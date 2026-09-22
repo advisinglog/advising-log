@@ -1,16 +1,13 @@
-name: Deploy to Cloudflare
+name: Deploy Fullstack to Cloudflare
 
 on:
   push:
     branches:
       - main
-    paths:
-      - 'backend/**'
-      - '.github/workflows/deploy.yml'
   workflow_dispatch:
 
 jobs:
-  # Deploy Backend (Cloudflare Workers & D1 Database)
+  # 1. Deploy Backend (Cloudflare Workers & D1 Database)
   deploy-backend:
     name: Test & Deploy Backend Worker
     runs-on: ubuntu-latest
@@ -40,3 +37,41 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: npx wrangler deploy
+
+  # 2. Deploy Frontend (Cloudflare Pages)
+  deploy-frontend:
+    name: Build & Deploy Frontend Pages
+    runs-on: ubuntu-latest
+    needs: deploy-backend
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Frontend Dependencies
+        working-directory: ./frontend
+        run: npm ci || npm install
+
+      - name: Run Frontend Unit Tests
+        working-directory: ./frontend
+        run: npm test
+
+      - name: Build Frontend Production Bundle
+        working-directory: ./frontend
+        env:
+          VITE_GOOGLE_CLIENT_ID: '762595973260-1rjkfe8kbc8s5c9cccr2qhpfi40okl1l.apps.googleusercontent.com'
+          VITE_SUPER_ADMIN_EMAIL: 'se.advisinglog@gmail.com'
+          VITE_CLOUDINARY_CLOUD_NAME: 'lzchanop'
+          VITE_CLOUDINARY_UPLOAD_PRESET: 'advising_preset'
+          VITE_API_URL: 'https://advising-log-backend.se-advisinglog.workers.dev'
+        run: npm run build
+
+      - name: Deploy to Cloudflare Pages
+        working-directory: ./frontend
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: npx wrangler pages deploy dist --project-name=advising-log --branch=main
