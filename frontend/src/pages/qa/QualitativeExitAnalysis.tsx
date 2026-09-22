@@ -37,6 +37,7 @@ import {
   Loader2,
   Copy,
   AlertTriangle,
+  ArrowRightLeft,
 } from 'lucide-react'
 import {
   analyzeWithLLM,
@@ -1482,8 +1483,6 @@ export default function QualitativeExitAnalysis() {
               const assessment = store.advisorAssessments.find(a => a.exitCaseId === c.id)
               const voice = store.studentVoiceResponses.find(v => v.exitCaseId === c.id || v.studentId === c.studentId)
 
-              const isWithdrawal = c.exitType === 'withdrawal' || c.exitType === 'dropout'
-
               return (
                 <div
                   key={c.id}
@@ -1492,25 +1491,46 @@ export default function QualitativeExitAnalysis() {
                   {/* Top Bar: Badges + Student Code */}
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
-                      <span
-                        className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
-                          isWithdrawal
-                            ? 'bg-rose-100 dark:bg-rose-900/60 text-rose-800 dark:text-rose-200 border border-rose-200/80 dark:border-rose-800'
-                            : 'bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-200 border border-amber-200/80 dark:border-amber-800'
-                        }`}
-                      >
-                        {isWithdrawal ? (
-                          <span className="inline-flex items-center gap-1.5">
-                            <UserX className="h-3.5 w-3.5" />
-                            {t('ขอลาออกถาวร', 'Withdrawal')}
+                      {(() => {
+                        if (c.exitType === 'transfer') {
+                          return (
+                            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-100 dark:bg-purple-900/60 text-purple-800 dark:text-purple-200 border border-purple-200/80 dark:border-purple-800">
+                              <span className="inline-flex items-center gap-1.5">
+                                <ArrowRightLeft className="h-3.5 w-3.5" />
+                                {t('ขอโอนย้ายสถาบัน', 'Institution Transfer')}
+                              </span>
+                            </span>
+                          )
+                        }
+                        if (c.exitType === 'dropout') {
+                          return (
+                            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 dark:bg-rose-900/60 text-rose-800 dark:text-rose-200 border border-rose-200/80 dark:border-rose-800">
+                              <span className="inline-flex items-center gap-1.5">
+                                <UserX className="h-3.5 w-3.5" />
+                                {t('พ้นสภาพนักศึกษา', 'Dropout')}
+                              </span>
+                            </span>
+                          )
+                        }
+                        if (c.exitType === 'leave_of_absence') {
+                          return (
+                            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-200 border border-amber-200/80 dark:border-amber-800">
+                              <span className="inline-flex items-center gap-1.5">
+                                <HeartHandshake className="h-3.5 w-3.5" />
+                                {t('ขอพักการศึกษา', 'Leave of Absence')}
+                              </span>
+                            </span>
+                          )
+                        }
+                        return (
+                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 dark:bg-rose-900/60 text-rose-800 dark:text-rose-200 border border-rose-200/80 dark:border-rose-800">
+                            <span className="inline-flex items-center gap-1.5">
+                              <UserX className="h-3.5 w-3.5" />
+                              {t('ขอลาออกถาวร', 'Withdrawal')}
+                            </span>
                           </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1.5">
-                            <HeartHandshake className="h-3.5 w-3.5" />
-                            {t('ขอพักการศึกษา', 'Leave of Absence')}
-                          </span>
-                        )}
-                      </span>
+                        )
+                      })()}
 
                       <span className="text-xs font-mono font-semibold text-slate-800 dark:text-slate-200">
                         {privacyMask ? (student?.code || c.studentId) : `${student?.name} (${student?.code})`}
