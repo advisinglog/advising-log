@@ -1439,6 +1439,8 @@ export default function QualitativeExitAnalysis() {
               <option value="all">{t('ทุกประเภทคำร้อง (All Types)', 'All Exit Types')}</option>
               <option value="withdrawal">{t('ขอลาออกถาวร (Withdrawal)', 'Withdrawal')}</option>
               <option value="leave_of_absence">{t('ขอพักการศึกษา (Leave of Absence)', 'Leave of Absence')}</option>
+              <option value="transfer">{t('ขอโอนย้ายสถาบัน (Institution Transfer)', 'Institution Transfer')}</option>
+              <option value="dropout">{t('พ้นสภาพนักศึกษา (Dropout)', 'Dropout')}</option>
             </select>
           </div>
 
