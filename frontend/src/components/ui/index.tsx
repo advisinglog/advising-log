@@ -361,14 +361,16 @@ export function DataTable<T extends { id?: string }>({ columns, data, onRowClick
 // --- Pagination ---
 
 export function Pagination({ page, totalPages, onPageChange }: { page: number; totalPages: number; onPageChange: (p: number) => void }) {
+  const { t } = useLanguage()
   if (totalPages <= 1) return null
   return (
     <div className="flex items-center justify-between mt-4 text-xs text-slate-500 dark:text-slate-400 font-medium">
-      <span>Page {page} of {totalPages}</span>
+      <span>{t(`หน้า ${page} จาก ${totalPages}`, `Page ${page} of ${totalPages}`)}</span>
       <div className="flex items-center gap-1.5">
         <button
           onClick={() => onPageChange(page - 1)}
           disabled={page <= 1}
+          aria-label={t('หน้าก่อนหน้า', 'Previous page')}
           className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
         >
           <ChevronLeft className="h-3.5 w-3.5" />
@@ -376,6 +378,7 @@ export function Pagination({ page, totalPages, onPageChange }: { page: number; t
         <button
           onClick={() => onPageChange(page + 1)}
           disabled={page >= totalPages}
+          aria-label={t('หน้าถัดไป', 'Next page')}
           className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
         >
           <ChevronRight className="h-3.5 w-3.5" />
