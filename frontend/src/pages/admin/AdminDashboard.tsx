@@ -474,36 +474,41 @@ export default function AdminDashboard() {
               <div className="space-y-2.5">
                 {filteredLogs.length > 0 ? (
                   filteredLogs.map(log => {
-                    const role = roleMeta[log.userRole as UserRole] || roleMeta.admin
+                    const role = (log.userRole && roleMeta[log.userRole as UserRole]) || roleMeta.admin
+                    const timeStr = log.createdAt
+                      ? log.createdAt.replace('T', ' ').substring(11, 16)
+                      : (log as any).timestamp
+                        ? String((log as any).timestamp).replace('T', ' ').substring(11, 16)
+                        : '--:--'
                     return (
                       <div
                         key={log.id}
                         className="p-3.5 rounded-xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800/80 hover:bg-white dark:hover:bg-slate-800/70 hover:shadow-xs transition-all flex items-start gap-3"
                       >
                         {/* User Avatar */}
-                        <UserAvatar name={log.userName} size="md" />
+                        <UserAvatar name={log.userName || 'User'} size="md" />
 
                         {/* Content */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-2">
                             <p className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
-                              {log.description}
+                              {log.description || '-'}
                             </p>
                             <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500 flex-shrink-0 flex items-center gap-1">
                               <Clock className="h-3 w-3" />
-                              {log.createdAt.replace('T', ' ').substring(11, 16)}
+                              {timeStr}
                             </span>
                           </div>
 
                           <div className="flex flex-wrap items-center gap-2 mt-1">
                             <span className="text-[11px] text-slate-600 dark:text-slate-400 font-medium">
-                              {log.userName}
+                              {log.userName || 'System'}
                             </span>
                             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${role.bg} ${role.color}`}>
                               {t(role.labelTh, role.labelEn)}
                             </span>
                             <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500 uppercase">
-                              · {log.action.replace(/_/g, ' ')}
+                              · {(log.action || '').replace(/_/g, ' ')}
                             </span>
                           </div>
                         </div>

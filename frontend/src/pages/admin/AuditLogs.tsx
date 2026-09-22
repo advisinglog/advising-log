@@ -14,7 +14,10 @@ export default function AuditLogs() {
   const logs = store.auditLogs.filter(l => {
     if (!search) return true
     const s = search.toLowerCase()
-    return l.userName.toLowerCase().includes(s) || l.action.toLowerCase().includes(s) || l.description.toLowerCase().includes(s)
+    const name = l.userName ? l.userName.toLowerCase() : ''
+    const action = l.action ? l.action.toLowerCase() : ''
+    const desc = l.description ? l.description.toLowerCase() : ''
+    return name.includes(s) || action.includes(s) || desc.includes(s)
   })
 
   const totalPages = Math.ceil(logs.length / pageSize)
@@ -24,11 +27,15 @@ export default function AuditLogs() {
     {
       key: 'date',
       header: t('วัน-เวลา', 'Timestamp'),
-      render: (l: AuditLog) => (
-        <span className="text-xs font-mono text-slate-500 dark:text-slate-400 font-medium">
-          {l.createdAt.replace('T', ' ').substring(0, 19)}
-        </span>
-      ),
+      render: (l: AuditLog) => {
+        const rawDate = l.createdAt || (l as any).timestamp
+        const dateStr = rawDate ? String(rawDate).replace('T', ' ').substring(0, 19) : '-'
+        return (
+          <span className="text-xs font-mono text-slate-500 dark:text-slate-400 font-medium">
+            {dateStr}
+          </span>
+        )
+      },
     },
     {
       key: 'user',
@@ -40,10 +47,10 @@ export default function AuditLogs() {
           qa_chair: { th: 'ประกันคุณภาพ/ประธานหลักสูตร', en: 'QA / Program Chair' },
           admin: { th: 'ผู้ดูแลระบบ', en: 'Admin' },
         }
-        const r = roleLabels[l.userRole] || { th: l.userRole, en: l.userRole }
+        const r = roleLabels[l.userRole] || { th: l.userRole || 'Admin', en: l.userRole || 'Admin' }
         return (
           <div>
-            <p className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100">{l.userName}</p>
+            <p className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100">{l.userName || '-'}</p>
             <p className="text-[10px] text-slate-400 dark:text-slate-400 font-bold uppercase tracking-wider">{t(r.th, r.en)}</p>
           </div>
         )
