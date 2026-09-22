@@ -30,7 +30,7 @@ jobs:
 
       - name: TypeScript Type Check
         working-directory: ./backend
-        run: npx tsc --noEmit
+        run: npm run typecheck
 
       - name: Run Backend Unit Tests
         working-directory: ./backend

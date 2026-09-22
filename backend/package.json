@@ -6,6 +6,7 @@
     "deploy": "wrangler deploy --minify",
     "cf-typegen": "wrangler types --env-interface CloudflareBindings",
     "test": "vitest run",
+    "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
     "db:init:local": "wrangler d1 execute advising_log_db --local --file=./drizzle/migrations/0000_classy_lord_tyger.sql",
     "db:seed:local": "wrangler d1 execute advising_log_db --local --file=./src/db/seed.sql"
@@ -18,6 +19,7 @@
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260901.1",
     "drizzle-kit": "^0.31.10",
+    "typescript": "^5.8.0",
     "vitest": "^4.1.11",
     "wrangler": "^4.110.0"
   }
