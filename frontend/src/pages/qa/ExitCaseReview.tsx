@@ -15,7 +15,7 @@ import {
   FileText,
   FileUp,
 } from 'lucide-react'
-import type { ExitCase } from '@/types'
+import type { ExitCase, ExitCaseStatus } from '@/types'
 
 export default function ExitCaseReview() {
   const { currentUser } = useAuth()
@@ -27,7 +27,7 @@ export default function ExitCaseReview() {
   const [selectedCase, setSelectedCase] = useState<ExitCase | null>(null)
   const [previewDoc, setPreviewDoc] = useState<DocumentViewerTarget | null>(null)
   const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState<'all' | 'open' | 'under_review' | 'closed'>('all')
+  const [statusFilter, setStatusFilter] = useState<'all' | 'open' | 'under_review' | 'resolved' | 'closed'>('all')
 
   // Finalize & Close Modal State
   const [showFinalizeModal, setShowFinalizeModal] = useState(false)
@@ -67,6 +67,7 @@ export default function ExitCaseReview() {
 
   const openCount = allReviewCases.filter(e => e.status === 'open').length
   const underReviewCount = allReviewCases.filter(e => e.status === 'under_review').length
+  const resolvedCount = allReviewCases.filter(e => e.status === 'resolved').length
   const closedCount = allReviewCases.filter(e => e.status === 'closed').length
 
   const columns = [
@@ -185,9 +186,12 @@ export default function ExitCaseReview() {
       ),
     }
 
+    const isRemediation = committeeDecision === 'remediation_offered'
+    const newStatus: ExitCaseStatus = isRemediation ? 'resolved' : 'closed'
+
     const fullResolution = `[${decisionLabels[committeeDecision] || committeeDecision}] ${resolutionNotes.trim()}`
 
-    store.updateExitCaseStatus(selectedCase.id, 'closed')
+    store.updateExitCaseStatus(selectedCase.id, newStatus)
     store.updateAdvisorAssessmentResolution(selectedCase.id, fullResolution)
 
     store.addAuditLog({
@@ -195,16 +199,25 @@ export default function ExitCaseReview() {
       userName: currentUser!.name,
       userRole: 'qa_chair',
       action: 'exit_case_updated',
-      description: `QA closed exit case ${selectedCase.id} with resolution: ${fullResolution}`,
+      description: `QA recorded exit case ${selectedCase.id} as ${newStatus} with resolution: ${fullResolution}`,
       targetId: selectedCase.id,
     })
 
     addToast(
       'success',
-      t('บันทึกมติและปิดเคสเรียบร้อย', 'Case Finalized & Closed'),
       t(
-        'บันทึกมติคณะกรรมการและปิดเคสคำร้องอย่างเป็นทางการแล้ว',
-        'Committee resolution recorded and exit case formally closed.'
+        isRemediation
+          ? 'บันทึกมาตรการช่วยเหลือและยุติเคสเรียบร้อย'
+          : 'บันทึกมติและปิดเคสเรียบร้อย',
+        isRemediation ? 'Remediation Recorded & Case Resolved' : 'Case Finalized & Closed'
+      ),
+      t(
+        isRemediation
+          ? 'บันทึกมติคณะกรรมการ จัดมาตรการช่วยเหลือนักศึกษา และเปลี่ยนสถานะเป็นยุติเคสแล้ว (Resolved)'
+          : 'บันทึกมติคณะกรรมการและปิดเคสคำร้องอย่างเป็นทางการแล้ว (Closed)',
+        isRemediation
+          ? 'Committee resolution recorded, student remediation applied, and case marked as resolved.'
+          : 'Committee resolution recorded and exit case formally closed.'
       )
     )
 
@@ -280,6 +293,17 @@ export default function ExitCaseReview() {
             }`}
           >
             {t('อยู่ระหว่างตรวจสอบ', 'Under Review')} ({underReviewCount})
+          </button>
+          <button
+            type="button"
+            onClick={() => setStatusFilter('resolved')}
+            className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+              statusFilter === 'resolved'
+                ? 'bg-white dark:bg-slate-700 text-sky-700 dark:text-sky-300 shadow-xs'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+            }`}
+          >
+            {t('ยุติเคสแล้ว', 'Resolved')} ({resolvedCount})
           </button>
           <button
             type="button"
@@ -617,10 +641,15 @@ export default function ExitCaseReview() {
               <Button variant="secondary" onClick={() => setSelectedCase(null)}>
                 {t('ปิด', 'Close')}
               </Button>
-              {selectedCase.status !== 'closed' && (
+              {selectedCase.status !== 'closed' && selectedCase.status !== 'resolved' ? (
                 <Button variant="primary" onClick={handleOpenFinalizeModal}>
                   <CheckCircle2 className="h-4 w-4 mr-1.5" />{' '}
-                  {t('สรุปผลและบันทึกมติปิดเคส', 'Finalize & Record Resolution')}
+                  {t('สรุปผลและบันทึกมติ', 'Record Committee Resolution')}
+                </Button>
+              ) : (
+                <Button variant="secondary" onClick={handleOpenFinalizeModal}>
+                  <FileCheck2 className="h-4 w-4 mr-1.5 text-emerald-500" />{' '}
+                  {t('แก้ไขมติคณะกรรมการ', 'Update Resolution')}
                 </Button>
               )}
             </div>

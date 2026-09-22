@@ -261,7 +261,7 @@ export default function QualitativeExitAnalysis() {
 
   // --- Calculations: Why Resign vs Why Leave ---
   const withdrawalCases = useMemo(() => {
-    return store.exitCases.filter(e => e.exitType === 'withdrawal' || e.exitType === 'dropout')
+    return store.exitCases.filter(e => e.exitType === 'withdrawal' || e.exitType === 'dropout' || e.exitType === 'transfer')
   }, [store.exitCases])
 
   const leaveCases = useMemo(() => {
@@ -1582,13 +1582,17 @@ export default function QualitativeExitAnalysis() {
                       <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[10px] font-mono">
                         #{c.reasonCode}
                       </span>
-                      {isWithdrawal ? (
-                        <span className="px-2 py-0.5 rounded-md bg-rose-50 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 text-[10px]">
-                          #PermanentDeparture
-                        </span>
-                      ) : (
+                      {c.exitType === 'leave_of_absence' ? (
                         <span className="px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 text-[10px]">
                           #ReEntryPlanned
+                        </span>
+                      ) : c.exitType === 'transfer' ? (
+                        <span className="px-2 py-0.5 rounded-md bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-[10px]">
+                          #TransferOut
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded-md bg-rose-50 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 text-[10px]">
+                          #PermanentDeparture
                         </span>
                       )}
                       {c.preferredEffectiveDate && (

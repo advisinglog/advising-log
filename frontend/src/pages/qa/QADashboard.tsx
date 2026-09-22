@@ -140,6 +140,7 @@ export default function QADashboard() {
   // Advisor workload
   const advisorWorkload = store.users.filter(u => u.role === 'advisor').map(a => ({
     name: a.name.split(' ').pop() || a.name,
+    fullName: a.name,
     requests: store.requests.filter(r => r.advisorId === a.id).length,
     sessions: store.sessions.filter(s => s.advisorId === a.id).length,
     students: store.roster.filter(r => r.advisorId === a.id && r.isActive).length,
@@ -197,7 +198,12 @@ export default function QADashboard() {
           avgOverall,
         },
         categoryData,
-        advisorWorkload,
+        advisorWorkload: advisorWorkload.map(a => ({
+          name: a.fullName || a.name,
+          requests: a.requests,
+          sessions: a.sessions,
+          students: a.students,
+        })),
         users: store.users,
         requests: store.requests,
         exitCases: store.exitCases,
@@ -551,7 +557,7 @@ export default function QADashboard() {
                         return (
                           <div className="rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-white/95 dark:bg-slate-900/95 p-3 shadow-xl backdrop-blur-md min-w-[200px] text-xs">
                             <div className="font-bold text-slate-900 dark:text-slate-100 mb-2 border-b border-slate-100 dark:border-slate-800 pb-1.5 flex items-center justify-between">
-                              <span>{label}</span>
+                              <span>{payload[0]?.payload?.fullName || label}</span>
                               <span className="text-[10px] text-slate-400 font-normal">{t('ภาระงานที่ปรึกษา', 'Workload & Sessions')}</span>
                             </div>
                             <div className="space-y-1.5">
@@ -856,8 +862,25 @@ export default function QADashboard() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-4">
               {store.studentVoiceResponses.map((res) => {
-                const isWithdrawal =
-                  res.exitType === 'withdrawal' || res.exitType === 'dropout'
+                const badgeConfig: Record<string, { className: string; label: string }> = {
+                  withdrawal: {
+                    className: 'border-rose-100 bg-rose-50 text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/35 dark:text-rose-300',
+                    label: t('ลาออกถาวร', 'Withdrawal'),
+                  },
+                  dropout: {
+                    className: 'border-rose-100 bg-rose-50 text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/35 dark:text-rose-300',
+                    label: t('พ้นสภาพนักศึกษา', 'Dropout'),
+                  },
+                  transfer: {
+                    className: 'border-purple-100 bg-purple-50 text-purple-700 dark:border-purple-900/50 dark:bg-purple-950/35 dark:text-purple-300',
+                    label: t('โอนย้ายสถาบัน', 'Institution Transfer'),
+                  },
+                  leave_of_absence: {
+                    className: 'border-amber-100 bg-amber-50 text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/35 dark:text-amber-300',
+                    label: t('พักการศึกษา', 'Leave of Absence'),
+                  },
+                }
+                const badge = badgeConfig[res.exitType] || badgeConfig.withdrawal
 
                 return (
                   <article
@@ -879,15 +902,9 @@ export default function QADashboard() {
                         </div>
 
                         <span
-                          className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold ${
-                            isWithdrawal
-                              ? 'border-rose-100 bg-rose-50 text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/35 dark:text-rose-300'
-                              : 'border-amber-100 bg-amber-50 text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/35 dark:text-amber-300'
-                          }`}
+                          className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold ${badge.className}`}
                         >
-                          {isWithdrawal
-                            ? t('ลาออกถาวร', 'Withdrawal')
-                            : t('พักการศึกษา', 'Leave of Absence')}
+                          {badge.label}
                         </span>
                       </div>
 
@@ -940,7 +957,7 @@ export default function QADashboard() {
                         <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />
                         <span>{res.ratings?.overallExperience ?? (res as any).overallRating ?? 4}/5</span>
                       </div>
-                      <span>{res.createdAt ? new Date(res.createdAt).toLocaleDateString() : '2026-09-20'}</span>
+                      <span>{res.createdAt ? new Date(res.createdAt).toLocaleDateString() : '-'}</span>
                     </footer>
                   </article>
                 )
