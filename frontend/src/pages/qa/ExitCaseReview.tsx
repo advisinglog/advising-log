@@ -47,12 +47,17 @@ export default function ExitCaseReview() {
     const stu = store.users.find(u => u.id === e.studentId)
     const adv = store.users.find(u => u.id === e.advisorId)
     const reason = getExitReasonLabel(e.reasonCode).toLowerCase()
+    const exitTypeLabel = getExitTypeLabel(e.exitType).toLowerCase()
+    const rawExitType = (e.exitType || '').toLowerCase().replace(/_/g, ' ')
     return (
       (stu?.name && stu.name.toLowerCase().includes(s)) ||
       (stu?.code && stu.code.toLowerCase().includes(s)) ||
       (adv?.name && adv.name.toLowerCase().includes(s)) ||
       e.id.toLowerCase().includes(s) ||
       reason.includes(s) ||
+      exitTypeLabel.includes(s) ||
+      rawExitType.includes(s) ||
+      (e.preferredEffectiveDate && e.preferredEffectiveDate.toLowerCase().includes(s)) ||
       (e.details && e.details.toLowerCase().includes(s))
     )
   })
@@ -232,8 +237,8 @@ export default function ExitCaseReview() {
             value={search}
             onChange={setSearch}
             placeholder={t(
-              'ค้นหาตามชื่อนักศึกษา, รหัส, หรืออาจารย์ที่ปรึกษา...',
-              'Search by student name, code, or advisor...'
+              'ค้นหาตามชื่อนักศึกษา, รหัส, อาจารย์, หรือประเภทคำร้อง...',
+              'Search by student, code, advisor, or exit type...'
             )}
           />
         </div>
