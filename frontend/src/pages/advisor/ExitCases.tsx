@@ -9,7 +9,7 @@ import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { PageHeader, DataTable, StatusBadge, Button, Modal, Timeline, DocumentViewerModal, type DocumentViewerTarget } from '@/components/ui'
 import type { ExitCase } from '@/types'
-import { Eye, MessageSquareHeart, FileText, Download, FileUp } from 'lucide-react'
+import { Eye, MessageSquareHeart, FileText, FileUp } from 'lucide-react'
 
 export default function ExitCases() {
   const { currentUser } = useAuth()
