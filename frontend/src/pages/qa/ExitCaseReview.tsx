@@ -174,11 +174,18 @@ export default function ExitCaseReview() {
 
     setIsSubmitting(true)
 
+    const exitTypeName = selectedCase
+      ? getExitTypeLabel(selectedCase.exitType)
+      : t('คำร้อง', 'Request')
+
     const decisionLabels: Record<string, string> = {
-      approved_departure: t('อนุมัติการลาออก/ลาพักตามคำร้อง', 'Approved Departure Request'),
+      approved_departure: t(
+        `อนุมัติการ${exitTypeName}ตามคำร้อง`,
+        `Approved ${selectedCase ? selectedCase.exitType.replace(/_/g, ' ') : 'Departure'} Request`
+      ),
       approved_with_followup: t(
-        'อนุมัติพร้อมจัดทำแผนติดตามผล (Re-entry Plan)',
-        'Approved with Re-entry Support Plan'
+        'อนุมัติพร้อมจัดทำแผนติดตามผล (Re-entry / Follow-up Plan)',
+        'Approved with Re-entry / Follow-up Support Plan'
       ),
       remediation_offered: t(
         'จัดมาตรการช่วยเหลือและให้คำปรึกษาเพิ่มเติม',
@@ -723,25 +730,42 @@ export default function ExitCaseReview() {
                 {[
                   {
                     id: 'approved_departure',
-                    label: t(
-                      'อนุมัติการลาออก / ลาพักตามคำร้อง',
-                      'Approve Departure / Leave as Requested'
-                    ),
-                    desc: t(
-                      'เห็นควรให้ดำเนินการตามความประสงค์ของนักศึกษา',
-                      'Agree with student request without retention intervention'
-                    ),
+                    label: selectedCase
+                      ? t(
+                          `อนุมัติการ${getExitTypeLabel(selectedCase.exitType)}ตามคำร้อง`,
+                          `Approve ${selectedCase.exitType.replace(/_/g, ' ')} Request`
+                        )
+                      : t('อนุมัติคำร้องตามที่นักศึกษาเสนอ', 'Approve Request as Submitted'),
+                    desc: selectedCase?.exitType === 'transfer'
+                      ? t(
+                          'เห็นควรให้ดำเนินการโอนย้ายสถาบันตามความประสงค์ของนักศึกษา',
+                          'Agree with student transfer to destination institution'
+                        )
+                      : t(
+                          'เห็นควรให้ดำเนินการตามความประสงค์ของนักศึกษา',
+                          'Agree with student request without retention intervention'
+                        ),
                   },
                   {
                     id: 'approved_with_followup',
-                    label: t(
-                      'อนุมัติพร้อมจัดทำแผนติดตามผล (Re-entry Plan)',
-                      'Approve with Re-entry Support Plan'
-                    ),
-                    desc: t(
-                      'กำหนดแผนติดต่อเพื่อประสานงานการกลับเข้าศึกษาต่อ',
-                      'Establish follow-up schedule to support academic return'
-                    ),
+                    label: selectedCase?.exitType === 'transfer'
+                      ? t(
+                          'อนุมัติพร้อมติดตามผลการส่งมอบเอกสาร/เทียบโอน',
+                          'Approve with Transfer Credit & Document Follow-up'
+                        )
+                      : t(
+                          'อนุมัติพร้อมจัดทำแผนติดตามผล (Re-entry / Follow-up Plan)',
+                          'Approve with Re-entry / Follow-up Support Plan'
+                        ),
+                    desc: selectedCase?.exitType === 'transfer'
+                      ? t(
+                          'ประสานงานฝ่ายทะเบียนเพื่อติดตามการเทียบโอนหน่วยกิตและการรายงานตัว',
+                          'Coordinate with Registrar to track credit transfer and enrollment'
+                        )
+                      : t(
+                          'กำหนดแผนติดต่อเพื่อประสานงานการกลับเข้าศึกษาต่อ',
+                          'Establish follow-up schedule to support academic return'
+                        ),
                   },
                   {
                     id: 'remediation_offered',

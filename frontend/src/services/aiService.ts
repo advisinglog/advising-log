@@ -289,10 +289,21 @@ Synthesizing across **${req.cases.length} departure cases** reveals sharp diverg
 * **Curriculum Revision (1 Year):** Introduce flexible minor degree options (UX/UI & Creative Tech) and structured re-entry roadmaps.`
   } else if (mode === 'case_diagnostic') {
     const targetCase = req.cases[0]
+    const exitTypeTh = targetCase?.exitType === 'leave_of_absence'
+      ? 'ขอพักการศึกษา'
+      : targetCase?.exitType === 'transfer'
+      ? 'ขอโอนย้ายสถาบัน'
+      : targetCase?.exitType === 'dropout'
+      ? 'พ้นสภาพนักศึกษา'
+      : 'ขอลาออกถาวร'
+
+    const isTransfer = targetCase?.exitType === 'transfer'
+    const isLeave = targetCase?.exitType === 'leave_of_absence'
+
     analysisText = lang === 'th'
       ? `### 🩺 การวินิจฉัยเคสรายบุคคลเชิงลึก (AI Case Diagnostic)
 
-* **รหัสเคส / นักศึกษา:** ${targetCase?.studentCode || 'De-identified Case'} (${targetCase?.exitType === 'leave_of_absence' ? 'ขอพักการศึกษา' : 'ขอลาออกถาวร'})
+* **รหัสเคส / นักศึกษา:** ${targetCase?.studentCode || 'De-identified Case'} (${exitTypeTh})
 * **สาเหตุหลักที่ระบุ:** ${targetCase?.reasonCode || 'ทั่วไป'}
 
 #### การประเมินสาเหตุแท้จริง (Root Cause Evaluation)
@@ -300,12 +311,16 @@ Synthesizing across **${req.cases.length} departure cases** reveals sharp diverg
 * ข้อวินิจฉัยของอาจารย์ที่ปรึกษา: "${targetCase?.advisorAssessment || 'รอการประเมิน'}"
 
 #### ข้อเสนอแนะเชิงมาตรการช่วยเหลือ (Actionable Guidance)
-1. **การชะลอการตัดสินใจ:** หากเป็นปัญหาความเครียดหรือภาระครอบครัว ควรแนะนำการพักการศึกษาแทนการลาออก เพื่อรักษาสถานภาพและหน่วยกิต
+${isTransfer ? `1. **การตรวจสอบการเทียบโอน:** ตรวจสอบโครงสร้างหลักสูตรและรายวิชาที่สามารถเทียบโอนไปยังสถาบันปลายทาง เพื่อประโยชน์สูงสุดของผู้เรียน
+2. **การประสานงานส่วนทะเบียน:** ประสานงานส่วนทะเบียนและประมวลผล (REG) เพื่ออำนวยความสะดวกด้านใบรับรองผลการเรียน (Transcript) และหนังสือรับรอง
+3. **การประเมินเพื่อปรับปรุงหลักสูตร:** เก็บข้อมูลเหตุผลการโอนย้ายเพื่อนำมาวิเคราะห์แนวโน้มความพึงพอใจและจุดที่ควรพัฒนาของหลักสูตรต่อไป` : isLeave ? `1. **การชะลอการตัดสินใจ:** แนะนำการวางแผนพักการศึกษาตามระเบียบ เพื่อรักษาสถานภาพและหน่วยกิตที่สะสมไว้
 2. **การประสานส่งต่อ:** ประสานส่วนบริการสุขภาพ/ศูนย์สุขภาพจิต MFU Counselling Center หรือส่วนทะเบียน (REG)
-3. **แผนการกลับเข้าศึกษา:** กำหนดนัดหมายติดตามผลทุก 4 สัปดาห์ เพื่อเตรียมความพร้อมวิชาการก่อนเปิดภาคเรียนถัดไป`
+3. **แผนการกลับเข้าศึกษา:** กำหนดนัดหมายติดตามผลทุก 4 สัปดาห์ เพื่อเตรียมความพร้อมวิชาการก่อนเปิดภาคเรียนถัดไป` : `1. **การชะลอการตัดสินใจ:** หากเป็นปัญหาความเครียดหรือภาระครอบครัว ควรแนะนำการพักการศึกษาแทนการลาออก เพื่อรักษาสถานภาพและหน่วยกิต
+2. **การประสานส่งต่อ:** ประสานส่วนบริการสุขภาพ/ศูนย์สุขภาพจิต MFU Counselling Center หรือฝ่ายทุนการศึกษา
+3. **มาตรการทางเลือก:** เสนอแนวทางเรียนปรับพื้นฐานหรือการโอนย้ายสาขาวิชาภายในสำนักวิชาเพื่อลดการสูญเสียผู้เรียน`}`
       : `### 🩺 Individual Case AI Diagnostic
 
-* **Case / Student ID:** ${targetCase?.studentCode || 'De-identified Case'} (${targetCase?.exitType})
+* **Case / Student ID:** ${targetCase?.studentCode || 'De-identified Case'} (${targetCase?.exitType?.replace(/_/g, ' ') || 'Exit Case'})
 * **Primary Stated Cause:** ${targetCase?.reasonCode}
 
 #### Root Cause Evaluation
@@ -313,9 +328,13 @@ Synthesizing across **${req.cases.length} departure cases** reveals sharp diverg
 * Advisor Assessment: "${targetCase?.advisorAssessment || 'N/A'}"
 
 #### Actionable Guidance
-1. **Retention Intervention:** If driven by burnout or family crises, advocate for temporary leave over permanent withdrawal.
+${isTransfer ? `1. **Credit Transfer Verification:** Review completed coursework and learning outcomes to maximize transferable credits to the target university.
+2. **Registrar Coordination:** Facilitate official transcript issuance and administrative certification via the Registrar Division.
+3. **Curricular CQI Feedback:** Analyze institutional transfer rationale to identify gaps in specialization tracks or curriculum alignment.` : isLeave ? `1. **Retention Intervention:** Support temporary leave of absence to preserve accrued academic credits and student status.
 2. **Cross-unit Referral:** Connect with MFU Counselling Center or Registrar Division.
-3. **Re-entry Protocol:** Schedule monthly check-ins to ensure smooth academic return.`
+3. **Re-entry Protocol:** Schedule monthly check-ins to ensure smooth academic return.` : `1. **Retention Intervention:** If driven by burnout or family crises, advocate for temporary leave over permanent withdrawal.
+2. **Cross-unit Referral:** Connect with MFU Counselling Center, Financial Aid, or Student Welfare.
+3. **Internal Transfer Options:** Explore intra-faculty track migration before finalizing permanent withdrawal.`}`
   } else {
     analysisText = lang === 'th'
       ? `### 💡 คำตอบเชิงคุณภาพจากระบบ AI สำหรับประธานหลักสูตร
