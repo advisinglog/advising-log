@@ -239,17 +239,36 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: { isOpe
 
 // --- Confirm Dialog ---
 
-export function ConfirmDialog({ isOpen, onClose, onConfirm, title, message, confirmLabel = 'Confirm', variant = 'primary' }: {
-  isOpen: boolean; onClose: () => void; onConfirm: () => void; title: string; message: string; confirmLabel?: string; variant?: 'primary' | 'danger'
+export function ConfirmDialog({
+  isOpen,
+  onClose,
+  onConfirm,
+  title,
+  message,
+  confirmLabel,
+  cancelLabel,
+  variant = 'primary',
+}: {
+  isOpen: boolean
+  onClose: () => void
+  onConfirm: () => void
+  title: string
+  message: string
+  confirmLabel?: string
+  cancelLabel?: string
+  variant?: 'primary' | 'danger'
 }) {
+  const { t } = useLanguage()
   if (!isOpen) return null
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title} size="sm">
       <p className="text-sm text-slate-600 dark:text-slate-300 mb-5 leading-relaxed">{message}</p>
       <div className="flex justify-end gap-2.5">
-        <Button variant="secondary" onClick={onClose}>Cancel</Button>
+        <Button variant="secondary" onClick={onClose}>
+          {cancelLabel || t('ยกเลิก', 'Cancel')}
+        </Button>
         <Button variant={variant === 'danger' ? 'danger' : 'primary'} onClick={() => { onConfirm(); onClose() }}>
-          {confirmLabel}
+          {confirmLabel || t('ยืนยัน', 'Confirm')}
         </Button>
       </div>
     </Modal>
