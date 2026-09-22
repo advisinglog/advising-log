@@ -24,6 +24,7 @@ import {
   ShieldCheck,
   Brain,
   ArrowRight,
+  Building2,
 } from 'lucide-react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -34,7 +35,7 @@ import QualitativeExitAnalysis from './QualitativeExitAnalysis'
 const PIE_COLORS = ['#0284c7', '#38bdf8', '#6366f1', '#a855f7', '#ec4899', '#f43f5e', '#f59e0b', '#10b981']
 
 
-type VoiceScoreTone = 'sky' | 'emerald' | 'violet'
+type VoiceScoreTone = 'sky' | 'emerald' | 'violet' | 'amber'
 
 const voiceScoreTone: Record<
   VoiceScoreTone,
@@ -47,6 +48,10 @@ const voiceScoreTone: Record<
   emerald: {
     icon: 'bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-950/35 dark:text-emerald-300 dark:border-emerald-900/50',
     accent: 'before:bg-emerald-500',
+  },
+  amber: {
+    icon: 'bg-amber-50 text-amber-600 border-amber-100 dark:bg-amber-950/35 dark:text-amber-300 dark:border-amber-900/50',
+    accent: 'before:bg-amber-500',
   },
   violet: {
     icon: 'bg-violet-50 text-violet-600 border-violet-100 dark:bg-violet-950/35 dark:text-violet-300 dark:border-violet-900/50',
@@ -150,6 +155,9 @@ export default function QADashboard() {
     : '0'
   const avgAdvisor = totalVoiceResponses > 0
     ? (store.studentVoiceResponses.reduce((acc, r) => acc + (r.ratings?.advisorSupport ?? (r as any).advisorRating ?? 0), 0) / totalVoiceResponses).toFixed(1)
+    : '0'
+  const avgServices = totalVoiceResponses > 0
+    ? (store.studentVoiceResponses.reduce((acc, r) => acc + (r.ratings?.universityServices ?? (r as any).servicesRating ?? 0), 0) / totalVoiceResponses).toFixed(1)
     : '0'
   const avgOverall = totalVoiceResponses > 0
     ? (store.studentVoiceResponses.reduce((acc, r) => acc + (r.ratings?.overallExperience ?? (r as any).overallRating ?? 0), 0) / totalVoiceResponses).toFixed(1)
@@ -640,7 +648,7 @@ export default function QADashboard() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
               <VoiceScoreCard
                 label={t('ความพึงพอใจต่อหลักสูตร', 'Curriculum Score')}
                 value={`${avgCurriculum} / 5`}
@@ -658,6 +666,12 @@ export default function QADashboard() {
                 value={`${avgAdvisor} / 5`}
                 icon={<Star className="h-5 w-5" />}
                 tone="emerald"
+              />
+              <VoiceScoreCard
+                label={t('การบริการและสิ่งอำนวยความสะดวก', 'University Services & Facilities')}
+                value={`${avgServices} / 5`}
+                icon={<Building2 className="h-5 w-5" />}
+                tone="amber"
               />
               <VoiceScoreCard
                 label={t('ประสบการณ์ภาพรวม', 'Overall Experience')}

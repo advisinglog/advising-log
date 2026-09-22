@@ -463,6 +463,12 @@ export default function ExitCaseReview() {
                       </strong>
                     </span>
                     <span>
+                      {t('การบริการและสิ่งอำนวยความสะดวก:', 'Services:')}{' '}
+                      <strong className="text-sky-700 dark:text-sky-300">
+                        {voiceResponse.ratings?.universityServices ?? 4}/5
+                      </strong>
+                    </span>
+                    <span>
                       {t('ภาพรวม:', 'Overall:')}{' '}
                       <strong className="text-sky-700 dark:text-sky-300">
                         {voiceResponse.ratings?.overallExperience ?? 4}/5
