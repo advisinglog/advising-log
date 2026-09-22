@@ -21,9 +21,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: 'npm'
-          cache-dependency-path: 'backend/package-lock.json'
+          node-version: 22
 
       - name: Install Backend Dependencies
         working-directory: ./backend
@@ -38,8 +36,7 @@ jobs:
         run: npm test
 
       - name: Deploy to Cloudflare Workers
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          workingDirectory: 'backend'
-          command: deploy
+        working-directory: ./backend
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: npx wrangler deploy
