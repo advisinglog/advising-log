@@ -53,6 +53,8 @@ import {
   mockAuditLogs,
 } from '@/data/mock-data'
 
+const isTestEnv = (typeof process !== 'undefined' && process.env?.NODE_ENV === 'test') || import.meta.env?.MODE === 'test'
+
 // --- Helper: generate simple IDs ---
 let counter = 1000
 function nextId(prefix: string): string {
@@ -191,26 +193,26 @@ export function useStore(): Store {
 }
 
 export function StoreProvider({ children }: { children: ReactNode }) {
-  const [users, setUsers] = useState<User[]>([...mockUsers])
-  const [roster, setRoster] = useState<StudentAdvisorAssignment[]>([...mockRoster])
-  const [requests, setRequests] = useState<AdvisingRequest[]>([...mockRequests])
-  const [appointments, setAppointments] = useState<Appointment[]>([...mockAppointments])
-  const [sessions, setSessions] = useState<AdvisingSession[]>([...mockSessions])
-  const [followUps, setFollowUps] = useState<FollowUp[]>([...mockFollowUps])
-  const [referrals, setReferrals] = useState<Referral[]>([...mockReferrals])
-  const [notifications, setNotifications] = useState<Notification[]>([...mockNotifications])
-  const [earlyWarnings, setEarlyWarnings] = useState<EarlyWarningCase[]>([...mockEarlyWarnings])
-  const [earlyWarningFollowUps, setEarlyWarningFollowUps] = useState<EarlyWarningFollowUp[]>([...mockEarlyWarningFollowUps])
-  const [followUpProgress, setFollowUpProgress] = useState<FollowUpProgress[]>([...mockFollowUpProgress])
-  const [requestProgress, setRequestProgress] = useState<RequestProgress[]>([...mockRequestProgress])
-  const [exitCases, setExitCases] = useState<ExitCase[]>([...mockExitCases])
-  const [advisorAssessments, setAdvisorAssessments] = useState<AdvisorExitAssessment[]>([...mockAdvisorAssessments])
-  const [studentVoiceResponses, setStudentVoiceResponses] = useState<StudentVoiceResponse[]>([...mockStudentVoiceResponses])
+  const [users, setUsers] = useState<User[]>(isTestEnv ? [...mockUsers] : [])
+  const [roster, setRoster] = useState<StudentAdvisorAssignment[]>(isTestEnv ? [...mockRoster] : [])
+  const [requests, setRequests] = useState<AdvisingRequest[]>(isTestEnv ? [...mockRequests] : [])
+  const [appointments, setAppointments] = useState<Appointment[]>(isTestEnv ? [...mockAppointments] : [])
+  const [sessions, setSessions] = useState<AdvisingSession[]>(isTestEnv ? [...mockSessions] : [])
+  const [followUps, setFollowUps] = useState<FollowUp[]>(isTestEnv ? [...mockFollowUps] : [])
+  const [referrals, setReferrals] = useState<Referral[]>(isTestEnv ? [...mockReferrals] : [])
+  const [notifications, setNotifications] = useState<Notification[]>(isTestEnv ? [...mockNotifications] : [])
+  const [earlyWarnings, setEarlyWarnings] = useState<EarlyWarningCase[]>(isTestEnv ? [...mockEarlyWarnings] : [])
+  const [earlyWarningFollowUps, setEarlyWarningFollowUps] = useState<EarlyWarningFollowUp[]>(isTestEnv ? [...mockEarlyWarningFollowUps] : [])
+  const [followUpProgress, setFollowUpProgress] = useState<FollowUpProgress[]>(isTestEnv ? [...mockFollowUpProgress] : [])
+  const [requestProgress, setRequestProgress] = useState<RequestProgress[]>(isTestEnv ? [...mockRequestProgress] : [])
+  const [exitCases, setExitCases] = useState<ExitCase[]>(isTestEnv ? [...mockExitCases] : [])
+  const [advisorAssessments, setAdvisorAssessments] = useState<AdvisorExitAssessment[]>(isTestEnv ? [...mockAdvisorAssessments] : [])
+  const [studentVoiceResponses, setStudentVoiceResponses] = useState<StudentVoiceResponse[]>(isTestEnv ? [...mockStudentVoiceResponses] : [])
   const [completedVoiceStudents, setCompletedVoiceStudents] = useState<string[]>([])
-  const [documents, setDocuments] = useState<StudentDocument[]>([...mockStudentDocuments])
+  const [documents, setDocuments] = useState<StudentDocument[]>(isTestEnv ? [...mockStudentDocuments] : [])
   const [categoryConfigs, setCategoryConfigs] = useState<AdvisingCategoryConfig[]>([...mockCategoryConfigs])
   const [documentTypes, setDocumentTypes] = useState<DocumentType[]>([...mockDocumentTypes])
-  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([...mockAuditLogs])
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>(isTestEnv ? [...mockAuditLogs] : [])
   const [aiKeys, setAiKeys] = useState<AiApiKey[]>([])
   const [systemApiConfig, setSystemApiConfig] = useState<SystemApiConfig>({
     isAiApiEnabled: true,
@@ -231,6 +233,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let isMounted = true
+    if (isTestEnv) return // In test mode, keep test fixtures intact
     async function syncFromBackend() {
       const [uRes, rosRes, rRes, aptRes, fRes, sRes, eRes, vRes, aRes, kRes, ewRes, docRes] = await Promise.all([
         api.getUsers(),
@@ -247,66 +250,35 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         api.getDocuments(),
       ])
       if (!isMounted) return
-      if (uRes && Array.isArray(uRes.users) && uRes.users.length > 0) {
-        setUsers(uRes.users)
-        if (rosRes && Array.isArray(rosRes.roster)) setRoster(rosRes.roster)
-        if (rRes && Array.isArray(rRes.requests)) setRequests(rRes.requests)
-        if (aptRes && Array.isArray(aptRes.appointments)) setAppointments(aptRes.appointments)
-        if (fRes && Array.isArray(fRes.followUps)) setFollowUps(fRes.followUps)
-        if (sRes && Array.isArray(sRes.sessions)) setSessions(sRes.sessions)
-        if (eRes && Array.isArray(eRes.exitCases)) setExitCases(eRes.exitCases)
-        if (vRes && Array.isArray(vRes.surveys)) {
-          const normalized = vRes.surveys.map((s: any) => ({
-            ...s,
-            primaryFactors: Array.isArray(s.primaryFactors)
-              ? s.primaryFactors
-              : typeof s.primaryFactors === 'string'
-                ? (() => { try { return JSON.parse(s.primaryFactors) } catch { return [] } })()
-                : [],
-            ratings: s.ratings || {
-              curriculumRelevance: s.curriculumRating ?? 3,
-              teachingQuality: s.teachingRating ?? 3,
-              advisorSupport: s.advisorRating ?? 3,
-              universityServices: s.servicesRating ?? 3,
-              overallExperience: s.overallRating ?? 3,
-            },
-          }))
-          setStudentVoiceResponses(normalized)
-        }
-        if (aRes && Array.isArray(aRes.logs)) setAuditLogs(aRes.logs)
-        if (kRes && Array.isArray(kRes.keys)) setAiKeys(kRes.keys)
-        if (ewRes && Array.isArray(ewRes.earlyWarnings)) setEarlyWarnings(ewRes.earlyWarnings)
-        if (docRes && Array.isArray(docRes.documents)) setDocuments(docRes.documents)
-      } else {
-        if (rosRes && Array.isArray(rosRes.roster) && rosRes.roster.length > 0) setRoster(rosRes.roster)
-        if (rRes && Array.isArray(rRes.requests) && rRes.requests.length > 0) setRequests(rRes.requests)
-        if (aptRes && Array.isArray(aptRes.appointments) && aptRes.appointments.length > 0) setAppointments(aptRes.appointments)
-        if (fRes && Array.isArray(fRes.followUps) && fRes.followUps.length > 0) setFollowUps(fRes.followUps)
-        if (sRes && Array.isArray(sRes.sessions) && sRes.sessions.length > 0) setSessions(sRes.sessions)
-        if (eRes && Array.isArray(eRes.exitCases) && eRes.exitCases.length > 0) setExitCases(eRes.exitCases)
-        if (vRes && Array.isArray(vRes.surveys) && vRes.surveys.length > 0) {
-          const normalized = vRes.surveys.map((s: any) => ({
-            ...s,
-            primaryFactors: Array.isArray(s.primaryFactors)
-              ? s.primaryFactors
-              : typeof s.primaryFactors === 'string'
-                ? (() => { try { return JSON.parse(s.primaryFactors) } catch { return [] } })()
-                : [],
-            ratings: s.ratings || {
-              curriculumRelevance: s.curriculumRating ?? 3,
-              teachingQuality: s.teachingRating ?? 3,
-              advisorSupport: s.advisorRating ?? 3,
-              universityServices: s.servicesRating ?? 3,
-              overallExperience: s.overallRating ?? 3,
-            },
-          }))
-          setStudentVoiceResponses(normalized)
-        }
-        if (aRes && Array.isArray(aRes.logs) && aRes.logs.length > 0) setAuditLogs(aRes.logs)
-        if (kRes && Array.isArray(kRes.keys)) setAiKeys(kRes.keys)
-        if (ewRes && Array.isArray(ewRes.earlyWarnings) && ewRes.earlyWarnings.length > 0) setEarlyWarnings(ewRes.earlyWarnings)
-        if (docRes && Array.isArray(docRes.documents) && docRes.documents.length > 0) setDocuments(docRes.documents)
+      if (uRes && Array.isArray(uRes.users)) setUsers(uRes.users)
+      if (rosRes && Array.isArray(rosRes.roster)) setRoster(rosRes.roster)
+      if (rRes && Array.isArray(rRes.requests)) setRequests(rRes.requests)
+      if (aptRes && Array.isArray(aptRes.appointments)) setAppointments(aptRes.appointments)
+      if (fRes && Array.isArray(fRes.followUps)) setFollowUps(fRes.followUps)
+      if (sRes && Array.isArray(sRes.sessions)) setSessions(sRes.sessions)
+      if (eRes && Array.isArray(eRes.exitCases)) setExitCases(eRes.exitCases)
+      if (vRes && Array.isArray(vRes.surveys)) {
+        const normalized = vRes.surveys.map((s: any) => ({
+          ...s,
+          primaryFactors: Array.isArray(s.primaryFactors)
+            ? s.primaryFactors
+            : typeof s.primaryFactors === 'string'
+              ? (() => { try { return JSON.parse(s.primaryFactors) } catch { return [] } })()
+              : [],
+          ratings: s.ratings || {
+            curriculumRelevance: s.curriculumRating ?? 3,
+            teachingQuality: s.teachingRating ?? 3,
+            advisorSupport: s.advisorRating ?? 3,
+            universityServices: s.servicesRating ?? 3,
+            overallExperience: s.overallRating ?? 3,
+          },
+        }))
+        setStudentVoiceResponses(normalized)
       }
+      if (aRes && Array.isArray(aRes.logs)) setAuditLogs(aRes.logs)
+      if (kRes && Array.isArray(kRes.keys)) setAiKeys(kRes.keys)
+      if (ewRes && Array.isArray(ewRes.earlyWarnings)) setEarlyWarnings(ewRes.earlyWarnings)
+      if (docRes && Array.isArray(docRes.documents)) setDocuments(docRes.documents)
     }
     syncFromBackend()
     return () => { isMounted = false }
