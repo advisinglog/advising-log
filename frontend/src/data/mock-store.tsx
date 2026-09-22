@@ -53,7 +53,7 @@ import {
   mockAuditLogs,
 } from '@/data/mock-data'
 
-const isTestEnv = (typeof process !== 'undefined' && process.env?.NODE_ENV === 'test') || import.meta.env?.MODE === 'test'
+const isTestEnv = import.meta.env?.MODE === 'test'
 
 // --- Helper: generate simple IDs ---
 let counter = 1000
