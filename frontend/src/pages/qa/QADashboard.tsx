@@ -3,12 +3,14 @@
 // ============================================================
 
 import { useState, type ReactNode } from 'react'
+import { useAuth } from '@/contexts/AuthContext'
 import { useStore } from '@/data/mock-store'
 import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useTheme } from '@/contexts/ThemeContext'
 import { PageHeader, Card, StatCard, Button } from '@/components/ui'
 import { ADVISING_CATEGORIES, EXIT_REASON_CODES } from '@/types'
+import { exportAunQaExcelReport } from '@/utils/exportUtils'
 import {
   BarChart3,
   TrendingUp,
@@ -96,6 +98,7 @@ function VoiceScoreCard({
 }
 
 export default function QADashboard() {
+  const { currentUser } = useAuth()
   const store = useStore()
   const { addToast } = useToast()
   const { t, language } = useLanguage()
@@ -176,18 +179,55 @@ export default function QADashboard() {
     .sort((a, b) => b.count - a.count)
 
   function handleExport() {
-    store.addAuditLog({
-      userId: 'QA001',
-      userName: 'QA Coordinator',
-      userRole: 'qa_chair',
-      action: 'qa_exported_data',
-      description: 'Exported QA statistics and Student Voice report',
-    })
-    addToast(
-      'info',
-      t('ส่งออกรายงานแล้ว', 'Export Generated'),
-      t('ข้อมูลรายงานการประกันคุณภาพและเสียงสะท้อนนักศึกษา (AUN-QA) ถูกดาวน์โหลดเรียบร้อย', 'QA and Student Voice accreditation report exported successfully.')
-    )
+    try {
+      exportAunQaExcelReport({
+        language,
+        metrics: {
+          totalRequests,
+          totalSessions,
+          totalFollowUps,
+          fuRate,
+          totalExitCases,
+          totalWarnings,
+          totalVoiceResponses,
+          avgCurriculum,
+          avgTeaching,
+          avgAdvisor,
+          avgServices,
+          avgOverall,
+        },
+        categoryData,
+        advisorWorkload,
+        users: store.users,
+        requests: store.requests,
+        exitCases: store.exitCases,
+        studentVoiceResponses: store.studentVoiceResponses,
+        advisorAssessments: store.advisorAssessments,
+      })
+
+      store.addAuditLog({
+        userId: currentUser?.id || 'QA001',
+        userName: currentUser?.name || 'QA Coordinator',
+        userRole: currentUser?.role || 'qa_chair',
+        action: 'qa_exported_data',
+        description: 'Exported official AUN-QA Excel report (.xlsx)',
+      })
+
+      addToast(
+        'success',
+        t('ส่งออกรายงาน AUN-QA เรียบร้อยแล้ว', 'AUN-QA Report Exported'),
+        t(
+          'ไฟล์รายงาน Excel (.xlsx) สรุปตัวชี้วัด ภาระงานอาจารย์ เคสลาออก และเสียงสะท้อน นศ. ถูกดาวน์โหลดแล้ว',
+          'AUN-QA Excel report (.xlsx) including metrics, workload, exit cases, and student voice was downloaded successfully.'
+        )
+      )
+    } catch (err: any) {
+      addToast(
+        'error',
+        t('การส่งออกรายงานล้มเหลว', 'Export Failed'),
+        err?.message || t('เกิดข้อผิดพลาดในการสร้างไฟล์ Excel', 'Failed to generate Excel file')
+      )
+    }
   }
 
   return (

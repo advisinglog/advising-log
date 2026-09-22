@@ -42,6 +42,7 @@ import {
   analyzeWithLLM,
   type AIAnalysisPayloadCase,
 } from '@/services/aiService'
+import { exportQualitativeExcelReport } from '@/utils/exportUtils'
 import {
   BarChart,
   Bar,
@@ -332,18 +333,38 @@ export default function QualitativeExitAnalysis() {
   }, [store.exitCases, store.studentVoiceResponses, store.users, store.advisorAssessments, selectedExitType, selectedYear, selectedTheme, searchQuery])
 
   function handleExportQualitative() {
-    store.addAuditLog({
-      userId: 'QA001',
-      userName: 'QA Coordinator',
-      userRole: 'qa_chair',
-      action: 'qa_exported_data',
-      description: 'Exported Qualitative Exit & Retention Analysis Report (AUN-QA Criteria 6 & 8)',
-    })
-    addToast(
-      'info',
-      t('ส่งออกรายงานการวิเคราะห์เชิงคุณภาพแล้ว', 'Qualitative Report Exported'),
-      t('รายงานการวิเคราะห์เจาะลึกสาเหตุการลาออกและพักการศึกษาถูกดาวน์โหลดเรียบร้อย', 'Qualitative retention diagnostic report downloaded successfully.')
-    )
+    try {
+      exportQualitativeExcelReport({
+        language,
+        cases: filteredCases,
+        users: store.users,
+        studentVoiceResponses: store.studentVoiceResponses,
+        advisorAssessments: store.advisorAssessments,
+      })
+
+      store.addAuditLog({
+        userId: currentUser?.id || 'QA001',
+        userName: currentUser?.name || 'QA Coordinator',
+        userRole: currentUser?.role || 'qa_chair',
+        action: 'qa_exported_data',
+        description: 'Exported Qualitative Exit & Retention Analysis Report (AUN-QA Criteria 6 & 8)',
+      })
+
+      addToast(
+        'success',
+        t('ส่งออกรายงานการวิเคราะห์เชิงคุณภาพแล้ว', 'Qualitative Report Exported'),
+        t(
+          'ไฟล์รายงาน Excel (.xlsx) การวิเคราะห์เจาะลึกสาเหตุการลาออกและพักการศึกษาถูกดาวน์โหลดเรียบร้อย',
+          'Qualitative retention diagnostic Excel report (.xlsx) downloaded successfully.'
+        )
+      )
+    } catch (err: any) {
+      addToast(
+        'error',
+        t('การส่งออกรายงานล้มเหลว', 'Export Failed'),
+        err?.message || t('เกิดข้อผิดพลาดในการสร้างไฟล์ Excel', 'Failed to generate Excel file')
+      )
+    }
   }
 
   return (
