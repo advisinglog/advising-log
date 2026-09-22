@@ -848,7 +848,11 @@ app.get('/api/audit-logs', async (c) => {
   const database = db(c)
   if (!database) return c.json({ logs: [] })
   const list = await database.select().from(schema.auditLogs).orderBy(desc(schema.auditLogs.timestamp)).limit(100)
-  return c.json({ logs: list })
+  const normalized = list.map(l => ({
+    ...l,
+    createdAt: l.timestamp,
+  }))
+  return c.json({ logs: normalized })
 })
 
 app.post('/api/audit-logs', async (c) => {
@@ -869,7 +873,7 @@ app.post('/api/audit-logs', async (c) => {
   }
 
   await database.insert(schema.auditLogs).values(log)
-  return c.json({ success: true, log }, 201)
+  return c.json({ success: true, log: { ...log, createdAt: log.timestamp } }, 201)
 })
 
 // ============================================================
