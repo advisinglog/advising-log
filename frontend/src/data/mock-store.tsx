@@ -251,7 +251,23 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       ])
       if (!isMounted) return
       if (uRes && Array.isArray(uRes.users)) setUsers(uRes.users)
-      if (rosRes && Array.isArray(rosRes.roster)) setRoster(rosRes.roster)
+      if (rosRes && Array.isArray(rosRes.roster)) {
+        const seen = new Set<string>()
+        const dedupedRoster: StudentAdvisorAssignment[] = []
+        const sorted = [...rosRes.roster].sort((a, b) => (b.assignedAt || '').localeCompare(a.assignedAt || ''))
+        for (const r of sorted) {
+          const key = (r.studentId || '').toLowerCase()
+          if (r.isActive && key) {
+            if (!seen.has(key)) {
+              seen.add(key)
+              dedupedRoster.push(r)
+            }
+          } else {
+            dedupedRoster.push(r)
+          }
+        }
+        setRoster(dedupedRoster)
+      }
       if (rRes && Array.isArray(rRes.requests)) {
         const normalizedRequests = rRes.requests.map((r: any) => ({
           ...r,
@@ -605,16 +621,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       isActive: true,
     }
     setRoster(prev => {
-      const exists = prev.some(r => r.studentId === studentId && r.isActive)
-      if (exists) {
-        return prev.map(r => (r.studentId === studentId && r.isActive ? { ...r, advisorId: newAdvisorId, assignedAt: now() } : r))
-      } else {
-        const newEntry: StudentAdvisorAssignment = {
-          id: nextId('R'),
-          ...entryData,
-        }
-        return [newEntry, ...prev]
+      const filtered = prev.filter(r => !(r.studentId === studentId && r.isActive))
+      const newEntry: StudentAdvisorAssignment = {
+        id: nextId('R'),
+        ...entryData,
       }
+      return [newEntry, ...filtered]
     })
     api.saveRosterEntry(entryData).catch(() => {})
   }, [])

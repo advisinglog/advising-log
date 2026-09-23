@@ -43,8 +43,26 @@ export default function RequestAdvising() {
 
   if (!currentUser) return null
 
-  const rosterEntry = store.roster.find(r => r.studentId === currentUser!.id && r.isActive)
-  const advisor = rosterEntry ? store.users.find(u => u.id === rosterEntry.advisorId) : null
+  // Find active roster assignment for the current student (matching ID, code, or email, sorted by newest assignment)
+  const matchingAssignments = store.roster
+    .filter(
+      r =>
+        r.isActive &&
+        (r.studentId === currentUser?.id ||
+         (currentUser?.code && r.studentId?.toUpperCase() === currentUser.code.toUpperCase()) ||
+         (currentUser?.email && r.studentId?.toLowerCase() === currentUser.email.toLowerCase()))
+    )
+    .sort((a, b) => (b.assignedAt || '').localeCompare(a.assignedAt || ''))
+
+  const rosterEntry = matchingAssignments[0] || null
+  const advisor = rosterEntry
+    ? store.users.find(
+        u =>
+          u.id === rosterEntry.advisorId ||
+          (u.code && rosterEntry.advisorId && u.code.toUpperCase() === rosterEntry.advisorId.toUpperCase()) ||
+          (u.email && rosterEntry.advisorId && u.email.toLowerCase() === rosterEntry.advisorId.toLowerCase())
+      )
+    : null
 
   const selectedCategoryConfig = store.categoryConfigs.find(c => c.value === category)
   const subCategories = selectedCategoryConfig?.subCategories || []

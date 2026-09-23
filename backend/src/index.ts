@@ -489,8 +489,23 @@ app.delete('/api/users/:id', async (c) => {
 app.get('/api/roster', async (c) => {
   const database = db(c)
   if (!database) return c.json({ roster: [] })
-  const list = await database.select().from(schema.studentAdvisorAssignments)
-  return c.json({ roster: list })
+  const list = await database.select().from(schema.studentAdvisorAssignments).orderBy(desc(schema.studentAdvisorAssignments.assignedAt))
+  
+  // Deduplicate by studentId so each student only has their latest assignment
+  const seenStudents = new Set<string>()
+  const deduplicated = []
+  for (const r of list) {
+    const key = (r.studentId || '').toLowerCase()
+    if (r.isActive && key) {
+      if (!seenStudents.has(key)) {
+        seenStudents.add(key)
+        deduplicated.push(r)
+      }
+    } else {
+      deduplicated.push(r)
+    }
+  }
+  return c.json({ roster: deduplicated })
 })
 
 app.post('/api/roster', async (c) => {
@@ -518,9 +533,13 @@ app.post('/api/roster', async (c) => {
   const targetAdvisorId = advisor ? advisor.id : body.advisorId
 
   const allAssignments = await database.select().from(schema.studentAdvisorAssignments)
-  const existing = allAssignments.find(
-    (a) => a.studentId === targetStudentId || (body.id && a.id === body.id)
+  const existingMatches = allAssignments.filter(
+    (a) =>
+      a.studentId === targetStudentId ||
+      (student && (a.studentId === student.code || a.studentId === student.email)) ||
+      (body.id && a.id === body.id)
   )
+  const existing = existingMatches[0]
 
   const assignment = {
     id: existing ? existing.id : (body.id || `R_${Date.now()}`),
@@ -532,6 +551,10 @@ app.post('/api/roster', async (c) => {
 
   if (existing) {
     await database.update(schema.studentAdvisorAssignments).set(assignment).where(eq(schema.studentAdvisorAssignments.id, existing.id))
+    // Clean up any other duplicate stale rows for this student
+    for (let i = 1; i < existingMatches.length; i++) {
+      await database.delete(schema.studentAdvisorAssignments).where(eq(schema.studentAdvisorAssignments.id, existingMatches[i].id))
+    }
   } else {
     await database.insert(schema.studentAdvisorAssignments).values(assignment)
   }
