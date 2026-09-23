@@ -171,7 +171,7 @@ app.post('/api/auth/google', async (c) => {
           u.email?.toLowerCase().trim() === lowerEmail ||
           u.code?.toUpperCase().trim() === codePrefix ||
           (u.email && u.email.toLowerCase().trim().split('@')[0] === codePrefix.toLowerCase())
-      ) || null
+      )
     }
 
     // If Super Admin account, auto-provision if not exists or update code
@@ -213,8 +213,10 @@ app.post('/api/auth/google', async (c) => {
       }, 403)
     }
 
+    const authenticatedUser = user
+
     // Check if account is active
-    if (!user.isActive) {
+    if (!authenticatedUser.isActive) {
       return c.json({
         success: false,
         error: 'ACCOUNT_DEACTIVATED',
@@ -224,13 +226,13 @@ app.post('/api/auth/google', async (c) => {
 
     // 4. Student Advisee Check: Student MUST be assigned to an advisor by Admin or Advisor
     let assignedAdvisor = null
-    if (user.role === 'student') {
+    if (authenticatedUser.role === 'student') {
       const allAssignments = await database.select().from(schema.studentAdvisorAssignments).where(eq(schema.studentAdvisorAssignments.isActive, true))
       const assignment = allAssignments.find(
         (a) =>
-          a.studentId === user.id ||
-          a.studentId?.toUpperCase() === user.code?.toUpperCase() ||
-          a.studentId?.toLowerCase() === user.email?.toLowerCase() ||
+          a.studentId === authenticatedUser.id ||
+          a.studentId?.toUpperCase() === authenticatedUser.code?.toUpperCase() ||
+          a.studentId?.toLowerCase() === authenticatedUser.email?.toLowerCase() ||
           a.studentId?.toLowerCase() === lowerEmail ||
           a.studentId?.toUpperCase() === codePrefix
       )
@@ -241,9 +243,9 @@ app.post('/api/auth/google', async (c) => {
           error: 'STUDENT_NOT_ASSIGNED',
           message: 'ไม่สามารถเข้าสู่ระบบได้: บัญชีนักศึกษาของคุณยังไม่ได้รับการจัดสรรอาจารย์ที่ปรึกษา กรุณาติดต่ออาจารย์ที่ปรึกษาหรือสำนักวิชาเพื่อดำเนินการเพิ่มรายชื่อ',
           studentInfo: {
-            name: user.name,
-            code: user.code,
-            email: user.email,
+            name: authenticatedUser.name,
+            code: authenticatedUser.code,
+            email: authenticatedUser.email,
           },
         }, 403)
       }
