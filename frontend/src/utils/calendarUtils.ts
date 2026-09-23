@@ -158,3 +158,24 @@ export function openGoogleCalendarEvent(options: GoogleCalendarEventOptions): vo
     window.open(url, '_blank', 'noopener,noreferrer')
   }
 }
+
+/**
+ * Builds direct Google Calendar URL to view an advisor's availability / schedule
+ * Uses embed mode to directly show a clean weekly schedule view without forcing a "Subscribe/Add Calendar" prompt.
+ */
+export function buildAdvisorCalendarUrl(advisorEmail?: string): string {
+  if (!advisorEmail || !advisorEmail.includes('@')) {
+    return 'https://calendar.google.com/calendar/r'
+  }
+  return `https://calendar.google.com/calendar/embed?src=${encodeURIComponent(advisorEmail.trim())}&mode=WEEK&ctz=Asia%2FBangkok&showTitle=0&showNav=1&showDate=1&showPrint=0&showTabs=0&showCalendars=0&showTz=0`
+}
+
+/**
+ * Opens advisor's Google Calendar directly in a new tab
+ */
+export function openAdvisorCalendar(advisorEmail?: string): void {
+  const url = buildAdvisorCalendarUrl(advisorEmail)
+  if (typeof window !== 'undefined') {
+    window.open(url, '_blank', 'noopener,noreferrer')
+  }
+}

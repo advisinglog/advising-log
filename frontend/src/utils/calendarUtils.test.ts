@@ -3,6 +3,7 @@ import {
   buildGoogleCalendarUrl,
   parseMeetingDateTime,
   formatGoogleCalendarDate,
+  buildAdvisorCalendarUrl,
 } from './calendarUtils'
 
 describe('calendarUtils', () => {
@@ -49,5 +50,15 @@ describe('calendarUtils', () => {
     expect(url).toContain('add=somchai%40student.cmu.ac.th%2Csmith%40cmu.ac.th')
     // invalid-email should be filtered out
     expect(url).not.toContain('invalid-email')
+  })
+
+  it('builds clean Google Calendar embed URL for advisor calendar viewer', () => {
+    const url = buildAdvisorCalendarUrl('advisor@mfu.ac.th')
+    expect(url).toContain('https://calendar.google.com/calendar/embed')
+    expect(url).toContain('src=advisor%40mfu.ac.th')
+    expect(url).toContain('mode=WEEK')
+
+    const fallbackUrl = buildAdvisorCalendarUrl('')
+    expect(fallbackUrl).toBe('https://calendar.google.com/calendar/r')
   })
 })

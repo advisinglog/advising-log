@@ -8,7 +8,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useStore } from '@/data/mock-store'
 import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { PageHeader, Button, Card } from '@/components/ui'
+import { PageHeader, Button, Card, Modal } from '@/components/ui'
 import { ADVISING_CATEGORIES, EXIT_REASON_CODES } from '@/types'
 import type { AdvisingCategory, ExitType, ExitReasonCode } from '@/types'
 import {
@@ -18,7 +18,9 @@ import {
   MessageSquareHeart,
   CheckCircle2,
   ExternalLink,
+  Calendar,
 } from 'lucide-react'
+import { buildAdvisorCalendarUrl, openAdvisorCalendar } from '@/utils/calendarUtils'
 
 export default function RequestAdvising() {
   const { currentUser } = useAuth()
@@ -40,6 +42,7 @@ export default function RequestAdvising() {
   const [preferredTime, setPreferredTime] = useState('')
   const [attachments, setAttachments] = useState<string[]>([])
   const [pdpaConsent, setPdpaConsent] = useState(false)
+  const [showCalendarModal, setShowCalendarModal] = useState(false)
 
   if (!currentUser) return null
 
@@ -193,16 +196,28 @@ export default function RequestAdvising() {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Advisor banner */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 shadow-xs flex items-center gap-3.5">
-          <div className="h-10 w-10 rounded-xl bg-sky-50 dark:bg-sky-950/50 border border-sky-100 dark:border-sky-800 flex items-center justify-center text-sky-600 dark:text-sky-400 flex-shrink-0">
-            <User className="h-5 w-5" />
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
+          <div className="flex items-center gap-3.5">
+            <div className="h-10 w-10 rounded-xl bg-sky-50 dark:bg-sky-950/50 border border-sky-100 dark:border-sky-800 flex items-center justify-center text-sky-600 dark:text-sky-400 flex-shrink-0">
+              <User className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-slate-400 dark:text-slate-400 uppercase tracking-wider">{t('อาจารย์ที่ปรึกษาที่รับผิดชอบ', 'Assigned Advisor')}</p>
+              <p className="text-sm font-bold text-slate-900 dark:text-slate-100 mt-0.5">
+                {advisor ? `${advisor.name} · ${advisor.department || 'School of Applied Digital Technology (ADT)'}` : t('ยังไม่ได้รับการจัดสรรอาจารย์ที่ปรึกษา', 'No assigned advisor')}
+              </p>
+            </div>
           </div>
-          <div>
-            <p className="text-xs font-semibold text-slate-400 dark:text-slate-400 uppercase tracking-wider">{t('อาจารย์ที่ปรึกษาที่รับผิดชอบ', 'Assigned Advisor')}</p>
-            <p className="text-sm font-bold text-slate-900 dark:text-slate-100 mt-0.5">
-              {advisor ? `${advisor.name} · ${advisor.department || 'School of Applied Digital Technology (ADT)'}` : t('ยังไม่ได้รับการจัดสรรอาจารย์ที่ปรึกษา', 'No assigned advisor')}
-            </p>
-          </div>
+          {advisor?.email && (
+            <button
+              type="button"
+              onClick={() => setShowCalendarModal(true)}
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-sky-50 dark:bg-sky-950/50 hover:bg-sky-100 dark:hover:bg-sky-900/60 text-sky-700 dark:text-sky-300 border border-sky-200/70 dark:border-sky-800 text-xs font-semibold transition-all cursor-pointer shadow-xs whitespace-nowrap self-start sm:self-auto"
+            >
+              <Calendar className="h-4 w-4 text-sky-600 dark:text-sky-400" />
+              <span>{t('ดูตารางอาจารย์ใน Google Calendar', "View Advisor's Google Calendar")}</span>
+            </button>
+          )}
         </div>
 
         <Card className="space-y-5">
@@ -343,11 +358,26 @@ export default function RequestAdvising() {
           </div>
 
           {/* Date and Time */}
-          <div className="space-y-1.5">
+          <div className="space-y-2">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+              <label className="text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200">
+                {t('วันและเวลาที่ประสงค์ขอเข้าพบ', 'Requested Date & Time')} <span className="text-rose-500">*</span>
+              </label>
+              {advisor?.email && (
+                <button
+                  type="button"
+                  onClick={() => setShowCalendarModal(true)}
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-sky-600 hover:text-sky-700 dark:text-sky-400 dark:hover:text-sky-300 cursor-pointer self-start sm:self-auto"
+                >
+                  <Calendar className="h-3.5 w-3.5" />
+                  <span>{t('เช็กช่วงเวลาว่างของอาจารย์', "Check Advisor's Free Time")}</span>
+                </button>
+              )}
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 mb-1.5">
-                  {t('วันที่ประสงค์ขอเข้าพบ', 'Requested Date')} <span className="text-rose-500">*</span>
+                <label className="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1">
+                  {t('วันที่', 'Date')}
                 </label>
                 <input
                   type="date"
@@ -357,8 +387,8 @@ export default function RequestAdvising() {
                 />
               </div>
               <div>
-                <label className="block text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 mb-1.5">
-                  {t('เวลาที่ประสงค์ขอเข้าพบ', 'Requested Time')} <span className="text-rose-500">*</span>
+                <label className="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1">
+                  {t('เวลา', 'Time')}
                 </label>
                 <input
                   type="time"
@@ -436,6 +466,66 @@ export default function RequestAdvising() {
           </div>
         </Card>
       </form>
+
+      {/* Advisor Calendar Viewer Modal */}
+      {advisor?.email && (
+        <Modal
+          isOpen={showCalendarModal}
+          onClose={() => setShowCalendarModal(false)}
+          title={t('ตารางเวลาของอาจารย์ที่ปรึกษา', "Advisor's Calendar Schedule")}
+          size="xl"
+        >
+          <div className="space-y-3.5">
+            {/* Advisor Summary Bar inside Modal */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800 rounded-xl text-xs">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="h-8 w-8 rounded-lg bg-sky-100 dark:bg-sky-950 text-sky-600 dark:text-sky-400 flex items-center justify-center font-bold flex-shrink-0">
+                  <User className="h-4 w-4" />
+                </div>
+                <div className="min-w-0">
+                  <p className="font-bold text-slate-900 dark:text-slate-100 truncate">{advisor.name}</p>
+                  <p className="text-slate-500 dark:text-slate-400 font-mono text-[11px] truncate">{advisor.email}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => openAdvisorCalendar(advisor.email)}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:text-sky-600 dark:hover:text-sky-400 hover:border-sky-300 dark:hover:border-sky-700 text-xs font-semibold transition-colors cursor-pointer shadow-xs whitespace-nowrap self-start sm:self-auto"
+                title={t('เปิดดูในแท็บใหม่', 'Open in new tab')}
+              >
+                <span>{t('เปิดแท็บใหม่', 'Open in New Tab')}</span>
+                <ExternalLink className="h-3.5 w-3.5 text-sky-500" />
+              </button>
+            </div>
+
+            {/* Embedded Calendar Frame */}
+            <div className="w-full h-[460px] rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden bg-white dark:bg-slate-950 shadow-inner relative">
+              <iframe
+                src={buildAdvisorCalendarUrl(advisor.email)}
+                title={`${advisor.name} Google Calendar`}
+                className="w-full h-full border-0"
+                loading="lazy"
+              />
+            </div>
+
+            {/* Modal Bottom Guidance & Actions */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1 border-t border-slate-100 dark:border-slate-800">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                💡 {t('ตรวจสอบช่วงเวลาว่าง แล้วระบุวันและเวลาที่ต้องการในแบบฟอร์ม', 'Check available slots, then pick your preferred date & time in the form.')}
+              </p>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => setShowCalendarModal(false)}
+                className="self-end sm:self-auto"
+              >
+                {t('ปิด', 'Close')}
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   )
 }
