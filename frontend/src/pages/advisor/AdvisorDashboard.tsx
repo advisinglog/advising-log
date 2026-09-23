@@ -416,9 +416,9 @@ export default function AdvisorDashboard() {
               </button>
             )}
           </div>
-          {upcomingApts.length > 0 ? (
+          {filteredUpcomingApts.length > 0 ? (
             <div className="space-y-2">
-              {upcomingApts.map(a => {
+              {filteredUpcomingApts.map(a => {
                 const student = store.users.find(u => u.id === a.studentId)
                 return (
                   <div key={a.id} className="flex items-center justify-between p-3 bg-slate-50/80 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/60 rounded-xl">
