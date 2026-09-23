@@ -142,9 +142,9 @@ describe('Student Voice Feature', () => {
     expect(screen.getByText(/กลุ่มขอพักการศึกษาชั่วคราว \(Leave of Absence\)/i)).toBeInTheDocument()
 
     // Check Thematic Root-Cause Synthesis
-    expect(screen.getByText(/การสังเคราะห์ปัญหาเชิงคุณภาพ 5 แกนหลัก/i)).toBeInTheDocument()
-    expect(screen.getByText(/ช่องว่างทักษะพื้นฐาน & การสอนก้าวเร็วกว่าความพร้อม/i)).toBeInTheDocument()
-    expect(screen.getByText(/ความเครียดสะสม ภาวะหมดไฟ & กำหนดส่งงานกระจุกตัว/i)).toBeInTheDocument()
+    expect(screen.getByText(/Thematic Qualitative Problem Synthesis|การสังเคราะห์ปัญหาเชิงคุณภาพ/i)).toBeInTheDocument()
+    expect(screen.getByText(/Academic & Rigor|วิชาการ & หลักสูตร/i)).toBeInTheDocument()
+    expect(screen.getByText(/Mental Health & Well-being|สุขภาพจิต & สุขภาวะ/i)).toBeInTheDocument()
 
     // Check Case-by-Case Qualitative Explorer
     expect(screen.getByText(/สำรวจเคสและเจาะลึกปัญหาเชิงคุณภาพรายกรณี/i)).toBeInTheDocument()

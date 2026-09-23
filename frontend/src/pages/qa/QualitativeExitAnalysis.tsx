@@ -294,6 +294,129 @@ export default function QualitativeExitAnalysis() {
   const financialCount = store.exitCases.filter(e => e.reasonCode === 'financial').length
   const familyCount = store.exitCases.filter(e => e.reasonCode === 'personal_family' || e.reasonCode === 'health').length
 
+  // Dynamically synthesized qualitative themes from real exit cases & student surveys
+  const thematicSyntheses = useMemo(() => {
+    const totalCases = store.exitCases.length || 1
+
+    const themeDefinitions = [
+      {
+        key: 'academic',
+        matchReason: (code: string) => code === 'academic',
+        label: t('วิชาการ & หลักสูตร', 'Academic & Rigor'),
+        icon: <GraduationCap className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400" />,
+        badgeTone: 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-100 dark:border-rose-900/40',
+        defaultAction: t(
+          'จัด Pre-sessional Coding Boot Camp ก่อนเปิดเทอม และเพิ่มระบบเพื่อนติว (Peer Tutoring)',
+          'Implement Pre-sessional Coding Boot Camp and Peer-Assisted Learning (PAL).'
+        ),
+      },
+      {
+        key: 'health_wellbeing',
+        matchReason: (code: string) => code === 'mental_health' || code === 'health',
+        label: t('สุขภาพจิต & สุขภาวะ', 'Mental Health & Well-being'),
+        icon: <Heart className="h-3.5 w-3.5 text-violet-600 dark:text-violet-400" />,
+        badgeTone: 'bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-100 dark:border-purple-900/40',
+        defaultAction: t(
+          'จัดทำ Assignment Coordination Matrix กระจายส่งงาน และเปิดช่องทางด่วนเข้าพบนักจิตบำบัด',
+          'Coordinate assignment deadlines and establish student mental health fast-track.'
+        ),
+      },
+      {
+        key: 'financial',
+        matchReason: (code: string) => code === 'financial',
+        label: t('การเงิน & ค่าครองชีพ', 'Financial Hardship'),
+        icon: <DollarSign className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />,
+        badgeTone: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-100 dark:border-emerald-900/40',
+        defaultAction: t(
+          'จัดตั้ง Emergency Discretionary Relief Fund ระดับสำนักวิชา และจัดสรรตำแหน่ง TA/Student Work-Study',
+          'Establish emergency relief micro-grants & expand student work-study jobs.'
+        ),
+      },
+      {
+        key: 'family_personal',
+        matchReason: (code: string) => code === 'personal_family' || code === 'personal' || code === 'family',
+        label: t('ครอบครัว & สุขภาพกาย', 'Family & Physical Health'),
+        icon: <Users className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />,
+        badgeTone: 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-100 dark:border-amber-900/40',
+        defaultAction: t(
+          'เปิดระบบ One-Stop Digital Petition สำหรับลาพัก และจัดระบบบันทึกเทปบรรยาย (Lecture Archive)',
+          'Provide streamlined digital leave petition and lecture archive for recuperating students.'
+        ),
+      },
+      {
+        key: 'career_shift',
+        matchReason: (code: string) => code === 'career_shift' || code === 'transfer' || code === 'career_work' || code === 'other',
+        label: t('ความถนัด & เป้าหมายอาชีพ', 'Career & Major Alignment'),
+        icon: <Compass className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />,
+        badgeTone: 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border-indigo-100 dark:border-indigo-900/40',
+        defaultAction: t(
+          'ปรับปรุงหลักสูตรให้มี Micro-credentials / Minor Degree และการแนะแนวอาชีพเชิงรุก',
+          'Introduce flexible minor tracks and proactive career advising.'
+        ),
+      },
+    ]
+
+    return themeDefinitions.map(def => {
+      const matchingCases = store.exitCases.filter(c => def.matchReason(c.reasonCode))
+      const count = matchingCases.length
+      const percentage = Math.round((count / totalCases) * 100)
+      const withdrawalCount = matchingCases.filter(c => c.exitType === 'withdrawal').length
+      const leaveCount = matchingCases.filter(c => c.exitType === 'leave_of_absence').length
+
+      // Pull real student statements from matching cases and matching student voice responses
+      const studentVoices: Array<{ quote: string; studentName?: string; studentCode?: string }> = []
+      matchingCases.forEach(c => {
+        if (c.details && c.details.trim()) {
+          const student = store.users.find(u => u.id === c.studentId)
+          studentVoices.push({
+            quote: c.details,
+            studentName: student?.name,
+            studentCode: student?.code,
+          })
+        }
+        const voice = store.studentVoiceResponses.find(v => v.exitCaseId === c.id || v.studentId === c.studentId)
+        if (voice?.whatCouldUniversityDoBetter && voice.whatCouldUniversityDoBetter.trim()) {
+          studentVoices.push({
+            quote: voice.whatCouldUniversityDoBetter,
+            studentName: voice.isAnonymous ? t('ไม่ระบุตัวตน', 'Anonymous') : voice.studentCode,
+          })
+        }
+      })
+
+      // Pull real advisor diagnoses
+      const advisorDiagnoses: Array<{ diagnosis: string; advisorName?: string }> = []
+      matchingCases.forEach(c => {
+        const assess = store.advisorAssessments.find(a => a.exitCaseId === c.id)
+        if (assess?.assessment && assess.assessment.trim()) {
+          const advisor = store.users.find(u => u.id === (assess.advisorId || c.advisorId))
+          advisorDiagnoses.push({
+            diagnosis: assess.assessment,
+            advisorName: advisor?.name,
+          })
+        }
+      })
+
+      // Pull custom recommendations if recorded by advisors
+      const recordedAction = matchingCases.find(c => {
+        const assess = store.advisorAssessments.find(a => a.exitCaseId === c.id)
+        return Boolean(assess?.recommendation || assess?.actionsTaken)
+      })
+      const assessObj = recordedAction ? store.advisorAssessments.find(a => a.exitCaseId === recordedAction.id) : null
+      const dynamicAction = assessObj?.recommendation || assessObj?.actionsTaken || def.defaultAction
+
+      return {
+        ...def,
+        count,
+        percentage,
+        withdrawalCount,
+        leaveCount,
+        studentVoices,
+        advisorDiagnoses,
+        action: dynamicAction,
+      }
+    })
+  }, [store.exitCases, store.advisorAssessments, store.studentVoiceResponses, store.users, language, t])
+
   // Filtered cases for Explorer
   const filteredCases = useMemo(() => {
     return store.exitCases.filter(e => {
@@ -1027,360 +1150,163 @@ export default function QualitativeExitAnalysis() {
       </Card>
 
       {/* ============================================================ */}
-      {/* SECTION 2: THEMATIC QUALITATIVE SYNTHESIS (5 CORE THEMES) */}
+      {/* SECTION 2: THEMATIC QUALITATIVE SYNTHESIS (DYNAMIC THEMES) */}
       {/* ============================================================ */}
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
             <h3 className="text-base sm:text-lg font-bold text-slate-950 dark:text-white flex items-center gap-2">
               <Quote className="h-4 w-4 text-sky-600 dark:text-sky-400" />
-              {t('การสังเคราะห์ปัญหาเชิงคุณภาพ 5 แกนหลัก (Thematic Root-Cause Synthesis)', 'Thematic Qualitative Problem Synthesis')}
+              {t('การสังเคราะห์ปัญหาเชิงคุณภาพจำแนกตามแกนปัญหา (Thematic Root-Cause Synthesis)', 'Thematic Qualitative Problem Synthesis')}
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400">
               {t(
-                'เจาะลึกเสียงสะท้อนนักศึกษา (Student Voice) ประกบผลวินิจฉัยของอาจารย์ที่ปรึกษา (Advisor Diagnostic) และมาตรการ CQI ระดับหลักสูตร',
-                'Synthesizing Student Verbatim Voices with Advisor Assessments and Continuous Quality Improvement (CQI) interventions.'
+                'ประมวลผลเสียงสะท้อนจริงของนักศึกษา (Student Voice) ประกบผลวินิจฉัยของอาจารย์ที่ปรึกษา (Advisor Diagnostic) จากฐานข้อมูลระบบ',
+                'Synthesizing authentic Student Verbatim Voices with Faculty Advisor Assessments and Continuous Quality Improvement (CQI) actions.'
               )}
             </p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {/* Theme 1: Academic Rigor */}
-          <div className="bg-white dark:bg-[#0e1424] border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm hover:border-sky-200 dark:hover:border-sky-900/60 transition-all space-y-4 flex flex-col justify-between">
-            <div className="space-y-2.5">
-              <div className="flex items-center justify-between">
-                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 flex items-center gap-1">
-                  <GraduationCap className="h-3 w-3 text-sky-600 dark:text-sky-400" />
-                  {t('วิชาการ & หลักสูตร', 'Academic & Rigor')}
-                </span>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-100 dark:border-rose-900/40">
-                  {t('ระดับผลกระทบ: วิกฤตปี 1', 'Impact: Critical (Yr 1)')}
-                </span>
-              </div>
+          {thematicSyntheses.map(theme => {
+            const hasCases = theme.count > 0
+            const primaryVoice = theme.studentVoices[0]
+            const primaryDiagnosis = theme.advisorDiagnoses[0]
 
-              <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                {t('ช่องว่างทักษะพื้นฐาน & การสอนก้าวเร็วกว่าความพร้อม', 'Foundation Gap & Fast Lecture Pacing')}
-              </h4>
+            return (
+              <div
+                key={theme.key}
+                className="bg-white dark:bg-[#0e1424] border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm hover:border-sky-200 dark:hover:border-sky-900/60 transition-all space-y-4 flex flex-col justify-between"
+              >
+                <div className="space-y-3">
+                  {/* Card Header: Category & Metric */}
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700 flex items-center gap-1.5">
+                      {theme.icon}
+                      {theme.label}
+                    </span>
+                    <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-md border ${theme.badgeTone}`}>
+                      {theme.count} {t('เคส', 'Cases')} ({theme.percentage}%)
+                    </span>
+                  </div>
 
-              {/* Student Voice */}
-              <div className="p-2.5 bg-slate-50/80 dark:bg-slate-800/45 rounded-xl border border-slate-200/80 dark:border-slate-700/70 text-xs sm:text-sm space-y-1.5">
-                <div className="font-semibold text-sky-700 dark:text-sky-300">
-                  <span className="inline-flex items-center gap-1.5">
-                    <Quote className="h-3.5 w-3.5" />
-                    {t('เสียงสะท้อนนักศึกษา (Student Voice):', 'Student Voice:')}
-                  </span>
+                  {/* Sub breakdown: Withdrawals vs Leaves */}
+                  <div className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400">
+                    <span className="inline-flex items-center gap-1">
+                      <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
+                      {theme.withdrawalCount} {t('ลาออก', 'Withdrawal')}
+                    </span>
+                    <span>·</span>
+                    <span className="inline-flex items-center gap-1">
+                      <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                      {theme.leaveCount} {t('ลาพัก', 'Leave')}
+                    </span>
+                  </div>
+
+                  {/* Real Student Voice */}
+                  <div className="p-3 bg-slate-50/80 dark:bg-slate-800/40 rounded-xl border border-slate-200/70 dark:border-slate-800 text-xs sm:text-sm space-y-1.5">
+                    <div className="font-semibold text-sky-700 dark:text-sky-300 text-xs flex items-center justify-between">
+                      <span className="inline-flex items-center gap-1.5">
+                        <Quote className="h-3.5 w-3.5" />
+                        {t('เสียงสะท้อนนักศึกษา (Student Voice):', 'Student Voice:')}
+                      </span>
+                      {primaryVoice?.studentCode && (
+                        <span className="text-[10px] font-mono font-normal text-slate-400">
+                          {privacyMask ? 'ID Masked' : primaryVoice.studentCode}
+                        </span>
+                      )}
+                    </div>
+                    {primaryVoice ? (
+                      <p className="text-slate-700 dark:text-slate-200 italic leading-relaxed text-xs">
+                        "{primaryVoice.quote}"
+                      </p>
+                    ) : (
+                      <p className="text-slate-400 dark:text-slate-500 text-xs italic">
+                        {t('ไม่มีเสียงสะท้อนข้อความสำหรับหมวดนี้', 'No written verbatim recorded for this theme.')}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Real Advisor Diagnosis */}
+                  <div className="p-3 bg-slate-50/50 dark:bg-slate-800/20 rounded-xl border border-slate-200/60 dark:border-slate-800 text-xs sm:text-sm space-y-1.5">
+                    <div className="font-semibold text-slate-800 dark:text-slate-200 text-xs flex items-center justify-between">
+                      <span className="inline-flex items-center gap-1.5">
+                        <Brain className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400" />
+                        {t('การวินิจฉัยของอาจารย์ที่ปรึกษา:', 'Advisor Evaluation:')}
+                      </span>
+                      {primaryDiagnosis?.advisorName && (
+                        <span className="text-[10px] font-normal text-slate-400">
+                          {primaryDiagnosis.advisorName}
+                        </span>
+                      )}
+                    </div>
+                    {primaryDiagnosis ? (
+                      <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-xs">
+                        {primaryDiagnosis.diagnosis}
+                      </p>
+                    ) : (
+                      <p className="text-slate-400 dark:text-slate-500 text-xs italic">
+                        {hasCases
+                          ? t('รอการบันทึกการวินิจฉัยเพิ่มเติมจากอาจารย์', 'Awaiting advisor diagnostic notes.')
+                          : t('ไม่มีเคสรายงานในหมวดหมู่นี้', 'No reported cases under this theme.')}
+                      </p>
+                    )}
+                  </div>
                 </div>
-                <p className="text-slate-600 dark:text-slate-300 italic leading-6">
-                  "{t(
-                    'วิชาเขียนโปรแกรมปี 1 สอนเร็วมากและภาระการบ้านหนักสำหรับคนที่ไม่มีพื้นฐานสายคอมฯ มาก่อน อยากให้มีวิชาปรับพื้นฐานหรือติวเสริมเข้มข้น',
-                    'Programming 1 moved too fast with heavy assignments for non-tech background students. We urgently need pre-sessional boot camps.'
-                  )}"
-                </p>
-              </div>
 
-              {/* Advisor Diagnosis */}
-              <div className="p-2.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200/80 dark:border-slate-700/60 text-xs sm:text-sm space-y-1.5">
-                <div className="font-semibold text-slate-800 dark:text-slate-200">
-                  <span className="inline-flex items-center gap-1.5">
-                    <Brain className="h-3.5 w-3.5" />
-                    {t('การวินิจฉัยของอาจารย์ที่ปรึกษา:', 'Advisor Evaluation:')}
+                {/* CQI Action Recommendation */}
+                <div className="pt-2.5 border-t border-slate-100 dark:border-slate-800 text-xs">
+                  <span className="font-semibold text-emerald-700 dark:text-emerald-400 block mb-1 flex items-center gap-1.5">
+                    <CheckCircle2 className="h-3 w-3" />
+                    {t('มาตรการแก้ไข AUN-QA Criteria 6.4:', 'AUN-QA CQI Action:')}
                   </span>
+                  <p className="text-slate-600 dark:text-slate-300 text-[11px] leading-relaxed">
+                    {theme.action}
+                  </p>
                 </div>
-                <p className="text-slate-600 dark:text-slate-300">
-                  {t(
-                    'นักศึกษาไม่มีพื้นฐานตรรกะคอมพิวเตอร์ ทำให้เรียนไม่ทันเพื่อนในกลุ่มวิชา Foundation เกิดความเครียดและหมดไฟ ไม่กล้าถามในห้อง',
-                    'Lack of pre-requisite computing logic caused student to fall behind peers early on, resulting in severe classroom anxiety.'
-                  )}
-                </p>
               </div>
-            </div>
-
-            {/* AUN-QA Intervention Action */}
-            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
-              <span className="font-semibold text-emerald-700 dark:text-emerald-400 block mb-1 flex items-center gap-1.5">
-                <CheckCircle2 className="h-3 w-3" />
-                {t('มาตรการแก้ไข AUN-QA Criteria 6.4:', 'AUN-QA CQI Action:')}
-              </span>
-              <p className="text-slate-600 dark:text-slate-300">
-                {t('จัด Pre-sessional Coding Boot Camp ก่อนเปิดเทอม 2 สัปดาห์ และเพิ่มระบบเพื่อนติว (Peer Tutoring)', 'Implement 2-week Pre-sessional Boot Camp + Peer-assisted learning (PAL).')}
-              </p>
-            </div>
-          </div>
-
-          {/* Theme 2: Mental Health & Burnout */}
-          <div className="bg-white dark:bg-[#0e1424] border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm hover:border-sky-200 dark:hover:border-sky-900/60 transition-all space-y-4 flex flex-col justify-between">
-            <div className="space-y-2.5">
-              <div className="flex items-center justify-between">
-                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 flex items-center gap-1">
-                  <Brain className="h-3 w-3 text-violet-600 dark:text-violet-400" />
-                  {t('สุขภาพจิต & สุขภาวะ', 'Mental Health & Burnout')}
-                </span>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-purple-50 dark:bg-purple-900/30 text-sky-600 dark:text-sky-400">
-                  {t('ระดับผลกระทบ: วิกฤตปี 2', 'Impact: High (Yr 2)')}
-                </span>
-              </div>
-
-              <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                {t('ความเครียดสะสม ภาวะหมดไฟ & กำหนดส่งงานกระจุกตัว', 'Chronic Stress, Burnout & Deadline Clustering')}
-              </h4>
-
-              {/* Student Voice */}
-              <div className="p-2.5 bg-slate-50/80 dark:bg-slate-800/45 rounded-xl border border-slate-200/80 dark:border-slate-700/70 text-xs sm:text-sm space-y-1.5">
-                <div className="font-semibold text-sky-700 dark:text-sky-300">
-                  <span className="inline-flex items-center gap-1.5">
-                    <Quote className="h-3.5 w-3.5" />
-                    {t('เสียงสะท้อนนักศึกษา (Student Voice):', 'Student Voice:')}
-                  </span>
-                </div>
-                <p className="text-slate-600 dark:text-slate-300 italic leading-6">
-                  "{t(
-                    'อยากให้อาจารย์ผู้สอนแต่ละวิชามีการประสานกำหนดการส่งงานไม่ให้กระจุกตัวพร้อมกันในช่วงก่อนสอบ เพราะทำให้นักศึกษาเกิดภาวะนอนไม่หลับและความเครียดสูงมาก',
-                    'Assignments clustered before exam week led to insomnia and acute stress; professors should coordinate due dates across the department.'
-                  )}"
-                </p>
-              </div>
-
-              {/* Advisor Diagnosis */}
-              <div className="p-2.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200/80 dark:border-slate-700/60 text-xs sm:text-sm space-y-1.5">
-                <div className="font-semibold text-slate-800 dark:text-slate-200">
-                  <span className="inline-flex items-center gap-1.5">
-                    <Brain className="h-3.5 w-3.5" />
-                    {t('การวินิจฉัยของอาจารย์ที่ปรึกษา:', 'Advisor Evaluation:')}
-                  </span>
-                </div>
-                <p className="text-slate-600 dark:text-slate-300">
-                  {t(
-                    'นักศึกษามีภาวะ Burnout ขั้นรุนแรงและมีภาวะซึมเศร้าปานกลาง ได้ส่งต่อไปยัง MFU Counselling Center และ รพ.ศูนย์การแพทย์ มฟล.',
-                    'Severe academic burnout with moderate clinical depression; referred to Counselling Center and University Medical Hospital.'
-                  )}
-                </p>
-              </div>
-            </div>
-
-            {/* AUN-QA Intervention Action */}
-            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
-              <span className="font-semibold text-emerald-700 dark:text-emerald-400 block mb-1 flex items-center gap-1.5">
-                <CheckCircle2 className="h-3 w-3" />
-                {t('มาตรการแก้ไข AUN-QA Criteria 6.4:', 'AUN-QA CQI Action:')}
-              </span>
-              <p className="text-slate-600 dark:text-slate-300">
-                {t('จัดทำ Assignment Coordination Matrix กระจายส่งงาน และเปิดช่องทาง Fast-track เข้าพบจิตแพทย์', 'Coordinate departmental deadline schedules and establish counseling fast-track.')}
-              </p>
-            </div>
-          </div>
-
-          {/* Theme 3: Financial Hardship */}
-          <div className="bg-white dark:bg-[#0e1424] border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm hover:border-sky-200 dark:hover:border-sky-900/60 transition-all space-y-4 flex flex-col justify-between">
-            <div className="space-y-2.5">
-              <div className="flex items-center justify-between">
-                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 flex items-center gap-1">
-                  <DollarSign className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
-                  {t('การเงิน & ค่าครองชีพ', 'Financial Hardship')}
-                </span>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-100 dark:border-emerald-900/40">
-                  {t('ระดับผลกระทบ: สูงปี 3', 'Impact: High (Yr 3)')}
-                </span>
-              </div>
-
-              <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                {t('วิกฤตเศรษฐกิจครอบครัว & ขาดแคลนทุนฉุกเฉินวงเงินสูง', 'Family Income Loss & Emergency Aid Gap')}
-              </h4>
-
-              {/* Student Voice */}
-              <div className="p-2.5 bg-slate-50/80 dark:bg-slate-800/45 rounded-xl border border-slate-200/80 dark:border-slate-700/70 text-xs sm:text-sm space-y-1.5">
-                <div className="font-semibold text-sky-700 dark:text-sky-300">
-                  <span className="inline-flex items-center gap-1.5">
-                    <Quote className="h-3.5 w-3.5" />
-                    {t('เสียงสะท้อนนักศึกษา (Student Voice):', 'Student Voice:')}
-                  </span>
-                </div>
-                <p className="text-slate-600 dark:text-slate-300 italic leading-6">
-                  "{t(
-                    'อยากให้มีทุนการศึกษาฉุกเฉินหรือตำแหน่งงาน Part-time ภายในคณะที่เพียงพอกว่านี้ สำหรับนักศึกษาที่มีปัญหาการเงินกะทันหัน',
-                    'Need emergency relief grants or on-campus part-time positions for students facing sudden financial collapse.'
-                  )}"
-                </p>
-              </div>
-
-              {/* Advisor Diagnosis */}
-              <div className="p-2.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200/80 dark:border-slate-700/60 text-xs sm:text-sm space-y-1.5">
-                <div className="font-semibold text-slate-800 dark:text-slate-200">
-                  <span className="inline-flex items-center gap-1.5">
-                    <Brain className="h-3.5 w-3.5" />
-                    {t('การวินิจฉัยของอาจารย์ที่ปรึกษา:', 'Advisor Evaluation:')}
-                  </span>
-                </div>
-                <p className="text-slate-600 dark:text-slate-300">
-                  {t(
-                    'นักศึกษาประสบวิกฤตทางการเงินกะทันหัน แนะนำทุนฉุกเฉินและ กยศ. แล้วแต่วงเงินไม่พอต่อภาระหนี้สิน จำเป็นต้องทำงานเต็มเวลา',
-                    'Student hit sudden family insolvency; existing emergency micro-grants were insufficient to cover living debts.'
-                  )}
-                </p>
-              </div>
-            </div>
-
-            {/* AUN-QA Intervention Action */}
-            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
-              <span className="font-semibold text-emerald-700 dark:text-emerald-400 block mb-1 flex items-center gap-1.5">
-                <CheckCircle2 className="h-3 w-3" />
-                {t('มาตรการแก้ไข AUN-QA Criteria 6.4:', 'AUN-QA CQI Action:')}
-              </span>
-              <p className="text-slate-600 dark:text-slate-300">
-                {t('จัดตั้ง Emergency Discretionary Relief Fund ระดับสำนักวิชา และจัดสรรตำแหน่ง TA/Student Work-Study', 'Establish Discretionary Emergency Fund & expand internal student work-study jobs.')}
-              </p>
-            </div>
-          </div>
-
-          {/* Theme 4: Family & Physical Health */}
-          <div className="bg-white dark:bg-[#0e1424] border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm hover:border-sky-200 dark:hover:border-sky-900/60 transition-all space-y-4 flex flex-col justify-between">
-            <div className="space-y-2.5">
-              <div className="flex items-center justify-between">
-                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 flex items-center gap-1">
-                  <Heart className="h-3 w-3 text-amber-600 dark:text-amber-400" />
-                  {t('ครอบครัว & สุขภาพกาย', 'Family & Physical Health')}
-                </span>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-100 dark:border-amber-900/40">
-                  {t('เหตุผลหลักการลาพัก', 'Primary Leave Reason')}
-                </span>
-              </div>
-
-              <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                {t('ภาระการดูแลผู้ป่วยที่ภูมิลำเนา & การพักฟื้นจากการผ่าตัด', 'Hometown Caregiving & Surgical Recovery')}
-              </h4>
-
-              {/* Student Voice */}
-              <div className="p-2.5 bg-slate-50/80 dark:bg-slate-800/45 rounded-xl border border-slate-200/80 dark:border-slate-700/70 text-xs sm:text-sm space-y-1.5">
-                <div className="font-semibold text-sky-700 dark:text-sky-300">
-                  <span className="inline-flex items-center gap-1.5">
-                    <Quote className="h-3.5 w-3.5" />
-                    {t('เสียงสะท้อนนักศึกษา (Student Voice):', 'Student Voice:')}
-                  </span>
-                </div>
-                <p className="text-slate-600 dark:text-slate-300 italic leading-6">
-                  "{t(
-                    'ขั้นตอนการยื่นเอกสารขอพักการศึกษาในส่วนกลางค่อนข้างซับซ้อน อยากให้มีระบบออนไลน์ที่เบ็ดเสร็จ และมีคลิปย้อนหลังสำหรับทบทวนเมื่อกลับมาเรียน',
-                    'University leave petition was cumbersome; would love an integrated online petition and lecture recordings to review during hiatus.'
-                  )}"
-                </p>
-              </div>
-
-              {/* Advisor Diagnosis */}
-              <div className="p-2.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200/80 dark:border-slate-700/60 text-xs sm:text-sm space-y-1.5">
-                <div className="font-semibold text-slate-800 dark:text-slate-200">
-                  <span className="inline-flex items-center gap-1.5">
-                    <Brain className="h-3.5 w-3.5" />
-                    {t('การวินิจฉัยของอาจารย์ที่ปรึกษา:', 'Advisor Evaluation:')}
-                  </span>
-                </div>
-                <p className="text-slate-600 dark:text-slate-300">
-                  {t(
-                    'นักศึกษามีผลการเรียนดีและมีเจตนารมณ์จะกลับมาเรียนต่อ วางแผน Study roadmap เทียบโอนรายวิชาเมื่อกลับมาเรียนเรียบร้อย',
-                    'Valid family obligation with solid GPA (3.25); formed re-entry study roadmap for smooth credit integration.'
-                  )}
-                </p>
-              </div>
-            </div>
-
-            {/* AUN-QA Intervention Action */}
-            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
-              <span className="font-semibold text-emerald-700 dark:text-emerald-400 block mb-1 flex items-center gap-1.5">
-                <CheckCircle2 className="h-3 w-3" />
-                {t('มาตรการแก้ไข AUN-QA Criteria 6.4:', 'AUN-QA CQI Action:')}
-              </span>
-              <p className="text-slate-600 dark:text-slate-300">
-                {t('เปิดระบบ One-Stop Digital Petition สำหรับลาพัก และจัดระบบบันทึกเทปบรรยาย (Lecture Archive)', 'Implement One-Stop digital petition & cloud lecture repository for recuperating students.')}
-              </p>
-            </div>
-          </div>
-
-          {/* Theme 5: Career Alignment & Direction */}
-          <div className="bg-white dark:bg-[#0e1424] border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm hover:border-sky-200 dark:hover:border-sky-900/60 transition-all space-y-4 flex flex-col justify-between">
-            <div className="space-y-2.5">
-              <div className="flex items-center justify-between">
-                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 flex items-center gap-1">
-                  <Compass className="h-3 w-3 text-indigo-600 dark:text-indigo-400" />
-                  {t('ความถนัด & เป้าหมายอาชีพ', 'Career Path Alignment')}
-                </span>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-900/40">
-                  {t('สาเหตุการย้ายสถาบัน', 'Transfer Reason')}
-                </span>
-              </div>
-
-              <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                {t('ความสนใจเบนเข็มไปทาง Digital Design / Creative Arts', 'Pivot Towards Digital Design / Creative Tech')}
-              </h4>
-
-              {/* Student Voice */}
-              <div className="p-2.5 bg-slate-50/80 dark:bg-slate-800/45 rounded-xl border border-slate-200/80 dark:border-slate-700/70 text-xs sm:text-sm space-y-1.5">
-                <div className="font-semibold text-sky-700 dark:text-sky-300">
-                  <span className="inline-flex items-center gap-1.5">
-                    <Quote className="h-3.5 w-3.5" />
-                    {t('เสียงสะท้อนนักศึกษา (Student Voice):', 'Student Voice:')}
-                  </span>
-                </div>
-                <p className="text-slate-600 dark:text-slate-300 italic leading-6">
-                  "{t(
-                    'ควรมี Track หรือวิชาเลือกด้าน Design / UX/UI ที่เน้นปฏิบัติสำหรับคนที่ไม่ถนัดสาย Coding เชิงทฤษฎี',
-                    'Curriculum should offer practical UX/UI or Design tracks for students less interested in purely theoretical coding.'
-                  )}"
-                </p>
-              </div>
-
-              {/* Advisor Diagnosis */}
-              <div className="p-2.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200/80 dark:border-slate-700/60 text-xs sm:text-sm space-y-1.5">
-                <div className="font-semibold text-slate-800 dark:text-slate-200">
-                  <span className="inline-flex items-center gap-1.5">
-                    <Brain className="h-3.5 w-3.5" />
-                    {t('การวินิจฉัยของอาจารย์ที่ปรึกษา:', 'Advisor Evaluation:')}
-                  </span>
-                </div>
-                <p className="text-slate-600 dark:text-slate-300">
-                  {t(
-                    'เป้าหมายอาชีพเปลี่ยนไปสายงานด้านสร้างสรรค์อย่างชัดเจน จึงช่วยประสานงานเรื่องเทียบโอนหน่วยกิตวิชาศึกษาทั่วไป',
-                    'Clear redirection toward media arts; assisted student with general education credit transfer syllabus verification.'
-                  )}
-                </p>
-              </div>
-            </div>
-
-            {/* AUN-QA Intervention Action */}
-            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
-              <span className="font-semibold text-emerald-700 dark:text-emerald-400 block mb-1 flex items-center gap-1.5">
-                <CheckCircle2 className="h-3 w-3" />
-                {t('มาตรการแก้ไข AUN-QA Criteria 6.4:', 'AUN-QA CQI Action:')}
-              </span>
-              <p className="text-slate-600 dark:text-slate-300">
-                {t('ปรับปรุงหลักสูตรให้มี Micro-credentials / Minor Degree ด้าน UX/UI และ Creative Tech', 'Introduce Flexible Minor Tracks in UX/UI and Creative Media Tech.')}
-              </p>
-            </div>
-          </div>
+            )
+          })}
 
           {/* Executive Synthesis Summary Card */}
           <div className="bg-white dark:bg-[#0e1424] rounded-2xl p-4 sm:p-5 shadow-sm space-y-4 flex flex-col justify-between border border-slate-200/80 dark:border-slate-800 hover:border-sky-200 dark:hover:border-sky-900/60 transition-all">
-            <div className="space-y-2">
+            <div className="space-y-2.5">
               <div className="flex items-center gap-2 text-sky-700 dark:text-sky-300 font-semibold text-xs">
                 <Lightbulb className="h-4 w-4 text-amber-400" />
                 {t('บทสรุปข้อเสนอแนะเชิงกลยุทธ์ (Chair Executive Action)', 'Chair Executive Strategic Action')}
               </div>
-              <h4 className="text-base font-semibold text-slate-900 dark:text-slate-100 leading-snug">
-                {t('3 มาตรการเร่งด่วนเพื่อยกระดับอัตราคงอยู่ (Retention Rate)', '3 Priority Actions to Elevate Retention')}
+              <h4 className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 leading-snug">
+                {t('ภาพรวมสถิติและมาตรการยกระดับอัตราคงอยู่', 'Cohort Attrition Summary & Action Priorities')}
               </h4>
-              <ul className="space-y-3 text-sm text-slate-700 dark:text-slate-300 leading-6">
+
+              <div className="grid grid-cols-2 gap-2 py-1">
+                <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/70 dark:border-slate-700/60">
+                  <p className="text-[10px] text-slate-400 uppercase font-semibold">{t('เคสขอออก/พักทั้งหมด', 'Total Exit Cases')}</p>
+                  <p className="text-base font-bold text-slate-900 dark:text-slate-100 mt-0.5">{store.exitCases.length} {t('ราย', 'cases')}</p>
+                </div>
+                <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/70 dark:border-slate-700/60">
+                  <p className="text-[10px] text-slate-400 uppercase font-semibold">{t('เสียงสะท้อนนักศึกษา', 'Student Voices')}</p>
+                  <p className="text-base font-bold text-sky-600 dark:text-sky-400 mt-0.5">{store.studentVoiceResponses.length} {t('ชุด', 'surveys')}</p>
+                </div>
+              </div>
+
+              <ul className="space-y-2 text-xs text-slate-700 dark:text-slate-300 leading-relaxed pt-1">
                 <li className="flex items-start gap-2">
-                  <span className="text-sky-600 dark:text-sky-400 font-semibold">1.</span>
-                  <span>{t('จัดค่ายปรับพื้นฐานการเขียนโค้ด (Coding Boot Camp) ก่อนเปิดเทอม 1', 'Mandate pre-sessional coding boot camp before Term 1 starts.')}</span>
+                  <span className="text-sky-600 dark:text-sky-400 font-bold">1.</span>
+                  <span>{t('จัดค่ายปรับพื้นฐานการเขียนโค้ด (Coding Boot Camp) เสริมทักษะนักศึกษาปี 1', 'Mandate pre-sessional coding boot camp for first-year cohorts.')}</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-sky-600 dark:text-sky-400 font-semibold">2.</span>
-                  <span>{t('จัดระบบคัดกรอง Early Warning แจ้งเตือนเมื่อนักศึกษาเริ่มส่งงานช้าใน 4 สัปดาห์แรก', 'Trigger Early Warning interventions within first 4 weeks.')}</span>
+                  <span className="text-sky-600 dark:text-sky-400 font-bold">2.</span>
+                  <span>{t('เชื่อมต่อระบบ Early Warning เพื่อแจ้งเตือนอาจารย์ที่ปรึกษาเมื่อพบสัญญาณขาดเรียน', 'Trigger proactive Early Warning advising on attendance drop.')}</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-sky-600 dark:text-sky-400 font-semibold">3.</span>
-                  <span>{t('ตั้งคณะทำงานติดตามเด็กที่ขอพักการศึกษา ให้กลับมารายงานตัวตามกำหนด 100%', 'Follow up monthly with students on leave to guarantee return.')}</span>
+                  <span className="text-sky-600 dark:text-sky-400 font-bold">3.</span>
+                  <span>{t('ติดตามนักศึกษาที่ขอพักการศึกษาให้กลับมารายงานตัวตามแผนการศึกษา', 'Provide dedicated study roadmaps for students on hiatus.')}</span>
                 </li>
               </ul>
             </div>
+
             <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
               <span>{t('เป้าหมาย Retention: > 92%', 'Retention Target: > 92%')}</span>
               <span className="text-emerald-700 dark:text-emerald-400 font-semibold">AUN-QA Criterion 8</span>
