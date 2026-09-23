@@ -56,17 +56,13 @@ describe('Advisor Pages Audit & Resilience Tests', () => {
     expect(screen.getByText(/เพิ่มนักศึกษาในความดูแล|Add Advisee/i)).toBeInTheDocument()
   })
 
-  it('renders AdvisingSessions and opens request detail modal safely even with string attachments', () => {
+  it('renders AdvisingSessions and renders requests table safely', () => {
     renderWithProviders(<AdvisingSessions />)
     expect(screen.getByText(/รายการการให้คำปรึกษาทางวิชาการ|Advising Sessions/i)).toBeInTheDocument()
 
-    // Find and click any view details button
-    const viewButtons = screen.getAllByRole('button', { name: /ดูรายละเอียด|View/i })
-    expect(viewButtons.length).toBeGreaterThan(0)
-    fireEvent.click(viewButtons[0])
-
-    // Should open modal without crashing
-    expect(screen.getByText(/รายละเอียดคำร้องของนักศึกษา|Student Request Details/i)).toBeInTheDocument()
+    // Table should render student requests
+    expect(screen.getByText(/หัวข้อและประเด็นที่ปรึกษา|Topic & Details/i)).toBeInTheDocument()
+    expect(screen.getByText(/วันและเวลานัดหมาย|Meeting Time/i)).toBeInTheDocument()
   })
 
   it('renders ExitCases and opens case detail modal safely without throwing on timeline items', () => {

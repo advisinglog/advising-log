@@ -1,12 +1,15 @@
+// ============================================================
+// Advisor — Advising Sessions (Minimal & Streamlined)
+// ============================================================
+
 import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useStore } from '@/data/mock-store'
 import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { PageHeader, Tabs, DataTable, StatusBadge, Button, Modal, Card, GoogleCalendarButton } from '@/components/ui'
-import type { AdvisingRequest, RequestProgress } from '@/types'
-import { Calendar, CheckCircle2, Eye, TrendingUp, Clock } from 'lucide-react'
-
+import { PageHeader, Tabs, DataTable, StatusBadge, Button, Modal, GoogleCalendarButton } from '@/components/ui'
+import type { AdvisingRequest } from '@/types'
+import { Calendar, CheckCircle2, Paperclip, User } from 'lucide-react'
 import { isAdvisorMatch } from '@/utils/advisorUtils'
 
 export default function AdvisingSessions() {
@@ -14,53 +17,26 @@ export default function AdvisingSessions() {
   const store = useStore()
   const { addToast } = useToast()
   const { t, getCategoryLabel } = useLanguage()
+
   const [tab, setTab] = useState('pending')
   const [selectedReq, setSelectedReq] = useState<AdvisingRequest | null>(null)
-  const [detailReq, setDetailReq] = useState<AdvisingRequest | null>(null)
+
   const [showSchedule, setShowSchedule] = useState(false)
   const [schedDate, setSchedDate] = useState('')
   const [schedTime, setSchedTime] = useState('')
   const [schedLoc, setSchedLoc] = useState('')
-  const [showProgressModal, setShowProgressModal] = useState(false)
-  const [progressValue, setProgressValue] = useState(0)
-  const [progressNotes, setProgressNotes] = useState('')
 
   if (!currentUser) return null
 
   const myRequests = store.requests.filter(r => isAdvisorMatch(r.advisorId, currentUser, store.users))
-  const myProgress = store.requestProgress.filter(rp => isAdvisorMatch(rp.advisorId, currentUser, store.users))
 
-  function handleUpdateProgress() {
-    if (!selectedReq || !currentUser) return
-    store.updateRequestProgress(
-      `${selectedReq.id}-progress`,
-      progressValue,
-      progressNotes
-    )
-    store.addAuditLog({
-      userId: currentUser.id,
-      userName: currentUser.name,
-      userRole: 'advisor',
-      action: 'followup_completed' as any,
-      description: `Updated progress for request ${selectedReq.id}: ${progressValue}%`,
-      targetId: selectedReq.id,
-    })
-    addToast('success', t('อัปเดตความคืบหน้าแล้ว', 'Progress Updated'), t('บันทึกความคืบหน้าคำร้องเรียบร้อยแล้ว', 'Progress has been recorded successfully.'))
-    setShowProgressModal(false)
-    setSelectedReq(null)
-    setProgressValue(0)
-    setProgressNotes('')
-  }
-
-  function getProgressForRequest(requestId: string): RequestProgress | undefined {
-    return myProgress.find(rp => rp.requestId === requestId)
-  }
   const filterMap: Record<string, string[]> = {
     pending: ['requested', 'pending'],
     upcoming: ['scheduled'],
     completed: ['completed', 'closed'],
     cancelled: ['cancelled'],
   }
+
   const filtered = myRequests.filter(r => filterMap[tab]?.includes(r.status))
 
   const tabs = [
@@ -69,11 +45,6 @@ export default function AdvisingSessions() {
     { value: 'completed', label: t('เสร็จสิ้นแล้ว', 'Completed'), count: myRequests.filter(r => ['completed', 'closed'].includes(r.status)).length },
     { value: 'cancelled', label: t('ยกเลิก', 'Cancelled'), count: myRequests.filter(r => r.status === 'cancelled').length },
   ]
-
-  function handleAccept(req: AdvisingRequest) {
-    store.updateRequestStatus(req.id, 'pending')
-    addToast('success', t('ตอบรับคำร้องแล้ว', 'Request Accepted'), t('คุณสามารถกำหนดเวลานัดหมายกับนักศึกษาได้ทันที', 'You can now schedule an appointment with the student.'))
-  }
 
   function handleSchedule() {
     if (!selectedReq || !schedDate || !schedTime || !schedLoc) return
@@ -106,7 +77,9 @@ export default function AdvisingSessions() {
     addToast('success', t('นัดหมายสำเร็จ', 'Appointment Scheduled'), `${schedDate} · ${schedTime}`)
     setShowSchedule(false)
     setSelectedReq(null)
-    setSchedDate(''); setSchedTime(''); setSchedLoc('')
+    setSchedDate('')
+    setSchedTime('')
+    setSchedLoc('')
   }
 
   function handleCancel(req: AdvisingRequest) {
@@ -130,59 +103,89 @@ export default function AdvisingSessions() {
       render: (r: AdvisingRequest) => {
         const s = store.users.find(u => u.id === r.studentId)
         return (
-          <div>
-            <p className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100">{s?.name}</p>
-            <p className="text-[11px] font-mono text-slate-400 dark:text-slate-500">{s?.code}</p>
+          <div className="flex items-center gap-3">
+            <div className="h-9 w-9 rounded-full bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-800 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
+              <User className="h-4 w-4" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{s?.name || '-'}</p>
+              <p className="text-[11px] font-mono text-slate-500 dark:text-slate-400 mt-0.5">{s?.code || '-'}</p>
+            </div>
           </div>
         )
       },
     },
     {
-      key: 'category',
-      header: t('หมวดหมู่', 'Category'),
-      render: (r: AdvisingRequest) => (
-        <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
-          {getCategoryLabel(r.category)}
-        </span>
-      ),
+      key: 'topic',
+      header: t('หัวข้อและประเด็นที่ปรึกษา', 'Topic & Details'),
+      render: (r: AdvisingRequest) => {
+        const rawAttachments = r.attachments
+        const attachmentsList: string[] = Array.isArray(rawAttachments)
+          ? rawAttachments
+          : typeof rawAttachments === 'string'
+            ? (() => { try { const p = JSON.parse(rawAttachments); return Array.isArray(p) ? p : [] } catch { return [] } })()
+            : []
+
+        return (
+          <div className="max-w-md">
+            <div className="flex items-center gap-2 flex-wrap mb-1.5">
+              <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-sky-50 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300 ring-1 ring-sky-700/10 dark:ring-sky-300/20">
+                {getCategoryLabel(r.category)}
+              </span>
+              {r.subCategory && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-medium">
+                  {r.subCategory}
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-3 leading-relaxed">
+              {r.details || '-'}
+            </p>
+            {attachmentsList.length > 0 && (
+              <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                {attachmentsList.map(file => (
+                  <span key={file} className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[11px] text-slate-600 dark:text-slate-300 font-medium">
+                    <Paperclip className="h-3 w-3 text-slate-400" />
+                    {file}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        )
+      },
     },
     {
-      key: 'date',
-      header: t('วันที่ยื่นคำร้อง', 'Requested Date'),
-      render: (r: AdvisingRequest) => <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">{r.createdAt}</span>,
-    },
-    {
-      key: 'preferred',
-      header: t('วัน-เวลาที่ประสงค์ขอเข้าพบ', 'Requested Slot'),
-      render: (r: AdvisingRequest) => (
-        <span className="text-xs text-slate-600 dark:text-slate-300">
-          {r.preferredDate} · {r.preferredTime}
-        </span>
-      ),
+      key: 'meetingSlot',
+      header: t('วันและเวลานัดหมาย', 'Meeting Time'),
+      render: (r: AdvisingRequest) => {
+        const apt = store.appointments.find(a => a.requestId === r.id && a.status === 'scheduled')
+        if (apt) {
+          return (
+            <div className="inline-flex flex-col bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/30 rounded-lg px-3 py-2">
+              <p className="text-xs font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
+                <Calendar className="h-3.5 w-3.5" />
+                {apt.scheduledDate} · {apt.scheduledTime}
+              </p>
+              <p className="text-[11px] text-emerald-600/80 dark:text-emerald-400/80 mt-1 font-medium">{apt.location}</p>
+            </div>
+          )
+        }
+        return (
+          <div className="inline-flex flex-col bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 rounded-lg px-3 py-2">
+            <p className="text-xs text-slate-700 dark:text-slate-300 font-semibold flex items-center gap-1.5">
+              <Calendar className="h-3.5 w-3.5 text-slate-400" />
+              {r.preferredDate} · {r.preferredTime}
+            </p>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 font-medium">{t('เวลาที่นักศึกษาเสนอ', 'Proposed slot')}</p>
+          </div>
+        )
+      },
     },
     {
       key: 'status',
       header: t('สถานะ', 'Status'),
       render: (r: AdvisingRequest) => <StatusBadge status={r.status} />,
-    },
-    {
-      key: 'progress',
-      header: t('ความคืบหน้า', 'Progress'),
-      render: (r: AdvisingRequest) => {
-        const rp = getProgressForRequest(r.id)
-        if (!rp) return <span className="text-xs text-slate-400 dark:text-slate-500">—</span>
-        return (
-          <div className="flex items-center gap-2">
-            <div className="w-16 h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-sky-500 rounded-full transition-all"
-                style={{ width: `${rp.progress}%` }}
-              />
-            </div>
-            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">{rp.progress}%</span>
-          </div>
-        )
-      },
     },
     {
       key: 'actions',
@@ -191,51 +194,46 @@ export default function AdvisingSessions() {
         const s = store.users.find(u => u.id === r.studentId)
         const apt = store.appointments.find(a => a.requestId === r.id && a.status === 'scheduled')
         return (
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <Button size="sm" variant="ghost" onClick={() => setDetailReq(r)}>
-              <Eye className="h-3 w-3 mr-1" /> {t('ดูรายละเอียด', 'View')}
-            </Button>
+          <div className="flex items-center gap-2 flex-wrap">
             {r.status === 'scheduled' && (
-              <GoogleCalendarButton
-                event={{
-                  title: `Advising Meeting: ${s?.name || r.studentId} & ${currentUser.name}`,
-                  description: `Advising Topic: ${getCategoryLabel(r.category)}\nStudent Code: ${s?.code || ''}\nLocation: ${apt?.location || 'Office / Online'}\nDetails: ${r.details}`,
-                  location: apt?.location || 'Office / Online',
-                  date: apt?.scheduledDate || r.preferredDate,
-                  time: apt?.scheduledTime || r.preferredTime,
-                  attendeeEmails: [s?.email || '', currentUser.email],
-                }}
-                label={t('ปฏิทิน & เชิญ', 'Invite & Calendar')}
-                size="sm"
-                variant="secondary"
-              />
+              <>
+                <GoogleCalendarButton
+                  event={{
+                    title: `Advising Meeting: ${s?.name || r.studentId} & ${currentUser.name}`,
+                    description: `Advising Topic: ${getCategoryLabel(r.category)}\nStudent Code: ${s?.code || ''}\nLocation: ${apt?.location || 'Office / Online'}\nDetails: ${r.details}`,
+                    location: apt?.location || 'Office / Online',
+                    date: apt?.scheduledDate || r.preferredDate,
+                    time: apt?.scheduledTime || r.preferredTime,
+                    attendeeEmails: [s?.email || '', currentUser.email],
+                  }}
+                  label={t('ปฏิทิน', 'Calendar')}
+                  size="sm"
+                  variant="secondary"
+                />
+                <Button size="sm" variant="primary" onClick={() => handleComplete(r)}>
+                  <CheckCircle2 className="h-3 w-3 mr-1" /> {t('เสร็จสิ้น', 'Complete')}
+                </Button>
+              </>
             )}
-            {r.status !== 'completed' && r.status !== 'cancelled' && r.status !== 'closed' && (
+
+            {(r.status === 'requested' || r.status === 'pending') && (
               <Button
                 size="sm"
-                variant="secondary"
-                onClick={() => { setSelectedReq(r); setShowProgressModal(true) }}
+                variant="primary"
+                onClick={() => {
+                  setSelectedReq(r)
+                  setSchedDate(r.preferredDate || '')
+                  setSchedTime(r.preferredTime || '')
+                  setSchedLoc('Faculty Office S2-301')
+                  setShowSchedule(true)
+                }}
               >
-                <TrendingUp className="h-3 w-3 mr-1" /> {t('อัปเดตความคืบหน้า', 'Update Progress')}
+                <Calendar className="h-3 w-3 mr-1" /> {t('นัดหมาย', 'Schedule')}
               </Button>
             )}
-            {r.status === 'requested' && (
-              <Button size="sm" variant="primary" onClick={() => handleAccept(r)}>
-                {t('ตอบรับ', 'Accept')}
-              </Button>
-            )}
-            {(r.status === 'requested' || r.status === 'pending') && (
-              <Button size="sm" variant="secondary" onClick={() => { setSelectedReq(r); setShowSchedule(true) }}>
-                <Calendar className="h-3 w-3 mr-1 text-sky-600 dark:text-sky-400" /> {t('นัดหมาย', 'Schedule')}
-              </Button>
-            )}
-            {r.status === 'scheduled' && (
-              <Button size="sm" variant="primary" onClick={() => handleComplete(r)}>
-                <CheckCircle2 className="h-3 w-3 mr-1" /> {t('เสร็จสิ้น', 'Complete')}
-              </Button>
-            )}
+
             {r.status !== 'completed' && r.status !== 'cancelled' && r.status !== 'closed' && (
-              <Button size="sm" variant="ghost" onClick={() => handleCancel(r)}>
+              <Button size="sm" variant="ghost" onClick={() => handleCancel(r)} className="text-slate-400 hover:text-rose-600 dark:hover:text-rose-400">
                 {t('ยกเลิก', 'Cancel')}
               </Button>
             )}
@@ -251,109 +249,15 @@ export default function AdvisingSessions() {
         title={t('รายการการให้คำปรึกษาทางวิชาการ', 'Advising Sessions')}
         description={t('ตรวจสอบคำร้องของนักศึกษา กำหนดเวลานัดหมายเข้าพบ และบันทึกผลการให้คำปรึกษา', 'Review student advising requests, schedule appointments, and mark sessions complete.')}
       />
+
       <Tabs tabs={tabs} active={tab} onChange={setTab} />
+
       <DataTable
         columns={columns}
         data={filtered}
-        onRowClick={setDetailReq}
         emptyMessage={t(`ไม่พบรายการในสถานะนี้`, `No ${tab} sessions found.`)}
       />
 
-      {/* Request Details Modal */}
-      <Modal
-        isOpen={!!detailReq}
-        onClose={() => setDetailReq(null)}
-        title={t('รายละเอียดคำร้องของนักศึกษา', 'Student Request Details')}
-        size="lg"
-      >
-        {detailReq && (() => {
-          const student = store.users.find(u => u.id === detailReq.studentId)
-          const appointment = store.appointments.find(a => a.requestId === detailReq.id)
-          return (
-            <div className="space-y-5">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                <div>
-                  <span className="text-slate-400 dark:text-slate-500 block mb-1">{t('นักศึกษา', 'Student')}</span>
-                  <p className="font-semibold text-slate-900 dark:text-slate-100">{student?.name || '-'} ({student?.code || '-'})</p>
-                </div>
-                <div>
-                  <span className="text-slate-400 dark:text-slate-500 block mb-1">{t('รหัสคำร้อง', 'Request ID')}</span>
-                  <p className="font-mono font-semibold text-slate-900 dark:text-slate-100">{detailReq.id}</p>
-                </div>
-                <div>
-                  <span className="text-slate-400 dark:text-slate-500 block mb-1">{t('หมวดหมู่', 'Category')}</span>
-                  <p className="font-semibold text-slate-900 dark:text-slate-100">{getCategoryLabel(detailReq.category)}</p>
-                  {detailReq.subCategory && <p className="text-slate-500 dark:text-slate-400 mt-0.5">{detailReq.subCategory}</p>}
-                </div>
-                <div>
-                  <span className="text-slate-400 dark:text-slate-500 block mb-1">{t('สถานะ', 'Status')}</span>
-                  <StatusBadge status={detailReq.status} />
-                </div>
-              </div>
-
-              <div>
-                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 block mb-1.5">{t('รายละเอียดที่นักศึกษาเขียน', 'Student Description')}</span>
-                <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap bg-slate-50/70 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 rounded-xl p-4">
-                  {detailReq.details}
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs border-t border-slate-100 dark:border-slate-800 pt-4">
-                <div>
-                  <span className="text-slate-400 dark:text-slate-500 block mb-1">{t('วันที่ยื่นคำร้อง', 'Submitted')}</span>
-                  <p className="font-medium text-slate-700 dark:text-slate-300">{detailReq.createdAt}</p>
-                </div>
-                <div>
-                  <span className="text-slate-400 dark:text-slate-500 block mb-1">{t('วันที่/เวลาที่ประสงค์ขอเข้าพบ', 'Preferred Meeting')}</span>
-                  <p className="font-medium text-slate-700 dark:text-slate-300">{detailReq.preferredDate} · {detailReq.preferredTime}</p>
-                </div>
-                {appointment && (
-                  <div className="sm:col-span-2 p-3 rounded-xl bg-sky-50/70 dark:bg-sky-950/40 border border-sky-100 dark:border-sky-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div>
-                      <span className="text-[11px] text-sky-800 dark:text-sky-300 font-bold block mb-0.5">{t('นัดหมายที่กำหนดแล้ว', 'Scheduled Appointment')}</span>
-                      <p className="font-semibold text-xs text-slate-800 dark:text-slate-200">{appointment.scheduledDate} · {appointment.scheduledTime} · {appointment.location}</p>
-                    </div>
-                    <GoogleCalendarButton
-                      event={{
-                        title: `Advising Meeting: ${student?.name || detailReq.studentId} & ${currentUser.name}`,
-                        description: `Advising Topic: ${getCategoryLabel(detailReq.category)}\nLocation: ${appointment.location}\nDetails: ${detailReq.details}`,
-                        location: appointment.location,
-                        date: appointment.scheduledDate,
-                        time: appointment.scheduledTime,
-                        attendeeEmails: [student?.email || '', currentUser.email],
-                      }}
-                      size="sm"
-                      variant="primary"
-                    />
-                  </div>
-                )}
-              </div>
-
-              {(() => {
-                const rawAttachments = detailReq.attachments
-                const attachmentsList: string[] = Array.isArray(rawAttachments)
-                  ? rawAttachments
-                  : typeof rawAttachments === 'string'
-                    ? (() => { try { const p = JSON.parse(rawAttachments); return Array.isArray(p) ? p : [] } catch { return [] } })()
-                    : []
-                if (attachmentsList.length === 0) return null
-                return (
-                  <div>
-                    <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 block mb-2">{t('เอกสารแนบ', 'Attachments')}</span>
-                    <div className="flex flex-wrap gap-2">
-                      {attachmentsList.map(file => (
-                        <span key={file} className="px-2.5 py-1.5 rounded-lg bg-sky-50 dark:bg-sky-950/50 border border-sky-100 dark:border-sky-800 text-xs text-sky-700 dark:text-sky-300 font-medium">
-                          {file}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )
-              })()}
-            </div>
-          )
-        })()}
-      </Modal>
 
       {/* Schedule Modal */}
       <Modal isOpen={showSchedule} onClose={() => setShowSchedule(false)} title={t('นัดหมายเวลาเข้าพบอาจารย์ที่ปรึกษา', 'Schedule Advising Appointment')} size="sm">
@@ -392,86 +296,6 @@ export default function AdvisingSessions() {
           </div>
         </div>
       </Modal>
-
-      {/* Progress History Section */}
-      {myProgress.length > 0 && (
-        <div className="mt-6 space-y-4">
-          <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-            <Clock className="h-4 w-4 text-sky-600 dark:text-sky-400" /> {t('ประวัติความคืบหน้าคำร้อง', 'Request Progress History')}
-          </h3>
-          {myProgress.map(rp => {
-            const request = myRequests.find(r => r.id === rp.requestId)
-            if (!request) return null
-            return (
-              <Card key={rp.id} className="p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <div>
-                    <p className="text-xs font-semibold text-slate-900 dark:text-slate-100">{getCategoryLabel(request.category)}</p>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400">{store.users.find(u => u.id === request.studentId)?.name} · {rp.createdAt}</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-20 h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-sky-500 rounded-full"
-                        style={{ width: `${rp.progress}%` }}
-                      />
-                    </div>
-                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{rp.progress}%</span>
-                  </div>
-                </div>
-                {rp.notes && (
-                  <p className="text-xs text-slate-600 dark:text-slate-400 italic">{rp.notes}</p>
-                )}
-              </Card>
-            )
-          })}
-        </div>
-      )}
-
-      {/* Progress Update Modal */}
-      <Modal isOpen={showProgressModal} onClose={() => { setShowProgressModal(false); setSelectedReq(null) }} title={t('อัปเดตความคืบหน้าคำร้อง', 'Update Request Progress')} size="md">
-        <div className="space-y-4">
-          <div className="p-3 bg-sky-50/70 dark:bg-sky-950/40 rounded-xl border border-sky-100 dark:border-sky-800">
-            <p className="text-xs font-semibold text-sky-900 dark:text-sky-200 mb-1">{t('คำร้อง', 'Request')}</p>
-            <p className="text-xs text-slate-700 dark:text-slate-300">{getCategoryLabel(selectedReq?.category || '')}</p>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">{store.users.find(u => u.id === selectedReq?.studentId)?.name}</p>
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">{t('ความคืบหน้า (%)', 'Progress (%)')}</label>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={progressValue}
-              onChange={e => setProgressValue(Number(e.target.value))}
-              className="w-full"
-            />
-            <div className="flex justify-between mt-1">
-              <span className="text-[11px] text-slate-500 dark:text-slate-400">0%</span>
-              <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{progressValue}%</span>
-              <span className="text-[11px] text-slate-500 dark:text-slate-400">100%</span>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">{t('บันทึกเพิ่มเติม', 'Notes')}</label>
-            <textarea
-              value={progressNotes}
-              onChange={e => setProgressNotes(e.target.value)}
-              rows={3}
-              placeholder={t('บันทึกสิ่งที่ทำไป หรือปัญหาที่พบ...', 'Record what you have done or any issues encountered...')}
-              className="w-full px-3.5 py-2 text-xs sm:text-sm border border-slate-200/90 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 resize-none"
-            />
-          </div>
-
-          <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
-            <Button variant="secondary" onClick={() => { setShowProgressModal(false); setSelectedReq(null) }}>{t('ยกเลิก', 'Cancel')}</Button>
-            <Button variant="primary" onClick={handleUpdateProgress}>{t('บันทึก', 'Save')}</Button>
-          </div>
-        </div>
-      </Modal>
     </div>
   )
 }
-

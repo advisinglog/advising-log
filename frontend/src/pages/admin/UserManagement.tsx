@@ -273,10 +273,10 @@ export default function UserManagement() {
     },
     {
       key: 'code',
-      header: t('รหัสประจำตัว', 'User ID / Code'),
+      header: t('รหัสนักศึกษา', 'Student ID'),
       render: (u: User) => (
         <span className="text-xs font-mono text-slate-600 dark:text-slate-300 font-medium">
-          {u.code}
+          {u.role === 'student' ? u.code : '—'}
         </span>
       ),
     },

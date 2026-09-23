@@ -622,16 +622,14 @@ export function AdvisorCohortBanner({
   advisor,
   adviseeCount,
   school,
-  semester,
 }: {
-  advisor: { name: string; code: string; email: string; department?: string; avatar?: string }
+  advisor: { name: string; code?: string; email: string; department?: string; avatar?: string }
   adviseeCount: number
   school?: string
   semester?: string
 }) {
   const { t } = useLanguage()
   const displaySchool = school || advisor.department || t('สำนักวิชาเทคโนโลยีดิจิทัลประยุกต์ (ADT)', 'School of Applied Digital Technology (ADT)')
-  const displaySemester = semester || t('1/2569', 'Semester 1 / Academic Year 2026')
 
   return (
     <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-premium p-4 sm:p-5 md:p-6 mb-4 sm:mb-6 relative overflow-hidden">
@@ -640,18 +638,10 @@ export function AdvisorCohortBanner({
         <div className="flex items-center gap-3 sm:gap-4">
           <UserAvatar name={advisor.name} avatar={advisor.avatar} size="lg" />
           <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-1">
-              <span className="px-2 py-0.5 rounded-md bg-sky-100/70 dark:bg-sky-950/60 text-sky-800 dark:text-sky-300 text-[10px] sm:text-[11px] font-mono font-bold border border-sky-200/50 dark:border-sky-800">
-                {advisor.code}
-              </span>
-              <span className="text-[10px] sm:text-xs text-slate-400 dark:text-slate-400 font-medium">
-                {t('อาจารย์ที่ปรึกษาทางวิชาการ', 'Academic Advisor')} · {displaySemester}
-              </span>
-            </div>
             <h2 className="text-base sm:text-lg md:text-xl font-bold text-slate-900 dark:text-slate-100 leading-tight truncate">
               {advisor.name}
             </h2>
-            <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-medium truncate">
+            <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium truncate">
               {displaySchool}
             </p>
           </div>
