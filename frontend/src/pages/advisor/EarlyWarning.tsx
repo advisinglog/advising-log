@@ -257,8 +257,8 @@ export default function EarlyWarning() {
                 className="w-full px-3.5 py-2 text-xs sm:text-sm border border-slate-200/90 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
               >
                 <option value="">{t('-- เลือกประเภท --', 'Select type')}</option>
-                {EARLY_WARNING_TYPES.map(t => (
-                  <option key={t.value} value={t.value}>{t.label}</option>
+                {EARLY_WARNING_TYPES.map(wt => (
+                  <option key={wt.value} value={wt.value}>{wt.label}</option>
                 ))}
               </select>
             </div>
