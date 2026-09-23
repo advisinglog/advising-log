@@ -42,16 +42,28 @@ type VoiceScoreTone = 'sky' | 'emerald' | 'violet' | 'amber'
 function VoiceScoreCard({
   label,
   value,
+  score,
   icon,
 }: {
   label: string
   value: string
+  score: number
   icon: ReactNode
   tone?: VoiceScoreTone
 }) {
+  const pct = Math.min(100, Math.max(0, (score / 5) * 100))
+  const barColor =
+    score >= 4
+      ? 'bg-emerald-500'
+      : score >= 3
+        ? 'bg-sky-500'
+        : score > 0
+          ? 'bg-amber-400'
+          : 'bg-slate-200 dark:bg-slate-700'
+
   return (
     <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#0e1424] p-4 shadow-sm hover:border-sky-300 dark:hover:border-sky-800 transition-all">
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 mb-3">
         <div className="h-10 w-10 rounded-xl border border-sky-100 dark:border-sky-900/50 bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0">
           {icon}
         </div>
@@ -63,6 +75,12 @@ function VoiceScoreCard({
             {label}
           </div>
         </div>
+      </div>
+      <div className="h-1.5 w-full rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+        <div
+          className={`h-full rounded-full transition-all duration-500 ${barColor}`}
+          style={{ width: `${pct}%` }}
+        />
       </div>
     </div>
   )
@@ -662,30 +680,35 @@ export default function QADashboard() {
               <VoiceScoreCard
                 label={t('ความพึงพอใจต่อหลักสูตร', 'Curriculum Score')}
                 value={`${avgCurriculum} / 5`}
+                score={parseFloat(avgCurriculum)}
                 icon={<Star className="h-5 w-5" />}
                 tone="sky"
               />
               <VoiceScoreCard
                 label={t('คุณภาพการสอน', 'Teaching Quality')}
                 value={`${avgTeaching} / 5`}
+                score={parseFloat(avgTeaching)}
                 icon={<Star className="h-5 w-5" />}
                 tone="sky"
               />
               <VoiceScoreCard
                 label={t('การดูแลของอาจารย์ที่ปรึกษา', 'Advisor Mentorship')}
                 value={`${avgAdvisor} / 5`}
+                score={parseFloat(avgAdvisor)}
                 icon={<Star className="h-5 w-5" />}
                 tone="emerald"
               />
               <VoiceScoreCard
                 label={t('การบริการและสิ่งอำนวยความสะดวก', 'University Services & Facilities')}
                 value={`${avgServices} / 5`}
+                score={parseFloat(avgServices)}
                 icon={<Building2 className="h-5 w-5" />}
                 tone="amber"
               />
               <VoiceScoreCard
                 label={t('ประสบการณ์ภาพรวม', 'Overall Experience')}
                 value={`${avgOverall} / 5`}
+                score={parseFloat(avgOverall)}
                 icon={<Sparkles className="h-5 w-5" />}
                 tone="violet"
               />
