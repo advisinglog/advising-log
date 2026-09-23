@@ -22,7 +22,6 @@ import {
   ScrollText,
   GraduationCap,
   X,
-  Sparkles,
   MessageSquareHeart,
   Bot,
 } from 'lucide-react'
@@ -140,14 +139,6 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
             </NavLink>
           ))}
         </nav>
-
-        {/* Footer info */}
-        <div className="p-4 border-t border-slate-100 dark:border-slate-800/80 text-[11px] text-slate-400 dark:text-slate-500 flex items-center justify-between">
-          <span className="font-medium">AdvisingLog v2.1</span>
-          <span className="inline-flex items-center gap-1 font-semibold text-sky-600 dark:text-sky-400">
-            <Sparkles className="h-3 w-3" /> Online
-          </span>
-        </div>
       </aside>
     </>
   )

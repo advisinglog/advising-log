@@ -7,7 +7,7 @@ import { useStore } from '@/data/mock-store'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/contexts/ToastContext'
-import { PageHeader, Card, StatusBadge, Timeline, EmptyState, Button, Modal, GoogleCalendarButton } from '@/components/ui'
+import { PageHeader, Card, StatusBadge, EmptyState, Button, Modal, GoogleCalendarButton } from '@/components/ui'
 import { ArrowLeft, Calendar, Paperclip, FileText, CheckCircle, X } from 'lucide-react'
 import { useState } from 'react'
 
@@ -61,35 +61,6 @@ export default function AdvisingDetail() {
     setShowDeclineModal(false)
     setDeclineReason('')
   }
-
-  // Build timeline
-  const timelineItems = [
-    { date: request.createdAt, title: t('ยื่นคำร้องขอรับคำปรึกษา', 'Request Submitted'), description: catLabel, status: 'requested' },
-  ]
-  if (appointment) {
-    timelineItems.push({
-      date: appointment.createdAt,
-      title: t('นัดหมายเวลาเข้าพบ', `Appointment ${appointment.status === 'scheduled' ? 'Scheduled' : appointment.status}`),
-      description: `${appointment.scheduledDate} · ${appointment.scheduledTime} (${appointment.location})`,
-      status: appointment.status
-    })
-  }
-  if (session) {
-    timelineItems.push({
-      date: session.sessionDate,
-      title: t('บันทึกผลการให้คำปรึกษาเสร็จสิ้น', 'Session Completed'),
-      description: session.summary,
-      status: 'completed'
-    })
-  }
-  followUps.forEach(fu => {
-    timelineItems.push({
-      date: fu.createdAt,
-      title: `${t('งานติดตามผล:', 'Follow-up:')} ${fu.task}`,
-      description: `${t('กำหนดส่ง:', 'Due:')} ${fu.dueDate}`,
-      status: fu.status
-    })
-  })
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -221,14 +192,6 @@ export default function AdvisingDetail() {
             </div>
           </Card>
         )}
-
-        {/* Timeline */}
-        <Card>
-          <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-sky-600 dark:text-sky-400" /> {t('ลำดับสถานะการดำเนินงาน', 'Progress Timeline')}
-          </h3>
-          <Timeline items={timelineItems} />
-        </Card>
 
         {/* Follow-ups */}
         {followUps.length > 0 && (
