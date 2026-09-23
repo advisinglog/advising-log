@@ -30,7 +30,7 @@ export default function AdvisorDashboard() {
   const upcomingApts = store.appointments
     .filter(a => a.advisorId === currentUser.id && a.status === 'scheduled')
     .sort((a, b) => {
-      const cmpDate = a.scheduledDate.localeCompare(b.scheduledDate)
+      const cmpDate = (a.scheduledDate || '').localeCompare(b.scheduledDate || '')
       if (cmpDate !== 0) return cmpDate
       return (a.scheduledTime || '').localeCompare(b.scheduledTime || '')
     })

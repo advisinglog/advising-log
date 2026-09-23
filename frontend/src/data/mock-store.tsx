@@ -252,11 +252,31 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       if (!isMounted) return
       if (uRes && Array.isArray(uRes.users)) setUsers(uRes.users)
       if (rosRes && Array.isArray(rosRes.roster)) setRoster(rosRes.roster)
-      if (rRes && Array.isArray(rRes.requests)) setRequests(rRes.requests)
+      if (rRes && Array.isArray(rRes.requests)) {
+        const normalizedRequests = rRes.requests.map((r: any) => ({
+          ...r,
+          attachments: Array.isArray(r.attachments)
+            ? r.attachments
+            : typeof r.attachments === 'string'
+              ? (() => { try { const p = JSON.parse(r.attachments); return Array.isArray(p) ? p : [] } catch { return [] } })()
+              : [],
+        }))
+        setRequests(normalizedRequests)
+      }
       if (aptRes && Array.isArray(aptRes.appointments)) setAppointments(aptRes.appointments)
       if (fRes && Array.isArray(fRes.followUps)) setFollowUps(fRes.followUps)
       if (sRes && Array.isArray(sRes.sessions)) setSessions(sRes.sessions)
-      if (eRes && Array.isArray(eRes.exitCases)) setExitCases(eRes.exitCases)
+      if (eRes && Array.isArray(eRes.exitCases)) {
+        const normalizedExitCases = eRes.exitCases.map((e: any) => ({
+          ...e,
+          documents: Array.isArray(e.documents)
+            ? e.documents
+            : typeof e.documents === 'string'
+              ? (() => { try { const p = JSON.parse(e.documents); return Array.isArray(p) ? p : [] } catch { return [] } })()
+              : [],
+        }))
+        setExitCases(normalizedExitCases)
+      }
       if (vRes && Array.isArray(vRes.surveys)) {
         const normalized = vRes.surveys.map((s: any) => ({
           ...s,

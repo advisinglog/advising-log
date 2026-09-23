@@ -122,13 +122,13 @@ export default function ExitCases() {
     // Add related advising history
     store.requests.filter(r => r.studentId === selectedCase.studentId).forEach(r => {
       items.push({
-        date: r.createdAt,
+        date: r.createdAt || '',
         title: `${t('การให้คำปรึกษา:', 'Advising:')} ${getCategoryLabel(r.category)}`,
-        description: r.details.substring(0, 80),
+        description: r.details ? r.details.substring(0, 80) : '',
         status: r.status,
       })
     })
-    return items.sort((a, b) => a.date.localeCompare(b.date))
+    return items.sort((a, b) => (a.date || '').localeCompare(b.date || ''))
   })() : []
 
   return (
@@ -181,7 +181,7 @@ export default function ExitCases() {
                   </div>
                   <div className="p-3 bg-sky-50/60 dark:bg-sky-950/40 rounded-xl border border-sky-100 dark:border-sky-900/40 text-xs space-y-2">
                     <div className="flex flex-wrap gap-1">
-                      {svr.primaryFactors.map((fac, idx) => (
+                      {(Array.isArray(svr.primaryFactors) ? svr.primaryFactors : []).map((fac, idx) => (
                         <span key={idx} className="px-2 py-0.5 rounded-md text-[10px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-medium">
                           {fac}
                         </span>

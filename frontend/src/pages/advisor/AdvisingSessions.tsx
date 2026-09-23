@@ -327,18 +327,27 @@ export default function AdvisingSessions() {
                 )}
               </div>
 
-              {detailReq.attachments.length > 0 && (
-                <div>
-                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 block mb-2">{t('เอกสารแนบ', 'Attachments')}</span>
-                  <div className="flex flex-wrap gap-2">
-                    {detailReq.attachments.map(file => (
-                      <span key={file} className="px-2.5 py-1.5 rounded-lg bg-sky-50 dark:bg-sky-950/50 border border-sky-100 dark:border-sky-800 text-xs text-sky-700 dark:text-sky-300 font-medium">
-                        {file}
-                      </span>
-                    ))}
+              {(() => {
+                const rawAttachments = detailReq.attachments
+                const attachmentsList: string[] = Array.isArray(rawAttachments)
+                  ? rawAttachments
+                  : typeof rawAttachments === 'string'
+                    ? (() => { try { const p = JSON.parse(rawAttachments); return Array.isArray(p) ? p : [] } catch { return [] } })()
+                    : []
+                if (attachmentsList.length === 0) return null
+                return (
+                  <div>
+                    <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 block mb-2">{t('เอกสารแนบ', 'Attachments')}</span>
+                    <div className="flex flex-wrap gap-2">
+                      {attachmentsList.map(file => (
+                        <span key={file} className="px-2.5 py-1.5 rounded-lg bg-sky-50 dark:bg-sky-950/50 border border-sky-100 dark:border-sky-800 text-xs text-sky-700 dark:text-sky-300 font-medium">
+                          {file}
+                        </span>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )
+              })()}
             </div>
           )
         })()}

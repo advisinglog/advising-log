@@ -546,17 +546,27 @@ app.get('/api/requests', async (c) => {
   const studentId = c.req.query('studentId')
   const advisorId = c.req.query('advisorId')
 
+  function normalizeReq(r: any) {
+    let att = []
+    if (Array.isArray(r.attachments)) {
+      att = r.attachments
+    } else if (typeof r.attachments === 'string') {
+      try { att = JSON.parse(r.attachments) } catch { att = [] }
+    }
+    return { ...r, attachments: Array.isArray(att) ? att : [] }
+  }
+
   let query = database.select().from(schema.advisingRequests)
   if (studentId) {
     const list = await query.where(eq(schema.advisingRequests.studentId, studentId))
-    return c.json({ requests: list })
+    return c.json({ requests: list.map(normalizeReq) })
   } else if (advisorId) {
     const list = await query.where(eq(schema.advisingRequests.advisorId, advisorId))
-    return c.json({ requests: list })
+    return c.json({ requests: list.map(normalizeReq) })
   }
 
   const allRequests = await query.orderBy(desc(schema.advisingRequests.createdAt))
-  return c.json({ requests: allRequests })
+  return c.json({ requests: allRequests.map(normalizeReq) })
 })
 
 app.post('/api/requests', async (c) => {
@@ -750,7 +760,16 @@ app.get('/api/exit-cases', async (c) => {
   const database = db(c)
   if (!database) return c.json({ exitCases: [] })
   const list = await database.select().from(schema.exitCases).orderBy(desc(schema.exitCases.createdAt))
-  return c.json({ exitCases: list })
+  const normalized = list.map(e => {
+    let docs = []
+    if (Array.isArray(e.documents)) {
+      docs = e.documents
+    } else if (typeof e.documents === 'string') {
+      try { docs = JSON.parse(e.documents) } catch { docs = [] }
+    }
+    return { ...e, documents: Array.isArray(docs) ? docs : [] }
+  })
+  return c.json({ exitCases: normalized })
 })
 
 app.post('/api/exit-cases', async (c) => {
