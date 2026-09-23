@@ -7,6 +7,8 @@ import { PageHeader, Tabs, DataTable, StatusBadge, Button, Modal, Card, GoogleCa
 import type { AdvisingRequest, RequestProgress } from '@/types'
 import { Calendar, CheckCircle2, Eye, TrendingUp, Clock } from 'lucide-react'
 
+import { isAdvisorMatch } from '@/utils/advisorUtils'
+
 export default function AdvisingSessions() {
   const { currentUser } = useAuth()
   const store = useStore()
@@ -25,8 +27,8 @@ export default function AdvisingSessions() {
 
   if (!currentUser) return null
 
-  const myRequests = store.requests.filter(r => r.advisorId === currentUser.id)
-  const myProgress = store.requestProgress.filter(rp => rp.advisorId === currentUser.id)
+  const myRequests = store.requests.filter(r => isAdvisorMatch(r.advisorId, currentUser, store.users))
+  const myProgress = store.requestProgress.filter(rp => isAdvisorMatch(rp.advisorId, currentUser, store.users))
 
   function handleUpdateProgress() {
     if (!selectedReq || !currentUser) return

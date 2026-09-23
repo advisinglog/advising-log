@@ -8,6 +8,8 @@ import { EARLY_WARNING_TYPES } from '@/types'
 import type { EarlyWarningCase, EarlyWarningType, EarlyWarningSeverity, EarlyWarningFollowUp } from '@/types'
 import { Plus, FileText, Clock, CheckCircle2 } from 'lucide-react'
 
+import { isAdvisorMatch } from '@/utils/advisorUtils'
+
 export default function EarlyWarning() {
   const { currentUser } = useAuth()
   const store = useStore()
@@ -27,10 +29,10 @@ export default function EarlyWarning() {
   const [followUpOutcome, setFollowUpOutcome] = useState('')
 
   if (!currentUser) return null
-  const myWarnings = store.earlyWarnings.filter(w => w.advisorId === currentUser.id)
-  const myFollowUps = store.earlyWarningFollowUps.filter(fw => fw.advisorId === currentUser.id)
+  const myWarnings = store.earlyWarnings.filter(w => isAdvisorMatch(w.advisorId, currentUser, store.users))
+  const myFollowUps = store.earlyWarningFollowUps.filter(fw => isAdvisorMatch(fw.advisorId, currentUser, store.users))
   const myStudents = store.roster
-    .filter(r => r.advisorId === currentUser.id && r.isActive)
+    .filter(r => isAdvisorMatch(r.advisorId, currentUser, store.users) && r.isActive)
     .map(r => store.users.find(u => u.id === r.studentId)!)
     .filter(Boolean)
 

@@ -184,6 +184,8 @@ function MiniCalendar({ appointmentDates, selectedDate, onSelectDate }: MiniCale
   )
 }
 
+import { isAdvisorMatch } from '@/utils/advisorUtils'
+
 export default function AdvisorDashboard() {
   const { currentUser } = useAuth()
   const { t, language, getCategoryLabel } = useLanguage()
@@ -198,11 +200,11 @@ export default function AdvisorDashboard() {
 
   if (!currentUser) return null
 
-  const myAdvisees = store.roster.filter(r => r.advisorId === currentUser.id && r.isActive)
-  const myRequests = store.requests.filter(r => r.advisorId === currentUser.id)
+  const myAdvisees = store.roster.filter(r => isAdvisorMatch(r.advisorId, currentUser, store.users) && r.isActive)
+  const myRequests = store.requests.filter(r => isAdvisorMatch(r.advisorId, currentUser, store.users))
   const pendingRequests = myRequests.filter(r => r.status === 'requested' || r.status === 'pending')
   const upcomingApts = store.appointments
-    .filter(a => a.advisorId === currentUser.id && a.status === 'scheduled')
+    .filter(a => isAdvisorMatch(a.advisorId, currentUser, store.users) && a.status === 'scheduled')
     .sort((a, b) => {
       const cmpDate = (a.scheduledDate || '').localeCompare(b.scheduledDate || '')
       if (cmpDate !== 0) return cmpDate
@@ -217,10 +219,10 @@ export default function AdvisorDashboard() {
     ? upcomingApts.filter(a => a.scheduledDate === calendarSelectedDate)
     : upcomingApts
 
-  const myFollowUps = store.followUps.filter(f => f.advisorId === currentUser.id && f.status !== 'completed')
-  const myExitCases = store.exitCases.filter(e => e.advisorId === currentUser.id && e.status !== 'closed')
-  const myWarnings = store.earlyWarnings.filter(w => w.advisorId === currentUser.id && w.status !== 'resolved')
-  const recentSessions = store.sessions.filter(s => s.advisorId === currentUser.id).slice(0, 5)
+  const myFollowUps = store.followUps.filter(f => isAdvisorMatch(f.advisorId, currentUser, store.users) && f.status !== 'completed')
+  const myExitCases = store.exitCases.filter(e => isAdvisorMatch(e.advisorId, currentUser, store.users) && e.status !== 'closed')
+  const myWarnings = store.earlyWarnings.filter(w => isAdvisorMatch(w.advisorId, currentUser, store.users) && w.status !== 'resolved')
+  const recentSessions = store.sessions.filter(s => isAdvisorMatch(s.advisorId, currentUser, store.users)).slice(0, 5)
 
   // List of all active students
   const allStudents = store.users.filter(u => u.role === 'student' && u.isActive)

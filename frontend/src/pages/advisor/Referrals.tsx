@@ -8,6 +8,8 @@ import { REFERRAL_DESTINATIONS } from '@/types'
 import type { Referral, ReferralDestination, ReferralDestinationGroup } from '@/types'
 import { Plus } from 'lucide-react'
 
+import { isAdvisorMatch } from '@/utils/advisorUtils'
+
 export default function Referrals() {
   const { currentUser } = useAuth()
   const store = useStore()
@@ -19,9 +21,9 @@ export default function Referrals() {
   const [destination, setDestination] = useState<ReferralDestination | ''>('')
 
   if (!currentUser) return null
-  const myReferrals = store.referrals.filter(r => r.advisorId === currentUser.id)
+  const myReferrals = store.referrals.filter(r => isAdvisorMatch(r.advisorId, currentUser, store.users))
   const myStudents = store.roster
-    .filter(r => r.advisorId === currentUser.id && r.isActive)
+    .filter(r => isAdvisorMatch(r.advisorId, currentUser, store.users) && r.isActive)
     .map(r => store.users.find(u => u.id === r.studentId)!)
     .filter(Boolean)
 

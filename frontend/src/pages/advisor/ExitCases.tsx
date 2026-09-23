@@ -7,15 +7,17 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useStore } from '@/data/mock-store'
 import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { PageHeader, DataTable, StatusBadge, Button, Modal, Timeline, DocumentViewerModal, type DocumentViewerTarget } from '@/components/ui'
+import { PageHeader, DataTable, StatusBadge, Button, Modal, DocumentViewerModal, type DocumentViewerTarget } from '@/components/ui'
 import type { ExitCase } from '@/types'
 import { Eye, MessageSquareHeart, FileText, FileUp } from 'lucide-react'
+
+import { isAdvisorMatch } from '@/utils/advisorUtils'
 
 export default function ExitCases() {
   const { currentUser } = useAuth()
   const store = useStore()
   const { addToast } = useToast()
-  const { t, getExitReasonLabel, getCategoryLabel, getExitTypeLabel } = useLanguage()
+  const { t, getExitReasonLabel, getExitTypeLabel } = useLanguage()
   const [selectedCase, setSelectedCase] = useState<ExitCase | null>(null)
   const [showAssessment, setShowAssessment] = useState(false)
   const [assessment, setAssessment] = useState('')
@@ -25,7 +27,7 @@ export default function ExitCases() {
   const [previewDoc, setPreviewDoc] = useState<DocumentViewerTarget | null>(null)
 
   if (!currentUser) return null
-  const myCases = store.exitCases.filter(e => e.advisorId === currentUser.id)
+  const myCases = store.exitCases.filter(e => isAdvisorMatch(e.advisorId, currentUser, store.users))
 
   const columns = [
     {
@@ -108,28 +110,6 @@ export default function ExitCases() {
     addToast('success', t('บันทึกผลการประเมินแล้ว', 'Assessment Submitted'), t('บันทึกความเห็นของอาจารย์ที่ปรึกษาและส่งต่อไปยังประธานหลักสูตร/QA เรียบร้อยแล้ว', 'Advisor assessment saved and forwarded to QA review.'))
     setShowAssessment(false); setSelectedCase(null); setAssessment(''); setFactors(''); setActions(''); setRecommendation('')
   }
-
-  // Build timeline for selected case
-  const caseTimeline = selectedCase ? (() => {
-    const items = [
-      {
-        date: selectedCase.createdAt,
-        title: t('ยื่นคำร้องขอลาออก/ลาพัก', 'Exit Case Created'),
-        description: `${getExitTypeLabel(selectedCase.exitType)} · ${getExitReasonLabel(selectedCase.reasonCode)}`,
-        status: 'open',
-      },
-    ]
-    // Add related advising history
-    store.requests.filter(r => r.studentId === selectedCase.studentId).forEach(r => {
-      items.push({
-        date: r.createdAt || '',
-        title: `${t('การให้คำปรึกษา:', 'Advising:')} ${getCategoryLabel(r.category)}`,
-        description: r.details ? r.details.substring(0, 80) : '',
-        status: r.status,
-      })
-    })
-    return items.sort((a, b) => (a.date || '').localeCompare(b.date || ''))
-  })() : []
 
   return (
     <div>
@@ -245,11 +225,6 @@ export default function ExitCases() {
                 </div>
               )
             })()}
-
-            <div className="border-t border-slate-100 dark:border-slate-800 pt-4">
-              <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider mb-3">{t('ประวัติการรับคำปรึกษาที่ผ่านมา', 'Student Advising History & Timeline')}</h4>
-              <Timeline items={caseTimeline} />
-            </div>
           </div>
         </Modal>
       )}

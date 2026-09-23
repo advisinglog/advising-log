@@ -6,6 +6,8 @@ import { useLanguage } from '@/contexts/LanguageContext'
 import { PageHeader, Card, Button, EmptyState } from '@/components/ui'
 import { ClipboardCheck, User, PlusCircle } from 'lucide-react'
 
+import { isAdvisorMatch } from '@/utils/advisorUtils'
+
 export default function AdvisorLog() {
   const { currentUser } = useAuth()
   const store = useStore()
@@ -25,7 +27,7 @@ export default function AdvisorLog() {
 
   // Completed requests that don't have a session log yet
   const completedRequests = store.requests.filter(r =>
-    r.advisorId === currentUser.id && r.status === 'completed' &&
+    isAdvisorMatch(r.advisorId, currentUser, store.users) && r.status === 'completed' &&
     !store.sessions.find(s => s.requestId === r.id)
   )
 
