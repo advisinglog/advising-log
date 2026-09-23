@@ -17,6 +17,7 @@ export default function Referrals() {
   const { t, getReferralLabel } = useLanguage()
   const [showCreate, setShowCreate] = useState(false)
   const [studentId, setStudentId] = useState('')
+  const [sessionId, setSessionId] = useState('')
   const [reason, setReason] = useState('')
   const [destination, setDestination] = useState<ReferralDestination | ''>('')
 
@@ -26,6 +27,11 @@ export default function Referrals() {
     .filter(r => isAdvisorMatch(r.advisorId, currentUser, store.users) && r.isActive)
     .map(r => store.users.find(u => u.id === r.studentId)!)
     .filter(Boolean)
+
+  // Sessions available for the currently selected student (closed sessions that have a log)
+  const availableSessions = studentId
+    ? store.sessions.filter(s => s.studentId === studentId && isAdvisorMatch(s.advisorId, currentUser, store.users))
+    : []
 
   const destinationGroups: { value: ReferralDestinationGroup; label: string; labelEn: string }[] = [
     { value: 'school', label: 'หน่วยงานภายในสำนักวิชา', labelEn: 'Internal School Level' },
@@ -40,7 +46,7 @@ export default function Referrals() {
       return
     }
     const ref = store.addReferral({
-      sessionId: '',
+      sessionId: sessionId,
       studentId,
       advisorId: currentUser!.id,
       reason,
@@ -57,7 +63,7 @@ export default function Referrals() {
       targetId: ref.id,
     })
     addToast('success', t('ส่งต่อหน่วยงานสำเร็จ', 'Referral Created'), t('ส่งต่อข้อมูลคำร้องไปยังหน่วยงานที่เกี่ยวข้องแล้ว', 'Referral request dispatched.'))
-    setShowCreate(false); setStudentId(''); setReason(''); setDestination('')
+    setShowCreate(false); setStudentId(''); setSessionId(''); setReason(''); setDestination('')
   }
 
   const columns = [
@@ -83,7 +89,23 @@ export default function Referrals() {
         </span>
       ),
     },
-    { key: 'reason', header: t('เหตุผลในการส่งต่อ', 'Referral Reason'), render: (r: Referral) => <span className="text-xs text-slate-600 dark:text-slate-300 line-clamp-1 max-w-xs">{r.reason}</span> },
+    {
+      key: 'reason',
+      header: t('เหตุผลในการส่งต่อ', 'Referral Reason'),
+      render: (r: Referral) => {
+        const session = r.sessionId ? store.sessions.find(s => s.id === r.sessionId) : null
+        return (
+          <div className="space-y-1 max-w-xs">
+            <span className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2 block">{r.reason}</span>
+            {session && (
+              <span className="inline-flex items-center text-[10px] font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
+                {t('เซสชัน:', 'Session:')} {session.sessionDate}
+              </span>
+            )}
+          </div>
+        )
+      },
+    },
     { key: 'date', header: t('วันที่ส่งต่อ', 'Referred Date'), render: (r: Referral) => <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">{r.referredAt}</span> },
     { key: 'status', header: t('สถานะ', 'Status'), render: (r: Referral) => <StatusBadge status={r.status} /> },
     {
@@ -123,7 +145,7 @@ export default function Referrals() {
             <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">{t('เลือกนักศึกษาในความดูแล', 'Select Advisee')} *</label>
             <select
               value={studentId}
-              onChange={e => setStudentId(e.target.value)}
+              onChange={e => { setStudentId(e.target.value); setSessionId('') }}
               className="w-full px-3.5 py-2 text-xs sm:text-sm border border-slate-200/90 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
             >
               <option value="">{t('-- เลือกนักศึกษา --', 'Select a student')}</option>
@@ -132,6 +154,27 @@ export default function Referrals() {
               ))}
             </select>
           </div>
+
+          {/* Optional: link to an existing session */}
+          {availableSessions.length > 0 && (
+            <div>
+              <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">
+                {t('อ้างอิงบันทึกการให้คำปรึกษา (ไม่บังคับ)', 'Link to Advising Session (Optional)')}
+              </label>
+              <select
+                value={sessionId}
+                onChange={e => setSessionId(e.target.value)}
+                className="w-full px-3.5 py-2 text-xs sm:text-sm border border-slate-200/90 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
+              >
+                <option value="">{t('-- ไม่อ้างอิงเซสชัน --', '-- No session link --')}</option>
+                {availableSessions.map(s => (
+                  <option key={s.id} value={s.id}>
+                    {s.sessionDate} — {s.summary.slice(0, 60)}{s.summary.length > 60 ? '…' : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div>
             <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">{t('หน่วยงานปลายทาง', 'Target Department / Unit')} *</label>

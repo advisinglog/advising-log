@@ -91,4 +91,14 @@ describe('Advisor Pages Audit & Resilience Tests', () => {
     renderWithProviders(<Referrals />)
     expect(screen.getByText(/การส่งต่อหน่วยงาน|Referrals/i)).toBeInTheDocument()
   })
+
+  it('allows opening referral modal and shows student options', () => {
+    renderWithProviders(<Referrals />)
+    const createBtn = screen.getByRole('button', { name: /สร้างการส่งต่อใหม่|Create Referral/i })
+    fireEvent.click(createBtn)
+
+    expect(screen.getByText(/ส่งต่อนักศึกษาไปยังหน่วยงานสนับสนุน|Create Student Support Referral/i)).toBeInTheDocument()
+    expect(screen.getByText(/เลือกนักศึกษาในความดูแล|Select Advisee/i)).toBeInTheDocument()
+    expect(screen.getByText(/หน่วยงานปลายทาง|Target Department/i)).toBeInTheDocument()
+  })
 })
