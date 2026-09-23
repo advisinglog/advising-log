@@ -156,9 +156,23 @@ app.post('/api/auth/google', async (c) => {
       .where(
         or(
           eq(schema.users.email, lowerEmail),
+          eq(schema.users.email, email.trim()),
           eq(schema.users.code, codePrefix),
+          eq(schema.users.code, codePrefix.toLowerCase()),
+          eq(schema.users.code, codePrefix.toUpperCase()),
         )
       ).get()
+
+    // Case-insensitive / whitespace-tolerant fallback across all users
+    if (!user) {
+      const allUsers = await database.select().from(schema.users)
+      user = allUsers.find(
+        (u) =>
+          u.email?.toLowerCase().trim() === lowerEmail ||
+          u.code?.toUpperCase().trim() === codePrefix ||
+          (u.email && u.email.toLowerCase().trim().split('@')[0] === codePrefix.toLowerCase())
+      ) || null
+    }
 
     // If Super Admin account, auto-provision if not exists or update code
     if (!user && isAuthorizedSuperAdmin) {
@@ -211,13 +225,15 @@ app.post('/api/auth/google', async (c) => {
     // 4. Student Advisee Check: Student MUST be assigned to an advisor by Admin or Advisor
     let assignedAdvisor = null
     if (user.role === 'student') {
-      const assignment = await database.select().from(schema.studentAdvisorAssignments)
-        .where(
-          and(
-            eq(schema.studentAdvisorAssignments.studentId, user.id),
-            eq(schema.studentAdvisorAssignments.isActive, true),
-          )
-        ).get()
+      const allAssignments = await database.select().from(schema.studentAdvisorAssignments).where(eq(schema.studentAdvisorAssignments.isActive, true))
+      const assignment = allAssignments.find(
+        (a) =>
+          a.studentId === user.id ||
+          a.studentId?.toUpperCase() === user.code?.toUpperCase() ||
+          a.studentId?.toLowerCase() === user.email?.toLowerCase() ||
+          a.studentId?.toLowerCase() === lowerEmail ||
+          a.studentId?.toUpperCase() === codePrefix
+      )
 
       if (!assignment) {
         return c.json({
@@ -235,7 +251,13 @@ app.post('/api/auth/google', async (c) => {
       // Fetch advisor details
       const activeAdvisorId = assignment.advisorId
       if (activeAdvisorId) {
-        assignedAdvisor = await database.select().from(schema.users).where(eq(schema.users.id, activeAdvisorId)).get()
+        const allUsers = await database.select().from(schema.users)
+        assignedAdvisor = allUsers.find(
+          (u) =>
+            u.id === activeAdvisorId ||
+            u.code?.toUpperCase() === String(activeAdvisorId).toUpperCase() ||
+            u.email?.toLowerCase() === String(activeAdvisorId).toLowerCase()
+        ) || null
       }
     }
 
@@ -307,33 +329,48 @@ app.post('/api/users', async (c) => {
   if (!database) return c.json({ error: 'Database unavailable' }, 503)
 
   const body = await c.req.json()
-  const superAdminEmail = (c.env?.SUPER_ADMIN_EMAIL || 'se.advisinglog@gmail.com').toLowerCase().trim()
-  const emailPrefix = (body.email || '').trim().split('@')[0]
-  const isStudent = /^\d/.test(emailPrefix) || (body.email || '').includes('@student.') || (body.email || '').includes('@lamduan.')
-  const assignedRole = isStudent
-    ? 'student'
-    : (body.role === 'admin' && body.email?.toLowerCase().trim() !== superAdminEmail ? 'advisor' : body.role || 'advisor')
-  const autoCode = body.code || (isStudent ? emailPrefix : `STAFF_${Date.now().toString().slice(-4)}`)
-  const derivedName = body.name?.trim() || deriveNameFromEmail(body.email)
-
-  const newUser = {
-    id: body.id || `USER_${Date.now()}`,
-    code: autoCode,
-    name: derivedName,
-    email: (body.email || '').trim(),
-    role: assignedRole,
-    department: body.department || 'School of Applied Digital Technology (ADT)',
-    phone: body.phone || null,
-    isActive: body.isActive !== undefined ? body.isActive : true,
-    hasAiAccess: body.hasAiAccess !== undefined ? body.hasAiAccess : false,
-    createdAt: body.createdAt || new Date().toISOString().split('T')[0],
+  const cleanEmail = (body.email || '').trim().toLowerCase()
+  if (!cleanEmail) {
+    return c.json({ error: 'Email is required' }, 400)
   }
 
-  await database.insert(schema.users).values(newUser).onConflictDoUpdate({
-    target: schema.users.id,
-    set: newUser,
-  })
-  return c.json({ success: true, user: newUser })
+  const superAdminEmail = (c.env?.SUPER_ADMIN_EMAIL || 'se.advisinglog@gmail.com').toLowerCase().trim()
+  const emailPrefix = cleanEmail.split('@')[0]
+  const isStudent = /^\d/.test(emailPrefix) || cleanEmail.includes('@student.') || cleanEmail.includes('@lamduan.')
+  const assignedRole = isStudent
+    ? 'student'
+    : (body.role === 'admin' && cleanEmail !== superAdminEmail ? 'advisor' : body.role || 'advisor')
+  const autoCode = body.code ? String(body.code).trim() : (isStudent ? emailPrefix : `STAFF_${Date.now().toString().slice(-4)}`)
+  const derivedName = body.name?.trim() || deriveNameFromEmail(body.email)
+
+  // Look up existing user by id, email, or code to avoid SQLite unique constraint errors
+  const allUsers = await database.select().from(schema.users)
+  const existingUser = allUsers.find(
+    (u) =>
+      u.email.toLowerCase() === cleanEmail ||
+      u.code.toUpperCase() === autoCode.toUpperCase() ||
+      (body.id && u.id === body.id)
+  )
+
+  const userObj = {
+    id: existingUser ? existingUser.id : (body.id || `USER_${Date.now()}`),
+    code: existingUser ? (body.code ? String(body.code).trim() : existingUser.code) : autoCode,
+    name: derivedName,
+    email: cleanEmail,
+    role: assignedRole,
+    department: body.department || existingUser?.department || 'School of Applied Digital Technology (ADT)',
+    phone: body.phone !== undefined ? body.phone : (existingUser?.phone || null),
+    isActive: body.isActive !== undefined ? body.isActive : (existingUser ? existingUser.isActive : true),
+    hasAiAccess: body.hasAiAccess !== undefined ? body.hasAiAccess : (existingUser ? existingUser.hasAiAccess : false),
+    createdAt: existingUser ? existingUser.createdAt : (body.createdAt || new Date().toISOString().split('T')[0]),
+  }
+
+  if (existingUser) {
+    await database.update(schema.users).set(userObj).where(eq(schema.users.id, existingUser.id))
+  } else {
+    await database.insert(schema.users).values(userObj)
+  }
+  return c.json({ success: true, user: userObj })
 })
 
 app.post('/api/users/bulk', async (c) => {
@@ -344,35 +381,48 @@ app.post('/api/users/bulk', async (c) => {
   const userList = Array.isArray(body?.users) ? body.users : []
   const superAdminEmail = (c.env?.SUPER_ADMIN_EMAIL || 'se.advisinglog@gmail.com').toLowerCase().trim()
 
+  const allUsers = await database.select().from(schema.users)
   const insertedUsers = []
+
   for (const item of userList) {
-    if (!item.email || !item.email.includes('@')) continue
-    const emailPrefix = item.email.trim().split('@')[0]
-    const isStudent = /^\d/.test(emailPrefix) || item.email.includes('@student.') || item.email.includes('@lamduan.')
+    const cleanEmail = (item.email || '').trim().toLowerCase()
+    if (!cleanEmail || !cleanEmail.includes('@')) continue
+
+    const emailPrefix = cleanEmail.split('@')[0]
+    const isStudent = /^\d/.test(emailPrefix) || cleanEmail.includes('@student.') || cleanEmail.includes('@lamduan.')
     const assignedRole = isStudent
       ? 'student'
-      : (item.role === 'admin' && item.email?.toLowerCase().trim() !== superAdminEmail ? 'advisor' : item.role || 'advisor')
+      : (item.role === 'admin' && cleanEmail !== superAdminEmail ? 'advisor' : item.role || 'advisor')
 
-    const autoCode = item.code || (isStudent ? emailPrefix : `STAFF_${Date.now().toString().slice(-4)}`)
+    const autoCode = item.code ? String(item.code).trim() : (isStudent ? emailPrefix : `STAFF_${Date.now().toString().slice(-4)}`)
     const derivedName = item.name?.trim() || deriveNameFromEmail(item.email)
 
+    const existingUser = allUsers.find(
+      (u) =>
+        u.email.toLowerCase() === cleanEmail ||
+        u.code.toUpperCase() === autoCode.toUpperCase() ||
+        (item.id && u.id === item.id)
+    )
+
     const userObj = {
-      id: item.id || `USER_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
-      code: autoCode,
+      id: existingUser ? existingUser.id : (item.id || `USER_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`),
+      code: existingUser ? (item.code ? String(item.code).trim() : existingUser.code) : autoCode,
       name: derivedName,
-      email: item.email.trim(),
+      email: cleanEmail,
       role: assignedRole,
-      department: item.department || 'School of Applied Digital Technology (ADT)',
-      phone: item.phone || null,
-      isActive: item.isActive !== undefined ? item.isActive : true,
-      hasAiAccess: item.hasAiAccess !== undefined ? item.hasAiAccess : false,
-      createdAt: item.createdAt || new Date().toISOString().split('T')[0],
+      department: item.department || existingUser?.department || 'School of Applied Digital Technology (ADT)',
+      phone: item.phone !== undefined ? item.phone : (existingUser?.phone || null),
+      isActive: item.isActive !== undefined ? item.isActive : (existingUser ? existingUser.isActive : true),
+      hasAiAccess: item.hasAiAccess !== undefined ? item.hasAiAccess : (existingUser ? existingUser.hasAiAccess : false),
+      createdAt: existingUser ? existingUser.createdAt : (item.createdAt || new Date().toISOString().split('T')[0]),
     }
 
-    await database.insert(schema.users).values(userObj).onConflictDoUpdate({
-      target: schema.users.id,
-      set: userObj,
-    })
+    if (existingUser) {
+      await database.update(schema.users).set(userObj).where(eq(schema.users.id, existingUser.id))
+    } else {
+      await database.insert(schema.users).values(userObj)
+      allUsers.push(userObj as any)
+    }
     insertedUsers.push(userObj)
   }
 
@@ -446,18 +496,43 @@ app.post('/api/roster', async (c) => {
   if (!database) return c.json({ error: 'Database unavailable' }, 503)
 
   const body = await c.req.json()
+  const allUsers = await database.select().from(schema.users)
+
+  // Resolve student and advisor IDs if codes or emails were provided
+  const student = allUsers.find(
+    (u) =>
+      u.id === body.studentId ||
+      u.code.toUpperCase() === String(body.studentId).toUpperCase() ||
+      u.email.toLowerCase() === String(body.studentId).toLowerCase()
+  )
+  const advisor = allUsers.find(
+    (u) =>
+      u.id === body.advisorId ||
+      u.code.toUpperCase() === String(body.advisorId).toUpperCase() ||
+      u.email.toLowerCase() === String(body.advisorId).toLowerCase()
+  )
+
+  const targetStudentId = student ? student.id : body.studentId
+  const targetAdvisorId = advisor ? advisor.id : body.advisorId
+
+  const allAssignments = await database.select().from(schema.studentAdvisorAssignments)
+  const existing = allAssignments.find(
+    (a) => a.studentId === targetStudentId || (body.id && a.id === body.id)
+  )
+
   const assignment = {
-    id: body.id || `R_${Date.now()}`,
-    studentId: body.studentId,
-    advisorId: body.advisorId,
-    assignedAt: body.assignedAt || new Date().toISOString().split('T')[0],
+    id: existing ? existing.id : (body.id || `R_${Date.now()}`),
+    studentId: targetStudentId,
+    advisorId: targetAdvisorId,
+    assignedAt: body.assignedAt || (existing ? existing.assignedAt : new Date().toISOString().split('T')[0]),
     isActive: body.isActive !== undefined ? body.isActive : true,
   }
 
-  await database.insert(schema.studentAdvisorAssignments).values(assignment).onConflictDoUpdate({
-    target: schema.studentAdvisorAssignments.id,
-    set: assignment,
-  })
+  if (existing) {
+    await database.update(schema.studentAdvisorAssignments).set(assignment).where(eq(schema.studentAdvisorAssignments.id, existing.id))
+  } else {
+    await database.insert(schema.studentAdvisorAssignments).values(assignment)
+  }
   return c.json({ success: true, assignment })
 })
 
