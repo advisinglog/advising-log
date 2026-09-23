@@ -179,11 +179,13 @@ export default function AdvisingDetail() {
                 <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1">{t('สรุปผลการให้คำปรึกษา', 'Session Summary')}</span>
                 <p className="text-slate-800 dark:text-slate-200 leading-relaxed">{session.summary}</p>
               </div>
-              <div className="p-3 sm:p-4 bg-slate-50/70 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 rounded-lg">
-                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1">{t('คำแนะนำและแนวทางปฏิบัติ', 'Advice & Guidance Provided')}</span>
-                <p className="text-slate-800 dark:text-slate-200 leading-relaxed">{session.advice}</p>
-              </div>
-              {session.outcome && (
+              {session.advice && session.advice !== session.summary && (
+                <div className="p-3 sm:p-4 bg-slate-50/70 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 rounded-lg">
+                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1">{t('คำแนะนำและแนวทางปฏิบัติ', 'Advice & Guidance Provided')}</span>
+                  <p className="text-slate-800 dark:text-slate-200 leading-relaxed">{session.advice}</p>
+                </div>
+              )}
+              {session.outcome && session.outcome !== session.summary && (
                 <div className="p-3 sm:p-4 bg-slate-50/70 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 rounded-lg">
                   <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1">{t('ผลลัพธ์ / ข้อตกลงร่วมกัน', 'Outcome / Action Items')}</span>
                   <p className="text-slate-800 dark:text-slate-200 leading-relaxed">{session.outcome}</p>
