@@ -20,12 +20,31 @@ export default function AdvisingHistory() {
 
   if (!currentUser) return null
 
+  // Multi-identifier student match (handles ID, student code, email, or DB user aliases)
+  const studentIdentifiers = new Set<string>([
+    currentUser.id,
+    currentUser.code,
+    currentUser.email?.toLowerCase(),
+    ...store.users
+      .filter(u =>
+        u.id === currentUser.id ||
+        (currentUser.code && u.code?.toUpperCase() === currentUser.code.toUpperCase()) ||
+        (currentUser.email && u.email?.toLowerCase() === currentUser.email.toLowerCase())
+      )
+      .flatMap(u => [u.id, u.code, u.email?.toLowerCase()].filter(Boolean) as string[])
+  ].filter(Boolean) as string[])
+
   const myRequests = store.requests
-    .filter(r => r.studentId === currentUser.id)
+    .filter(r =>
+      studentIdentifiers.has(r.studentId) ||
+      (currentUser.code && r.studentId?.toUpperCase() === currentUser.code.toUpperCase()) ||
+      (currentUser.email && r.studentId?.toLowerCase() === currentUser.email.toLowerCase())
+    )
     .filter(r => {
       if (!search) return true
       const cat = getCategoryLabel(r.category)
-      return cat.toLowerCase().includes(search.toLowerCase()) || r.details.toLowerCase().includes(search.toLowerCase())
+      const details = r.details || ''
+      return cat.toLowerCase().includes(search.toLowerCase()) || details.toLowerCase().includes(search.toLowerCase())
     })
 
   const columns = [
@@ -34,7 +53,21 @@ export default function AdvisingHistory() {
     { key: 'advisor', header: t('อาจารย์ที่ปรึกษา', 'Faculty Advisor'), render: (r: AdvisingRequest) => <span className="text-xs text-slate-600 dark:text-slate-300">{store.users.find(u => u.id === r.advisorId)?.name || '-'}</span> },
     { key: 'appointment', header: t('เวลานัดหมาย', 'Appointment'), render: (r: AdvisingRequest) => {
       const apt = store.appointments.find(a => a.requestId === r.id)
-      if (!apt) return <span className="text-xs text-slate-400 dark:text-slate-500">—</span>
+      if (!apt) {
+        if (r.preferredDate || r.preferredTime) {
+          return (
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                {r.preferredDate}{r.preferredTime ? ` · ${r.preferredTime}` : ''}
+              </span>
+              <span className="inline-flex items-center px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 text-[10px] font-medium text-slate-500 dark:text-slate-400 rounded border border-slate-200/80 dark:border-slate-700">
+                {t('เวลาที่ขอ', 'Requested')}
+              </span>
+            </div>
+          )
+        }
+        return <span className="text-xs text-slate-400 dark:text-slate-500">—</span>
+      }
 
       let statusIndicator = null
       if (apt.status === 'scheduled' && !apt.studentConfirmed && !apt.studentDeclined) {

@@ -31,7 +31,28 @@ export default function Documents() {
 
   if (!currentUser) return null
 
-  const myDocs = store.documents.filter(d => d.studentId === currentUser.id)
+  // Multi-identifier student match (handles ID, student code, email, or DB user aliases)
+  const studentIdentifiers = new Set<string>([
+    currentUser.id,
+    currentUser.code,
+    currentUser.email?.toLowerCase(),
+    ...store.users
+      .filter(u =>
+        u.id === currentUser.id ||
+        (currentUser.code && u.code?.toUpperCase() === currentUser.code.toUpperCase()) ||
+        (currentUser.email && u.email?.toLowerCase() === currentUser.email.toLowerCase())
+      )
+      .flatMap(u => [u.id, u.code, u.email?.toLowerCase()].filter(Boolean) as string[])
+  ].filter(Boolean) as string[])
+
+  const isCurrentStudent = (id?: string | null) => {
+    if (!id) return false
+    return studentIdentifiers.has(id) ||
+      (currentUser.code && id.toUpperCase() === currentUser.code.toUpperCase()) ||
+      (currentUser.email && id.toLowerCase() === currentUser.email.toLowerCase())
+  }
+
+  const myDocs = store.documents.filter(d => isCurrentStudent(d.studentId))
   const activeDocumentTypes = store.documentTypes.filter(d => d.isActive)
 
   const selectedDocType = activeDocumentTypes.find(d => d.id === selectedTypeId)

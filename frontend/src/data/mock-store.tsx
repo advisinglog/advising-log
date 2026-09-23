@@ -59,7 +59,10 @@ const isTestEnv = import.meta.env?.MODE === 'test'
 let counter = 1000
 function nextId(prefix: string): string {
   counter++
-  return `${prefix}${counter}`
+  if (isTestEnv) {
+    return `${prefix}${counter}`
+  }
+  return `${prefix}_${Date.now()}_${counter}`
 }
 
 function now(): string {
@@ -324,8 +327,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const addRequest = useCallback((req: Omit<AdvisingRequest, 'id' | 'createdAt' | 'updatedAt'>): AdvisingRequest => {
     const newReq: AdvisingRequest = { ...req, id: nextId('REQ'), createdAt: now(), updatedAt: now() }
-    setRequests(prev => [newReq, ...prev])
-    api.createRequest(newReq).catch(() => {})
+    setRequests(prev => [newReq, ...prev.filter(r => r.id !== newReq.id)])
+    api.createRequest(newReq).then(res => {
+      if (res?.request?.id && res.request.id !== newReq.id) {
+        setRequests(prev => prev.map(r => r.id === newReq.id ? { ...r, id: res.request.id } : r))
+      }
+    }).catch(() => {})
     return newReq
   }, [])
 

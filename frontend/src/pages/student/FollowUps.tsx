@@ -19,8 +19,29 @@ export default function FollowUps() {
 
   if (!currentUser) return null
 
-  const myFollowUps = store.followUps.filter(f => f.studentId === currentUser.id)
-  const myProgress = store.followUpProgress.filter(fp => fp.studentId === currentUser.id)
+  // Multi-identifier student match (handles ID, student code, email, or DB user aliases)
+  const studentIdentifiers = new Set<string>([
+    currentUser.id,
+    currentUser.code,
+    currentUser.email?.toLowerCase(),
+    ...store.users
+      .filter(u =>
+        u.id === currentUser.id ||
+        (currentUser.code && u.code?.toUpperCase() === currentUser.code.toUpperCase()) ||
+        (currentUser.email && u.email?.toLowerCase() === currentUser.email.toLowerCase())
+      )
+      .flatMap(u => [u.id, u.code, u.email?.toLowerCase()].filter(Boolean) as string[])
+  ].filter(Boolean) as string[])
+
+  const isCurrentStudent = (id?: string | null) => {
+    if (!id) return false
+    return studentIdentifiers.has(id) ||
+      (currentUser.code && id.toUpperCase() === currentUser.code.toUpperCase()) ||
+      (currentUser.email && id.toLowerCase() === currentUser.email.toLowerCase())
+  }
+
+  const myFollowUps = store.followUps.filter(f => isCurrentStudent(f.studentId))
+  const myProgress = store.followUpProgress.filter(fp => isCurrentStudent(fp.studentId))
 
   function handleUpdateProgress() {
     if (!selectedFollowUp || !currentUser) return

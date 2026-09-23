@@ -110,9 +110,16 @@ export default function RequestAdvising() {
       return
     }
 
+    const studentUser = store.users.find(
+      u => u.id === currentUser?.id ||
+           (currentUser?.code && u.code?.toUpperCase() === currentUser.code.toUpperCase()) ||
+           (currentUser?.email && u.email?.toLowerCase() === currentUser.email.toLowerCase())
+    )
+    const effectiveStudentId = studentUser?.id || currentUser!.id
+
     // 1. Create AdvisingRequest
     const newRequest = store.addRequest({
-      studentId: currentUser!.id,
+      studentId: effectiveStudentId,
       advisorId: advisor.id,
       category: category as AdvisingCategory,
       subCategory: category === 'withdrawal_leave' ? exitType : (subCategory || undefined),

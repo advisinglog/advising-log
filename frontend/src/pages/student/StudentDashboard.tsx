@@ -17,22 +17,52 @@ export default function StudentDashboard() {
 
   if (!currentUser) return null
 
-  // Find advisor (auto-assigned to Dr. Prasit if new student)
-  const rosterEntry = store.roster.find(r => r.studentId === currentUser.id && r.isActive)
+  // Multi-identifier student match (handles ID, student code, email, or DB user aliases)
+  const studentIdentifiers = new Set<string>([
+    currentUser.id,
+    currentUser.code,
+    currentUser.email?.toLowerCase(),
+    ...store.users
+      .filter(u =>
+        u.id === currentUser.id ||
+        (currentUser.code && u.code?.toUpperCase() === currentUser.code.toUpperCase()) ||
+        (currentUser.email && u.email?.toLowerCase() === currentUser.email.toLowerCase())
+      )
+      .flatMap(u => [u.id, u.code, u.email?.toLowerCase()].filter(Boolean) as string[])
+  ].filter(Boolean) as string[])
+
+  const isCurrentStudent = (id?: string | null) => {
+    if (!id) return false
+    return studentIdentifiers.has(id) ||
+      (currentUser.code && id.toUpperCase() === currentUser.code.toUpperCase()) ||
+      (currentUser.email && id.toLowerCase() === currentUser.email.toLowerCase())
+  }
+
+  // Find active advisor from roster
+  const matchingRosterEntries = store.roster
+    .filter(r => r.isActive && isCurrentStudent(r.studentId))
+    .sort((a, b) => (b.assignedAt || '').localeCompare(a.assignedAt || ''))
+  const rosterEntry = matchingRosterEntries[0] || null
+
   const advisor = rosterEntry
-    ? store.users.find(u => u.id === rosterEntry.advisorId)
+    ? store.users.find(
+        u =>
+          u.id === rosterEntry.advisorId ||
+          (u.code && rosterEntry.advisorId && u.code.toUpperCase() === rosterEntry.advisorId.toUpperCase()) ||
+          (u.email && rosterEntry.advisorId && u.email.toLowerCase() === rosterEntry.advisorId.toLowerCase())
+      )
     : store.users.find(u => u.id === 'ADV001' || u.role === 'advisor')
 
   // My data (sorted chronologically so upcomingAppointment is the earliest pending session)
-  const myRequests = store.requests.filter(r => r.studentId === currentUser.id)
+  const myRequests = store.requests.filter(r => isCurrentStudent(r.studentId))
   const myAppointments = store.appointments
-    .filter(a => a.studentId === currentUser.id && a.status === 'scheduled' && !a.studentDeclined)
+    .filter(a => isCurrentStudent(a.studentId) && a.status === 'scheduled' && !a.studentDeclined)
     .sort((a, b) => {
       const cmpDate = a.scheduledDate.localeCompare(b.scheduledDate)
       if (cmpDate !== 0) return cmpDate
       return (a.scheduledTime || '').localeCompare(b.scheduledTime || '')
     })
-  const myFollowUps = store.followUps.filter(f => f.studentId === currentUser.id && f.status !== 'completed')
+  const myFollowUps = store.followUps.filter(f => isCurrentStudent(f.studentId) && f.status !== 'completed')
   const upcomingAppointment = myAppointments[0]
   const upcomingReq = upcomingAppointment ? store.requests.find(r => r.id === upcomingAppointment.requestId) : null
   const upcomingAdvisor = upcomingAppointment ? store.users.find(u => u.id === upcomingAppointment.advisorId) : null
@@ -189,7 +219,10 @@ export default function StudentDashboard() {
                           </p>
                         </div>
                         <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5">{req.details}</p>
-                        <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">{t('ยื่นคำร้องเมื่อ:', 'Submitted on:')} {req.createdAt}</p>
+                        <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">
+                          {t('ยื่นคำร้องเมื่อ:', 'Submitted on:')} {req.createdAt}
+                          {req.preferredDate && ` · ${t('ขอเข้าพบ:', 'Requested:')} ${req.preferredDate} ${req.preferredTime || ''}`}
+                        </p>
                       </div>
                       <div className="flex-shrink-0 flex items-center gap-2">
                         <StatusBadge status={req.status} />

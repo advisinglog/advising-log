@@ -568,8 +568,34 @@ app.get('/api/requests', async (c) => {
   const database = db(c)
   if (!database) return c.json({ requests: [] })
 
-  const studentId = c.req.query('studentId')
-  const advisorId = c.req.query('advisorId')
+  let studentId = c.req.query('studentId')
+  let advisorId = c.req.query('advisorId')
+
+  if (studentId) {
+    const matchedStudent = await database.select().from(schema.users).where(
+      or(
+        eq(schema.users.id, studentId),
+        eq(schema.users.code, studentId),
+        eq(schema.users.email, studentId),
+      )
+    ).get()
+    if (matchedStudent) {
+      studentId = matchedStudent.id
+    }
+  }
+
+  if (advisorId) {
+    const matchedAdvisor = await database.select().from(schema.users).where(
+      or(
+        eq(schema.users.id, advisorId),
+        eq(schema.users.code, advisorId),
+        eq(schema.users.email, advisorId),
+      )
+    ).get()
+    if (matchedAdvisor) {
+      advisorId = matchedAdvisor.id
+    }
+  }
 
   function normalizeReq(r: any) {
     let att = []
@@ -599,10 +625,73 @@ app.post('/api/requests', async (c) => {
   if (!database) return c.json({ error: 'Database unavailable' }, 503)
 
   const body = await c.req.json()
+
+  let studentId = body.studentId
+  let advisorId = body.advisorId
+
+  const candidateStudentCodes = [studentId, body.studentCode, body.studentEmail].filter(Boolean) as string[]
+
+  // Resilient student resolution (by id, code, or email)
+  const studentUser = await database.select().from(schema.users).where(
+    or(
+      eq(schema.users.id, studentId),
+      eq(schema.users.code, studentId),
+      eq(schema.users.email, studentId),
+      ...(body.studentCode ? [eq(schema.users.code, body.studentCode)] : []),
+      ...(body.studentEmail ? [eq(schema.users.email, body.studentEmail)] : [])
+    )
+  ).get()
+  if (studentUser) {
+    studentId = studentUser.id
+  } else {
+    const allUsers = await database.select().from(schema.users)
+    const matchedStudent = allUsers.find(
+      u => candidateStudentCodes.some(c =>
+        u.id === c ||
+        (u.code && (u.code.toUpperCase() === c.toUpperCase() || c.includes(u.code))) ||
+        (u.email && (u.email.toLowerCase() === c.toLowerCase() || c.toLowerCase().includes(u.email.toLowerCase())))
+      )
+    )
+    if (matchedStudent) {
+      studentId = matchedStudent.id
+    }
+  }
+
+  // Resilient advisor resolution (by id, code, or email)
+  const advisorUser = await database.select().from(schema.users).where(
+    or(
+      eq(schema.users.id, advisorId),
+      eq(schema.users.code, advisorId),
+      eq(schema.users.email, advisorId),
+    )
+  ).get()
+  if (advisorUser) {
+    advisorId = advisorUser.id
+  } else {
+    const allUsers = await database.select().from(schema.users)
+    const matchedAdvisor = allUsers.find(
+      u => u.id === advisorId ||
+           (u.code && advisorId && (u.code.toUpperCase() === advisorId.toUpperCase() || advisorId.includes(u.code))) ||
+           (u.email && advisorId && (u.email.toLowerCase() === advisorId.toLowerCase() || advisorId.toLowerCase().includes(u.email.toLowerCase())))
+    )
+    if (matchedAdvisor) {
+      advisorId = matchedAdvisor.id
+    }
+  }
+
+  let reqId = body.id || `REQ_${Date.now()}`
+  const existingReq = await database.select({ id: schema.advisingRequests.id })
+    .from(schema.advisingRequests)
+    .where(eq(schema.advisingRequests.id, reqId))
+    .get()
+  if (existingReq) {
+    reqId = `REQ_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`
+  }
+
   const newReq = {
-    id: body.id || `REQ${Date.now()}`,
-    studentId: body.studentId,
-    advisorId: body.advisorId,
+    id: reqId,
+    studentId,
+    advisorId,
     category: body.category,
     subCategory: body.subCategory || null,
     details: body.details,
@@ -628,6 +717,15 @@ app.patch('/api/requests/:id/status', async (c) => {
   await database.update(schema.advisingRequests)
     .set({ status: body.status, updatedAt: new Date().toISOString().split('T')[0] })
     .where(eq(schema.advisingRequests.id, id))
+  return c.json({ success: true })
+})
+
+app.delete('/api/requests/:id', async (c) => {
+  const database = db(c)
+  if (!database) return c.json({ error: 'Database unavailable' }, 503)
+
+  const id = c.req.param('id')
+  await database.delete(schema.advisingRequests).where(eq(schema.advisingRequests.id, id))
   return c.json({ success: true })
 })
 

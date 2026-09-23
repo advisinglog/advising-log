@@ -39,6 +39,7 @@ export const mockUsers: User[] = [
   { id: 'STU008', code: '6631503008', name: 'Pimchanok Saetang', email: 'pimchanok.s@student.mfu.ac.th', role: 'student', department: 'School of Applied Digital Technology (ADT)', phone: '081-234-5608', isActive: true, hasAiAccess: false, createdAt: '2024-06-01' },
   { id: 'STU009', code: '6631503009', name: 'Kittipat Somboon', email: 'kittipat.s@student.mfu.ac.th', role: 'student', department: 'School of Applied Digital Technology (ADT)', phone: '081-234-5609', isActive: true, hasAiAccess: false, createdAt: '2024-06-01' },
   { id: 'STU010', code: '6631503010', name: 'Waraporn Chantara', email: 'waraporn.c@student.mfu.ac.th', role: 'student', department: 'School of Applied Digital Technology (ADT)', phone: '081-234-5610', isActive: true, hasAiAccess: false, createdAt: '2024-06-01' },
+  { id: 'STU_WORANUT', code: '6631503036', name: 'Woranut Khwanpongdee', email: '6631503036@lamduan.mfu.ac.th', role: 'student', department: 'School of Applied Digital Technology (ADT)', phone: '081-234-5636', isActive: true, hasAiAccess: false, createdAt: '2024-06-01' },
   // Advisors
   { id: 'ADV001', code: 'EMP-1001', name: 'Dr. Prasit Kanchanawat', email: 'prasit.k@mfu.ac.th', role: 'advisor', department: 'School of Applied Digital Technology (ADT)', phone: '053-916-001', isActive: true, hasAiAccess: true, createdAt: '2020-01-15' },
   { id: 'ADV002', code: 'EMP-1002', name: 'Dr. Wipawan Buathong', email: 'wipawan.b@mfu.ac.th', role: 'advisor', department: 'School of Applied Digital Technology (ADT)', phone: '053-916-002', isActive: true, hasAiAccess: false, createdAt: '2019-08-01' },
@@ -63,6 +64,7 @@ export const mockRoster: StudentAdvisorAssignment[] = [
   { id: 'R008', studentId: 'STU008', advisorId: 'ADV003', assignedAt: '2024-06-15', isActive: true },
   { id: 'R009', studentId: 'STU009', advisorId: 'ADV003', assignedAt: '2024-06-15', isActive: true },
   { id: 'R010', studentId: 'STU010', advisorId: 'ADV001', assignedAt: '2024-06-15', isActive: true },
+  { id: 'R_WORANUT', studentId: 'STU_WORANUT', advisorId: 'ADV001', assignedAt: '2024-06-15', isActive: true },
 ]
 
 // --- Advising Requests ---
