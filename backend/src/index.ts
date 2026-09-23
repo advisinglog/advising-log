@@ -859,18 +859,14 @@ app.post('/api/follow-up-progress', async (c) => {
   if (!database) return c.json({ error: 'Database unavailable' }, 503)
 
   const body = await c.req.json()
-  const existing = body.id
-    ? (await database.select().from(schema.followUpProgress).where(eq(schema.followUpProgress.id, body.id)))[0]
-    : null
-
   const progressRecord = {
-    id: body.id || (existing ? existing.id : `FUP${Date.now()}`),
-    followUpId: body.followUpId || (existing ? existing.followUpId : ''),
-    studentId: body.studentId || (existing ? existing.studentId : ''),
-    progress: body.progress ?? (existing ? existing.progress : 0),
-    notes: body.notes !== undefined ? body.notes : (existing ? existing.notes : ''),
-    status: body.status || (existing ? existing.status : 'in_progress'),
-    createdAt: body.createdAt || (existing ? existing.createdAt : new Date().toISOString().split('T')[0]),
+    id: body.id || `FUP${Date.now()}`,
+    followUpId: body.followUpId,
+    studentId: body.studentId,
+    progress: body.progress || 0,
+    notes: body.notes || '',
+    status: body.status || 'in_progress',
+    createdAt: body.createdAt || new Date().toISOString().split('T')[0],
   }
 
   await database.insert(schema.followUpProgress).values(progressRecord).onConflictDoUpdate({

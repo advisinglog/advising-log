@@ -45,49 +45,20 @@ export default function FollowUps() {
 
   function handleUpdateProgress() {
     if (!selectedFollowUp || !currentUser) return
-    const isCompleted = progressValue === 100
-    const existingFp = getProgressForFollowUp(selectedFollowUp.id)
-
-    if (existingFp) {
-      store.updateFollowUpProgress(
-        existingFp.id,
-        progressValue,
-        progressNotes,
-        {
-          followUpId: selectedFollowUp.id,
-          studentId: currentUser.id,
-          status: isCompleted ? 'submitted' : 'in_progress',
-        }
-      )
-    } else {
-      store.addFollowUpProgress({
-        followUpId: selectedFollowUp.id,
-        studentId: currentUser.id,
-        progress: progressValue,
-        notes: progressNotes,
-        status: isCompleted ? 'submitted' : 'in_progress',
-      })
-    }
-
-    if (isCompleted && selectedFollowUp.status !== 'completed') {
-      store.updateFollowUpStatus(selectedFollowUp.id, 'completed')
-    }
-
+    store.updateFollowUpProgress(
+      `${selectedFollowUp.id}-progress`,
+      progressValue,
+      progressNotes
+    )
     store.addAuditLog({
       userId: currentUser.id,
       userName: currentUser.name,
       userRole: 'student',
-      action: isCompleted ? 'followup_completed' : ('followup_progress_updated' as any),
+      action: 'followup_completed' as any,
       description: `Updated progress for ${selectedFollowUp.task}: ${progressValue}%`,
       targetId: selectedFollowUp.id,
     })
-    addToast(
-      'success',
-      isCompleted ? t('งานเสร็จสิ้นแล้ว', 'Task Completed') : t('อัปเดตความคืบหน้าแล้ว', 'Progress Updated'),
-      isCompleted
-        ? t('บันทึกผลงานเสร็จสมบูรณ์ 100% เรียบร้อยแล้ว', 'Follow-up marked 100% completed.')
-        : t('บันทึกความคืบหน้างานเรียบร้อยแล้ว', 'Progress has been recorded successfully.')
-    )
+    addToast('success', t('อัปเดตความคืบหน้าแล้ว', 'Progress Updated'), t('บันทึกความคืบหน้างานเรียบร้อยแล้ว', 'Progress has been recorded successfully.'))
     setShowProgressModal(false)
     setSelectedFollowUp(null)
     setProgressValue(0)
@@ -165,13 +136,7 @@ export default function FollowUps() {
               <Button
                 size="sm"
                 variant="secondary"
-                onClick={() => {
-                  setSelectedFollowUp(f)
-                  const fp = getProgressForFollowUp(f.id)
-                  setProgressValue(fp?.progress ?? 0)
-                  setProgressNotes(fp?.notes ?? '')
-                  setShowProgressModal(true)
-                }}
+                onClick={() => { setSelectedFollowUp(f); setShowProgressModal(true) }}
               >
                 <TrendingUp className="h-3.5 w-3.5 mr-1" /> {t('อัปเดต', 'Update')}
               </Button>
@@ -180,22 +145,6 @@ export default function FollowUps() {
                 variant="primary"
                 onClick={() => {
                   store.updateFollowUpStatus(f.id, 'completed')
-                  const fp = getProgressForFollowUp(f.id)
-                  if (fp) {
-                    store.updateFollowUpProgress(fp.id, 100, fp.notes || t('ทำเสร็จแล้ว', 'Completed'), {
-                      followUpId: f.id,
-                      studentId: currentUser.id,
-                      status: 'submitted',
-                    })
-                  } else {
-                    store.addFollowUpProgress({
-                      followUpId: f.id,
-                      studentId: currentUser.id,
-                      progress: 100,
-                      notes: t('ทำเสร็จแล้ว', 'Completed'),
-                      status: 'submitted',
-                    })
-                  }
                   store.addAuditLog({ userId: currentUser.id, userName: currentUser.name, userRole: 'student', action: 'followup_completed', description: `Completed follow-up: ${f.task}`, targetId: f.id })
                   addToast('success', t('ดำเนินการเสร็จสิ้น', 'Follow-up Completed'), f.task)
                 }}
