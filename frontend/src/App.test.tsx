@@ -3,7 +3,7 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import App from './App'
 import { ThemeProvider, useTheme } from '@/contexts/ThemeContext'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
-import { LanguageProvider } from '@/contexts/LanguageContext'
+import { LanguageProvider, useLanguage } from '@/contexts/LanguageContext'
 
 function ThemeTestConsumer() {
   const { theme, setTheme, isDark, toggleTheme } = useTheme()
@@ -90,6 +90,40 @@ describe('App component', () => {
       fireEvent.click(toggleButton)
     })
     expect(document.documentElement.classList.contains('dark')).toBe(false)
+  })
+
+  it('translates advising subcategories properly in Thai and English modes', () => {
+    function SubCatConsumer() {
+      const { setLanguage, getSubCategoryLabel } = useLanguage()
+      return (
+        <div>
+          <span data-testid="sub-scholarship">{getSubCategoryLabel('Scholarship Renewal')}</span>
+          <span data-testid="sub-tuition">{getSubCategoryLabel('Tuition Payment')}</span>
+          <span data-testid="sub-course">{getSubCategoryLabel('Course Registration')}</span>
+          <button onClick={() => setLanguage('en')}>Switch to English</button>
+        </div>
+      )
+    }
+
+    render(
+      <LanguageProvider>
+        <SubCatConsumer />
+      </LanguageProvider>
+    )
+
+    // Defaults to Thai mode
+    expect(screen.getByTestId('sub-scholarship').textContent).toBe('ต่อสัญญา / รายงานตัวรับทุนการศึกษา')
+    expect(screen.getByTestId('sub-tuition').textContent).toBe('การผ่อนผัน / ชำระค่าธรรมเนียมการศึกษา')
+    expect(screen.getByTestId('sub-course').textContent).toBe('การวางแผนลงทะเบียนรายวิชา')
+
+    // Switch to English
+    act(() => {
+      fireEvent.click(screen.getByText('Switch to English'))
+    })
+
+    expect(screen.getByTestId('sub-scholarship').textContent).toBe('Scholarship Renewal')
+    expect(screen.getByTestId('sub-tuition').textContent).toBe('Tuition Payment')
+    expect(screen.getByTestId('sub-course').textContent).toBe('Course Registration')
   })
 })
 

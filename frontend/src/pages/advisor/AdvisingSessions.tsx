@@ -16,7 +16,7 @@ export default function AdvisingSessions() {
   const { currentUser } = useAuth()
   const store = useStore()
   const { addToast } = useToast()
-  const { t, getCategoryLabel } = useLanguage()
+  const { t, getCategoryLabel, getSubCategoryLabel } = useLanguage()
 
   const [tab, setTab] = useState('pending')
   const [selectedReq, setSelectedReq] = useState<AdvisingRequest | null>(null)
@@ -134,7 +134,7 @@ export default function AdvisingSessions() {
               </span>
               {r.subCategory && (
                 <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-medium">
-                  {r.subCategory}
+                  {getSubCategoryLabel(r.subCategory)}
                 </span>
               )}
             </div>

@@ -31,7 +31,7 @@ export default function RequestAdvising() {
   const { currentUser } = useAuth()
   const store = useStore()
   const { addToast } = useToast()
-  const { t, getCategoryLabel, getExitReasonLabel } = useLanguage()
+  const { t, getCategoryLabel, getExitReasonLabel, getSubCategoryLabel } = useLanguage()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
 
@@ -508,7 +508,7 @@ export default function RequestAdvising() {
               >
                 <option value="">{t('-- เลือกหัวข้อย่อย --', 'Select specific topic')}</option>
                 {subCategories.map(sc => (
-                  <option key={sc} value={sc}>{sc}</option>
+                  <option key={sc} value={sc}>{getSubCategoryLabel(sc)}</option>
                 ))}
               </select>
             </div>

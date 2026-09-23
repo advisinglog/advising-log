@@ -11,7 +11,7 @@ import { useNavigate } from 'react-router-dom'
 
 export default function StudentDashboard() {
   const { currentUser } = useAuth()
-  const { t, language, getCategoryLabel } = useLanguage()
+  const { t, language, getCategoryLabel, getSubCategoryLabel } = useLanguage()
   const store = useStore()
   const navigate = useNavigate()
 
@@ -131,7 +131,11 @@ export default function StudentDashboard() {
                       {upcomingAdvisor && (
                         <p className="text-xs text-slate-700 dark:text-slate-200 font-semibold mt-1">
                           <span className="text-slate-400 dark:text-slate-400 font-medium">{t('อาจารย์ที่ปรึกษา:', 'Advisor:')}</span> {upcomingAdvisor.name}
-                          {upcomingReq && <span className="font-normal text-slate-500 dark:text-slate-400"> ({getCategoryLabel(upcomingReq.category)})</span>}
+                          {upcomingReq && (
+                            <span className="font-normal text-slate-500 dark:text-slate-400">
+                              {' '}({getCategoryLabel(upcomingReq.category)}{upcomingReq.subCategory ? ` · ${getSubCategoryLabel(upcomingReq.subCategory)}` : ''})
+                            </span>
+                          )}
                         </p>
                       )}
                       <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 flex flex-wrap items-center gap-2 font-medium">

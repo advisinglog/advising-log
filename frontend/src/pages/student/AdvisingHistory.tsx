@@ -14,7 +14,7 @@ import { FileEdit, Clock, X, CheckCircle } from 'lucide-react'
 export default function AdvisingHistory() {
   const { currentUser } = useAuth()
   const store = useStore()
-  const { t, getCategoryLabel } = useLanguage()
+  const { t, getCategoryLabel, getSubCategoryLabel } = useLanguage()
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
 
@@ -43,13 +43,29 @@ export default function AdvisingHistory() {
     .filter(r => {
       if (!search) return true
       const cat = getCategoryLabel(r.category)
+      const subCat = r.subCategory ? getSubCategoryLabel(r.subCategory) : ''
       const details = r.details || ''
-      return cat.toLowerCase().includes(search.toLowerCase()) || details.toLowerCase().includes(search.toLowerCase())
+      return cat.toLowerCase().includes(search.toLowerCase()) ||
+        subCat.toLowerCase().includes(search.toLowerCase()) ||
+        details.toLowerCase().includes(search.toLowerCase())
     })
 
   const columns = [
     { key: 'date', header: t('วันที่ยื่น', 'Date'), render: (r: AdvisingRequest) => <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">{r.createdAt}</span> },
-    { key: 'category', header: t('หมวดหมู่', 'Category'), render: (r: AdvisingRequest) => <span className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100">{getCategoryLabel(r.category)}</span> },
+    {
+      key: 'category',
+      header: t('หมวดหมู่', 'Category'),
+      render: (r: AdvisingRequest) => (
+        <div>
+          <span className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100 block">{getCategoryLabel(r.category)}</span>
+          {r.subCategory && (
+            <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+              {getSubCategoryLabel(r.subCategory)}
+            </span>
+          )}
+        </div>
+      ),
+    },
     { key: 'advisor', header: t('อาจารย์ที่ปรึกษา', 'Faculty Advisor'), render: (r: AdvisingRequest) => <span className="text-xs text-slate-600 dark:text-slate-300">{store.users.find(u => u.id === r.advisorId)?.name || '-'}</span> },
     { key: 'appointment', header: t('เวลานัดหมาย', 'Appointment'), render: (r: AdvisingRequest) => {
       const apt = store.appointments.find(a => a.requestId === r.id)

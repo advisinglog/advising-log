@@ -14,7 +14,7 @@ import { useState } from 'react'
 export default function AdvisingDetail() {
   const { id } = useParams<{ id: string }>()
   const store = useStore()
-  const { t, getCategoryLabel } = useLanguage()
+  const { t, getCategoryLabel, getSubCategoryLabel } = useLanguage()
   const navigate = useNavigate()
   const { currentUser } = useAuth()
   const { addToast } = useToast()
@@ -73,7 +73,10 @@ export default function AdvisingDetail() {
         </button>
       </div>
 
-      <PageHeader title={catLabel} actions={<StatusBadge status={request.status} />} />
+      <PageHeader
+        title={request.subCategory ? `${catLabel} — ${getSubCategoryLabel(request.subCategory)}` : catLabel}
+        actions={<StatusBadge status={request.status} />}
+      />
 
       <div className="space-y-5 sm:space-y-6">
         {/* Request details */}
