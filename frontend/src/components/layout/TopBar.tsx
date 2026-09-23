@@ -2,7 +2,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useStore } from '@/data/mock-store'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { ThemeToggle, UserAvatar } from '@/components/ui'
-import { Bell, LogOut, Menu, Calendar } from 'lucide-react'
+import { Bell, LogOut, Menu } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
@@ -64,17 +64,8 @@ export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
         <Menu className="h-5 w-5" />
       </button>
 
-      {/* Academic Term Indicator (REG MFU Style) */}
-      <div className="hidden lg:flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-50/90 dark:bg-slate-800/60 border border-slate-200/70 dark:border-slate-700/60 shadow-2xs">
-        <Calendar className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400" />
-        <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-          {t('ภาคการศึกษา 1/2569', 'Semester 1 / 2026')}
-        </span>
-        <span className="text-slate-300 dark:text-slate-600">·</span>
-        <span className="text-[11px] font-semibold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-500/12 px-2 py-0.5 rounded border border-sky-100 dark:border-sky-500/25">
-          {t('ระบบบริการการศึกษา มฟล.', 'MFU SIS Advising')}
-        </span>
-      </div>
+      {/* Spacer for desktop layout alignment */}
+      <div className="hidden lg:block flex-1" />
 
       {/* Right: Language + Theme + Notifications + User */}
       <div className="flex items-center gap-1 sm:gap-2.5">

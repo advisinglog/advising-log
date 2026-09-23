@@ -75,10 +75,6 @@ export default function StudentDashboard() {
         advisor={advisor}
         school={currentUser.department ? (language === 'th' ? 'สำนักวิชาเทคโนโลยีดิจิทัลประยุกต์ (ADT)' : 'School of Applied Digital Technology (ADT)') : undefined}
         major={t('สาขาวิชาวิศวกรรมซอฟต์แวร์', 'Software Engineering')}
-        gpax="3.48"
-        credits="102 / 136"
-        status={t('ปกติ', 'Normal')}
-        semester={t('1/2569', 'Semester 1 / Academic Year 2026')}
       />
 
       <PageHeader
@@ -108,11 +104,6 @@ export default function StudentDashboard() {
               <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-sky-600 dark:text-sky-400" /> {t('ตารางนัดหมายที่กำลังจะมาถึง', 'Upcoming Advising Appointment')}
               </h3>
-              {upcomingAppointment && (
-                <span className="text-[11px] font-semibold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/60 px-2.5 py-0.5 rounded-full border border-sky-100 dark:border-sky-800">
-                  {t('ภาคการศึกษา 1/2569', 'Semester 1/2026')}
-                </span>
-              )}
             </div>
 
             {upcomingAppointment ? (

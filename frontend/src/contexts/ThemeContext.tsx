@@ -50,12 +50,15 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (typeof document === 'undefined') return
     const root = document.documentElement
+    const body = document.body
 
     if (isDark) {
       root.classList.add('dark')
+      body?.classList.add('dark')
       root.style.colorScheme = 'dark'
     } else {
       root.classList.remove('dark')
+      body?.classList.remove('dark')
       root.style.colorScheme = 'light'
     }
   }, [isDark])
@@ -66,6 +69,21 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       localStorage.setItem(THEME_STORAGE_KEY, newTheme)
     } catch {
       // Ignore localStorage write errors
+    }
+
+    if (typeof document !== 'undefined') {
+      const willBeDark = newTheme === 'system' ? systemPrefersDark : newTheme === 'dark'
+      const root = document.documentElement
+      const body = document.body
+      if (willBeDark) {
+        root.classList.add('dark')
+        body?.classList.add('dark')
+        root.style.colorScheme = 'dark'
+      } else {
+        root.classList.remove('dark')
+        body?.classList.remove('dark')
+        root.style.colorScheme = 'light'
+      }
     }
   }
 

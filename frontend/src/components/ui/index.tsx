@@ -565,25 +565,15 @@ export function StudentProfileBanner({
   advisor,
   school,
   major,
-  gpax = '3.48',
-  credits = '102 / 136',
-  status,
-  semester,
 }: {
   student: { name: string; code: string; email: string; department?: string; avatar?: string }
   advisor?: { name: string; email: string; phone?: string; department?: string; avatar?: string } | null
   school?: string
   major?: string
-  gpax?: string
-  credits?: string
-  status?: string
-  semester?: string
 }) {
   const { t } = useLanguage()
   const displaySchool = school || t('สำนักวิชาเทคโนโลยีดิจิทัลประยุกต์ (ADT)', 'School of Applied Digital Technology (ADT)')
   const displayMajor = major || t('สาขาวิชาวิศวกรรมซอฟต์แวร์', 'Software Engineering')
-  const displayStatus = status || t('ปกติ', 'Normal')
-  const displaySemester = semester || t('1/2569', 'Semester 1 / Academic Year 2026')
 
   return (
     <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-premium p-4 sm:p-5 md:p-6 mb-4 sm:mb-6 relative overflow-hidden">
@@ -599,13 +589,6 @@ export function StudentProfileBanner({
               <span className="px-2 sm:px-2.5 py-0.5 rounded-md bg-sky-100/70 dark:bg-sky-950/60 text-sky-800 dark:text-sky-300 text-[10px] sm:text-xs font-mono font-bold border border-sky-200/60 dark:border-sky-800">
                 {student.code}
               </span>
-              <span className="inline-flex items-center gap-1 px-2 sm:px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border border-emerald-200/70 dark:border-emerald-800 text-[10px] sm:text-[11px] font-semibold">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                {displayStatus}
-              </span>
-              <span className="text-[10px] sm:text-[11px] font-medium text-slate-400 dark:text-slate-400">
-                {t('ภาคการศึกษา:', 'Term:')} {displaySemester}
-              </span>
             </div>
             <h2 className="text-base sm:text-lg md:text-xl font-bold text-slate-900 dark:text-slate-100 leading-tight truncate">
               {student.name}
@@ -616,22 +599,14 @@ export function StudentProfileBanner({
           </div>
         </div>
 
-        {/* Right: Academic metrics & Advisor */}
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3 pt-3 lg:pt-0 border-t lg:border-t-0 border-slate-100 dark:border-slate-800">
-          <div className="px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/60 min-w-[80px] sm:min-w-[100px]">
-            <p className="text-[9px] sm:text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">{t('GPAX สะสม', 'Cumulative GPAX')}</p>
-            <p className="text-sm sm:text-base font-extrabold text-sky-600 dark:text-sky-400 mt-0.5 font-mono">{gpax}</p>
-          </div>
-          <div className="px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/60 min-w-[80px] sm:min-w-[100px]">
-            <p className="text-[9px] sm:text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">{t('หน่วยกิตสะสม', 'Earned Credits')}</p>
-            <p className="text-sm sm:text-base font-extrabold text-slate-800 dark:text-slate-200 mt-0.5 font-mono">{credits}</p>
-          </div>
-          <div className="px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl bg-sky-50/50 dark:bg-sky-500/10 border border-sky-100 dark:border-sky-500/25 max-w-[180px] sm:max-w-xs flex-1">
+        {/* Right: Advisor Card */}
+        <div className="flex items-center pt-3 lg:pt-0 border-t lg:border-t-0 border-slate-100 dark:border-slate-800">
+          <div className="px-3.5 py-2 rounded-xl bg-sky-50/60 dark:bg-sky-500/10 border border-sky-100 dark:border-sky-500/25 min-w-[200px] sm:min-w-[240px]">
             <p className="text-[9px] sm:text-[10px] font-bold text-sky-700 dark:text-sky-300 uppercase tracking-wider">{t('อาจารย์ที่ปรึกษา', 'Faculty Advisor')}</p>
-            <p className="text-[11px] sm:text-xs font-bold text-slate-900 dark:text-slate-100 truncate mt-0.5">
+            <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 truncate mt-0.5">
               {advisor?.name || t('ยังไม่ได้รับการจัดสรร', 'Not Assigned')}
             </p>
-            <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-slate-400 truncate">
+            <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 truncate">
               {advisor?.email || t('กรุณาติดต่อสำนักวิชา', 'Contact School Office')}
             </p>
           </div>

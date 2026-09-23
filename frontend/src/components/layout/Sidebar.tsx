@@ -78,13 +78,6 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
     }
   }
 
-  const roleMeta = {
-    student: { title: t('ระบบนักศึกษา', 'Student Portal'), subtitle: t('นักศึกษาในความดูแล', 'Academic Advisee') },
-    advisor: { title: t('ระบบอาจารย์ที่ปรึกษา', 'Advisor Portal'), subtitle: t('อาจารย์ที่ปรึกษา', 'Faculty Advisor') },
-    qa_chair: { title: t('ระบบประกันคุณภาพ', 'QA & Chair Portal'), subtitle: t('ฝ่ายประกันคุณภาพ', 'Quality Assurance') },
-    admin: { title: t('ระบบผู้ดูแล', 'Admin Console'), subtitle: t('ผู้ดูแลระบบ', 'System Operator') },
-  }[currentUser.role]
-
   const navItems = getNavItems(currentUser.role)
 
   return (
@@ -116,17 +109,6 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
           <button onClick={onClose} className="lg:hidden text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
             <X className="h-4 w-4" />
           </button>
-        </div>
-
-        {/* Role label badge */}
-        <div className="px-4 py-3 border-b border-slate-100/80 dark:border-slate-800/80 bg-slate-50/40 dark:bg-slate-900/40">
-          <div className="p-2 rounded-xl bg-white dark:bg-slate-800/60 border border-slate-200/70 dark:border-slate-700/60 shadow-2xs flex items-center justify-between">
-            <div>
-              <p className="text-[11px] font-bold text-slate-900 dark:text-slate-100 leading-tight">{roleMeta.title}</p>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">{roleMeta.subtitle}</p>
-            </div>
-            <span className="h-2 w-2 rounded-full bg-emerald-500 ring-2 ring-emerald-100 dark:ring-emerald-950" />
-          </div>
         </div>
 
         {/* Navigation */}
