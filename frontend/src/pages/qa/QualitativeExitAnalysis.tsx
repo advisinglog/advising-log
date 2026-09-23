@@ -58,66 +58,28 @@ import {
 
 type MetricTone = 'rose' | 'amber' | 'sky' | 'purple' | 'emerald'
 
-const metricToneStyles: Record<
-  MetricTone,
-  { icon: string; value: string; border: string }
-> = {
-  rose: {
-    icon: 'bg-rose-50 text-rose-600 border-rose-100 dark:bg-rose-950/35 dark:text-rose-300 dark:border-rose-900/50',
-    value: 'text-slate-950 dark:text-white',
-    border: 'hover:border-rose-200 dark:hover:border-rose-900/70',
-  },
-  amber: {
-    icon: 'bg-amber-50 text-amber-600 border-amber-100 dark:bg-amber-950/35 dark:text-amber-300 dark:border-amber-900/50',
-    value: 'text-slate-950 dark:text-white',
-    border: 'hover:border-amber-200 dark:hover:border-amber-900/70',
-  },
-  sky: {
-    icon: 'bg-sky-50 text-sky-600 border-sky-100 dark:bg-sky-950/35 dark:text-sky-300 dark:border-sky-900/50',
-    value: 'text-slate-950 dark:text-white',
-    border: 'hover:border-sky-200 dark:hover:border-sky-900/70',
-  },
-  purple: {
-    icon: 'bg-violet-50 text-violet-600 border-violet-100 dark:bg-violet-950/35 dark:text-violet-300 dark:border-violet-900/50',
-    value: 'text-slate-950 dark:text-white',
-    border: 'hover:border-violet-200 dark:hover:border-violet-900/70',
-  },
-  emerald: {
-    icon: 'bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-950/35 dark:text-emerald-300 dark:border-emerald-900/50',
-    value: 'text-slate-950 dark:text-white',
-    border: 'hover:border-emerald-200 dark:hover:border-emerald-900/70',
-  },
-}
-
 function MetricTile({
   label,
   value,
   icon,
-  tone,
 }: {
   label: ReactNode
   value: number
   icon: ReactNode
   tone: MetricTone
 }) {
-  const styles = metricToneStyles[tone]
-
   return (
-    <div
-      className={`min-h-[112px] rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#0e1424] p-4 shadow-sm transition-all ${styles.border}`}
-    >
-      <div className="flex items-start gap-3">
-        <div
-          className={`h-10 w-10 rounded-xl border flex items-center justify-center flex-shrink-0 ${styles.icon}`}
-        >
+    <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#0e1424] p-4 shadow-sm hover:border-sky-300 dark:hover:border-sky-800 transition-all flex flex-col justify-between">
+      <div className="flex items-center justify-between gap-2 mb-2.5">
+        <div className="h-9 w-9 rounded-xl border border-sky-100 dark:border-sky-900/50 bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0">
           {icon}
         </div>
-        <div className="min-w-0">
-          <div className={`text-2xl font-bold leading-none ${styles.value}`}>{value}</div>
-          <div className="mt-2 text-[13px] font-medium leading-5 text-slate-700 dark:text-slate-300">
-            {label}
-          </div>
-        </div>
+        <span className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+          {value}
+        </span>
+      </div>
+      <div className="text-xs font-medium leading-relaxed text-slate-600 dark:text-slate-300">
+        {label}
       </div>
     </div>
   )
@@ -492,38 +454,34 @@ export default function QualitativeExitAnalysis() {
   }
 
   return (
-    <div className="space-y-8 text-slate-700 dark:text-slate-200 font-sans antialiased">
+    <div className="space-y-6 text-slate-700 dark:text-slate-200 font-sans antialiased">
       {/* Top Banner: Qualitative Diagnosis Focus */}
-      <div className="group relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-gradient-to-br from-white via-sky-50/35 to-white dark:from-slate-900 dark:via-slate-900 dark:to-sky-950/20 p-4 sm:p-5 md:p-6 shadow-premium transition-all duration-200 hover:border-sky-200/90 dark:hover:border-sky-500/35 hover:shadow-premium-hover flex flex-col xl:flex-row xl:items-center justify-between gap-4 sm:gap-5">
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-sky-500 via-sky-400 to-sky-600 pointer-events-none" />
-        <div className="absolute left-0 top-1 bottom-0 w-1 bg-gradient-to-b from-sky-100 via-transparent to-transparent dark:from-sky-500/20 pointer-events-none" aria-hidden="true" />
-        
-
-        <div className="relative z-10 flex items-start sm:items-center gap-3 sm:gap-4 min-w-0">
-          <div className="h-14 w-14 sm:h-16 sm:w-16 md:h-18 md:w-18 rounded-2xl bg-white/80 dark:bg-sky-950/50 border-2 border-sky-100 dark:border-sky-800/60 text-sky-700 dark:text-sky-300 flex items-center justify-center flex-shrink-0 shadow-sm ring-4 ring-sky-50/80 dark:ring-sky-500/10 transition-transform duration-200 group-hover:scale-[1.03]">
-            <Brain className="h-6 w-6 sm:h-7 sm:w-7" />
+      <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-gradient-to-r from-sky-50/50 via-white to-white dark:from-sky-950/20 dark:via-[#0e1424] dark:to-[#0e1424] p-5 sm:p-6 shadow-sm flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+        <div className="flex items-start sm:items-center gap-3.5 min-w-0">
+          <div className="h-11 w-11 rounded-xl bg-sky-100 dark:bg-sky-950 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0">
+            <Brain className="h-5 w-5" />
           </div>
           <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-1">
-              <h3 className="text-base sm:text-lg md:text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight leading-tight">
+            <div className="flex flex-wrap items-center gap-2 mb-1">
+              <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 tracking-tight">
                 {t('การวิเคราะห์ปัญหาเชิงคุณภาพ: ทำไมเด็กลาออก / พักการศึกษา?', 'Qualitative Analysis: Why Do Students Resign or Take Leave?')}
               </h3>
-              <span className="inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-semibold bg-sky-50 dark:bg-sky-950/50 text-sky-700 dark:text-sky-300 border border-sky-200/70 dark:border-sky-800">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-50 dark:bg-sky-950/50 text-sky-700 dark:text-sky-300 border border-sky-200/70 dark:border-sky-800">
                 <Sparkles className="h-3 w-3 text-sky-600 dark:text-sky-400" />
                 AUN-QA Criteria 6.4 & 8.3
               </span>
             </div>
-            <p className="max-w-4xl text-sm sm:text-base leading-relaxed text-slate-500 dark:text-slate-400 font-medium">
+            <p className="max-w-3xl text-xs sm:text-sm leading-relaxed text-slate-500 dark:text-slate-400">
               {t(
-                'จำแนกและวิเคราะห์เจาะลึกสาเหตุรากเหง้า (Root Causes) เปรียบเทียบระหว่างกลุ่ม "ขอลาออกถาวร" (ไม่ถนัดในสาขา/เป้าหมายเปลี่ยน) กับกลุ่ม "ขอพักการศึกษาชั่วคราว" (ภาระครอบครัว/สุขภาพจิต) โดยสังเคราะห์จากคำพูดจริงของนักศึกษาและผลวินิจฉัยของอาจารย์ที่ปรึกษา',
-                'In-depth comparative root-cause diagnosis contrasting Permanent Withdrawals (foundation gaps / career redirection) against Temporary Leaves of Absence (family caregiving / burnout), synthesizing student voices with faculty advisor evaluations.'
+                'จำแนกและวิเคราะห์เจาะลึกสาเหตุรากเหง้า (Root Causes) เปรียบเทียบระหว่างกลุ่ม "ขอลาออกถาวร" กับกลุ่ม "ขอพักการศึกษาชั่วคราว" โดยสังเคราะห์จากคำพูดจริงของนักศึกษาและผลวินิจฉัยของอาจารย์ที่ปรึกษา',
+                'In-depth comparative root-cause diagnosis contrasting Permanent Withdrawals against Temporary Leaves of Absence, synthesizing student voices with faculty advisor evaluations.'
               )}
             </p>
           </div>
         </div>
 
-        <div className="relative z-10 flex items-center gap-2 flex-shrink-0 self-start xl:self-auto">
-          <Button variant="secondary" size="sm" onClick={handleExportQualitative} className="bg-white/85 dark:bg-sky-500/10 border-sky-100 dark:border-sky-500/25 text-slate-700 dark:text-slate-300 shadow-xs">
+        <div className="flex items-center gap-2 shrink-0 self-start xl:self-auto">
+          <Button variant="secondary" size="sm" onClick={handleExportQualitative} className="text-xs">
             <Download className="h-3.5 w-3.5 mr-1.5 text-slate-500" />
             {t('ส่งออกรายงานวิเคราะห์เชิงคุณภาพ', 'Export Qualitative Audit')}
           </Button>
@@ -899,41 +857,41 @@ export default function QualitativeExitAnalysis() {
               </span>
             </div>
 
-            <div className="space-y-3 text-xs">
+            <div className="space-y-3">
               {/* Point 1 */}
-              <div className="p-3 bg-slate-50/70 dark:bg-slate-800/50 rounded-xl border border-slate-200/80 dark:border-slate-700/70 space-y-1.5">
+              <div className="p-3.5 bg-slate-50/70 dark:bg-slate-800/40 rounded-xl space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                  <span className="font-semibold text-xs text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
                     <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
                     {t('อันดับ 1: ความยากของหลักสูตร / ไม่ตรงความถนัด (Foundation Gap)', 'Rank 1: Curriculum Rigor & Foundation Gap')}
                   </span>
-                  <span className="text-[10px] font-mono font-bold bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-100 dark:border-rose-900/40 px-1.5 py-0.5 rounded">
+                  <span className="text-[10px] font-mono font-bold bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 px-1.5 py-0.5 rounded">
                     ~50%
                   </span>
                 </div>
-                <p className="text-slate-600 dark:text-slate-300 leading-6">
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                   {t(
                     'นักศึกษาปี 1 ที่ไม่มีพื้นฐานการเขียนโปรแกรม/ตรรกะคณิตศาสตร์มาก่อน เรียนตามไม่ทันในวิชาแกน ภาระงานหนักและปรับตัวกับความเร็วการสอนไม่ทัน จนเกิดความท้อแท้และตัดสินใจลาออก',
                     'First-year students lacking prior coding background struggle with rapid lecture pacing in core programming, triggering severe demoralization and departure.'
                   )}
                 </p>
-                <div className="text-xs text-slate-600 dark:text-slate-300 italic leading-6 bg-slate-50/80 dark:bg-slate-800/50 p-3 rounded-lg border-l-2 border-rose-400 leading-6">
+                <div className="text-xs text-slate-600 dark:text-slate-300 italic leading-relaxed pl-3 border-l-2 border-rose-400 py-0.5 mt-1">
                   "{t('วิชาเขียนโปรแกรมปี 1 สอนเร็วมาก การบ้านหนักสำหรับคนไม่มีพื้นฐาน อยากให้มีวิชาปรับพื้นฐานหรือติวเสริมเข้มข้น', 'Programming pace was too fast with heavy homework for beginners without prior tech experience.')}"
                 </div>
               </div>
 
               {/* Point 2 */}
-              <div className="p-3 bg-slate-50/70 dark:bg-slate-800/50 rounded-xl border border-slate-200/80 dark:border-slate-700/70 space-y-1.5">
+              <div className="p-3.5 bg-slate-50/70 dark:bg-slate-800/40 rounded-xl space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                  <span className="font-semibold text-xs text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
                     <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
                     {t('อันดับ 2: ค้นพบเป้าหมายอาชีพใหม่ / ย้ายสาขา (Career Redirection)', 'Rank 2: Career Path Redirection')}
                   </span>
-                  <span className="text-[10px] font-mono font-bold bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-100 dark:border-rose-900/40 px-1.5 py-0.5 rounded">
+                  <span className="text-[10px] font-mono font-bold bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 px-1.5 py-0.5 rounded">
                     ~30%
                   </span>
                 </div>
-                <p className="text-slate-600 dark:text-slate-300 leading-6">
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                   {t(
                     'ค้นพบว่าไม่ชอบงานด้านเขียนโค้ดเชิงลึก แต่สนใจงานสร้างสรรค์ เช่น Graphic Design, Animation, หรือ Digital Marketing จึงลาออกเพื่อไปศึกษาต่อสาขาอื่น',
                     'Realization of misalignment with deep software engineering, opting to transfer toward Digital Media Arts or Design.'
@@ -942,17 +900,17 @@ export default function QualitativeExitAnalysis() {
               </div>
 
               {/* Point 3 */}
-              <div className="p-3 bg-slate-50/70 dark:bg-slate-800/50 rounded-xl border border-slate-200/80 dark:border-slate-700/70 space-y-1.5">
+              <div className="p-3.5 bg-slate-50/70 dark:bg-slate-800/40 rounded-xl space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                  <span className="font-semibold text-xs text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
                     <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
                     {t('อันดับ 3: วิกฤตเศรษฐกิจครอบครัวระยะยาว (Financial Crisis)', 'Rank 3: Long-term Financial Hardship')}
                   </span>
-                  <span className="text-[10px] font-mono font-bold bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-100 dark:border-rose-900/40 px-1.5 py-0.5 rounded">
+                  <span className="text-[10px] font-mono font-bold bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 px-1.5 py-0.5 rounded">
                     ~20%
                   </span>
                 </div>
-                <p className="text-slate-600 dark:text-slate-300 leading-6">
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                   {t(
                     'ครอบครัวสูญเสียรายได้หลักกะทันหัน นักศึกษาจำเป็นต้องออกไปทำงานประจำเต็มเวลาเพื่อหารายได้จุนเจือ ไม่สามารถเรียนควบคู่ได้',
                     'Severe household income shock compelling the student to seek full-time employment to support dependents.'
@@ -983,41 +941,41 @@ export default function QualitativeExitAnalysis() {
               </span>
             </div>
 
-            <div className="space-y-3 text-xs">
+            <div className="space-y-3">
               {/* Point 1 */}
-              <div className="p-3 bg-slate-50/70 dark:bg-slate-800/50 rounded-xl border border-slate-200/80 dark:border-slate-700/70 space-y-1.5">
+              <div className="p-3.5 bg-slate-50/70 dark:bg-slate-800/40 rounded-xl space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                  <span className="font-semibold text-xs text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
                     <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
                     {t('อันดับ 1: ภาระครอบครัวกะทันหัน / ดูแลผู้ป่วย (Family Caregiving)', 'Rank 1: Family Caregiving & Obligations')}
                   </span>
-                  <span className="text-[10px] font-mono font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-100 dark:border-amber-900/40 px-1.5 py-0.5 rounded">
+                  <span className="text-[10px] font-mono font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 px-1.5 py-0.5 rounded">
                     ~50%
                   </span>
                 </div>
-                <p className="text-slate-600 dark:text-slate-300 leading-6">
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                   {t(
                     'บิดามารดาหรือคนในครอบครัวเจ็บป่วยเรื้อรัง ต้องกลับไปช่วยดูแลที่ต่างจังหวัด นักศึกษามีผลการเรียนดีและมีเจตนารมณ์จะกลับมาเรียนต่ออย่างแน่นอน',
                     'Parental acute or chronic illness necessitating hometown caregiving. Students maintain solid GPA and express firm intent to return.'
                   )}
                 </p>
-                <div className="text-xs text-slate-600 dark:text-slate-300 italic leading-6 bg-slate-50/80 dark:bg-slate-800/50 p-3 rounded-lg border-l-2 border-amber-400 leading-6">
+                <div className="text-xs text-slate-600 dark:text-slate-300 italic leading-relaxed pl-3 border-l-2 border-amber-400 py-0.5 mt-1">
                   "{t('คุณแม่ป่วยเรื้อรัง ต้องกลับไปช่วยดูแลอย่างใกล้ชิด วางแผนจะกลับมาศึกษาต่อในปีการศึกษาถัดไปแน่นอน', 'Taking leave to nurse an ill parent at hometown; planning to return next academic year without fail.')}"
                 </div>
               </div>
 
               {/* Point 2 */}
-              <div className="p-3 bg-slate-50/70 dark:bg-slate-800/50 rounded-xl border border-slate-200/80 dark:border-slate-700/70 space-y-1.5">
+              <div className="p-3.5 bg-slate-50/70 dark:bg-slate-800/40 rounded-xl space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                  <span className="font-semibold text-xs text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
                     <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
                     {t('อันดับ 2: สุขภาพจิต & ภาวะหมดไฟสะสม (Mental Health & Burnout)', 'Rank 2: Mental Health & Burnout Recovery')}
                   </span>
-                  <span className="text-[10px] font-mono font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-100 dark:border-amber-900/40 px-1.5 py-0.5 rounded">
+                  <span className="text-[10px] font-mono font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 px-1.5 py-0.5 rounded">
                     ~30%
                   </span>
                 </div>
-                <p className="text-slate-600 dark:text-slate-300 leading-6">
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                   {t(
                     'ภาวะเครียดสะสมรุนแรง วิตกกังวลต่อการสอบ และนอนไม่หลับเรื้อรัง แพทย์แนะนำให้พักฟื้นและบำบัด 1 ภาคการศึกษาก่อนกลับเข้าสู่ระบบเรียน',
                     'Clinical burnout, insomnia, and acute exam anxiety. Psychiatrists recommend 1 semester medical recuperation leave.'
@@ -1026,17 +984,17 @@ export default function QualitativeExitAnalysis() {
               </div>
 
               {/* Point 3 */}
-              <div className="p-3 bg-slate-50/70 dark:bg-slate-800/50 rounded-xl border border-slate-200/80 dark:border-slate-700/70 space-y-1.5">
+              <div className="p-3.5 bg-slate-50/70 dark:bg-slate-800/40 rounded-xl space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                  <span className="font-semibold text-xs text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
                     <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
                     {t('อันดับ 3: ปัญหาสุขภาพทางกาย / อุบัติเหตุ (Physical Health / Surgery)', 'Rank 3: Physical Health & Surgery Recovery')}
                   </span>
-                  <span className="text-[10px] font-mono font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-100 dark:border-amber-900/40 px-1.5 py-0.5 rounded">
+                  <span className="text-[10px] font-mono font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 px-1.5 py-0.5 rounded">
                     ~20%
                   </span>
                 </div>
-                <p className="text-slate-600 dark:text-slate-300 leading-6">
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                   {t(
                     'การผ่าตัดเอ็นข้อเข่าหรือการรักษาพยาบาลต่อเนื่อง 4-6 เดือน ไม่สามารถเดินทางมาเรียนได้สะดวก มีใบรับรองแพทย์ชัดเจน',
                     'Orthopedic surgical recovery or prolonged medical treatment requiring temporary hiatus from on-campus attendance.'
@@ -1205,10 +1163,10 @@ export default function QualitativeExitAnalysis() {
                   </div>
 
                   {/* Real Student Voice */}
-                  <div className="p-3 bg-slate-50/80 dark:bg-slate-800/40 rounded-xl border border-slate-200/70 dark:border-slate-800 text-xs sm:text-sm space-y-1.5">
+                  <div className="pl-3 border-l-2 border-sky-400 py-0.5 space-y-1">
                     <div className="font-semibold text-sky-700 dark:text-sky-300 text-xs flex items-center justify-between">
                       <span className="inline-flex items-center gap-1.5">
-                        <Quote className="h-3.5 w-3.5" />
+                        <Quote className="h-3 w-3" />
                         {t('เสียงสะท้อนนักศึกษา (Student Voice):', 'Student Voice:')}
                       </span>
                       {primaryVoice?.studentCode && (
@@ -1229,10 +1187,10 @@ export default function QualitativeExitAnalysis() {
                   </div>
 
                   {/* Real Advisor Diagnosis */}
-                  <div className="p-3 bg-slate-50/50 dark:bg-slate-800/20 rounded-xl border border-slate-200/60 dark:border-slate-800 text-xs sm:text-sm space-y-1.5">
+                  <div className="pl-3 border-l-2 border-slate-300 dark:border-slate-700 py-0.5 space-y-1">
                     <div className="font-semibold text-slate-800 dark:text-slate-200 text-xs flex items-center justify-between">
                       <span className="inline-flex items-center gap-1.5">
-                        <Brain className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400" />
+                        <Brain className="h-3 w-3 text-sky-600 dark:text-sky-400" />
                         {t('การวินิจฉัยของอาจารย์ที่ปรึกษา:', 'Advisor Evaluation:')}
                       </span>
                       {primaryDiagnosis?.advisorName && (
@@ -1482,15 +1440,15 @@ export default function QualitativeExitAnalysis() {
                   {/* Why? Qualitative Comparison Box */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 text-sm">
                     {/* Left: What Student Stated */}
-                    <div className="p-4 bg-slate-50/80 dark:bg-slate-800/50 rounded-xl border border-slate-200/80 dark:border-slate-700/70 space-y-2">
+                    <div className="p-3.5 bg-slate-50/70 dark:bg-slate-800/40 rounded-xl space-y-1.5">
                       <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide block">
                         {t('เหตุผลที่นักศึกษาระบุ (Student Voice Details):', 'Student Stated Reason:')}
                       </span>
-                      <p className="text-slate-700 dark:text-slate-300 leading-relaxed italic">
+                      <p className="text-slate-700 dark:text-slate-300 leading-relaxed italic text-xs">
                         "{c.details}"
                       </p>
                       {voice?.whatCouldUniversityDoBetter && (
-                        <p className="text-[11px] text-sky-700 dark:text-sky-300 pt-1 border-t border-slate-200/60 dark:border-slate-700/60 mt-1.5 flex items-center gap-1.5">
+                        <p className="text-[11px] text-sky-700 dark:text-sky-300 pt-1 border-t border-slate-200/60 dark:border-slate-700/60 mt-1 flex items-center gap-1.5">
                           <Lightbulb className="h-3 w-3 text-amber-500 flex-shrink-0" />
                           <span>{t('สิ่งที่อยากให้ ม. ปรับปรุง:', 'University Feedback:')} "{voice.whatCouldUniversityDoBetter}"</span>
                         </p>
@@ -1498,25 +1456,25 @@ export default function QualitativeExitAnalysis() {
                     </div>
 
                     {/* Right: Advisor Assessment */}
-                    <div className="p-4 bg-white dark:bg-slate-800/40 rounded-xl border border-sky-200/80 dark:border-sky-900/50 space-y-2">
+                    <div className="p-3.5 bg-sky-50/40 dark:bg-sky-950/20 rounded-xl border border-sky-100 dark:border-sky-900/40 space-y-1.5">
                       <span className="text-[10px] font-semibold text-sky-700 dark:text-sky-300 uppercase tracking-wider flex items-center justify-between">
                         <span>{t('การวินิจฉัยของอาจารย์ที่ปรึกษา:', 'Advisor Diagnostic:')}</span>
                         <span className="font-medium text-[10px] text-slate-400">{advisor?.name}</span>
                       </span>
                       {assessment ? (
                         <>
-                          <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
+                          <p className="text-slate-700 dark:text-slate-300 leading-relaxed text-xs">
                             {assessment.assessment}
                           </p>
                           {assessment.recommendation && (
-                            <p className="text-[11px] text-emerald-700 dark:text-emerald-400 pt-1 border-t border-sky-100/80 dark:border-sky-900/40 mt-1.5 font-semibold flex items-center gap-1.5">
+                            <p className="text-[11px] text-emerald-700 dark:text-emerald-400 pt-1 border-t border-sky-100/80 dark:border-sky-900/40 mt-1 font-semibold flex items-center gap-1.5">
                               <CheckCircle2 className="h-3 w-3 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
                               <span>{t('ข้อเสนอแนะ:', 'Recommendation:')} {assessment.recommendation}</span>
                             </p>
                           )}
                         </>
                       ) : (
-                        <p className="text-slate-400 italic">
+                        <p className="text-slate-400 italic text-xs">
                           {t('รออาจารย์ที่ปรึกษาบันทึกผลการประเมิน', 'Pending advisor formal assessment filing.')}
                         </p>
                       )}

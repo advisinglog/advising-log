@@ -422,9 +422,10 @@ export default function ExitCaseReview() {
             )}
 
             {/* Qualitative Root-Cause Diagnostic Banner for QA */}
-            <div className="p-3.5 bg-gradient-to-r from-sky-50 to-indigo-50/40 dark:from-sky-950/40 dark:to-indigo-950/30 rounded-xl border border-sky-200/80 dark:border-sky-900/50 space-y-2 text-xs">
+            {/* Qualitative Root-Cause Diagnostic Banner for QA */}
+            <div className="p-3.5 bg-sky-50/60 dark:bg-sky-950/25 rounded-xl border border-sky-100 dark:border-sky-900/40 space-y-1.5 text-xs">
               <div className="flex items-center justify-between">
-                <span className="font-bold text-sky-900 dark:text-sky-300 flex items-center gap-1.5">
+                <span className="font-semibold text-sky-900 dark:text-sky-300 flex items-center gap-1.5">
                   <Brain className="h-4 w-4 text-sky-600 dark:text-sky-400" />
                   {t(
                     'การวิเคราะห์ปัญหาเชิงคุณภาพ (Qualitative Problem Diagnosis):',
@@ -435,7 +436,7 @@ export default function ExitCaseReview() {
                   #{selectedCase.reasonCode}
                 </span>
               </div>
-              <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
+              <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-xs">
                 {selectedCase.exitType === 'withdrawal' || selectedCase.exitType === 'dropout'
                   ? t(
                       'เคสลาออกถาวร: สะท้อนปัญหาเชิงลึกด้านความพร้อมการเรียนและเป้าหมายอาชีพ ควรพิจารณาผลกระทบต่อเกณฑ์รับเข้าและการปูพื้นฐานปี 1',
@@ -448,12 +449,12 @@ export default function ExitCaseReview() {
               </p>
             </div>
 
-            <div>
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1">
+            <div className="space-y-1">
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
                 {t('เหตุผลที่นักศึกษาระบุ', 'Student Stated Reason')}
               </span>
-              <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed p-3 bg-slate-50/50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-800">
-                {selectedCase.details}
+              <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed p-3.5 bg-slate-50/70 dark:bg-slate-800/40 rounded-xl border border-slate-100 dark:border-slate-800 italic">
+                "{selectedCase.details}"
               </p>
             </div>
 
