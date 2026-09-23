@@ -122,7 +122,7 @@ export default function AdvisorDashboard() {
       {/* Advisor Cohort Banner (REG MFU Academic Portal Style) */}
       <AdvisorCohortBanner
         advisor={currentUser}
-        adviseeCount={myAdvisees.length || 18}
+        adviseeCount={myAdvisees.length}
         school={currentUser.department ? (language === 'th' ? 'สำนักวิชาเทคโนโลยีดิจิทัลประยุกต์ (ADT)' : 'School of Applied Digital Technology (ADT)') : undefined}
       />
 
