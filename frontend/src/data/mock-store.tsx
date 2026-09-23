@@ -114,7 +114,12 @@ interface StoreActions {
   addFollowUp: (fu: Omit<FollowUp, 'id' | 'createdAt'>) => FollowUp
   updateFollowUpStatus: (id: string, status: FollowUp['status']) => void
   addFollowUpProgress: (fp: Omit<FollowUpProgress, 'id' | 'createdAt'>) => FollowUpProgress
-  updateFollowUpProgress: (id: string, progress: number, notes: string) => void
+  updateFollowUpProgress: (
+    id: string,
+    progress: number,
+    notes: string,
+    extra?: { followUpId?: string; studentId?: string; status?: FollowUpProgress['status'] }
+  ) => void
 
   // Request Progress
   addRequestProgress: (rp: Omit<RequestProgress, 'id' | 'createdAt'>) => RequestProgress
@@ -386,9 +391,35 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return newFp
   }, [])
 
-  const updateFollowUpProgress = useCallback((id: string, progress: number, notes: string) => {
-    setFollowUpProgress(prev => prev.map(fp => fp.id === id ? { ...fp, progress, notes } : fp))
-    api.saveFollowUpProgress({ id, progress, notes }).catch(() => {})
+  const updateFollowUpProgress = useCallback((
+    id: string,
+    progress: number,
+    notes: string,
+    extra?: { followUpId?: string; studentId?: string; status?: FollowUpProgress['status'] }
+  ) => {
+    setFollowUpProgress(prev =>
+      prev.map(fp => {
+        if (fp.id === id) {
+          return {
+            ...fp,
+            progress,
+            notes,
+            ...(extra?.status ? { status: extra.status } : {}),
+            ...(extra?.followUpId ? { followUpId: extra.followUpId } : {}),
+            ...(extra?.studentId ? { studentId: extra.studentId } : {}),
+          }
+        }
+        return fp
+      })
+    )
+    api.saveFollowUpProgress({
+      id,
+      progress,
+      notes,
+      ...(extra?.status ? { status: extra.status } : {}),
+      ...(extra?.followUpId ? { followUpId: extra.followUpId } : {}),
+      ...(extra?.studentId ? { studentId: extra.studentId } : {}),
+    }).catch(() => {})
   }, [])
 
   const addRequestProgress = useCallback((rp: Omit<RequestProgress, 'id' | 'createdAt'>): RequestProgress => {
