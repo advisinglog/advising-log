@@ -69,18 +69,18 @@ export default function StudentVoiceSurvey() {
 
   const [isSubmitted, setIsSubmitted] = useState(false)
 
+  if (!currentUser) return null
+
   const hasAlreadyCompleted = Boolean(
     store.studentVoiceResponses.some(
-      v => v.studentId === currentUser?.id || v.studentCode === currentUser?.code
+      v => v.studentId === currentUser.id || v.studentCode === currentUser.code
     ) ||
-    (currentUser?.id && store.completedVoiceStudents.includes(currentUser.id)) ||
-    (typeof window !== 'undefined' && currentUser?.id && (
+    store.completedVoiceStudents.includes(currentUser.id) ||
+    (typeof window !== 'undefined' && (
       sessionStorage.getItem(`student_voice_completed_${currentUser.id}`) === 'true' ||
       localStorage.getItem(`student_voice_completed_${currentUser.id}`) === 'true'
     ))
   )
-
-  if (!currentUser) return null
 
   function toggleFactor(factorLabel: string) {
     setSelectedFactors(prev =>
