@@ -268,7 +268,7 @@ export default function ExitCases() {
               value={recommendation}
               onChange={e => setRecommendation(e.target.value)}
               rows={2}
-              placeholder="Recommended next steps for QA review..."
+              placeholder={t('ข้อเสนอแนะและขั้นตอนถัดไปสำหรับ QA และประธานหลักสูตร...', 'Recommended next steps for QA review...')}
               className="w-full px-3.5 py-2 text-xs sm:text-sm border border-slate-200/90 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 resize-none"
             />
           </div>
