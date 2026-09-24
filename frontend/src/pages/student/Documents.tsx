@@ -5,7 +5,7 @@ import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { PageHeader, DataTable, StatusBadge, Button, Modal, ConfirmDialog, DocumentViewerModal, type DocumentViewerTarget } from '@/components/ui'
 import type { StudentDocument } from '@/types'
-import { FileText, Upload, AlertCircle, FileUp, X, ShieldCheck, Trash2, PenTool, Fingerprint, FileCheck, Eye, Download, Loader2 } from 'lucide-react'
+import { FileText, Upload, AlertCircle, FileUp, X, ShieldCheck, Trash2, PenTool, Fingerprint, FileCheck, Eye, Download, Loader2, ChevronDown, Check } from 'lucide-react'
 import { uploadFileToCloudinary, getCloudinaryViewUrl } from '@/services/cloudinaryService'
 
 export default function Documents() {
@@ -17,6 +17,7 @@ export default function Documents() {
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedTypeId, setSelectedTypeId] = useState('')
+  const [showDocTypeDropdown, setShowDocTypeDropdown] = useState(false)
   const [descriptionText, setDescriptionText] = useState('')
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [simulatedFileName, setSimulatedFileName] = useState('')
@@ -60,6 +61,7 @@ export default function Documents() {
 
   function resetForm() {
     setSelectedTypeId('')
+    setShowDocTypeDropdown(false)
     setDescriptionText('')
     setSelectedFile(null)
     setSimulatedFileName('')
@@ -456,25 +458,94 @@ export default function Documents() {
 
           {/* 1. Document Type Dropdown */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+            <label htmlFor="doctype-select" className="block text-xs font-bold text-slate-700 dark:text-slate-300">
               {t('ประเภทเอกสาร / แบบฟอร์ม', 'Document Type')} <span className="text-rose-500">*</span>
             </label>
-            <select
-              value={selectedTypeId}
-              onChange={e => {
-                setSelectedTypeId(e.target.value)
-                setHasConsentedEsign(false)
-                setFormError('')
-              }}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs sm:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all cursor-pointer shadow-2xs"
-            >
-              <option value="">{t('-- เลือกประเภทเอกสาร --', '-- Select Document Type --')}</option>
-              {activeDocumentTypes.map(dt => (
-                <option key={dt.id} value={dt.id}>
-                  {dt.name}
-                </option>
-              ))}
-            </select>
+
+            {/* Custom Document Type Dropdown Trigger */}
+            <div className="relative">
+              <button
+                type="button"
+                aria-label={t('ประเภทเอกสาร / แบบฟอร์ม', 'Document Type')}
+                onClick={() => setShowDocTypeDropdown(!showDocTypeDropdown)}
+                className={`w-full min-h-[44px] flex items-center justify-between px-3.5 py-2.5 rounded-xl border text-xs sm:text-sm font-medium transition-all shadow-2xs text-left cursor-pointer ${
+                  !selectedTypeId
+                    ? 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-400 dark:text-slate-500 hover:border-sky-400'
+                    : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 hover:border-sky-400'
+                }`}
+              >
+                <div className="flex items-center gap-2.5 min-w-0 flex-1 pr-2">
+                  <div className="h-7 w-7 rounded-lg bg-sky-50 dark:bg-sky-950/60 border border-sky-100 dark:border-sky-800 flex items-center justify-center flex-shrink-0 text-sky-600 dark:text-sky-400">
+                    <FileText className="h-4 w-4" />
+                  </div>
+                  <span className={`truncate ${!selectedTypeId ? 'text-slate-400 dark:text-slate-500' : 'font-semibold text-slate-900 dark:text-slate-100'}`}>
+                    {selectedDocType ? selectedDocType.name : t('-- เลือกประเภทเอกสาร / แบบฟอร์ม --', '-- Select Document Type --')}
+                  </span>
+                </div>
+                <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform duration-150 flex-shrink-0 ${showDocTypeDropdown ? 'rotate-180 text-sky-500' : ''}`} />
+              </button>
+
+              {/* Custom Menu Dropdown */}
+              {showDocTypeDropdown && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setShowDocTypeDropdown(false)} />
+                  <div className="absolute left-0 right-0 top-full mt-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl z-50 py-1.5 max-h-64 overflow-y-auto animate-[slideIn_0.12s_ease-out]">
+                    {activeDocumentTypes.map(dt => (
+                      <button
+                        key={dt.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedTypeId(dt.id)
+                          setHasConsentedEsign(false)
+                          setFormError('')
+                          setShowDocTypeDropdown(false)
+                        }}
+                        className={`w-full text-left px-3.5 py-2.5 text-xs sm:text-sm transition-colors cursor-pointer flex items-center justify-between gap-3 ${
+                          selectedTypeId === dt.id
+                            ? 'bg-sky-50/80 dark:bg-sky-950/50 text-sky-700 dark:text-sky-300 font-semibold'
+                            : 'text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/60'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                          <FileText className="h-4 w-4 text-sky-600 dark:text-sky-400 flex-shrink-0" />
+                          <span className="truncate">{dt.name}</span>
+                          <span className={`text-[10px] px-1.5 py-0.2 rounded font-semibold ${
+                            dt.signatureMethod === 'wet_signature'
+                              ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300'
+                              : 'bg-sky-100 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300'
+                          }`}>
+                            {dt.signatureMethod === 'wet_signature' ? t('ลายมือจริง', 'Wet') : t('ดิจิทัล', 'E-Sign')}
+                          </span>
+                        </div>
+                        {selectedTypeId === dt.id && (
+                          <Check className="h-4 w-4 text-sky-600 dark:text-sky-400 flex-shrink-0" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {/* Hidden native select for test & automation compatibility */}
+              <select
+                id="doctype-select"
+                aria-label={t('ประเภทเอกสาร / แบบฟอร์ม', 'Document Type')}
+                value={selectedTypeId}
+                onChange={e => {
+                  setSelectedTypeId(e.target.value)
+                  setHasConsentedEsign(false)
+                  setFormError('')
+                }}
+                className="sr-only"
+              >
+                <option value="">{t('-- เลือกประเภทเอกสาร --', '-- Select Document Type --')}</option>
+                {activeDocumentTypes.map(dt => (
+                  <option key={dt.id} value={dt.id}>
+                    {dt.name}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {/* Signature Type determined by Admin setting */}
