@@ -7,10 +7,11 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useStore } from '@/data/mock-store'
 import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { PageHeader, Tabs, DataTable, Button, Modal, GoogleCalendarButton, DocumentViewerModal, SearchInput, type DocumentViewerTarget } from '@/components/ui'
+import { PageHeader, Tabs, DataTable, Button, Modal, DocumentViewerModal, SearchInput, type DocumentViewerTarget } from '@/components/ui'
 import type { AdvisingRequest } from '@/types'
-import { Calendar, Eye, FileText, Sparkles } from 'lucide-react'
+import { Calendar, Eye, FileText, Sparkles, Building2, Video, CheckCircle2, MapPin, Link2 } from 'lucide-react'
 import { isAdvisorMatch } from '@/utils/advisorUtils'
+import { openGoogleCalendarEvent } from '@/utils/calendarUtils'
 
 export default function AdvisingSessions() {
   const { currentUser } = useAuth()
@@ -27,7 +28,9 @@ export default function AdvisingSessions() {
   const [showSchedule, setShowSchedule] = useState(false)
   const [schedDate, setSchedDate] = useState('')
   const [schedTime, setSchedTime] = useState('')
+  const [meetingMode, setMeetingMode] = useState<'in_person' | 'online'>('in_person')
   const [schedLoc, setSchedLoc] = useState('')
+  const [autoOpenCalendar, setAutoOpenCalendar] = useState(true)
 
   const viewedRequestsKey = currentUser ? `advising_log_viewed_requests_${currentUser.id}` : ''
 
@@ -110,7 +113,19 @@ export default function AdvisingSessions() {
   ]
 
   function handleSchedule() {
-    if (!selectedReq || !schedDate || !schedTime || !schedLoc) return
+    if (!selectedReq || !currentUser) return
+    const finalLocation = schedLoc.trim()
+    if (!finalLocation) {
+      addToast(
+        'error',
+        t('กรุณาระบุสถานที่หรือลิงก์เข้าพบ', 'Location / Link Required'),
+        meetingMode === 'in_person'
+          ? t('กรุณาระบุห้องพักอาจารย์หรือสถานที่เข้าพบ', 'Please specify the room number or meeting location.')
+          : t('กรุณาระบุลิงก์ห้องประชุมออนไลน์ เช่น Google Meet หรือ Zoom', 'Please specify the virtual meeting link (e.g. Google Meet or Zoom).')
+      )
+      return
+    }
+
     markRequestViewed(selectedReq.id)
     const apt = store.addAppointment({
       requestId: selectedReq.id,
@@ -118,15 +133,15 @@ export default function AdvisingSessions() {
       advisorId: currentUser!.id,
       scheduledDate: schedDate,
       scheduledTime: schedTime,
-      location: schedLoc,
+      location: finalLocation,
       status: 'scheduled',
     })
     store.updateRequestStatus(selectedReq.id, 'scheduled')
     store.addNotification({
       userId: selectedReq.studentId,
       type: 'info',
-      title: t('นัดหมายเวลาเข้าพบอาจารย์แล้ว', 'Appointment Scheduled'),
-      message: `${t('อาจารย์ที่ปรึกษานัดหมายเข้าพบในวันที่', 'Your advising appointment has been scheduled for')} ${schedDate} ${schedTime} (${schedLoc})`,
+      title: t('ยืนยันนัดหมายเวลาเข้าพบอาจารย์แล้ว', 'Appointment Confirmed'),
+      message: `${t('อาจารย์ที่ปรึกษายืนยันการนัดหมายเข้าพบในวันที่', 'Your advising appointment has been confirmed for')} ${schedDate} ${schedTime} (${finalLocation})`,
       relatedId: apt.id,
       isRead: false,
     })
@@ -135,15 +150,31 @@ export default function AdvisingSessions() {
       userName: currentUser!.name,
       userRole: 'advisor',
       action: 'appointment_scheduled',
-      description: `Scheduled appointment for ${store.users.find(u => u.id === selectedReq.studentId)?.name}`,
+      description: `Confirmed appointment for ${store.users.find(u => u.id === selectedReq.studentId)?.name}`,
       targetId: apt.id,
     })
-    addToast('success', t('นัดหมายสำเร็จ', 'Appointment Scheduled'), `${schedDate} · ${schedTime}`)
+
+    const student = store.users.find(u => u.id === selectedReq.studentId)
+    if (autoOpenCalendar) {
+      openGoogleCalendarEvent({
+        title: `Advising Meeting: ${student?.name || selectedReq.studentId} & ${currentUser.name}`,
+        description: `Advising Topic: ${getCategoryLabel(selectedReq.category)}\nStudent Code: ${student?.code || ''}\nLocation / Platform: ${finalLocation}\nDetails: ${selectedReq.details}`,
+        location: finalLocation,
+        date: schedDate,
+        time: schedTime,
+        attendeeEmails: [student?.email || '', currentUser.email],
+      })
+    }
+
+    addToast(
+      'success',
+      t('ยืนยันนัดหมายสำเร็จ', 'Appointment Confirmed'),
+      autoOpenCalendar
+        ? t('บันทึกนัดหมายและเปิด Google Calendar เพื่อส่งคำเชิญแล้ว', 'Appointment saved & Google Calendar opened for invitation.')
+        : `${schedDate} · ${schedTime}`
+    )
     setShowSchedule(false)
     setSelectedReq(null)
-    setSchedDate('')
-    setSchedTime('')
-    setSchedLoc('')
   }
 
   function handleCancel(req: AdvisingRequest) {
@@ -161,6 +192,10 @@ export default function AdvisingSessions() {
         {isNewRequest(r) && <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-sky-100 dark:bg-sky-950/70 text-[10px] font-bold text-sky-700 dark:text-sky-300"><Sparkles className="h-3 w-3" />{t('ใหม่', 'New')}</span>}
       </div>
     ) },
+    { key: 'student', header: t('นักศึกษา', 'Student'), render: (r: AdvisingRequest) => {
+      const student = store.users.find(u => u.id === r.studentId)
+      return <div><span className="text-xs text-slate-700 dark:text-slate-300 font-medium block">{student?.name || '-'}</span><span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">{student?.code || '-'}</span></div>
+    } },
     {
       key: 'category',
       header: t('หมวดหมู่', 'Category'),
@@ -173,10 +208,6 @@ export default function AdvisingSessions() {
         )
       },
     },
-    { key: 'student', header: t('นักศึกษา', 'Student'), render: (r: AdvisingRequest) => {
-      const student = store.users.find(u => u.id === r.studentId)
-      return <div><span className="text-xs text-slate-700 dark:text-slate-300 font-medium block">{student?.name || '-'}</span><span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">{student?.code || '-'}</span></div>
-    } },
     {
       key: 'meetingSlot',
       header: t('วันและเวลานัดหมาย', 'Meeting Time'),
@@ -204,57 +235,49 @@ export default function AdvisingSessions() {
         )
       },
     },
-    {
-      key: 'actions',
-      header: t('การจัดการ', 'Actions'),
-      render: (r: AdvisingRequest) => {
-        const s = store.users.find(u => u.id === r.studentId)
-        const apt = store.appointments.find(a => a.requestId === r.id && a.status === 'scheduled')
-        return (
-          <div className="flex items-center gap-2 flex-wrap">
-            {r.status === 'scheduled' && (
-              <GoogleCalendarButton
-                event={{
-                  title: `Advising Meeting: ${s?.name || r.studentId} & ${currentUser.name}`,
-                  description: `Advising Topic: ${getCategoryLabel(r.category)}\nStudent Code: ${s?.code || ''}\nLocation: ${apt?.location || 'Office / Online'}\nDetails: ${r.details}`,
-                  location: apt?.location || 'Office / Online',
-                  date: apt?.scheduledDate || r.preferredDate,
-                  time: apt?.scheduledTime || r.preferredTime,
-                  attendeeEmails: [s?.email || '', currentUser.email],
-                }}
-                label={t('ปฏิทิน', 'Calendar')}
-                size="sm"
-                variant="secondary"
-                onClick={() => markRequestViewed(r.id)}
-              />
-            )}
+    ...(tab === 'pending' || tab === 'upcoming'
+      ? [
+          {
+            key: 'actions',
+            header: t('การจัดการ', 'Actions'),
+            render: (r: AdvisingRequest) => {
+              return (
+                <div className="flex items-center gap-2 flex-wrap" onClick={e => e.stopPropagation()}>
+                  {(r.status === 'requested' || r.status === 'pending') && (
+                    <Button
+                      size="sm"
+                      variant="primary"
+                      onClick={() => {
+                        markRequestViewed(r.id)
+                        setSelectedReq(r)
+                        setSchedDate(r.preferredDate || new Date().toISOString().split('T')[0])
+                        setSchedTime(r.preferredTime || '10:00')
+                        setMeetingMode('in_person')
+                        setSchedLoc('')
+                        setAutoOpenCalendar(true)
+                        setShowSchedule(true)
+                      }}
+                    >
+                      <CheckCircle2 className="h-3 w-3 mr-1" /> {t('ตอบรับ', 'Confirm')}
+                    </Button>
+                  )}
 
-            {(r.status === 'requested' || r.status === 'pending') && (
-              <Button
-                size="sm"
-                variant="primary"
-                onClick={() => {
-                  markRequestViewed(r.id)
-                  setSelectedReq(r)
-                  setSchedDate(r.preferredDate || '')
-                  setSchedTime(r.preferredTime || '')
-                  setSchedLoc('Faculty Office S2-301')
-                  setShowSchedule(true)
-                }}
-              >
-                <Calendar className="h-3 w-3 mr-1" /> {t('นัดหมาย', 'Schedule')}
-              </Button>
-            )}
-
-            {r.status !== 'completed' && r.status !== 'cancelled' && r.status !== 'closed' && (
-              <Button size="sm" variant="ghost" onClick={() => handleCancel(r)} className="text-slate-400 hover:text-rose-600 dark:hover:text-rose-400">
-                {t('ยกเลิก', 'Cancel')}
-              </Button>
-            )}
-          </div>
-        )
-      },
-    },
+                  {r.status !== 'completed' && r.status !== 'cancelled' && r.status !== 'closed' && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleCancel(r)}
+                      className="text-slate-400 hover:text-rose-600 dark:hover:text-rose-400"
+                    >
+                      {t('ยกเลิก', 'Cancel')}
+                    </Button>
+                  )}
+                </div>
+              )
+            },
+          },
+        ]
+      : []),
   ]
 
   return (
@@ -281,30 +304,40 @@ export default function AdvisingSessions() {
         isOpen={Boolean(detailReq)}
         onClose={() => setDetailReq(null)}
         title={t('รายละเอียดคำร้องขอคำปรึกษา', 'Advising Request Details')}
-        size="lg"
+        size="md"
       >
         {detailReq && (
-          <div className="space-y-5">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
-              <div><span className="text-slate-400 block">{t('นักศึกษา', 'Student')}</span><p className="font-semibold mt-1">{store.users.find(u => u.id === detailReq.studentId)?.name || '-'}</p></div>
-              <div><span className="text-slate-400 block">{t('รหัสคำร้อง', 'Request ID')}</span><p className="font-semibold mt-1">{detailReq.id}</p></div>
-              <div><span className="text-slate-400 block">{t('วันที่นัดหมาย', 'Requested date')}</span><p className="font-semibold mt-1">{detailReq.preferredDate}</p></div>
-              <div><span className="text-slate-400 block">{t('เวลา', 'Time')}</span><p className="font-semibold mt-1">{detailReq.preferredTime}</p></div>
+          <div className="space-y-4">
+            {/* Student Name */}
+            <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
+              <span className="text-[11px] text-slate-400 block font-medium">{t('นักศึกษาผู้ยื่นคำร้อง', 'Student')}</span>
+              <p className="text-sm font-bold text-slate-900 dark:text-slate-100 mt-0.5">
+                {store.users.find(u => u.id === detailReq.studentId)?.name || '-'}
+                <span className="text-xs font-mono font-normal text-slate-500 ml-2">
+                  ({store.users.find(u => u.id === detailReq.studentId)?.code || '-'})
+                </span>
+              </p>
             </div>
+
+            {/* Topic & Details (What is not in the table) */}
             <div>
-              <h4 className="text-xs font-bold text-slate-700 dark:text-slate-200 mb-2">{t('หัวข้อและรายละเอียด', 'Topic and details')}</h4>
-              <p className="text-sm leading-relaxed whitespace-pre-wrap rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 p-4">{detailReq.details || '-'}</p>
+              <h4 className="text-xs font-bold text-slate-700 dark:text-slate-200 mb-1.5">{t('รายละเอียดที่นักศึกษาต้องการปรึกษา', 'Consultation Details')}</h4>
+              <p className="text-xs sm:text-sm leading-relaxed whitespace-pre-wrap rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 p-3.5 text-slate-800 dark:text-slate-200">
+                {detailReq.details || '-'}
+              </p>
             </div>
+
+            {/* Attachments (What is not in the table) */}
             <div>
-              <h4 className="text-xs font-bold text-slate-700 dark:text-slate-200 mb-2">{t('ไฟล์แนบ', 'Attachments')}</h4>
+              <h4 className="text-xs font-bold text-slate-700 dark:text-slate-200 mb-1.5">{t('ไฟล์แนบ', 'Attachments')}</h4>
               <div className="space-y-2">
-                {getAttachments(detailReq).length === 0 && <p className="text-xs text-slate-400">{t('ไม่มีไฟล์แนบ', 'No attachments')}</p>}
+                {getAttachments(detailReq).length === 0 && <p className="text-xs text-slate-400 py-1">{t('ไม่มีไฟล์แนบ', 'No attachments')}</p>}
                 {getAttachments(detailReq).map(file => {
                   const hasFile = Boolean(file.fileUrl || file.cloudinaryPublicId)
                   return (
                     <div key={file.id} className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2.5">
                       <span className="flex items-center gap-2 min-w-0 text-xs font-medium truncate"><FileText className="h-4 w-4 text-sky-600 shrink-0" />{file.fileName}</span>
-                      <Button size="sm" variant={hasFile ? 'secondary' : 'ghost'} disabled={!hasFile} onClick={() => { markRequestViewed(detailReq.id); setPreviewDoc(file) }}>
+                      <Button size="sm" variant={hasFile ? 'secondary' : 'ghost'} disabled={!hasFile} onClick={() => setPreviewDoc(file)}>
                         <Eye className="h-3.5 w-3.5 mr-1" /> {hasFile ? t('เปิดดู', 'Open') : t('ไม่มีไฟล์', 'Unavailable')}
                       </Button>
                     </div>
@@ -322,43 +355,123 @@ export default function AdvisingSessions() {
         document={previewDoc}
       />
 
+      {/* Confirm Appointment Modal */}
+      <Modal
+        isOpen={showSchedule}
+        onClose={() => setShowSchedule(false)}
+        title={t('ยืนยันการนัดหมายเข้าพบอาจารย์ที่ปรึกษา', 'Confirm Advising Appointment')}
+        size="md"
+      >
+        {selectedReq && (
+          <div className="space-y-4">
+            {/* Student & Agreed Slot Banner */}
+            <div className="rounded-xl border border-sky-100 dark:border-sky-900/60 bg-sky-50/50 dark:bg-sky-950/40 p-3.5 space-y-2">
+              <div className="flex items-center justify-between gap-2 flex-wrap text-xs">
+                <span className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                  <span>{store.users.find(u => u.id === selectedReq.studentId)?.name || '-'}</span>
+                  <span className="font-mono text-slate-500 font-normal">({store.users.find(u => u.id === selectedReq.studentId)?.code || '-'})</span>
+                </span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-sky-100 dark:bg-sky-900 text-sky-700 dark:text-sky-300">
+                  {getCategoryLabel(selectedReq.category)}
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400 bg-white/80 dark:bg-slate-900/80 px-2.5 py-1.5 rounded-lg border border-emerald-200/60 dark:border-emerald-900/40">
+                <Calendar className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                <span>{t('วัน-เวลาที่นักศึกษาขอเข้าพบ:', 'Requested Slot:')}</span>
+                <span className="font-bold">{schedDate} · {schedTime}</span>
+              </div>
+            </div>
 
-      {/* Schedule Modal */}
-      <Modal isOpen={showSchedule} onClose={() => setShowSchedule(false)} title={t('นัดหมายเวลาเข้าพบอาจารย์ที่ปรึกษา', 'Schedule Advising Appointment')} size="sm">
-        <div className="space-y-4">
-          <div>
-            <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">{t('วันที่นัดหมาย', 'Appointment Date')} *</label>
-            <input
-              type="date"
-              value={schedDate}
-              onChange={e => setSchedDate(e.target.value)}
-              className="w-full px-3 py-2 text-xs sm:text-sm border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-colors"
-            />
+            {/* Meeting Mode Selector (In-person vs Online) */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1.5">
+                {t('รูปแบบการเข้าพบ', 'Meeting Format')}
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setMeetingMode('in_person')}
+                  className={`flex items-center justify-center gap-2 p-2.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
+                    meetingMode === 'in_person'
+                      ? 'bg-sky-50 dark:bg-sky-950/60 border-sky-500 text-sky-700 dark:text-sky-300 shadow-2xs'
+                      : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                  }`}
+                >
+                  <Building2 className="h-4 w-4 text-sky-600 dark:text-sky-400" />
+                  <span>{t('เข้าพบตัวต่อตัว (Onsite)', 'In-Person (Onsite)')}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setMeetingMode('online')}
+                  className={`flex items-center justify-center gap-2 p-2.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
+                    meetingMode === 'online'
+                      ? 'bg-sky-50 dark:bg-sky-950/60 border-sky-500 text-sky-700 dark:text-sky-300 shadow-2xs'
+                      : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                  }`}
+                >
+                  <Video className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                  <span>{t('ออนไลน์ (Virtual)', 'Online (Virtual)')}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Location / Platform link field */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">
+                {meetingMode === 'in_person' ? (
+                  <span className="flex items-center gap-1.5">
+                    <MapPin className="h-3.5 w-3.5 text-sky-600" />
+                    {t('สถานที่ / ห้องเข้าพบ', 'Specific Room / Location')} *
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1.5">
+                    <Link2 className="h-3.5 w-3.5 text-indigo-600" />
+                    {t('แพลตฟอร์มหรือลิงก์ห้องประชุม', 'Meeting Platform / Link')} *
+                  </span>
+                )}
+              </label>
+
+              <input
+                type="text"
+                value={schedLoc}
+                onChange={e => setSchedLoc(e.target.value)}
+                placeholder={
+                  meetingMode === 'in_person'
+                    ? t('เช่น ห้องพักอาจารย์ S2-301', 'e.g. Office Room S2-301')
+                    : t('เช่น ลิงก์ Google Meet หรือ Zoom', 'e.g. Google Meet or Zoom link')
+                }
+                className="w-full px-3 py-2 text-xs sm:text-sm border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-colors"
+              />
+            </div>
+
+            {/* Google Calendar Sync Checkbox */}
+            <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+              <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={autoOpenCalendar}
+                  onChange={e => setAutoOpenCalendar(e.target.checked)}
+                  className="rounded border-slate-300 text-sky-600 focus:ring-sky-500 h-4 w-4"
+                />
+                <span className="text-xs text-slate-700 dark:text-slate-300 font-medium">
+                  {t('เพิ่มลงใน Google Calendar ของคุณและส่งคำเชิญให้นักศึกษา', 'Add to your Google Calendar & invite student')}
+                </span>
+              </label>
+            </div>
+
+            {/* Footer Buttons */}
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+              <Button variant="secondary" onClick={() => setShowSchedule(false)}>
+                {t('ยกเลิก', 'Cancel')}
+              </Button>
+              <Button variant="primary" onClick={handleSchedule}>
+                <CheckCircle2 className="h-4 w-4 mr-1" />
+                {t('ยืนยันนัดหมาย', 'Confirm Appointment')}
+              </Button>
+            </div>
           </div>
-          <div>
-            <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">{t('เวลานัดหมาย', 'Appointment Time')} *</label>
-            <input
-              type="time"
-              value={schedTime}
-              onChange={e => setSchedTime(e.target.value)}
-              className="w-full px-3 py-2 text-xs sm:text-sm border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-colors"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">{t('สถานที่ / ห้องเข้าพบ', 'Location / Meeting Room')} *</label>
-            <input
-              type="text"
-              value={schedLoc}
-              onChange={e => setSchedLoc(e.target.value)}
-              placeholder={t('เช่น ห้องพักอาจารย์ S2-301 หรือ Zoom Online', 'e.g. Office Room S2-301 or Online (Zoom)')}
-              className="w-full px-3 py-2 text-xs sm:text-sm border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-colors"
-            />
-          </div>
-          <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
-            <Button variant="secondary" onClick={() => setShowSchedule(false)}>{t('ยกเลิก', 'Cancel')}</Button>
-            <Button variant="primary" onClick={handleSchedule}>{t('ยืนยันนัดหมาย', 'Confirm Schedule')}</Button>
-          </div>
-        </div>
+        )}
       </Modal>
     </div>
   )

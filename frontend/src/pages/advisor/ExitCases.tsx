@@ -67,12 +67,16 @@ export default function ExitCases() {
       key: 'actions',
       header: t('การจัดการ', 'Actions'),
       render: (e: ExitCase) => (
-        <div className="flex items-center gap-1.5">
-          <Button size="sm" variant="secondary" onClick={() => setSelectedCase(e)}>
-            <Eye className="h-3 w-3 mr-1 text-slate-500 dark:text-slate-400" /> {t('ดูรายละเอียด', 'View')}
-          </Button>
+        <div className="flex items-center gap-1.5" onClick={ev => ev.stopPropagation()}>
           {e.status !== 'closed' && (
-            <Button size="sm" variant="primary" onClick={() => { setSelectedCase(e); setShowAssessment(true) }}>
+            <Button
+              size="sm"
+              variant="primary"
+              onClick={() => {
+                setSelectedCase(e)
+                setShowAssessment(true)
+              }}
+            >
               {t('ประเมินความเห็น', 'Assess')}
             </Button>
           )}
@@ -117,29 +121,26 @@ export default function ExitCases() {
         title={t('รายการเคสขอลาออก / ลาพักการศึกษา', 'Exit & Dropout Cases')}
         description={t('ตรวจสอบและประเมินความเห็นอาจารย์ที่ปรึกษาสำหรับคำร้องขอลาออกและลาพักของนักศึกษา', 'Review student withdrawal and leave requests and record faculty advisor assessments.')}
       />
-      <DataTable columns={columns} data={myCases} emptyMessage={t('ไม่พบคำร้องขอลาพักหรือลาออกของนักศึกษาในความดูแล', 'No student exit cases assigned.')} />
+      <DataTable
+        columns={columns}
+        data={myCases}
+        onRowClick={c => setSelectedCase(c)}
+        emptyMessage={t('ไม่พบคำร้องขอลาพักหรือลาออกของนักศึกษาในความดูแล', 'No student exit cases assigned.')}
+      />
 
       {/* View Case Modal */}
       {selectedCase && !showAssessment && (
-        <Modal isOpen={!!selectedCase} onClose={() => setSelectedCase(null)} title={t('รายละเอียดคำร้องขอลาออก / ลาพัก', 'Exit Case Details')} size="lg">
+        <Modal isOpen={!!selectedCase} onClose={() => setSelectedCase(null)} title={t('รายละเอียดคำร้องขอลาออก / ลาพัก', 'Exit Case Details')} size="md">
           <div className="space-y-4">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs p-3.5 bg-slate-50/70 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 rounded-xl">
-              <div>
-                <span className="text-slate-400 dark:text-slate-400 block font-medium">{t('นักศึกษา', 'Student')}</span>
-                <p className="font-semibold text-slate-900 dark:text-slate-100 mt-0.5">{store.users.find(u => u.id === selectedCase.studentId)?.name}</p>
-              </div>
-              <div>
-                <span className="text-slate-400 dark:text-slate-400 block font-medium">{t('ประเภท', 'Exit Type')}</span>
-                <p className="font-semibold text-slate-900 dark:text-slate-100 mt-0.5">{getExitTypeLabel(selectedCase.exitType)}</p>
-              </div>
-              <div>
-                <span className="text-slate-400 dark:text-slate-400 block font-medium">{t('สาเหตุ', 'Reason')}</span>
-                <p className="font-semibold text-slate-900 dark:text-slate-100 mt-0.5">{getExitReasonLabel(selectedCase.reasonCode)}</p>
-              </div>
-              <div>
-                <span className="text-slate-400 dark:text-slate-400 block font-medium">{t('สถานะ', 'Status')}</span>
-                <div className="mt-1"><StatusBadge status={selectedCase.status} /></div>
-              </div>
+            {/* Student Name */}
+            <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
+              <span className="text-[11px] text-slate-400 block font-medium">{t('นักศึกษาผู้ยื่นคำร้อง', 'Student')}</span>
+              <p className="text-sm font-bold text-slate-900 dark:text-slate-100 mt-0.5">
+                {store.users.find(u => u.id === selectedCase.studentId)?.name || '-'}
+                <span className="text-xs font-mono font-normal text-slate-500 ml-2">
+                  ({store.users.find(u => u.id === selectedCase.studentId)?.code || '-'})
+                </span>
+              </p>
             </div>
             <div>
               <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1">{t('เหตุผลประกอบจากนักศึกษา', 'Student Stated Details')}</span>
