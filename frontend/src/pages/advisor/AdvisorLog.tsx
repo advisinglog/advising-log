@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useStore } from '@/data/mock-store'
 import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { PageHeader, Card, Button, EmptyState } from '@/components/ui'
+import { PageHeader, Card, Button, EmptyState, ConfirmDialog } from '@/components/ui'
 import { ClipboardCheck, User, PlusCircle, Lightbulb, Sparkles, Check } from 'lucide-react'
 
 import { isAdvisorMatch } from '@/utils/advisorUtils'
@@ -19,6 +19,7 @@ export default function AdvisorLog() {
   const [followUpTask, setFollowUpTask] = useState('')
   const [followUpDate, setFollowUpDate] = useState('')
   const [activeTemplateIdx, setActiveTemplateIdx] = useState<number | null>(null)
+  const [pendingTemplate, setPendingTemplate] = useState<{ text: string; idx: number } | null>(null)
 
   if (!currentUser) return null
 
@@ -60,11 +61,17 @@ export default function AdvisorLog() {
   const student = selectedReq ? store.users.find(u => u.id === selectedReq.studentId) : null
   const appointment = selectedReq ? store.appointments.find(a => a.requestId === selectedReq.id) : null
 
+  function applyTemplateDirectly(templateText: string, idx: number) {
+    setSummary(templateText)
+    setActiveTemplateIdx(idx)
+    addToast('info', t('นำตัวอย่างไปใส่ในช่องสรุปแล้ว', 'Example applied to summary'), t('สามารถปรับแต่งเนื้อหาเพิ่มเติมให้ตรงกับเคสจริงได้เลย', 'You can now customize it to fit the actual session.'))
+  }
+
   function handleApplyTemplate(templateText: string, idx: number) {
-    if (!summary.trim() || window.confirm(t('ต้องการแทนที่ข้อความสรุปด้วยตัวอย่างนี้หรือไม่?', 'Replace current text with this example template?'))) {
-      setSummary(templateText)
-      setActiveTemplateIdx(idx)
-      addToast('info', t('นำตัวอย่างไปใส่ในช่องสรุปแล้ว', 'Example applied to summary'), t('สามารถปรับแต่งเนื้อหาเพิ่มเติมให้ตรงกับเคสจริงได้เลย', 'You can now customize it to fit the actual session.'))
+    if (!summary.trim()) {
+      applyTemplateDirectly(templateText, idx)
+    } else {
+      setPendingTemplate({ text: templateText, idx })
     }
   }
 
@@ -345,6 +352,25 @@ export default function AdvisorLog() {
           </form>
         </Card>
       )}
+
+      {/* Template Replace Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={Boolean(pendingTemplate)}
+        onClose={() => setPendingTemplate(null)}
+        onConfirm={() => {
+          if (pendingTemplate) {
+            applyTemplateDirectly(pendingTemplate.text, pendingTemplate.idx)
+            setPendingTemplate(null)
+          }
+        }}
+        title={t('ต้องการแทนที่ข้อความสรุปหรือไม่?', 'Replace Current Summary?')}
+        message={t(
+          'คุณมีข้อความที่กำลังพิมพ์อยู่ในช่องสรุปผลการให้คำปรึกษา การใช้ตัวอย่างนี้จะเขียนทับข้อความปัจจุบันทั้งหมด คุณต้องการดำเนินการต่อหรือไม่?',
+          'You have existing text in the advising summary field. Applying this template will replace your current content. Do you want to continue?'
+        )}
+        confirmLabel={t('แทนที่ข้อความ', 'Replace')}
+        cancelLabel={t('ยกเลิก', 'Cancel')}
+      />
     </div>
   )
 }
