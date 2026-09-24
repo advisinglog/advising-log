@@ -387,7 +387,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const updateFollowUpProgress = useCallback((id: string, progress: number, notes: string) => {
-    setFollowUpProgress(prev => prev.map(fp => fp.id === id ? { ...fp, progress, notes } : fp))
+    setFollowUpProgress(prev => prev.map(fp => (fp.id === id || fp.followUpId === id) ? { ...fp, progress, notes, status: progress >= 100 ? 'submitted' : 'in_progress' } : fp))
     api.saveFollowUpProgress({ id, progress, notes }).catch(() => {})
   }, [])
 

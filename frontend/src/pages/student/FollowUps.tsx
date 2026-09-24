@@ -43,13 +43,35 @@ export default function FollowUps() {
   const myFollowUps = store.followUps.filter(f => isCurrentStudent(f.studentId))
   const myProgress = store.followUpProgress.filter(fp => isCurrentStudent(fp.studentId))
 
+  function getProgressForFollowUp(followUpId: string): FollowUpProgress | undefined {
+    return myProgress.find(fp => fp.followUpId === followUpId)
+  }
+
+  function handleOpenProgressModal(f: FollowUp) {
+    setSelectedFollowUp(f)
+    const fp = getProgressForFollowUp(f.id)
+    setProgressValue(fp?.progress ?? 0)
+    setProgressNotes(fp?.notes ?? '')
+    setShowProgressModal(true)
+  }
+
   function handleUpdateProgress() {
     if (!selectedFollowUp || !currentUser) return
-    store.updateFollowUpProgress(
-      `${selectedFollowUp.id}-progress`,
-      progressValue,
-      progressNotes
-    )
+    const existing = getProgressForFollowUp(selectedFollowUp.id)
+    if (existing) {
+      store.updateFollowUpProgress(existing.id, progressValue, progressNotes)
+    } else {
+      store.addFollowUpProgress({
+        followUpId: selectedFollowUp.id,
+        studentId: currentUser.id,
+        progress: progressValue,
+        notes: progressNotes,
+        status: progressValue >= 100 ? 'submitted' : 'in_progress',
+      })
+    }
+    if (progressValue >= 100 && selectedFollowUp.status !== 'completed') {
+      store.updateFollowUpStatus(selectedFollowUp.id, 'completed')
+    }
     store.addAuditLog({
       userId: currentUser.id,
       userName: currentUser.name,
@@ -63,10 +85,6 @@ export default function FollowUps() {
     setSelectedFollowUp(null)
     setProgressValue(0)
     setProgressNotes('')
-  }
-
-  function getProgressForFollowUp(followUpId: string): FollowUpProgress | undefined {
-    return myProgress.find(fp => fp.followUpId === followUpId)
   }
 
   const columns = [
@@ -136,7 +154,7 @@ export default function FollowUps() {
               <Button
                 size="sm"
                 variant="secondary"
-                onClick={() => { setSelectedFollowUp(f); setShowProgressModal(true) }}
+                onClick={() => handleOpenProgressModal(f)}
               >
                 <TrendingUp className="h-3.5 w-3.5 mr-1" /> {t('อัปเดต', 'Update')}
               </Button>
