@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { useStore } from '@/data/mock-store'
 import { useToast } from '@/contexts/ToastContext'
@@ -14,13 +15,23 @@ export default function AdvisorLog() {
   const store = useStore()
   const { addToast } = useToast()
   const { t, getCategoryLabel } = useLanguage()
+  const location = useLocation()
 
-  const [selectedRequestId, setSelectedRequestId] = useState('')
+  const [selectedRequestId, setSelectedRequestId] = useState<string>(
+    (location.state as { requestId?: string } | undefined)?.requestId || ''
+  )
   const [summary, setSummary] = useState('')
   const [followUpTask, setFollowUpTask] = useState('')
   const [followUpDate, setFollowUpDate] = useState('')
   const [activeTemplateIdx, setActiveTemplateIdx] = useState<number | null>(null)
   const [pendingTemplate, setPendingTemplate] = useState<{ text: string; idx: number } | null>(null)
+
+  useEffect(() => {
+    const navRequestId = (location.state as { requestId?: string } | undefined)?.requestId
+    if (navRequestId) {
+      setSelectedRequestId(navRequestId)
+    }
+  }, [location.state])
 
   if (!currentUser) return null
 
@@ -52,9 +63,10 @@ export default function AdvisorLog() {
     },
   ]
 
-  // Completed requests that don't have a session log yet
+  // Scheduled or Completed requests that don't have a session log yet
   const completedRequests = store.requests.filter(r =>
-    isAdvisorMatch(r.advisorId, currentUser, store.users) && r.status === 'completed' &&
+    isAdvisorMatch(r.advisorId, currentUser, store.users) &&
+    (r.status === 'scheduled' || r.status === 'completed') &&
     !store.sessions.find(s => s.requestId === r.id)
   )
 
@@ -169,7 +181,7 @@ export default function AdvisorLog() {
           <EmptyState
             icon={<ClipboardCheck className="h-6 w-6 text-sky-500" />}
             title={t('ไม่มีนัดหมายที่รอการเขียนบันทึก', 'No sessions pending documentation')}
-            description={t('เมื่อคุณกด "เสร็จสิ้น" ในแท็บรายการนัดหมาย จะสามารถเขียนบันทึกผลการให้คำปรึกษาได้ที่นี่', 'Mark a scheduled session as \'Completed\' in the Sessions tab to write its official advising log.')}
+            description={t('รายการนัดหมายที่ถึงกำหนดหรือเสร็จสิ้นแล้วจะปรากฏที่นี่เพื่อเขียนบันทึกผล', 'Scheduled sessions will appear here to write their official advising log.')}
           />
         </Card>
       ) : (
@@ -178,14 +190,14 @@ export default function AdvisorLog() {
             {/* Session Selector */}
             <div>
               <label className="block text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 mb-1.5">
-                {t('เลือกนัดหมายที่เสร็จสิ้นแล้ว', 'Select Completed Session')} <span className="text-rose-500">*</span>
+                {t('เลือกนัดหมายที่ต้องการบันทึกผล', 'Select Advising Session')} <span className="text-rose-500">*</span>
               </label>
               <select
                 value={selectedRequestId}
                 onChange={e => setSelectedRequestId(e.target.value)}
                 className="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200/90 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-xs cursor-pointer"
               >
-                <option value="">{t('-- เลือกรายการนัดหมายที่ต้องการบันทึก --', 'Select a completed session to log')}</option>
+                <option value="">{t('-- เลือกรายการนัดหมายที่ต้องการบันทึก --', 'Select an advising session to log')}</option>
                 {completedRequests.map(r => {
                   const s = store.users.find(u => u.id === r.studentId)
                   return (

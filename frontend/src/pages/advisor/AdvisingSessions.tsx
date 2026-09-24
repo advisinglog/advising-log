@@ -7,9 +7,9 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useStore } from '@/data/mock-store'
 import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { PageHeader, Tabs, DataTable, StatusBadge, Button, Modal, GoogleCalendarButton, DocumentViewerModal, SearchInput, type DocumentViewerTarget } from '@/components/ui'
+import { PageHeader, Tabs, DataTable, Button, Modal, GoogleCalendarButton, DocumentViewerModal, SearchInput, type DocumentViewerTarget } from '@/components/ui'
 import type { AdvisingRequest } from '@/types'
-import { Calendar, CheckCircle2, Eye, FileText, Sparkles } from 'lucide-react'
+import { Calendar, Eye, FileText, Sparkles } from 'lucide-react'
 import { isAdvisorMatch } from '@/utils/advisorUtils'
 
 export default function AdvisingSessions() {
@@ -154,14 +154,6 @@ export default function AdvisingSessions() {
     addToast('info', t('ยกเลิกคำร้องแล้ว', 'Request Cancelled'))
   }
 
-  function handleComplete(req: AdvisingRequest) {
-    markRequestViewed(req.id)
-    store.updateRequestStatus(req.id, 'completed')
-    const apt = store.appointments.find(a => a.requestId === req.id && a.status === 'scheduled')
-    if (apt) store.updateAppointmentStatus(apt.id, 'completed')
-    addToast('success', t('บันทึกเสร็จสิ้นแล้ว', 'Marked as Completed'), t('คุณสามารถเขียนบันทึกผลการให้คำปรึกษาได้ทันที', 'You can now proceed to write an advising log.'))
-  }
-
   const columns = [
     { key: 'date', header: t('วันที่ยื่น', 'Date'), render: (r: AdvisingRequest) => (
       <div className="flex items-center gap-2 flex-wrap">
@@ -213,11 +205,6 @@ export default function AdvisingSessions() {
       },
     },
     {
-      key: 'status',
-      header: t('สถานะ', 'Status'),
-      render: (r: AdvisingRequest) => <StatusBadge status={r.status} />,
-    },
-    {
       key: 'actions',
       header: t('การจัดการ', 'Actions'),
       render: (r: AdvisingRequest) => {
@@ -226,25 +213,20 @@ export default function AdvisingSessions() {
         return (
           <div className="flex items-center gap-2 flex-wrap">
             {r.status === 'scheduled' && (
-              <>
-                <GoogleCalendarButton
-                  event={{
-                    title: `Advising Meeting: ${s?.name || r.studentId} & ${currentUser.name}`,
-                    description: `Advising Topic: ${getCategoryLabel(r.category)}\nStudent Code: ${s?.code || ''}\nLocation: ${apt?.location || 'Office / Online'}\nDetails: ${r.details}`,
-                    location: apt?.location || 'Office / Online',
-                    date: apt?.scheduledDate || r.preferredDate,
-                    time: apt?.scheduledTime || r.preferredTime,
-                    attendeeEmails: [s?.email || '', currentUser.email],
-                  }}
-                  label={t('ปฏิทิน', 'Calendar')}
-                  size="sm"
-                  variant="secondary"
-                  onClick={() => markRequestViewed(r.id)}
-                />
-                <Button size="sm" variant="primary" onClick={() => handleComplete(r)}>
-                  <CheckCircle2 className="h-3 w-3 mr-1" /> {t('เสร็จสิ้น', 'Complete')}
-                </Button>
-              </>
+              <GoogleCalendarButton
+                event={{
+                  title: `Advising Meeting: ${s?.name || r.studentId} & ${currentUser.name}`,
+                  description: `Advising Topic: ${getCategoryLabel(r.category)}\nStudent Code: ${s?.code || ''}\nLocation: ${apt?.location || 'Office / Online'}\nDetails: ${r.details}`,
+                  location: apt?.location || 'Office / Online',
+                  date: apt?.scheduledDate || r.preferredDate,
+                  time: apt?.scheduledTime || r.preferredTime,
+                  attendeeEmails: [s?.email || '', currentUser.email],
+                }}
+                label={t('ปฏิทิน', 'Calendar')}
+                size="sm"
+                variant="secondary"
+                onClick={() => markRequestViewed(r.id)}
+              />
             )}
 
             {(r.status === 'requested' || r.status === 'pending') && (
