@@ -53,6 +53,8 @@ import {
   mockAuditLogs,
 } from '@/data/mock-data'
 
+import { getLocalDateString } from '@/utils/dateUtils'
+
 const isTestEnv = import.meta.env?.MODE === 'test'
 
 // --- Helper: generate simple IDs ---
@@ -66,7 +68,7 @@ function nextId(prefix: string): string {
 }
 
 function now(): string {
-  return new Date().toISOString().split('T')[0]
+  return getLocalDateString()
 }
 
 // --- Store Shape ---

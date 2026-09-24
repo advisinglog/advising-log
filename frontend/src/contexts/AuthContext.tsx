@@ -5,6 +5,7 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from 'react'
 import type { User } from '@/types'
 import { mockUsers, mockRoster } from '@/data/mock-data'
+import { getLocalDateString } from '@/utils/dateUtils'
 
 export interface GoogleLoginResult {
   success: boolean
@@ -154,7 +155,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           avatar: picture,
           isActive: true,
           hasAiAccess: true,
-          createdAt: new Date().toISOString().split('T')[0],
+          createdAt: getLocalDateString(),
         }
 
         setCurrentUser(newUser)

@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom'
 import { PageHeader, StatCard, Card, StatusBadge, EmptyState, Button, Modal, AdvisorCohortBanner, GoogleCalendarButton } from '@/components/ui'
 import { FileEdit, CalendarClock, ListChecks, UserX, AlertTriangle, Clock, ArrowRight, UserPlus, CheckCircle2, Search } from 'lucide-react'
 import { isAdvisorMatch } from '@/utils/advisorUtils'
+import { getLocalDateString } from '@/utils/dateUtils'
 
 export default function AdvisorDashboard() {
   const { currentUser } = useAuth()
@@ -91,7 +92,7 @@ export default function AdvisorDashboard() {
       role: 'student' as const,
       department: currentUser?.department || 'School of Applied Digital Technology (ADT)',
       isActive: true,
-      createdAt: new Date().toISOString().split('T')[0],
+      createdAt: getLocalDateString(),
     }
 
     store.addUser(newStudent)

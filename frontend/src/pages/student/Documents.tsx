@@ -7,6 +7,7 @@ import { PageHeader, DataTable, StatusBadge, Button, Modal, ConfirmDialog, Docum
 import type { StudentDocument } from '@/types'
 import { FileText, Upload, AlertCircle, FileUp, X, ShieldCheck, Trash2, PenTool, Fingerprint, FileCheck, Eye, Download, Loader2, ChevronDown, Check } from 'lucide-react'
 import { uploadFileToCloudinary, getCloudinaryViewUrl } from '@/services/cloudinaryService'
+import { getLocalDateString } from '@/utils/dateUtils'
 
 export default function Documents() {
   const { currentUser } = useAuth()
@@ -144,7 +145,7 @@ export default function Documents() {
         cloudPublicId = `advising_docs/${currentUser.code || 'std'}_${Date.now()}_${simulatedFileName}`
       }
 
-      const today = new Date().toISOString().split('T')[0]
+      const today = getLocalDateString()
       const status: StudentDocument['status'] = selectedDocType.signatureMethod === 'e_signature' ? 'signed' : 'uploaded'
 
       let resultDocId = ''

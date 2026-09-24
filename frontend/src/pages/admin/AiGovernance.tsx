@@ -24,6 +24,7 @@ import { useStore } from '@/data/mock-store'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { getLocalDateString } from '@/utils/dateUtils'
 import api from '@/services/apiClient'
 import type { User, AiApiKey } from '@/types'
 
@@ -87,7 +88,7 @@ export default function AiGovernance() {
 
     setIsSavingKey(true)
     try {
-      const name = newKeyName.trim() || `Gemini Key ${new Date().toISOString().split('T')[0]}`
+      const name = newKeyName.trim() || `Gemini Key ${getLocalDateString()}`
       await store.addAiKey(name, newKeyValue.trim(), newKeyIsDefault)
       addToast(
         'success',

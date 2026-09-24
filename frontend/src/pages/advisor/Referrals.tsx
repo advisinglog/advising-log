@@ -9,6 +9,7 @@ import type { Referral, ReferralDestination, ReferralDestinationGroup } from '@/
 import { Plus } from 'lucide-react'
 
 import { isAdvisorMatch } from '@/utils/advisorUtils'
+import { getLocalDateString } from '@/utils/dateUtils'
 
 export default function Referrals() {
   const { currentUser } = useAuth()
@@ -52,7 +53,7 @@ export default function Referrals() {
       reason,
       destination: destination as ReferralDestination,
       status: 'pending',
-      referredAt: new Date().toISOString().split('T')[0],
+      referredAt: getLocalDateString(),
     })
     store.addAuditLog({
       userId: currentUser!.id,

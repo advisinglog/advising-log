@@ -6,6 +6,7 @@ import { useToast } from '@/contexts/ToastContext'
 import { PageHeader, DataTable, StatusBadge, Button, SearchInput, Modal, UserAvatar } from '@/components/ui'
 import type { User, UserRole } from '@/types'
 import { ChevronDown, Bot, ExternalLink, UserPlus, ShieldCheck, User as UserIcon, Users, Info, Trash2, AlertTriangle } from 'lucide-react'
+import { getLocalDateString } from '@/utils/dateUtils'
 
 export default function UserManagement() {
   const store = useStore()
@@ -183,7 +184,7 @@ export default function UserManagement() {
       department: newDept || 'School of Applied Digital Technology (ADT)',
       isActive: true,
       hasAiAccess: effectiveRole !== 'student',
-      createdAt: new Date().toISOString().split('T')[0],
+      createdAt: getLocalDateString(),
     }
 
     setIsSubmitting(true)

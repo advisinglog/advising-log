@@ -7,6 +7,7 @@ import { PageHeader, Card, Button, EmptyState, ConfirmDialog } from '@/component
 import { ClipboardCheck, User, PlusCircle, Lightbulb, Sparkles, Check } from 'lucide-react'
 
 import { isAdvisorMatch } from '@/utils/advisorUtils'
+import { getLocalDateString } from '@/utils/dateUtils'
 
 export default function AdvisorLog() {
   const { currentUser } = useAuth()
@@ -98,7 +99,7 @@ export default function AdvisorLog() {
       appointmentId: appointment?.id || '',
       studentId: selectedReq!.studentId,
       advisorId: currentUser!.id,
-      sessionDate: new Date().toISOString().split('T')[0],
+      sessionDate: getLocalDateString(),
       summary: cleanSummary,
       problem: cleanSummary,
       advice: cleanSummary,
@@ -335,7 +336,7 @@ export default function AdvisorLog() {
                   <input
                     type="date"
                     value={followUpDate}
-                    min={new Date().toISOString().split('T')[0]}
+                    min={getLocalDateString()}
                     onChange={e => setFollowUpDate(e.target.value)}
                     className="w-full px-3.5 py-2 text-xs sm:text-sm border border-slate-200/90 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-xs"
                   />

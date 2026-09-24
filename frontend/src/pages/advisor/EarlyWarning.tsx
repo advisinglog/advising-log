@@ -9,6 +9,7 @@ import type { EarlyWarningCase, EarlyWarningType, EarlyWarningSeverity, EarlyWar
 import { Plus, FileText, Clock, CheckCircle2 } from 'lucide-react'
 
 import { isAdvisorMatch } from '@/utils/advisorUtils'
+import { getLocalDateString } from '@/utils/dateUtils'
 
 export default function EarlyWarning() {
   const { currentUser } = useAuth()
@@ -47,7 +48,7 @@ export default function EarlyWarning() {
       warningType: warningType as EarlyWarningType,
       severity: severity as EarlyWarningSeverity,
       description,
-      dateDetected: new Date().toISOString().split('T')[0],
+      dateDetected: getLocalDateString(),
       recommendedAction,
       followUpDate,
       status: 'active',
@@ -76,7 +77,7 @@ export default function EarlyWarning() {
       notes: followUpNotes,
       actionsTaken: followUpActions,
       outcome: followUpOutcome,
-      followUpDate: new Date().toISOString().split('T')[0],
+      followUpDate: getLocalDateString(),
       status: 'in_progress',
     })
     store.addAuditLog({
