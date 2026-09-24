@@ -90,6 +90,9 @@ export default function AdvisorLog() {
     })
 
     store.updateRequestStatus(selectedRequestId, 'closed')
+    store.appointments
+      .filter(a => a.requestId === selectedRequestId && a.status === 'scheduled')
+      .forEach(a => store.updateAppointmentStatus(a.id, 'completed'))
     store.addAuditLog({
       userId: currentUser!.id,
       userName: currentUser!.name,
