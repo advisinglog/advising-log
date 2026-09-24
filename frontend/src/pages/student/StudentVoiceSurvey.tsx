@@ -82,10 +82,17 @@ export default function StudentVoiceSurvey() {
     ))
   )
 
-  function toggleFactor(factorLabel: string) {
-    setSelectedFactors(prev =>
-      prev.includes(factorLabel) ? prev.filter(f => f !== factorLabel) : [...prev, factorLabel]
-    )
+  function toggleFactor(factorId: string) {
+    setSelectedFactors(prev => {
+      const opt = FACTOR_OPTIONS.find(o => o.id === factorId || o.th === factorId || o.en === factorId)
+      const targetId = opt ? opt.id : factorId
+      const exists = prev.some(f => f === targetId || (opt && (f === opt.th || f === opt.en)))
+      if (exists) {
+        return prev.filter(f => f !== targetId && (!opt || (f !== opt.th && f !== opt.en)))
+      } else {
+        return [...prev, targetId]
+      }
+    })
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -100,6 +107,11 @@ export default function StudentVoiceSurvey() {
       return
     }
 
+    const finalFactors = selectedFactors.map(f => {
+      const opt = FACTOR_OPTIONS.find(o => o.id === f || o.th === f || o.en === f)
+      return opt ? (language === 'th' ? opt.th : opt.en) : f
+    })
+
     const response = store.addStudentVoiceResponse({
       exitCaseId: linkedExitCaseId || studentExitCase?.id,
       studentId: isAnonymous ? undefined : currentUser!.id,
@@ -107,7 +119,7 @@ export default function StudentVoiceSurvey() {
       isAnonymous,
       exitType,
       academicYear,
-      primaryFactors: selectedFactors,
+      primaryFactors: finalFactors,
       ratings: {
         curriculumRelevance: curriculumRating,
         teachingQuality: teachingRating,
@@ -354,12 +366,14 @@ export default function StudentVoiceSurvey() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             {FACTOR_OPTIONS.map(opt => {
               const label = language === 'th' ? opt.th : opt.en
-              const isSelected = selectedFactors.includes(label)
+              const isSelected = selectedFactors.some(
+                f => f === opt.id || f === opt.th || f === opt.en
+              )
               return (
                 <button
                   type="button"
                   key={opt.id}
-                  onClick={() => toggleFactor(label)}
+                  onClick={() => toggleFactor(opt.id)}
                   className={`p-3 rounded-xl border text-left text-xs transition-all flex items-start gap-2.5 cursor-pointer ${
                     isSelected
                       ? 'bg-sky-50 dark:bg-sky-950/70 border-sky-300 dark:border-sky-700 text-sky-900 dark:text-sky-200 font-semibold shadow-xs ring-1 ring-sky-300/40'
