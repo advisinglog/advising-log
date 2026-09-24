@@ -62,14 +62,13 @@ export default function AdvisingHistory() {
       (currentUser.email && r.studentId?.toLowerCase() === currentUser.email.toLowerCase())
     )
     .filter(r => {
-      if (!search.trim()) return true
-      const s = search.trim().toLowerCase()
+      if (!search) return true
       const cat = getCategoryLabel(r.category)
       const subCat = r.subCategory ? getSubCategoryLabel(r.subCategory) : ''
       const details = r.details || ''
-      return cat.toLowerCase().includes(s) ||
-        subCat.toLowerCase().includes(s) ||
-        details.toLowerCase().includes(s)
+      return cat.toLowerCase().includes(search.toLowerCase()) ||
+        subCat.toLowerCase().includes(search.toLowerCase()) ||
+        details.toLowerCase().includes(search.toLowerCase())
     })
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
 
@@ -159,7 +158,6 @@ export default function AdvisingHistory() {
       <div className="mb-5 sm:mb-6 max-w-sm">
         <SearchInput value={search} onChange={setSearch} placeholder={t('ค้นหาตามหมวดหมู่ หรือคำสำคัญ...', 'Search by category or keyword...')} />
       </div>
-      <p className="text-[11px] text-slate-400 dark:text-slate-500 mb-3 flex items-center gap-1"><Sparkles className="h-3 w-3 text-sky-500" /> {t('ป้าย “ใหม่” จะหายเมื่อเปิดดูรายการแล้ว', '“New” disappears after you open the request')}</p>
       <DataTable
         columns={columns}
         data={myRequests}
