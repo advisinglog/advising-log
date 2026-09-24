@@ -75,6 +75,16 @@ export default function AdvisorLog() {
       return
     }
 
+    if (followUpTask.trim() && !followUpDate) {
+      addToast('error', t('กรุณาระบุวันกำหนดส่ง', 'Due Date Required'), t('กรุณาระบุวันที่กำหนดส่งสำหรับงานติดตามผลที่มอบหมาย', 'Please select a due date for the assigned follow-up task.'))
+      return
+    }
+
+    if (!followUpTask.trim() && followUpDate) {
+      addToast('error', t('กรุณาระบุชื่องานติดตามผล', 'Follow-up Task Required'), t('กรุณาระบุรายละเอียดงานที่ต้องการมอบหมาย', 'Please specify the follow-up task description.'))
+      return
+    }
+
     const cleanSummary = summary.trim()
     const session = store.addSession({
       requestId: selectedRequestId,
@@ -318,6 +328,7 @@ export default function AdvisorLog() {
                   <input
                     type="date"
                     value={followUpDate}
+                    min={new Date().toISOString().split('T')[0]}
                     onChange={e => setFollowUpDate(e.target.value)}
                     className="w-full px-3.5 py-2 text-xs sm:text-sm border border-slate-200/90 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-xs"
                   />

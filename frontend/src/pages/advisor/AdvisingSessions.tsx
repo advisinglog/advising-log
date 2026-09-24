@@ -91,14 +91,33 @@ export default function AdvisingSessions() {
   ]
 
   function handleSchedule() {
-    if (!selectedReq || !schedDate || !schedTime || !schedLoc) return
+    if (!selectedReq) return
+    if (!schedDate || !schedTime || !schedLoc.trim()) {
+      addToast(
+        'error',
+        t('ข้อมูลไม่ครบถ้วน', 'Validation Error'),
+        t('กรุณาระบุวัน เวลา และสถานที่นัดหมายให้ครบถ้วน', 'Please provide appointment date, time, and location.')
+      )
+      return
+    }
+
+    const todayStr = new Date().toISOString().split('T')[0]
+    if (schedDate < todayStr) {
+      addToast(
+        'error',
+        t('วันที่ไม่ถูกต้อง', 'Invalid Date'),
+        t('ไม่สามารถเลือกวันที่ในอดีตได้ กรุณาเลือกวันปัจจุบันหรือวันถัดไป', 'Cannot select a past date. Please choose today or a future date.')
+      )
+      return
+    }
+
     const apt = store.addAppointment({
       requestId: selectedReq.id,
       studentId: selectedReq.studentId,
       advisorId: currentUser!.id,
       scheduledDate: schedDate,
       scheduledTime: schedTime,
-      location: schedLoc,
+      location: schedLoc.trim(),
       status: 'scheduled',
     })
     store.updateRequestStatus(selectedReq.id, 'scheduled')
@@ -106,7 +125,7 @@ export default function AdvisingSessions() {
       userId: selectedReq.studentId,
       type: 'info',
       title: t('นัดหมายเวลาเข้าพบอาจารย์แล้ว', 'Appointment Scheduled'),
-      message: `${t('อาจารย์ที่ปรึกษานัดหมายเข้าพบในวันที่', 'Your advising appointment has been scheduled for')} ${schedDate} ${schedTime} (${schedLoc})`,
+      message: `${t('อาจารย์ที่ปรึกษานัดหมายเข้าพบในวันที่', 'Your advising appointment has been scheduled for')} ${schedDate} ${schedTime} (${schedLoc.trim()})`,
       relatedId: apt.id,
       isRead: false,
     })
@@ -326,6 +345,7 @@ export default function AdvisingSessions() {
             <input
               type="date"
               value={schedDate}
+              min={new Date().toISOString().split('T')[0]}
               onChange={e => setSchedDate(e.target.value)}
               className="w-full px-3 py-2 text-xs sm:text-sm border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-colors"
             />
