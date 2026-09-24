@@ -24,6 +24,14 @@ import {
   ChevronDown,
   Info,
   Check,
+  GraduationCap,
+  Coins,
+  BookOpen,
+  TrendingUp,
+  Briefcase,
+  HeartHandshake,
+  LogOut,
+  Tag,
 } from 'lucide-react'
 import { buildAdvisorCalendarUrl, openAdvisorCalendar } from '@/utils/calendarUtils'
 
@@ -51,6 +59,23 @@ export default function RequestAdvising() {
   const [calendarTab, setCalendarTab] = useState<'google' | 'system'>('google')
   const [selectedAdvisorId, setSelectedAdvisorId] = useState<string>('')
   const [showAdvisorDropdown, setShowAdvisorDropdown] = useState(false)
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false)
+  const [showSubCategoryDropdown, setShowSubCategoryDropdown] = useState(false)
+  const [showExitReasonDropdown, setShowExitReasonDropdown] = useState(false)
+
+  function getCategoryIcon(cat: AdvisingCategory | '') {
+    switch (cat) {
+      case 'scholarship_document': return <GraduationCap className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+      case 'financial': return <Coins className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+      case 'registration': return <BookOpen className="h-4 w-4 text-sky-600 dark:text-sky-400" />
+      case 'student_status': return <ShieldCheck className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+      case 'academic_performance': return <TrendingUp className="h-4 w-4 text-rose-600 dark:text-rose-400" />
+      case 'internship_career': return <Briefcase className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
+      case 'personal': return <HeartHandshake className="h-4 w-4 text-pink-600 dark:text-pink-400" />
+      case 'withdrawal_leave': return <LogOut className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+      default: return <Tag className="h-4 w-4 text-slate-400" />
+    }
+  }
 
   if (!currentUser) return null
 
@@ -423,25 +448,87 @@ export default function RequestAdvising() {
         </div>
 
         <Card className="space-y-5">
-          {/* Category */}
+          {/* Category Dropdown */}
           <div>
             <label htmlFor="category-select" className="block text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 mb-1.5">
               {t('หมวดหมู่คำปรึกษา', 'Advising Category')} <span className="text-rose-500">*</span>
             </label>
-            <select
-              id="category-select"
-              value={category}
-              onChange={e => {
-                setCategory(e.target.value as AdvisingCategory)
-                setSubCategory('')
-              }}
-              className="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200/90 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-colors shadow-xs cursor-pointer font-medium"
-            >
-              <option value="">{t('-- กรุณาเลือกหมวดหมู่ --', 'Select a category')}</option>
-              {ADVISING_CATEGORIES.map(c => (
-                <option key={c.value} value={c.value}>{getCategoryLabel(c.value)}</option>
-              ))}
-            </select>
+
+            {/* Custom Category Dropdown Trigger */}
+            <div className="relative">
+              <button
+                type="button"
+                aria-label={t('เลือกหมวดหมู่คำปรึกษา', 'Select Advising Category')}
+                onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
+                className={`w-full min-h-[46px] flex items-center justify-between px-3.5 py-2.5 border rounded-xl text-xs sm:text-sm font-medium transition-all shadow-2xs text-left cursor-pointer ${
+                  !category
+                    ? 'border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-400 dark:text-slate-500 hover:border-sky-300 dark:hover:border-sky-800'
+                    : 'border-slate-200/90 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 hover:border-sky-400 dark:hover:border-sky-600'
+                }`}
+              >
+                <div className="flex items-center gap-2.5 min-w-0 flex-1 pr-2">
+                  <div className="h-7 w-7 rounded-lg bg-sky-50 dark:bg-sky-950/60 border border-sky-100 dark:border-sky-800 flex items-center justify-center flex-shrink-0">
+                    {getCategoryIcon(category)}
+                  </div>
+                  <span className={`truncate font-semibold ${!category ? 'text-slate-400 dark:text-slate-500' : 'text-slate-900 dark:text-slate-100'}`}>
+                    {category ? getCategoryLabel(category) : t('-- กรุณาเลือกหมวดหมู่คำปรึกษา --', '-- Select advising category --')}
+                  </span>
+                </div>
+                <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform duration-150 flex-shrink-0 ${showCategoryDropdown ? 'rotate-180 text-sky-500' : ''}`} />
+              </button>
+
+              {/* Custom Category Menu Dropdown */}
+              {showCategoryDropdown && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setShowCategoryDropdown(false)} />
+                  <div className="absolute left-0 right-0 top-full mt-1.5 bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-xl shadow-xl z-50 py-1.5 max-h-72 overflow-y-auto animate-[slideIn_0.12s_ease-out]">
+                    {ADVISING_CATEGORIES.map(c => (
+                      <button
+                        key={c.value}
+                        type="button"
+                        onClick={() => {
+                          setCategory(c.value)
+                          setSubCategory('')
+                          setShowCategoryDropdown(false)
+                        }}
+                        className={`w-full text-left px-3.5 py-2.5 text-xs sm:text-sm transition-colors cursor-pointer flex items-center justify-between gap-3 ${
+                          category === c.value
+                            ? 'bg-sky-50/80 dark:bg-sky-950/50 text-sky-700 dark:text-sky-300 font-semibold'
+                            : 'text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/60'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="h-6 w-6 rounded-md bg-slate-100 dark:bg-slate-800 flex items-center justify-center flex-shrink-0">
+                            {getCategoryIcon(c.value)}
+                          </div>
+                          <span className="truncate">{getCategoryLabel(c.value)}</span>
+                        </div>
+                        {category === c.value && (
+                          <Check className="h-4 w-4 text-sky-600 dark:text-sky-400 flex-shrink-0" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {/* Hidden native select for test & automation compatibility */}
+              <select
+                id="category-select"
+                aria-label={t('หมวดหมู่คำปรึกษา', 'Advising Category')}
+                value={category}
+                onChange={e => {
+                  setCategory(e.target.value as AdvisingCategory)
+                  setSubCategory('')
+                }}
+                className="sr-only"
+              >
+                <option value="">{t('-- กรุณาเลือกหมวดหมู่ --', 'Select a category')}</option>
+                {ADVISING_CATEGORIES.map(c => (
+                  <option key={c.value} value={c.value}>{getCategoryLabel(c.value)}</option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {/* When category is withdrawal_leave */}
@@ -474,18 +561,64 @@ export default function RequestAdvising() {
               </div>
 
               <div>
-                <label className="block text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 mb-1.5">
+                <label htmlFor="exit-reason-select" className="block text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 mb-1.5">
                   {t('สาเหตุหลัก', 'Primary Reason')} <span className="text-rose-500">*</span>
                 </label>
-                <select
-                  value={exitReasonCode}
-                  onChange={e => setExitReasonCode(e.target.value as ExitReasonCode)}
-                  className="w-full px-3.5 py-2 text-xs sm:text-sm border border-slate-200/90 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-xs cursor-pointer"
-                >
-                  {EXIT_REASON_CODES.map(r => (
-                    <option key={r.value} value={r.value}>{getExitReasonLabel(r.value)}</option>
-                  ))}
-                </select>
+
+                {/* Custom Exit Reason Dropdown Trigger */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setShowExitReasonDropdown(!showExitReasonDropdown)}
+                    className="w-full min-h-[42px] flex items-center justify-between px-3.5 py-2 border border-slate-200/90 dark:border-slate-800 rounded-xl text-xs sm:text-sm font-medium bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 hover:border-sky-400 dark:hover:border-sky-600 transition-colors shadow-2xs text-left cursor-pointer"
+                  >
+                    <span className="truncate">{getExitReasonLabel(exitReasonCode)}</span>
+                    <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform duration-150 flex-shrink-0 ${showExitReasonDropdown ? 'rotate-180 text-sky-500' : ''}`} />
+                  </button>
+
+                  {/* Custom Exit Reason Dropdown Menu */}
+                  {showExitReasonDropdown && (
+                    <>
+                      <div className="fixed inset-0 z-40" onClick={() => setShowExitReasonDropdown(false)} />
+                      <div className="absolute left-0 right-0 top-full mt-1.5 bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-xl shadow-xl z-50 py-1 max-h-60 overflow-y-auto animate-[slideIn_0.12s_ease-out]">
+                        {EXIT_REASON_CODES.map(r => (
+                          <button
+                            key={r.value}
+                            type="button"
+                            onClick={() => {
+                              setExitReasonCode(r.value as ExitReasonCode)
+                              setShowExitReasonDropdown(false)
+                            }}
+                            className={`w-full text-left px-3.5 py-2 text-xs sm:text-sm transition-colors cursor-pointer flex items-center justify-between gap-2 ${
+                              exitReasonCode === r.value
+                                ? 'bg-sky-50/80 dark:bg-sky-950/50 text-sky-700 dark:text-sky-300 font-semibold'
+                                : 'text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/60'
+                            }`}
+                          >
+                            <span>{getExitReasonLabel(r.value)}</span>
+                            {exitReasonCode === r.value && (
+                              <Check className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400 flex-shrink-0" />
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+
+                  {/* Hidden native select for test compatibility */}
+                  <select
+                    id="exit-reason-select"
+                    aria-hidden="true"
+                    tabIndex={-1}
+                    value={exitReasonCode}
+                    onChange={e => setExitReasonCode(e.target.value as ExitReasonCode)}
+                    className="sr-only"
+                  >
+                    {EXIT_REASON_CODES.map(r => (
+                      <option key={r.value} value={r.value}>{getExitReasonLabel(r.value)}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               {/* Student Voice Survey Link & Status */}
@@ -530,19 +663,84 @@ export default function RequestAdvising() {
           {/* Sub-category for regular categories */}
           {category !== 'withdrawal_leave' && subCategories.length > 0 && (
             <div>
-              <label className="block text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 mb-1.5">
+              <label htmlFor="subcategory-select" className="block text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 mb-1.5">
                 {t('หัวข้อย่อย', 'Sub-category')} <span className="text-slate-400 font-normal">({t('ไม่บังคับ', 'Optional')})</span>
               </label>
-              <select
-                value={subCategory}
-                onChange={e => setSubCategory(e.target.value)}
-                className="w-full px-3.5 py-2 text-xs sm:text-sm border border-slate-200/90 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-colors shadow-xs cursor-pointer"
-              >
-                <option value="">{t('-- เลือกหัวข้อย่อย --', 'Select specific topic')}</option>
-                {subCategories.map(sc => (
-                  <option key={sc} value={sc}>{getSubCategoryLabel(sc)}</option>
-                ))}
-              </select>
+
+              {/* Custom Subcategory Dropdown Trigger */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setShowSubCategoryDropdown(!showSubCategoryDropdown)}
+                  className={`w-full min-h-[42px] flex items-center justify-between px-3.5 py-2 border rounded-xl text-xs sm:text-sm font-medium transition-colors shadow-2xs text-left cursor-pointer ${
+                    !subCategory
+                      ? 'border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-400 dark:text-slate-500 hover:border-sky-300'
+                      : 'border-slate-200/90 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 hover:border-sky-400'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Tag className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" />
+                    <span className="truncate">
+                      {subCategory ? getSubCategoryLabel(subCategory) : t('-- เลือกหัวข้อย่อย --', 'Select specific topic')}
+                    </span>
+                  </div>
+                  <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform duration-150 flex-shrink-0 ${showSubCategoryDropdown ? 'rotate-180 text-sky-500' : ''}`} />
+                </button>
+
+                {/* Custom Subcategory Dropdown Menu */}
+                {showSubCategoryDropdown && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setShowSubCategoryDropdown(false)} />
+                    <div className="absolute left-0 right-0 top-full mt-1.5 bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-xl shadow-xl z-50 py-1 max-h-60 overflow-y-auto animate-[slideIn_0.12s_ease-out]">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSubCategory('')
+                          setShowSubCategoryDropdown(false)
+                        }}
+                        className="w-full text-left px-3.5 py-2 text-xs text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/60 cursor-pointer"
+                      >
+                        {t('-- ไม่ระบุหัวข้อย่อย --', '-- None / General --')}
+                      </button>
+                      {subCategories.map(sc => (
+                        <button
+                          key={sc}
+                          type="button"
+                          onClick={() => {
+                            setSubCategory(sc)
+                            setShowSubCategoryDropdown(false)
+                          }}
+                          className={`w-full text-left px-3.5 py-2 text-xs sm:text-sm transition-colors cursor-pointer flex items-center justify-between gap-2 ${
+                            subCategory === sc
+                              ? 'bg-sky-50/80 dark:bg-sky-950/50 text-sky-700 dark:text-sky-300 font-semibold'
+                              : 'text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/60'
+                          }`}
+                        >
+                          <span>{getSubCategoryLabel(sc)}</span>
+                          {subCategory === sc && (
+                            <Check className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400 flex-shrink-0" />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+
+                {/* Hidden native select for test compatibility */}
+                <select
+                  id="subcategory-select"
+                  aria-hidden="true"
+                  tabIndex={-1}
+                  value={subCategory}
+                  onChange={e => setSubCategory(e.target.value)}
+                  className="sr-only"
+                >
+                  <option value="">{t('-- เลือกหัวข้อย่อย --', 'Select specific topic')}</option>
+                  {subCategories.map(sc => (
+                    <option key={sc} value={sc}>{getSubCategoryLabel(sc)}</option>
+                  ))}
+                </select>
+              </div>
             </div>
           )}
 
