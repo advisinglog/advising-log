@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useStore } from '@/data/mock-store'
 import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { PageHeader, Tabs, DataTable, StatusBadge, Button, Modal, GoogleCalendarButton, DocumentViewerModal, SearchInput, type DocumentViewerTarget } from '@/components/ui'
+import { PageHeader, Tabs, DataTable, Button, Modal, GoogleCalendarButton, DocumentViewerModal, SearchInput, type DocumentViewerTarget } from '@/components/ui'
 import type { AdvisingRequest } from '@/types'
 import { Calendar, CheckCircle2, Eye, FileText, Sparkles } from 'lucide-react'
 import { isAdvisorMatch } from '@/utils/advisorUtils'
@@ -209,11 +209,6 @@ export default function AdvisingSessions() {
           </div>
         )
       },
-    },
-    {
-      key: 'status',
-      header: t('สถานะ', 'Status'),
-      render: (r: AdvisingRequest) => <StatusBadge status={r.status} />,
     },
     {
       key: 'actions',
