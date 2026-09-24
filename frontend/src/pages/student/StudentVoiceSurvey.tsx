@@ -21,6 +21,13 @@ import {
   Send,
   ArrowLeft,
   ArrowRight,
+  ChevronDown,
+  Check,
+  LogOut,
+  Clock,
+  ArrowRightLeft,
+  AlertCircle,
+  GraduationCap,
 } from 'lucide-react'
 
 const FACTOR_OPTIONS = [
@@ -51,8 +58,27 @@ export default function StudentVoiceSurvey() {
 
   const [isAnonymous, setIsAnonymous] = useState(false)
   const [exitType, setExitType] = useState<ExitType>(studentExitCase?.exitType || 'withdrawal')
+  const [showExitTypeDropdown, setShowExitTypeDropdown] = useState(false)
   const [academicYear, setAcademicYear] = useState('Year 2 (ชั้นปีที่ 2)')
+  const [showAcademicYearDropdown, setShowAcademicYearDropdown] = useState(false)
   const [selectedFactors, setSelectedFactors] = useState<string[]>([])
+
+  const EXIT_TYPE_OPTIONS: { value: ExitType; labelTh: string; labelEn: string; icon: typeof LogOut }[] = [
+    { value: 'withdrawal', labelTh: 'ขอลาออกจากการเป็นนักศึกษา (Withdrawal)', labelEn: 'Withdrawal / Drop Out', icon: LogOut },
+    { value: 'leave_of_absence', labelTh: 'ขอลาพักการศึกษา (Leave of Absence)', labelEn: 'Leave of Absence', icon: Clock },
+    { value: 'transfer', labelTh: 'ขอโอนย้ายสถาบัน / สาขา (Transfer)', labelEn: 'Transfer Institution / Major', icon: ArrowRightLeft },
+    { value: 'dropout', labelTh: 'พ้นสภาพ / อื่นๆ (Dropout / Discontinuation)', labelEn: 'Dropout / Discontinuation', icon: AlertCircle },
+  ]
+
+  const ACADEMIC_YEAR_OPTIONS = [
+    { value: 'Year 1 (ชั้นปีที่ 1)', labelTh: 'Year 1 (ชั้นปีที่ 1)', labelEn: 'Year 1 (ชั้นปีที่ 1)' },
+    { value: 'Year 2 (ชั้นปีที่ 2)', labelTh: 'Year 2 (ชั้นปีที่ 2)', labelEn: 'Year 2 (ชั้นปีที่ 2)' },
+    { value: 'Year 3 (ชั้นปีที่ 3)', labelTh: 'Year 3 (ชั้นปีที่ 3)', labelEn: 'Year 3 (ชั้นปีที่ 3)' },
+    { value: 'Year 4+ (ชั้นปีที่ 4 ขึ้นไป)', labelTh: 'Year 4+ (ชั้นปีที่ 4 ขึ้นไป)', labelEn: 'Year 4+ (ชั้นปีที่ 4 ขึ้นไป)' },
+  ]
+
+  const selectedExitTypeOpt = EXIT_TYPE_OPTIONS.find(o => o.value === exitType) || EXIT_TYPE_OPTIONS[0]
+  const SelectedExitIcon = selectedExitTypeOpt.icon
   
   // Ratings
   const [curriculumRating, setCurriculumRating] = useState(3)
@@ -316,36 +342,161 @@ export default function StudentVoiceSurvey() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* 1. Case Category Dropdown */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+              <label htmlFor="exit-type-select" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                 {t('กรณีที่เกิดขึ้น', 'Case Category')} <span className="text-rose-500">*</span>
               </label>
-              <select
-                value={exitType}
-                onChange={e => setExitType(e.target.value as ExitType)}
-                className="w-full px-3.5 py-2 text-xs sm:text-sm border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-colors cursor-pointer"
-              >
-                <option value="withdrawal">{t('ขอลาออกจากการเป็นนักศึกษา (Withdrawal)', 'Withdrawal / Drop Out')}</option>
-                <option value="leave_of_absence">{t('ขอลาพักการศึกษา (Leave of Absence)', 'Leave of Absence')}</option>
-                <option value="transfer">{t('ขอโอนย้ายสถาบัน / สาขา (Transfer)', 'Transfer Institution / Major')}</option>
-                <option value="dropout">{t('พ้นสภาพ / อื่นๆ (Dropout / Discontinuation)', 'Dropout / Discontinuation')}</option>
-              </select>
+
+              <div className="relative">
+                <button
+                  type="button"
+                  aria-label={t('กรณีที่เกิดขึ้น', 'Case Category')}
+                  onClick={() => {
+                    setShowExitTypeDropdown(!showExitTypeDropdown)
+                    setShowAcademicYearDropdown(false)
+                  }}
+                  className="w-full min-h-[42px] flex items-center justify-between px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs sm:text-sm font-medium transition-all shadow-2xs text-left cursor-pointer hover:border-sky-400"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0 flex-1 pr-2">
+                    <div className="h-6 w-6 rounded-lg bg-sky-50 dark:bg-sky-950/60 border border-sky-100 dark:border-sky-800 flex items-center justify-center flex-shrink-0 text-sky-600 dark:text-sky-400">
+                      <SelectedExitIcon className="h-3.5 w-3.5" />
+                    </div>
+                    <span className="truncate font-medium text-slate-900 dark:text-slate-100">
+                      {language === 'th' ? selectedExitTypeOpt.labelTh : selectedExitTypeOpt.labelEn}
+                    </span>
+                  </div>
+                  <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform duration-150 flex-shrink-0 ${showExitTypeDropdown ? 'rotate-180 text-sky-500' : ''}`} />
+                </button>
+
+                {showExitTypeDropdown && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setShowExitTypeDropdown(false)} />
+                    <div className="absolute left-0 right-0 top-full mt-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl z-50 py-1.5 max-h-60 overflow-y-auto animate-[slideIn_0.12s_ease-out]">
+                      {EXIT_TYPE_OPTIONS.map(opt => {
+                        const Icon = opt.icon
+                        const isSelected = exitType === opt.value
+                        return (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            onClick={() => {
+                              setExitType(opt.value)
+                              setShowExitTypeDropdown(false)
+                            }}
+                            className={`w-full text-left px-3.5 py-2.5 text-xs sm:text-sm transition-colors cursor-pointer flex items-center justify-between gap-3 ${
+                              isSelected
+                                ? 'bg-sky-50/80 dark:bg-sky-950/50 text-sky-700 dark:text-sky-300 font-semibold'
+                                : 'text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/60'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                              <Icon className="h-4 w-4 text-sky-600 dark:text-sky-400 flex-shrink-0" />
+                              <span className="truncate">{language === 'th' ? opt.labelTh : opt.labelEn}</span>
+                            </div>
+                            {isSelected && (
+                              <Check className="h-4 w-4 text-sky-600 dark:text-sky-400 flex-shrink-0" />
+                            )}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </>
+                )}
+
+                {/* Hidden native select for test & automation compatibility */}
+                <select
+                  id="exit-type-select"
+                  aria-label={t('กรณีที่เกิดขึ้น', 'Case Category')}
+                  value={exitType}
+                  onChange={e => setExitType(e.target.value as ExitType)}
+                  className="sr-only"
+                >
+                  {EXIT_TYPE_OPTIONS.map(opt => (
+                    <option key={opt.value} value={opt.value}>
+                      {language === 'th' ? opt.labelTh : opt.labelEn}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
+            {/* 2. Academic Year Dropdown */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+              <label htmlFor="academic-year-select" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                 {t('ชั้นปีการศึกษาปัจจุบัน', 'Academic Year')} <span className="text-rose-500">*</span>
               </label>
-              <select
-                value={academicYear}
-                onChange={e => setAcademicYear(e.target.value)}
-                className="w-full px-3.5 py-2 text-xs sm:text-sm border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-colors cursor-pointer"
-              >
-                <option value="Year 1 (ชั้นปีที่ 1)">Year 1 (ชั้นปีที่ 1)</option>
-                <option value="Year 2 (ชั้นปีที่ 2)">Year 2 (ชั้นปีที่ 2)</option>
-                <option value="Year 3 (ชั้นปีที่ 3)">Year 3 (ชั้นปีที่ 3)</option>
-                <option value="Year 4+ (ชั้นปีที่ 4 ขึ้นไป)">Year 4+ (ชั้นปีที่ 4 ขึ้นไป)</option>
-              </select>
+
+              <div className="relative">
+                <button
+                  type="button"
+                  aria-label={t('ชั้นปีการศึกษาปัจจุบัน', 'Academic Year')}
+                  onClick={() => {
+                    setShowAcademicYearDropdown(!showAcademicYearDropdown)
+                    setShowExitTypeDropdown(false)
+                  }}
+                  className="w-full min-h-[42px] flex items-center justify-between px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs sm:text-sm font-medium transition-all shadow-2xs text-left cursor-pointer hover:border-sky-400"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0 flex-1 pr-2">
+                    <div className="h-6 w-6 rounded-lg bg-sky-50 dark:bg-sky-950/60 border border-sky-100 dark:border-sky-800 flex items-center justify-center flex-shrink-0 text-sky-600 dark:text-sky-400">
+                      <GraduationCap className="h-3.5 w-3.5" />
+                    </div>
+                    <span className="truncate font-medium text-slate-900 dark:text-slate-100">
+                      {academicYear}
+                    </span>
+                  </div>
+                  <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform duration-150 flex-shrink-0 ${showAcademicYearDropdown ? 'rotate-180 text-sky-500' : ''}`} />
+                </button>
+
+                {showAcademicYearDropdown && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setShowAcademicYearDropdown(false)} />
+                    <div className="absolute left-0 right-0 top-full mt-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl z-50 py-1.5 max-h-60 overflow-y-auto animate-[slideIn_0.12s_ease-out]">
+                      {ACADEMIC_YEAR_OPTIONS.map(opt => {
+                        const isSelected = academicYear === opt.value
+                        return (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            onClick={() => {
+                              setAcademicYear(opt.value)
+                              setShowAcademicYearDropdown(false)
+                            }}
+                            className={`w-full text-left px-3.5 py-2.5 text-xs sm:text-sm transition-colors cursor-pointer flex items-center justify-between gap-3 ${
+                              isSelected
+                                ? 'bg-sky-50/80 dark:bg-sky-950/50 text-sky-700 dark:text-sky-300 font-semibold'
+                                : 'text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/60'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                              <GraduationCap className="h-4 w-4 text-sky-600 dark:text-sky-400 flex-shrink-0" />
+                              <span className="truncate">{opt.value}</span>
+                            </div>
+                            {isSelected && (
+                              <Check className="h-4 w-4 text-sky-600 dark:text-sky-400 flex-shrink-0" />
+                            )}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </>
+                )}
+
+                {/* Hidden native select for test & automation compatibility */}
+                <select
+                  id="academic-year-select"
+                  aria-label={t('ชั้นปีการศึกษาปัจจุบัน', 'Academic Year')}
+                  value={academicYear}
+                  onChange={e => setAcademicYear(e.target.value)}
+                  className="sr-only"
+                >
+                  {ACADEMIC_YEAR_OPTIONS.map(opt => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.value}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
         </Card>
