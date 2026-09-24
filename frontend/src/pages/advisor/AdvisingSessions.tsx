@@ -9,7 +9,7 @@ import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { PageHeader, Tabs, DataTable, StatusBadge, Button, Modal, GoogleCalendarButton, DocumentViewerModal, SearchInput, type DocumentViewerTarget } from '@/components/ui'
 import type { AdvisingRequest } from '@/types'
-import { Calendar, CheckCircle2, Eye, FileText } from 'lucide-react'
+import { Calendar, CheckCircle2, Eye, FileText, Sparkles } from 'lucide-react'
 import { isAdvisorMatch } from '@/utils/advisorUtils'
 
 export default function AdvisingSessions() {
@@ -28,6 +28,12 @@ export default function AdvisingSessions() {
   const [schedDate, setSchedDate] = useState('')
   const [schedTime, setSchedTime] = useState('')
   const [schedLoc, setSchedLoc] = useState('')
+
+  const isRecentRequest = (request: AdvisingRequest) => {
+    const createdAt = new Date(request.createdAt).getTime()
+    const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
+    return Number.isFinite(createdAt) && createdAt >= sevenDaysAgo
+  }
 
   if (!currentUser) return null
 
@@ -55,6 +61,7 @@ export default function AdvisingSessions() {
       ].join(' ').toLowerCase()
       return searchable.includes(search.toLowerCase())
     })
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
 
   function getAttachments(request: AdvisingRequest): DocumentViewerTarget[] {
     return (Array.isArray(request.attachments) ? request.attachments : []).map((attachment, index) => {
@@ -134,7 +141,12 @@ export default function AdvisingSessions() {
   }
 
   const columns = [
-    { key: 'date', header: t('วันที่ยื่น', 'Date'), render: (r: AdvisingRequest) => <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">{r.createdAt}</span> },
+    { key: 'date', header: t('วันที่ยื่น', 'Date'), render: (r: AdvisingRequest) => (
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">{r.createdAt}</span>
+        {isRecentRequest(r) && <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-sky-100 dark:bg-sky-950/70 text-[10px] font-bold text-sky-700 dark:text-sky-300"><Sparkles className="h-3 w-3" />{t('ใหม่', 'New')}</span>}
+      </div>
+    ) },
     {
       key: 'category',
       header: t('หมวดหมู่', 'Category'),
@@ -251,6 +263,7 @@ export default function AdvisingSessions() {
       <div className="mb-5 sm:mb-6 max-w-sm">
         <SearchInput value={search} onChange={setSearch} placeholder={t('ค้นหาตามหมวดหมู่ ชื่อนักศึกษา หรือคำสำคัญ...', 'Search by category, student, or keyword...')} />
       </div>
+      <p className="text-[11px] text-slate-400 dark:text-slate-500 mb-3 flex items-center gap-1"><Sparkles className="h-3 w-3 text-sky-500" /> {t('ป้าย “ใหม่” หมายถึงรายการที่ยื่นภายใน 7 วันล่าสุด', '“New” means submitted within the last 7 days')}</p>
 
       <DataTable
         columns={columns}

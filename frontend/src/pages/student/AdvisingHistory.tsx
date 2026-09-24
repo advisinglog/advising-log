@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom'
 import { PageHeader, DataTable, StatusBadge, SearchInput, Button } from '@/components/ui'
 import type { AdvisingRequest } from '@/types'
 import { useState } from 'react'
-import { FileEdit, Clock, X, CheckCircle } from 'lucide-react'
+import { FileEdit, Clock, X, CheckCircle, Sparkles } from 'lucide-react'
 
 export default function AdvisingHistory() {
   const { currentUser } = useAuth()
@@ -17,6 +17,27 @@ export default function AdvisingHistory() {
   const { t, getCategoryLabel, getSubCategoryLabel } = useLanguage()
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
+
+  const viewedRequestsKey = currentUser ? `advising_log_viewed_requests_${currentUser.id}` : ''
+
+  const getViewedRequests = (): string[] => {
+    if (!viewedRequestsKey) return []
+    try {
+      const stored = JSON.parse(localStorage.getItem(viewedRequestsKey) || '[]')
+      return Array.isArray(stored) ? stored : []
+    } catch {
+      return []
+    }
+  }
+
+  const isNewRequest = (request: AdvisingRequest) => !getViewedRequests().includes(request.id)
+
+  const markRequestViewed = (requestId: string) => {
+    const viewedRequests = getViewedRequests()
+    if (!viewedRequests.includes(requestId)) {
+      localStorage.setItem(viewedRequestsKey, JSON.stringify([...viewedRequests, requestId]))
+    }
+  }
 
   if (!currentUser) return null
 
@@ -49,9 +70,15 @@ export default function AdvisingHistory() {
         subCat.toLowerCase().includes(search.toLowerCase()) ||
         details.toLowerCase().includes(search.toLowerCase())
     })
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
 
   const columns = [
-    { key: 'date', header: t('วันที่ยื่น', 'Date'), render: (r: AdvisingRequest) => <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">{r.createdAt}</span> },
+    { key: 'date', header: t('วันที่ยื่น', 'Date'), render: (r: AdvisingRequest) => (
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">{r.createdAt}</span>
+        {isNewRequest(r) && <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-sky-100 dark:bg-sky-950/70 text-[10px] font-bold text-sky-700 dark:text-sky-300"><Sparkles className="h-3 w-3" />{t('ใหม่', 'New')}</span>}
+      </div>
+    ) },
     {
       key: 'category',
       header: t('หมวดหมู่', 'Category'),
@@ -131,10 +158,11 @@ export default function AdvisingHistory() {
       <div className="mb-5 sm:mb-6 max-w-sm">
         <SearchInput value={search} onChange={setSearch} placeholder={t('ค้นหาตามหมวดหมู่ หรือคำสำคัญ...', 'Search by category or keyword...')} />
       </div>
+      <p className="text-[11px] text-slate-400 dark:text-slate-500 mb-3 flex items-center gap-1"><Sparkles className="h-3 w-3 text-sky-500" /> {t('ป้าย “ใหม่” จะหายเมื่อเปิดดูรายการแล้ว', '“New” disappears after you open the request')}</p>
       <DataTable
         columns={columns}
         data={myRequests}
-        onRowClick={r => navigate(`/student/history/${r.id}`)}
+        onRowClick={r => { markRequestViewed(r.id); navigate(`/student/history/${r.id}`) }}
         emptyMessage={t('ไม่พบประวัติคำร้องขอรับคำปรึกษา', 'No advising records found matching your search.')}
       />
     </div>
