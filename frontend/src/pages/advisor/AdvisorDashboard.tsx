@@ -8,7 +8,7 @@ import { useStore } from '@/data/mock-store'
 import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useNavigate } from 'react-router-dom'
-import { PageHeader, StatCard, Card, StatusBadge, EmptyState, Button, Modal, AdvisorCohortBanner, GoogleCalendarButton } from '@/components/ui'
+import { PageHeader, StatCard, Card, StatusBadge, EmptyState, Button, Modal, AdvisorCohortBanner } from '@/components/ui'
 import { FileEdit, CalendarClock, ListChecks, UserX, AlertTriangle, Clock, ArrowRight, UserPlus, CheckCircle2, Search } from 'lucide-react'
 import { isAdvisorMatch } from '@/utils/advisorUtils'
 import { getLocalDateString } from '@/utils/dateUtils'
@@ -228,19 +228,6 @@ export default function AdvisorDashboard() {
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <GoogleCalendarButton
-                        event={{
-                          title: `Advising Meeting: ${student?.name || a.studentId} & ${currentUser.name}`,
-                          description: `Advising Appointment with ${student?.name || a.studentId} (${student?.code || ''})\nLocation: ${a.location}\nDate: ${a.scheduledDate} ${a.scheduledTime}`,
-                          location: a.location,
-                          date: a.scheduledDate,
-                          time: a.scheduledTime,
-                          attendeeEmails: [student?.email || '', currentUser.email],
-                        }}
-                        label={t('เพิ่มลงปฏิทิน', 'Calendar')}
-                        size="sm"
-                        variant="secondary"
-                      />
                       <Button size="sm" onClick={() => navigate('/advisor/log')}>
                         {t('บันทึกผล', 'Record Log')}
                       </Button>
