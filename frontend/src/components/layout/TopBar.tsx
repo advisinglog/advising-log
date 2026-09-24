@@ -5,6 +5,7 @@ import { ThemeToggle, UserAvatar } from '@/components/ui'
 import { Bell, LogOut, Menu } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import type { Notification } from '@/types'
 
 const thaiNotificationTranslations: Record<string, { title: string; message: string }> = {
   NOT001: {
@@ -52,6 +53,60 @@ export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
 
   const myNotifs = store.notifications.filter(n => n.userId === currentUser.id)
   const unreadCount = myNotifs.filter(n => !n.isRead).length
+
+  const handleNotificationClick = (n: Notification) => {
+    store.markNotificationRead(n.id)
+    setShowNotifs(false)
+
+    if (!n.relatedId) {
+      if (currentUser.role === 'student') navigate('/student')
+      else if (currentUser.role === 'advisor') navigate('/advisor')
+      else if (currentUser.role === 'qa_chair') navigate('/qa')
+      else if (currentUser.role === 'admin') navigate('/admin')
+      return
+    }
+
+    const rel = n.relatedId
+
+    if (currentUser.role === 'student') {
+      if (rel.startsWith('APT')) {
+        const apt = store.appointments.find(a => a.id === rel)
+        if (apt?.requestId) {
+          navigate(`/student/history/${apt.requestId}`)
+        } else {
+          navigate('/student/history')
+        }
+      } else if (rel.startsWith('REQ')) {
+        navigate(`/student/history/${rel}`)
+      } else if (rel.startsWith('DOC')) {
+        navigate('/student/documents')
+      } else if (rel.startsWith('FU')) {
+        navigate('/student/followups')
+      } else {
+        navigate('/student/history')
+      }
+    } else if (currentUser.role === 'advisor') {
+      if (rel.startsWith('APT') || rel.startsWith('REQ')) {
+        navigate('/advisor/sessions')
+      } else if (rel.startsWith('EW') || rel.startsWith('EWF')) {
+        navigate('/advisor/warnings')
+      } else if (rel.startsWith('EXIT')) {
+        navigate('/advisor/exit-cases')
+      } else if (rel.startsWith('FU')) {
+        navigate('/advisor/sessions')
+      } else {
+        navigate('/advisor/sessions')
+      }
+    } else if (currentUser.role === 'qa_chair') {
+      if (rel.startsWith('EXIT')) {
+        navigate('/qa/exit-review')
+      } else {
+        navigate('/qa')
+      }
+    } else if (currentUser.role === 'admin') {
+      navigate('/admin')
+    }
+  }
 
   return (
     <header className="h-16 bg-white/90 dark:bg-[#0e1424]/90 backdrop-blur-md border-b border-slate-200/70 dark:border-slate-800/80 flex items-center justify-between px-3 sm:px-6 sticky top-0 z-30 shadow-xs text-slate-900 dark:text-slate-100">
@@ -137,7 +192,7 @@ export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
                     return (
                       <div
                         key={n.id}
-                        onClick={() => { store.markNotificationRead(n.id); setShowNotifs(false) }}
+                        onClick={() => handleNotificationClick(n)}
                         className={`px-5 py-3.5 border-b border-slate-50 dark:border-slate-800/60 cursor-pointer hover:bg-sky-50/30 dark:hover:bg-slate-800/60 transition-colors ${!n.isRead ? 'bg-sky-50/50 dark:bg-sky-500/10' : ''}`}
                       >
                         <div className="flex items-start justify-between gap-2">
