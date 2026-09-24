@@ -512,14 +512,17 @@ export function UserAvatar({
     setImgError(false)
   }, [avatar])
 
-  const initials = (name || 'User')
+  // Clean out common academic titles & honorific prefixes (EN & TH)
+  const cleanName = (name || 'User')
+    .replace(/^(asst\.\s*prof\.\s*dr\.|assoc\.\s*prof\.\s*dr\.|asst\.\s*prof\.|assoc\.\s*prof\.|prof\.\s*dr\.|prof\.|dr\.|doctor|mr\.|mrs\.|ms\.|ผศ\.\s*ดร\.|รศ\.\s*ดร\.|ศ\.\s*ดร\.|ดร\.|ผศ\.|รศ\.|ศ\.|อาจารย์|อ\.|นาย|นางสาว|นาง)\s+/i, '')
     .trim()
-    .split(/\s+/)
-    .filter(Boolean)
-    .map(n => n[0])
-    .join('')
-    .substring(0, 2)
-    .toUpperCase() || 'U'
+
+  const parts = (cleanName || name || 'User').split(/\s+/).filter(Boolean)
+  const initials = (
+    parts.length >= 2
+      ? `${parts[0][0]}${parts[parts.length - 1][0]}`
+      : parts[0]?.substring(0, 2) || 'U'
+  ).toUpperCase()
 
   const sizeClasses = {
     xs: 'h-6 w-6 text-[10px] rounded-lg',
