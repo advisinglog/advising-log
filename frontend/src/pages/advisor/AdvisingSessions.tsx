@@ -7,9 +7,9 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useStore } from '@/data/mock-store'
 import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { PageHeader, Tabs, DataTable, StatusBadge, Button, Modal, GoogleCalendarButton, DocumentViewerModal, type DocumentViewerTarget } from '@/components/ui'
+import { PageHeader, Tabs, DataTable, StatusBadge, Button, Modal, GoogleCalendarButton, DocumentViewerModal, SearchInput, type DocumentViewerTarget } from '@/components/ui'
 import type { AdvisingRequest } from '@/types'
-import { Calendar, CheckCircle2, Eye, FileText, Paperclip, User } from 'lucide-react'
+import { Calendar, CheckCircle2, Eye, FileText, User } from 'lucide-react'
 import { isAdvisorMatch } from '@/utils/advisorUtils'
 
 export default function AdvisingSessions() {
@@ -19,6 +19,7 @@ export default function AdvisingSessions() {
   const { t, getCategoryLabel, getSubCategoryLabel } = useLanguage()
 
   const [tab, setTab] = useState('pending')
+  const [search, setSearch] = useState('')
   const [selectedReq, setSelectedReq] = useState<AdvisingRequest | null>(null)
   const [detailReq, setDetailReq] = useState<AdvisingRequest | null>(null)
   const [previewDoc, setPreviewDoc] = useState<DocumentViewerTarget | null>(null)
@@ -39,7 +40,21 @@ export default function AdvisingSessions() {
     cancelled: ['cancelled'],
   }
 
-  const filtered = myRequests.filter(r => filterMap[tab]?.includes(r.status))
+  const filtered = myRequests
+    .filter(r => filterMap[tab]?.includes(r.status))
+    .filter(r => {
+      if (!search) return true
+      const student = store.users.find(u => u.id === r.studentId)
+      const searchable = [
+        r.createdAt,
+        getCategoryLabel(r.category),
+        r.subCategory ? getSubCategoryLabel(r.subCategory) : '',
+        r.details,
+        student?.name || '',
+        student?.code || '',
+      ].join(' ').toLowerCase()
+      return searchable.includes(search.toLowerCase())
+    })
 
   function getAttachments(request: AdvisingRequest): DocumentViewerTarget[] {
     return (Array.isArray(request.attachments) ? request.attachments : []).map((attachment, index) => {
@@ -119,71 +134,23 @@ export default function AdvisingSessions() {
   }
 
   const columns = [
+    { key: 'date', header: t('วันที่ยื่น', 'Date'), render: (r: AdvisingRequest) => <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">{r.createdAt}</span> },
     {
-      key: 'student',
-      header: t('นักศึกษา', 'Student'),
+      key: 'category',
+      header: t('หมวดหมู่', 'Category'),
       render: (r: AdvisingRequest) => {
-        const s = store.users.find(u => u.id === r.studentId)
         return (
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-full bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-800 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
-              <User className="h-4 w-4" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{s?.name || '-'}</p>
-              <p className="text-[11px] font-mono text-slate-500 dark:text-slate-400 mt-0.5">{s?.code || '-'}</p>
-            </div>
+          <div>
+            <span className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100 block">{getCategoryLabel(r.category)}</span>
+            {r.subCategory && <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">{getSubCategoryLabel(r.subCategory)}</span>}
           </div>
         )
       },
     },
-    {
-      key: 'topic',
-      header: t('หัวข้อและประเด็นที่ปรึกษา', 'Topic & Details'),
-      render: (r: AdvisingRequest) => {
-        const rawAttachments = r.attachments
-        const attachmentsList: string[] = Array.isArray(rawAttachments)
-          ? rawAttachments
-          : typeof rawAttachments === 'string'
-            ? (() => { try { const p = JSON.parse(rawAttachments); return Array.isArray(p) ? p : [] } catch { return [] } })()
-            : []
-
-        return (
-          <div className="max-w-md">
-            <div className="flex items-center gap-2 flex-wrap mb-1.5">
-              <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-sky-50 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300 ring-1 ring-sky-700/10 dark:ring-sky-300/20">
-                {getCategoryLabel(r.category)}
-              </span>
-              {r.subCategory && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-medium">
-                  {getSubCategoryLabel(r.subCategory)}
-                </span>
-              )}
-            </div>
-            <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-3 leading-relaxed">
-              {r.details || '-'}
-            </p>
-            {attachmentsList.length > 0 && (
-              <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                {attachmentsList.map(file => (
-                  <span key={file} className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[11px] text-slate-600 dark:text-slate-300 font-medium">
-                    <Paperclip className="h-3 w-3 text-slate-400" />
-                    {file}
-                  </span>
-                ))}
-              </div>
-            )}
-            <button
-              type="button"
-              onClick={() => setDetailReq(r)}
-              className="inline-flex items-center gap-1 mt-2 text-[11px] font-semibold text-sky-700 dark:text-sky-400 hover:text-sky-900 dark:hover:text-sky-300"
-            >
-              <Eye className="h-3.5 w-3.5" /> {t('ดูรายละเอียด', 'View details')}
-            </button>
-          </div>
-        )
-      },
-    },
+    { key: 'student', header: t('นักศึกษา', 'Student'), render: (r: AdvisingRequest) => {
+      const student = store.users.find(u => u.id === r.studentId)
+      return <div><span className="text-xs text-slate-700 dark:text-slate-300 font-medium block">{student?.name || '-'}</span><span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">{student?.code || '-'}</span></div>
+    } },
     {
       key: 'meetingSlot',
       header: t('วันและเวลานัดหมาย', 'Meeting Time'),
@@ -281,9 +248,14 @@ export default function AdvisingSessions() {
 
       <Tabs tabs={tabs} active={tab} onChange={setTab} />
 
+      <div className="mb-5 sm:mb-6 max-w-sm">
+        <SearchInput value={search} onChange={setSearch} placeholder={t('ค้นหาตามหมวดหมู่ ชื่อนักศึกษา หรือคำสำคัญ...', 'Search by category, student, or keyword...')} />
+      </div>
+
       <DataTable
         columns={columns}
         data={filtered}
+        onRowClick={r => setDetailReq(r)}
         emptyMessage={t(`ไม่พบรายการในสถานะนี้`, `No ${tab} sessions found.`)}
       />
 

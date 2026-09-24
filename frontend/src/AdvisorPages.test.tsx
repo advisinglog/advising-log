@@ -61,7 +61,7 @@ describe('Advisor Pages Audit & Resilience Tests', () => {
     expect(screen.getByText(/รายการการให้คำปรึกษาทางวิชาการ|Advising Sessions/i)).toBeInTheDocument()
 
     // Table should render student requests
-    expect(screen.getByText(/หัวข้อและประเด็นที่ปรึกษา|Topic & Details/i)).toBeInTheDocument()
+    expect(screen.getByText(/หมวดหมู่|Category/i)).toBeInTheDocument()
     expect(screen.getByText(/วันและเวลานัดหมาย|Meeting Time/i)).toBeInTheDocument()
   })
 
