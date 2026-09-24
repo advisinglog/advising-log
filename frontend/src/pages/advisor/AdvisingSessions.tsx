@@ -7,9 +7,9 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useStore } from '@/data/mock-store'
 import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { PageHeader, Tabs, DataTable, StatusBadge, Button, Modal, GoogleCalendarButton } from '@/components/ui'
+import { PageHeader, Tabs, DataTable, StatusBadge, Button, Modal, GoogleCalendarButton, DocumentViewerModal, type DocumentViewerTarget } from '@/components/ui'
 import type { AdvisingRequest } from '@/types'
-import { Calendar, CheckCircle2, Paperclip, User } from 'lucide-react'
+import { Calendar, CheckCircle2, Eye, FileText, Paperclip, User } from 'lucide-react'
 import { isAdvisorMatch } from '@/utils/advisorUtils'
 
 export default function AdvisingSessions() {
@@ -20,6 +20,8 @@ export default function AdvisingSessions() {
 
   const [tab, setTab] = useState('pending')
   const [selectedReq, setSelectedReq] = useState<AdvisingRequest | null>(null)
+  const [detailReq, setDetailReq] = useState<AdvisingRequest | null>(null)
+  const [previewDoc, setPreviewDoc] = useState<DocumentViewerTarget | null>(null)
 
   const [showSchedule, setShowSchedule] = useState(false)
   const [schedDate, setSchedDate] = useState('')
@@ -38,6 +40,26 @@ export default function AdvisingSessions() {
   }
 
   const filtered = myRequests.filter(r => filterMap[tab]?.includes(r.status))
+
+  function getAttachments(request: AdvisingRequest): DocumentViewerTarget[] {
+    return (Array.isArray(request.attachments) ? request.attachments : []).map((attachment, index) => {
+      const value = attachment as unknown
+      if (typeof value === 'string') {
+        return { id: `${request.id}-attachment-${index}`, fileName: value, title: value }
+      }
+
+      const file = value as Record<string, unknown>
+      const fileName = String(file.fileName || file.name || file.originalFilename || `attachment-${index + 1}`)
+      return {
+        id: `${request.id}-attachment-${index}`,
+        fileName,
+        title: fileName,
+        fileUrl: typeof file.fileUrl === 'string' ? file.fileUrl : typeof file.url === 'string' ? file.url : typeof file.secureUrl === 'string' ? file.secureUrl : undefined,
+        cloudinaryPublicId: typeof file.cloudinaryPublicId === 'string' ? file.cloudinaryPublicId : typeof file.publicId === 'string' ? file.publicId : undefined,
+        fileType: typeof file.fileType === 'string' ? file.fileType : undefined,
+      }
+    })
+  }
 
   const tabs = [
     { value: 'pending', label: t('คำร้องรอการตอบรับ', 'Pending Requests'), count: myRequests.filter(r => ['requested', 'pending'].includes(r.status)).length },
@@ -151,6 +173,13 @@ export default function AdvisingSessions() {
                 ))}
               </div>
             )}
+            <button
+              type="button"
+              onClick={() => setDetailReq(r)}
+              className="inline-flex items-center gap-1 mt-2 text-[11px] font-semibold text-sky-700 dark:text-sky-400 hover:text-sky-900 dark:hover:text-sky-300"
+            >
+              <Eye className="h-3.5 w-3.5" /> {t('ดูรายละเอียด', 'View details')}
+            </button>
           </div>
         )
       },
@@ -256,6 +285,51 @@ export default function AdvisingSessions() {
         columns={columns}
         data={filtered}
         emptyMessage={t(`ไม่พบรายการในสถานะนี้`, `No ${tab} sessions found.`)}
+      />
+
+      <Modal
+        isOpen={Boolean(detailReq)}
+        onClose={() => setDetailReq(null)}
+        title={t('รายละเอียดคำร้องขอคำปรึกษา', 'Advising Request Details')}
+        size="lg"
+      >
+        {detailReq && (
+          <div className="space-y-5">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
+              <div><span className="text-slate-400 block">{t('นักศึกษา', 'Student')}</span><p className="font-semibold mt-1">{store.users.find(u => u.id === detailReq.studentId)?.name || '-'}</p></div>
+              <div><span className="text-slate-400 block">{t('รหัสคำร้อง', 'Request ID')}</span><p className="font-semibold mt-1">{detailReq.id}</p></div>
+              <div><span className="text-slate-400 block">{t('วันที่นัดหมาย', 'Requested date')}</span><p className="font-semibold mt-1">{detailReq.preferredDate}</p></div>
+              <div><span className="text-slate-400 block">{t('เวลา', 'Time')}</span><p className="font-semibold mt-1">{detailReq.preferredTime}</p></div>
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-slate-700 dark:text-slate-200 mb-2">{t('หัวข้อและรายละเอียด', 'Topic and details')}</h4>
+              <p className="text-sm leading-relaxed whitespace-pre-wrap rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 p-4">{detailReq.details || '-'}</p>
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-slate-700 dark:text-slate-200 mb-2">{t('ไฟล์แนบ', 'Attachments')}</h4>
+              <div className="space-y-2">
+                {getAttachments(detailReq).length === 0 && <p className="text-xs text-slate-400">{t('ไม่มีไฟล์แนบ', 'No attachments')}</p>}
+                {getAttachments(detailReq).map(file => {
+                  const hasFile = Boolean(file.fileUrl || file.cloudinaryPublicId)
+                  return (
+                    <div key={file.id} className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2.5">
+                      <span className="flex items-center gap-2 min-w-0 text-xs font-medium truncate"><FileText className="h-4 w-4 text-sky-600 shrink-0" />{file.fileName}</span>
+                      <Button size="sm" variant={hasFile ? 'secondary' : 'ghost'} disabled={!hasFile} onClick={() => setPreviewDoc(file)}>
+                        <Eye className="h-3.5 w-3.5 mr-1" /> {hasFile ? t('เปิดดู', 'Open') : t('ไม่มีไฟล์', 'Unavailable')}
+                      </Button>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      <DocumentViewerModal
+        isOpen={Boolean(previewDoc)}
+        onClose={() => setPreviewDoc(null)}
+        document={previewDoc}
       />
 
 
