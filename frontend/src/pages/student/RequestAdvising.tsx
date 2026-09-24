@@ -80,9 +80,12 @@ export default function RequestAdvising() {
     u => u.role === 'advisor' && u.isActive
   )
 
-  // Current selected advisor: if student selected one, use it; otherwise default to assignedAdvisor; if neither, first available
-  const advisor = (selectedAdvisorId ? store.users.find(u => u.id === selectedAdvisorId) : null) || assignedAdvisor || availableAdvisors[0] || null
-  const isAssignedAdvisor = !assignedAdvisor || advisor?.id === assignedAdvisor?.id
+  // Current selected advisor:
+  // If student explicitly selected one, use it.
+  // Otherwise, default to their assigned advisor from roster.
+  // If neither (no roster assignment & not selected yet), keep it null to prompt explicit choice.
+  const advisor = (selectedAdvisorId ? store.users.find(u => u.id === selectedAdvisorId) : null) || assignedAdvisor || null
+  const isAssignedAdvisor = Boolean(assignedAdvisor && advisor?.id === assignedAdvisor?.id)
 
   // Advisor's existing scheduled appointments in system to detect collisions
   const advisorAppointments = store.appointments
@@ -135,7 +138,11 @@ export default function RequestAdvising() {
     }
 
     if (!advisor) {
-      addToast('error', t('ไม่พบอาจารย์ที่ปรึกษา', 'No Advisor'), t('คุณยังไม่มีอาจารย์ที่ปรึกษาในระบบ กรุณาติดต่อสำนักวิชา', 'You do not have an assigned advisor. Please contact admin.'))
+      addToast(
+        'error',
+        t('กรุณาเลือกอาจารย์ผู้รับคำร้อง', 'Advisor Required'),
+        t('คุณยังไม่ได้เลือกอาจารย์ที่ปรึกษา กรุณาเลือกอาจารย์ที่ต้องการส่งคำร้องให้', 'Please select a faculty advisor from the list before submitting.')
+      )
       return
     }
 
@@ -244,9 +251,14 @@ export default function RequestAdvising() {
                 {t('อาจารย์ที่ปรึกษาประจำตัว (ค่าเริ่มต้น)', 'Assigned Advisor (Default)')}
               </span>
             )}
-            {!isAssignedAdvisor && (
+            {!isAssignedAdvisor && assignedAdvisor && (
               <span className="text-[11px] font-medium text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-2 py-0.5 rounded-md border border-amber-200/80 dark:border-amber-800">
                 {t('อาจารย์ท่านอื่นในสาขา', 'Other Faculty Member')}
+              </span>
+            )}
+            {!assignedAdvisor && (
+              <span className="text-[11px] font-medium text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-2 py-0.5 rounded-md border border-amber-200/80 dark:border-amber-800">
+                {t('ยังไม่มีอาจารย์ที่ปรึกษาประจำตัวในระบบ — กรุณาเลือกอาจารย์', 'No Assigned Advisor in Roster — Please Select')}
               </span>
             )}
           </div>
@@ -258,22 +270,32 @@ export default function RequestAdvising() {
               <button
                 type="button"
                 onClick={() => setShowAdvisorDropdown(!showAdvisorDropdown)}
-                className="w-full h-full min-h-[50px] flex items-center justify-between px-3.5 py-2 border border-slate-200/90 dark:border-slate-700 rounded-xl text-xs sm:text-sm font-medium text-slate-900 dark:text-slate-100 bg-slate-50/70 dark:bg-slate-800/80 hover:bg-slate-100/80 dark:hover:bg-slate-800 transition-colors shadow-2xs text-left cursor-pointer"
+                className={`w-full h-full min-h-[50px] flex items-center justify-between px-3.5 py-2 border rounded-xl text-xs sm:text-sm font-medium transition-colors shadow-2xs text-left cursor-pointer ${
+                  !advisor
+                    ? 'border-amber-300 dark:border-amber-800/80 bg-amber-50/40 dark:bg-amber-950/20 hover:bg-amber-50/70'
+                    : 'border-slate-200/90 dark:border-slate-700 text-slate-900 dark:text-slate-100 bg-slate-50/70 dark:bg-slate-800/80 hover:bg-slate-100/80 dark:hover:bg-slate-800'
+                }`}
               >
                 <div className="flex items-center gap-2.5 min-w-0 flex-1 pr-2">
-                  <div className="h-8 w-8 rounded-lg bg-sky-100 dark:bg-sky-950 text-sky-600 dark:text-sky-400 flex items-center justify-center font-bold flex-shrink-0">
+                  <div className={`h-8 w-8 rounded-lg flex items-center justify-center font-bold flex-shrink-0 ${
+                    !advisor
+                      ? 'bg-amber-100 dark:bg-amber-950 text-amber-600 dark:text-amber-400'
+                      : 'bg-sky-100 dark:bg-sky-950 text-sky-600 dark:text-sky-400'
+                  }`}>
                     <User className="h-4 w-4" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <span className="font-semibold text-slate-900 dark:text-slate-100 truncate block">
-                      {advisor?.name || t('เลือกอาจารย์...', 'Select Faculty...')}
+                    <span className={`font-semibold truncate block ${!advisor ? 'text-amber-700 dark:text-amber-300' : 'text-slate-900 dark:text-slate-100'}`}>
+                      {advisor?.name || t('-- กรุณาเลือกอาจารย์ที่ปรึกษาเพื่อรับคำร้อง --', '-- Please select a faculty advisor --')}
                     </span>
                     <span className="text-[11px] text-slate-500 dark:text-slate-400 truncate block">
-                      {advisor?.department || 'School of Applied Digital Technology (ADT)'}
+                      {advisor ? (advisor.department || 'School of Applied Digital Technology (ADT)') : t('ยังไม่มีอาจารย์ที่ปรึกษาประจำตัวที่ระบุในระบบ Roster', 'No assigned advisor in system roster')}
                     </span>
                   </div>
                 </div>
-                <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform duration-150 flex-shrink-0 ${showAdvisorDropdown ? 'rotate-180 text-sky-500' : ''}`} />
+                <ChevronDown className={`h-4 w-4 transition-transform duration-150 flex-shrink-0 ${
+                  showAdvisorDropdown ? 'rotate-180 text-sky-500' : !advisor ? 'text-amber-500' : 'text-slate-400'
+                }`} />
               </button>
 
               {/* Custom Web Dropdown Menu */}
