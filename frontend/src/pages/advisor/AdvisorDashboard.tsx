@@ -174,13 +174,13 @@ export default function AdvisorDashboard() {
             </h3>
             {pendingRequests.length > 0 && (
               <button onClick={() => navigate('/advisor/sessions')} className="text-xs font-semibold text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 flex items-center gap-1 cursor-pointer">
-                {t('ดูทั้งหมด', 'View all')} <ArrowRight className="h-3 w-3" />
+                {t('ดูทั้งหมด', 'View all')} ({pendingRequests.length}) <ArrowRight className="h-3 w-3" />
               </button>
             )}
           </div>
           {pendingRequests.length > 0 ? (
             <div className="space-y-2">
-              {pendingRequests.map(r => {
+              {pendingRequests.slice(0, 5).map(r => {
                 const student = store.users.find(u => u.id === r.studentId)
                 const catLabel = getCategoryLabel(r.category)
                 return (
@@ -211,13 +211,13 @@ export default function AdvisorDashboard() {
             </h3>
             {upcomingApts.length > 0 && (
               <button onClick={() => navigate('/advisor/sessions')} className="text-xs font-semibold text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 flex items-center gap-1 cursor-pointer">
-                {t('ดูทั้งหมด', 'View all')} <ArrowRight className="h-3 w-3" />
+                {t('ดูทั้งหมด', 'View all')} ({upcomingApts.length}) <ArrowRight className="h-3 w-3" />
               </button>
             )}
           </div>
           {upcomingApts.length > 0 ? (
             <div className="space-y-2">
-              {upcomingApts.map(a => {
+              {upcomingApts.slice(0, 5).map(a => {
                 const student = store.users.find(u => u.id === a.studentId)
                 return (
                   <div key={a.id} className="flex items-center justify-between p-3 bg-slate-50/80 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/60 rounded-xl">
@@ -249,13 +249,13 @@ export default function AdvisorDashboard() {
             </h3>
             {myFollowUps.length > 0 && (
               <button onClick={() => navigate('/advisor/sessions')} className="text-xs font-semibold text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 flex items-center gap-1 cursor-pointer">
-                {t('ดูทั้งหมด', 'View all')} <ArrowRight className="h-3 w-3" />
+                {t('ดูทั้งหมด', 'View all')} ({myFollowUps.length}) <ArrowRight className="h-3 w-3" />
               </button>
             )}
           </div>
           {myFollowUps.length > 0 ? (
             <div className="space-y-2">
-              {myFollowUps.map(f => {
+              {myFollowUps.slice(0, 5).map(f => {
                 const student = store.users.find(u => u.id === f.studentId)
                 return (
                   <div key={f.id} className="p-3 bg-slate-50/80 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/60 rounded-xl space-y-1">
@@ -283,13 +283,13 @@ export default function AdvisorDashboard() {
             </h3>
             {recentSessions.length > 0 && (
               <button onClick={() => navigate('/advisor/sessions')} className="text-xs font-semibold text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 flex items-center gap-1 cursor-pointer">
-                {t('ดูทั้งหมด', 'View all')} <ArrowRight className="h-3 w-3" />
+                {t('ดูทั้งหมด', 'View all')} ({recentSessions.length}) <ArrowRight className="h-3 w-3" />
               </button>
             )}
           </div>
           {recentSessions.length > 0 ? (
             <div className="space-y-2">
-              {recentSessions.map(s => {
+              {recentSessions.slice(0, 5).map(s => {
                 const student = store.users.find(u => u.id === s.studentId)
                 return (
                   <div key={s.id} className="p-3 bg-slate-50/80 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/60 rounded-xl space-y-1">
