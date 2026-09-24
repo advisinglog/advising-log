@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useStore } from '@/data/mock-store'
 import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { PageHeader, Tabs, DataTable, Button, Modal, GoogleCalendarButton, DocumentViewerModal, SearchInput, type DocumentViewerTarget } from '@/components/ui'
+import { PageHeader, Tabs, DataTable, StatusBadge, Button, Modal, GoogleCalendarButton, DocumentViewerModal, SearchInput, type DocumentViewerTarget } from '@/components/ui'
 import type { AdvisingRequest } from '@/types'
 import { Calendar, CheckCircle2, Eye, FileText, Sparkles } from 'lucide-react'
 import { isAdvisorMatch } from '@/utils/advisorUtils'
@@ -29,10 +29,29 @@ export default function AdvisingSessions() {
   const [schedTime, setSchedTime] = useState('')
   const [schedLoc, setSchedLoc] = useState('')
 
-  const isRecentRequest = (request: AdvisingRequest) => {
-    const createdAt = new Date(request.createdAt).getTime()
-    const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
-    return Number.isFinite(createdAt) && createdAt >= sevenDaysAgo
+  const viewedRequestsKey = currentUser ? `advising_log_viewed_requests_${currentUser.id}` : ''
+
+  const getViewedRequests = (): string[] => {
+    if (!viewedRequestsKey) return []
+    try {
+      const stored = JSON.parse(localStorage.getItem(viewedRequestsKey) || '[]')
+      return Array.isArray(stored) ? stored : []
+    } catch {
+      return []
+    }
+  }
+
+  const [viewedRequestIds, setViewedRequestIds] = useState<string[]>(getViewedRequests)
+
+  const isNewRequest = (request: AdvisingRequest) => !viewedRequestIds.includes(request.id)
+
+  const markRequestViewed = (requestId: string) => {
+    setViewedRequestIds(previous => {
+      if (previous.includes(requestId)) return previous
+      const next = [...previous, requestId]
+      localStorage.setItem(viewedRequestsKey, JSON.stringify(next))
+      return next
+    })
   }
 
   if (!currentUser) return null
@@ -49,8 +68,7 @@ export default function AdvisingSessions() {
   const filtered = myRequests
     .filter(r => filterMap[tab]?.includes(r.status))
     .filter(r => {
-      if (!search.trim()) return true
-      const s = search.trim().toLowerCase()
+      if (!search) return true
       const student = store.users.find(u => u.id === r.studentId)
       const searchable = [
         r.createdAt,
@@ -60,7 +78,7 @@ export default function AdvisingSessions() {
         student?.name || '',
         student?.code || '',
       ].join(' ').toLowerCase()
-      return searchable.includes(s)
+      return searchable.includes(search.toLowerCase())
     })
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
 
@@ -92,33 +110,15 @@ export default function AdvisingSessions() {
   ]
 
   function handleSchedule() {
-    if (!selectedReq) return
-    if (!schedDate || !schedTime || !schedLoc.trim()) {
-      addToast(
-        'error',
-        t('ข้อมูลไม่ครบถ้วน', 'Validation Error'),
-        t('กรุณาระบุวัน เวลา และสถานที่นัดหมายให้ครบถ้วน', 'Please provide appointment date, time, and location.')
-      )
-      return
-    }
-
-    const todayStr = new Date().toISOString().split('T')[0]
-    if (schedDate < todayStr) {
-      addToast(
-        'error',
-        t('วันที่ไม่ถูกต้อง', 'Invalid Date'),
-        t('ไม่สามารถเลือกวันที่ในอดีตได้ กรุณาเลือกวันปัจจุบันหรือวันถัดไป', 'Cannot select a past date. Please choose today or a future date.')
-      )
-      return
-    }
-
+    if (!selectedReq || !schedDate || !schedTime || !schedLoc) return
+    markRequestViewed(selectedReq.id)
     const apt = store.addAppointment({
       requestId: selectedReq.id,
       studentId: selectedReq.studentId,
       advisorId: currentUser!.id,
       scheduledDate: schedDate,
       scheduledTime: schedTime,
-      location: schedLoc.trim(),
+      location: schedLoc,
       status: 'scheduled',
     })
     store.updateRequestStatus(selectedReq.id, 'scheduled')
@@ -126,7 +126,7 @@ export default function AdvisingSessions() {
       userId: selectedReq.studentId,
       type: 'info',
       title: t('นัดหมายเวลาเข้าพบอาจารย์แล้ว', 'Appointment Scheduled'),
-      message: `${t('อาจารย์ที่ปรึกษานัดหมายเข้าพบในวันที่', 'Your advising appointment has been scheduled for')} ${schedDate} ${schedTime} (${schedLoc.trim()})`,
+      message: `${t('อาจารย์ที่ปรึกษานัดหมายเข้าพบในวันที่', 'Your advising appointment has been scheduled for')} ${schedDate} ${schedTime} (${schedLoc})`,
       relatedId: apt.id,
       isRead: false,
     })
@@ -147,6 +147,7 @@ export default function AdvisingSessions() {
   }
 
   function handleCancel(req: AdvisingRequest) {
+    markRequestViewed(req.id)
     store.updateRequestStatus(req.id, 'cancelled')
     const apt = store.appointments.find(a => a.requestId === req.id && a.status === 'scheduled')
     if (apt) store.updateAppointmentStatus(apt.id, 'cancelled')
@@ -154,6 +155,7 @@ export default function AdvisingSessions() {
   }
 
   function handleComplete(req: AdvisingRequest) {
+    markRequestViewed(req.id)
     store.updateRequestStatus(req.id, 'completed')
     const apt = store.appointments.find(a => a.requestId === req.id && a.status === 'scheduled')
     if (apt) store.updateAppointmentStatus(apt.id, 'completed')
@@ -164,7 +166,7 @@ export default function AdvisingSessions() {
     { key: 'date', header: t('วันที่ยื่น', 'Date'), render: (r: AdvisingRequest) => (
       <div className="flex items-center gap-2 flex-wrap">
         <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">{r.createdAt}</span>
-        {isRecentRequest(r) && <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-sky-100 dark:bg-sky-950/70 text-[10px] font-bold text-sky-700 dark:text-sky-300"><Sparkles className="h-3 w-3" />{t('ใหม่', 'New')}</span>}
+        {isNewRequest(r) && <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-sky-100 dark:bg-sky-950/70 text-[10px] font-bold text-sky-700 dark:text-sky-300"><Sparkles className="h-3 w-3" />{t('ใหม่', 'New')}</span>}
       </div>
     ) },
     {
@@ -211,6 +213,11 @@ export default function AdvisingSessions() {
       },
     },
     {
+      key: 'status',
+      header: t('สถานะ', 'Status'),
+      render: (r: AdvisingRequest) => <StatusBadge status={r.status} />,
+    },
+    {
       key: 'actions',
       header: t('การจัดการ', 'Actions'),
       render: (r: AdvisingRequest) => {
@@ -232,6 +239,7 @@ export default function AdvisingSessions() {
                   label={t('ปฏิทิน', 'Calendar')}
                   size="sm"
                   variant="secondary"
+                  onClick={() => markRequestViewed(r.id)}
                 />
                 <Button size="sm" variant="primary" onClick={() => handleComplete(r)}>
                   <CheckCircle2 className="h-3 w-3 mr-1" /> {t('เสร็จสิ้น', 'Complete')}
@@ -244,6 +252,7 @@ export default function AdvisingSessions() {
                 size="sm"
                 variant="primary"
                 onClick={() => {
+                  markRequestViewed(r.id)
                   setSelectedReq(r)
                   setSchedDate(r.preferredDate || '')
                   setSchedTime(r.preferredTime || '')
@@ -278,12 +287,11 @@ export default function AdvisingSessions() {
       <div className="mb-5 sm:mb-6 max-w-sm">
         <SearchInput value={search} onChange={setSearch} placeholder={t('ค้นหาตามหมวดหมู่ ชื่อนักศึกษา หรือคำสำคัญ...', 'Search by category, student, or keyword...')} />
       </div>
-      <p className="text-[11px] text-slate-400 dark:text-slate-500 mb-3 flex items-center gap-1"><Sparkles className="h-3 w-3 text-sky-500" /> {t('ป้าย “ใหม่” หมายถึงรายการที่ยื่นภายใน 7 วันล่าสุด', '“New” means submitted within the last 7 days')}</p>
 
       <DataTable
         columns={columns}
         data={filtered}
-        onRowClick={r => setDetailReq(r)}
+        onRowClick={r => { markRequestViewed(r.id); setDetailReq(r) }}
         emptyMessage={t(`ไม่พบรายการในสถานะนี้`, `No ${tab} sessions found.`)}
       />
 
@@ -314,7 +322,7 @@ export default function AdvisingSessions() {
                   return (
                     <div key={file.id} className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2.5">
                       <span className="flex items-center gap-2 min-w-0 text-xs font-medium truncate"><FileText className="h-4 w-4 text-sky-600 shrink-0" />{file.fileName}</span>
-                      <Button size="sm" variant={hasFile ? 'secondary' : 'ghost'} disabled={!hasFile} onClick={() => setPreviewDoc(file)}>
+                      <Button size="sm" variant={hasFile ? 'secondary' : 'ghost'} disabled={!hasFile} onClick={() => { markRequestViewed(detailReq.id); setPreviewDoc(file) }}>
                         <Eye className="h-3.5 w-3.5 mr-1" /> {hasFile ? t('เปิดดู', 'Open') : t('ไม่มีไฟล์', 'Unavailable')}
                       </Button>
                     </div>
@@ -341,7 +349,6 @@ export default function AdvisingSessions() {
             <input
               type="date"
               value={schedDate}
-              min={new Date().toISOString().split('T')[0]}
               onChange={e => setSchedDate(e.target.value)}
               className="w-full px-3 py-2 text-xs sm:text-sm border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-colors"
             />
