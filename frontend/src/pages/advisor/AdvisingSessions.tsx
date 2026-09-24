@@ -9,7 +9,7 @@ import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { PageHeader, Tabs, DataTable, StatusBadge, Button, Modal, GoogleCalendarButton, DocumentViewerModal, SearchInput, type DocumentViewerTarget } from '@/components/ui'
 import type { AdvisingRequest } from '@/types'
-import { Calendar, CheckCircle2, Eye, FileText, User } from 'lucide-react'
+import { Calendar, CheckCircle2, Eye, FileText } from 'lucide-react'
 import { isAdvisorMatch } from '@/utils/advisorUtils'
 
 export default function AdvisingSessions() {
