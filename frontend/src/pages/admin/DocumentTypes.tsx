@@ -11,8 +11,8 @@ export default function DocumentTypes() {
   const [search, setSearch] = useState('')
 
   const docTypes = store.documentTypes.filter(d => {
-    if (!search) return true
-    return d.name.toLowerCase().includes(search.toLowerCase())
+    if (!search.trim()) return true
+    return d.name.toLowerCase().includes(search.trim().toLowerCase())
   })
 
   const columns = [

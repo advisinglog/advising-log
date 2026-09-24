@@ -248,8 +248,8 @@ export default function UserManagement() {
     if (roleFilter !== 'all' && u.role !== roleFilter) return false
 
     // Apply search filter
-    if (!search) return true
-    const s = search.toLowerCase()
+    if (!search.trim()) return true
+    const s = search.trim().toLowerCase()
     return (
       u.name.toLowerCase().includes(s) ||
       u.code.toLowerCase().includes(s) ||

@@ -12,8 +12,8 @@ export default function AuditLogs() {
   const pageSize = 15
 
   const logs = store.auditLogs.filter(l => {
-    if (!search) return true
-    const s = search.toLowerCase()
+    if (!search.trim()) return true
+    const s = search.trim().toLowerCase()
     const name = l.userName ? l.userName.toLowerCase() : ''
     const action = l.action ? l.action.toLowerCase() : ''
     const desc = l.description ? l.description.toLowerCase() : ''

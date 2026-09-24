@@ -62,13 +62,14 @@ export default function AdvisingHistory() {
       (currentUser.email && r.studentId?.toLowerCase() === currentUser.email.toLowerCase())
     )
     .filter(r => {
-      if (!search) return true
+      if (!search.trim()) return true
+      const s = search.trim().toLowerCase()
       const cat = getCategoryLabel(r.category)
       const subCat = r.subCategory ? getSubCategoryLabel(r.subCategory) : ''
       const details = r.details || ''
-      return cat.toLowerCase().includes(search.toLowerCase()) ||
-        subCat.toLowerCase().includes(search.toLowerCase()) ||
-        details.toLowerCase().includes(search.toLowerCase())
+      return cat.toLowerCase().includes(s) ||
+        subCat.toLowerCase().includes(s) ||
+        details.toLowerCase().includes(s)
     })
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
 

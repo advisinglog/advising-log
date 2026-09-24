@@ -49,7 +49,8 @@ export default function AdvisingSessions() {
   const filtered = myRequests
     .filter(r => filterMap[tab]?.includes(r.status))
     .filter(r => {
-      if (!search) return true
+      if (!search.trim()) return true
+      const s = search.trim().toLowerCase()
       const student = store.users.find(u => u.id === r.studentId)
       const searchable = [
         r.createdAt,
@@ -59,7 +60,7 @@ export default function AdvisingSessions() {
         student?.name || '',
         student?.code || '',
       ].join(' ').toLowerCase()
-      return searchable.includes(search.toLowerCase())
+      return searchable.includes(s)
     })
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
 

@@ -11,9 +11,10 @@ export default function Categories() {
   const [search, setSearch] = useState('')
 
   const categories = store.categoryConfigs.filter(c => {
-    if (!search) return true
+    if (!search.trim()) return true
+    const s = search.trim().toLowerCase()
     const label = getCategoryLabel(c.value).toLowerCase()
-    return label.includes(search.toLowerCase()) || c.value.toLowerCase().includes(search.toLowerCase())
+    return label.includes(s) || c.value.toLowerCase().includes(s)
   })
 
   const columns = [
