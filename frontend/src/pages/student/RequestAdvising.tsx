@@ -124,6 +124,16 @@ export default function RequestAdvising() {
       return
     }
 
+    const todayStr = new Date().toISOString().split('T')[0]
+    if (preferredDate < todayStr) {
+      addToast(
+        'error',
+        t('วันที่ไม่ถูกต้อง', 'Invalid Date'),
+        t('ไม่สามารถเลือกวันที่ในอดีตได้ กรุณาเลือกวันปัจจุบันหรือวันถัดไป', 'Cannot select a past date. Please choose today or a future date.')
+      )
+      return
+    }
+
     if (!advisor) {
       addToast('error', t('ไม่พบอาจารย์ที่ปรึกษา', 'No Advisor'), t('คุณยังไม่มีอาจารย์ที่ปรึกษาในระบบ กรุณาติดต่อสำนักวิชา', 'You do not have an assigned advisor. Please contact admin.'))
       return
@@ -551,6 +561,7 @@ export default function RequestAdvising() {
                 <input
                   type="date"
                   value={preferredDate}
+                  min={new Date().toISOString().split('T')[0]}
                   onChange={e => setPreferredDate(e.target.value)}
                   className="w-full px-3.5 py-2 text-xs sm:text-sm border border-slate-200/90 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-colors shadow-xs"
                 />
