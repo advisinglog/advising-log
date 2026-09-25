@@ -11,6 +11,7 @@ import { useGoogleLogin } from '@react-oauth/google'
 import { useAuth } from '@/contexts/AuthContext'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { ThemeToggle } from '@/components/ui'
+import { InteractiveVideoHero } from '@/components/InteractiveVideoHero'
 import {
   GraduationCap,
   AlertCircle,
@@ -143,10 +144,12 @@ export default function LoginPage() {
       {/* ------------------------------------------------------------- */}
       {/* Left Panel: Exact bg-sky-600 (Matching the active Language button) */}
       {/* ------------------------------------------------------------- */}
-      <div className="hidden lg:flex lg:w-1/2 xl:w-7/12 bg-sky-600 dark:bg-[#072444] text-white flex-col justify-between p-12 xl:p-16 border-r border-sky-500 dark:border-sky-900/60 relative">
+      <div className="hidden lg:flex lg:w-1/2 xl:w-7/12 bg-sky-900 dark:bg-[#072444] text-white flex-col justify-between p-12 xl:p-16 border-r border-sky-500 dark:border-sky-900/60 relative overflow-hidden">
+        {/* Full-Bleed 3D Interactive Video Background */}
+        <InteractiveVideoHero />
         
         {/* Top: University & Brand Identity */}
-        <div className="space-y-5">
+        <div className="space-y-5 relative z-10">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-xl bg-white text-sky-600 flex items-center justify-center shadow-md ring-4 ring-white/20">
               <GraduationCap className="h-6 w-6" />
@@ -167,86 +170,68 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Center: Academic Scope & 3 Clean Translucent Cards */}
-        <div className="my-auto py-8 space-y-6 max-w-xl">
-          <div className="space-y-2.5">
-            <h2 className="text-2xl xl:text-3xl font-bold tracking-tight text-white leading-snug">
+        {/* Center: Open Stage for 3D Character - No obstructing text */}
+        <div className="flex-1" />
+
+        {/* Bottom Section: Compact Scope Dock */}
+        <div className="space-y-4 relative z-10 pt-4">
+          <div className="space-y-1">
+            <h2 className="text-lg xl:text-xl font-bold tracking-tight text-white leading-tight drop-shadow-md">
               {t(
-                'ระบบบริหารการให้คำปรึกษาทางวิชาการ และการประกันคุณภาพการศึกษา',
-                'Academic Advising Management & AUN-QA Quality Assurance System'
+                'ระบบบริหารการให้คำปรึกษาทางวิชาการ และการประกันคุณภาพ',
+                'Academic Advising Management & Quality Assurance'
               )}
             </h2>
-            <p className="text-sm text-sky-100/90 leading-relaxed font-normal">
+            <p className="text-xs text-sky-100/80 leading-relaxed font-normal">
               {t(
-                'แพลตฟอร์มศูนย์กลางสำหรับการบันทึกการให้คำปรึกษา การดูแลช่วยเหลือนักศึกษา และรวบรวมข้อมูลสถิติตามเกณฑ์มาตรฐาน AUN-QA',
-                'Institutional platform for advisory session logs, early risk intervention, and educational quality assurance analytics.'
+                'แพลตฟอร์มศูนย์กลางสำหรับการบันทึกการให้คำปรึกษาและการดูแลช่วยเหลือนักศึกษา',
+                'Institutional platform for advisory session logs and advisee support.'
               )}
             </p>
           </div>
 
-          {/* 3 Translucent Clean Cards with White Borders */}
-          <div className="space-y-3">
-            <div className="p-4 rounded-xl bg-white/10 hover:bg-white/15 border border-white/20 backdrop-blur-xs transition-colors flex items-start gap-3.5">
-              <div className="h-9 w-9 rounded-lg bg-white/20 text-white flex items-center justify-center flex-shrink-0 border border-white/30 shadow-2xs">
-                <Users className="h-4.5 w-4.5" />
+          {/* 3 Compact Horizontal Glass Cards */}
+          <div className="grid grid-cols-3 gap-2.5">
+            <div className="p-3 rounded-xl bg-slate-900/80 hover:bg-slate-900/95 border border-white/20 shadow-md transition-all">
+              <div className="h-7 w-7 rounded-lg bg-sky-500/25 text-sky-200 flex items-center justify-center mb-1.5 border border-sky-400/30">
+                <Users className="h-4 w-4" />
               </div>
-              <div className="space-y-0.5">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-xs font-bold text-white">
-                    {t('การดูแลและให้คำปรึกษารายบุคคล', 'Individual Student Advising')}
-                  </h3>
-                  <span className="text-[10px] font-bold text-sky-100 bg-white/20 px-1.5 py-0.5 rounded border border-white/25">
-                    SIS
-                  </span>
-                </div>
-                <p className="text-[11px] text-sky-100/85 leading-relaxed">
-                  {t('บันทึกผลการเข้าพบ จัดการนัดหมาย และติดตามความก้าวหน้าของนักศึกษาในความดูแลอย่างเป็นระบบ', 'Structured session logs, appointment scheduling, and individual advisee progress tracking.')}
-                </p>
-              </div>
+              <h3 className="text-xs font-bold text-white truncate">
+                {t('คำปรึกษารายบุคคล', 'SIS Advising')}
+              </h3>
+              <p className="text-[10px] text-sky-200/80 truncate">
+                {t('บันทึกและติดตาม', 'Session Logs')}
+              </p>
             </div>
 
-            <div className="p-4 rounded-xl bg-white/10 hover:bg-white/15 border border-white/20 backdrop-blur-xs transition-colors flex items-start gap-3.5">
-              <div className="h-9 w-9 rounded-lg bg-white/20 text-white flex items-center justify-center flex-shrink-0 border border-white/30 shadow-2xs">
-                <Compass className="h-4.5 w-4.5" />
+            <div className="p-3 rounded-xl bg-slate-900/80 hover:bg-slate-900/95 border border-white/20 shadow-md transition-all">
+              <div className="h-7 w-7 rounded-lg bg-emerald-500/25 text-emerald-200 flex items-center justify-center mb-1.5 border border-emerald-400/30">
+                <Compass className="h-4 w-4" />
               </div>
-              <div className="space-y-0.5">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-xs font-bold text-white">
-                    {t('ระบบช่วยเหลือและส่งต่อหน่วยงาน', 'Early Support & Case Referrals')}
-                  </h3>
-                  <span className="text-[10px] font-bold text-emerald-200 bg-emerald-500/30 px-1.5 py-0.5 rounded border border-emerald-300/30">
-                    Care
-                  </span>
-                </div>
-                <p className="text-[11px] text-sky-100/85 leading-relaxed">
-                  {t('แจ้งเตือนภาวะเสี่ยงทางการเรียน ประสานงานหน่วยงานสนับสนุน และดูแลเคสอย่างต่อเนื่อง', 'Academic risk monitoring, inter-departmental referrals, and proactive case follow-up.')}
-                </p>
-              </div>
+              <h3 className="text-xs font-bold text-white truncate">
+                {t('ส่งต่อช่วยเหลือ', 'Early Support')}
+              </h3>
+              <p className="text-[10px] text-emerald-200/80 truncate">
+                {t('แจ้งเตือนภาวะเสี่ยง', 'Case Referrals')}
+              </p>
             </div>
 
-            <div className="p-4 rounded-xl bg-white/10 hover:bg-white/15 border border-white/20 backdrop-blur-xs transition-colors flex items-start gap-3.5">
-              <div className="h-9 w-9 rounded-lg bg-white/20 text-white flex items-center justify-center flex-shrink-0 border border-white/30 shadow-2xs">
-                <Award className="h-4.5 w-4.5" />
+            <div className="p-3 rounded-xl bg-slate-900/80 hover:bg-slate-900/95 border border-white/20 shadow-md transition-all">
+              <div className="h-7 w-7 rounded-lg bg-sky-500/25 text-sky-200 flex items-center justify-center mb-1.5 border border-sky-400/30">
+                <Award className="h-4 w-4" />
               </div>
-              <div className="space-y-0.5">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-xs font-bold text-white">
-                    {t('การประกันคุณภาพตามเกณฑ์ AUN-QA', 'AUN-QA Criteria 3 Alignment')}
-                  </h3>
-                  <span className="text-[10px] font-bold text-sky-100 bg-white/20 px-1.5 py-0.5 rounded border border-white/25">
-                    QA
-                  </span>
-                </div>
-                <p className="text-[11px] text-sky-100/85 leading-relaxed">
-                  {t('สถิติการคงอยู่ การวิเคราะห์เสียงของนักศึกษา และรายงานสำหรับการตรวจประเมินคุณภาพ', 'Student retention analytics, student voice insights, and audit-ready accreditation reporting.')}
-                </p>
-              </div>
+              <h3 className="text-xs font-bold text-white truncate">
+                {t('ประกันคุณภาพ', 'AUN-QA Audit')}
+              </h3>
+              <p className="text-[10px] text-sky-200/80 truncate">
+                {t('เกณฑ์มาตรฐาน 3.0', 'Criteria 3.0')}
+              </p>
             </div>
           </div>
         </div>
 
         {/* Bottom: Institutional Compliance Note */}
-        <div className="pt-6 border-t border-white/20 flex items-center justify-between text-xs text-sky-100">
+        <div className="pt-6 border-t border-white/20 flex items-center justify-between text-xs text-sky-100 relative z-10">
           <span className="font-semibold text-white/90">Mae Fah Luang University</span>
           <div className="flex items-center gap-1.5 text-[11px] font-semibold text-white">
             <ShieldCheck className="h-4 w-4 text-emerald-300" />
