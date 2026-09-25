@@ -473,8 +473,8 @@ export default function QualitativeExitAnalysis() {
             </div>
             <p className="max-w-3xl text-xs sm:text-sm leading-relaxed text-slate-500 dark:text-slate-400">
               {t(
-                'จำแนกและวิเคราะห์เจาะลึกสาเหตุรากเหง้า (Root Causes) เปรียบเทียบระหว่างกลุ่ม "ขอลาออกถาวร" กับกลุ่ม "ขอพักการศึกษาชั่วคราว" โดยสังเคราะห์จากคำพูดจริงของนักศึกษาและผลวินิจฉัยของอาจารย์ที่ปรึกษา',
-                'In-depth comparative root-cause diagnosis contrasting Permanent Withdrawals against Temporary Leaves of Absence, synthesizing student voices with faculty advisor evaluations.'
+                'การวิเคราะห์หาสาเหตุที่แท้จริงสำหรับทุกประเด็นย่อย โดยบูรณาการความคิดเห็นของนักศึกษาร่วมกับการประเมินของอาจารย์ที่ปรึกษา',
+                'Root-cause diagnosis for all leaves, synthesizing student voices with advisors evaluations.'
               )}
             </p>
           </div>
@@ -545,9 +545,6 @@ export default function QualitativeExitAnalysis() {
                   {aiProvider}
                 </span>
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                {t('ประมวลผลข้อความเชิงคุณภาพ สังเคราะห์ Root Causes และให้คำปรึกษาประธานหลักสูตรตามเกณฑ์ AUN-QA', 'LLM-powered thematic reasoning, root-cause diagnostics, and accreditation guidance.')}
-              </p>
             </div>
           </div>
 
@@ -820,14 +817,8 @@ export default function QualitativeExitAnalysis() {
           <div>
             <h3 className="text-base sm:text-lg font-bold text-slate-950 dark:text-white flex items-center gap-2">
               <Layers className="h-4 w-4 text-sky-600 dark:text-sky-400" />
-              {t('เปรียบเทียบสาเหตุ: "ทำไมเด็กลาออก?" VS "ทำไมเด็กขอพักการศึกษา?"', 'Comparative Matrix: Why Students Resign vs. Why They Take Leave')}
+              {t('เปรียบเทียบสาเหตุ: "ทำไมเด็กลาออก?" VS "ทำไมเด็กขอพักการศึกษา?"', 'Comparative Matrix: Resignation vs. Leave')}
             </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              {t(
-                'ความแตกต่างของสาเหตุหลักและมาตรการช่วยเหลือระหว่างการลาออกถาวรและการขอพักการศึกษาชั่วคราว',
-                'Critical divergence in root drivers and intervention paths between permanent departures and temporary leaves.'
-              )}
-            </p>
           </div>
           <span className="text-[11px] font-semibold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-500/10 px-3 py-1 rounded-full border border-sky-200/60 dark:border-sky-500/20 self-start sm:self-auto">
             {t(`รวมทั้งหมด ${totalDepartures} เคส`, `Total ${totalDepartures} Cases`)}
@@ -1117,12 +1108,6 @@ export default function QualitativeExitAnalysis() {
               <Quote className="h-4 w-4 text-sky-600 dark:text-sky-400" />
               {t('การสังเคราะห์ปัญหาเชิงคุณภาพจำแนกตามแกนปัญหา (Thematic Root-Cause Synthesis)', 'Thematic Qualitative Problem Synthesis')}
             </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              {t(
-                'ประมวลผลเสียงสะท้อนจริงของนักศึกษา (Student Voice) ประกบผลวินิจฉัยของอาจารย์ที่ปรึกษา (Advisor Diagnostic) จากฐานข้อมูลระบบ',
-                'Synthesizing authentic Student Verbatim Voices with Faculty Advisor Assessments and Continuous Quality Improvement (CQI) actions.'
-              )}
-            </p>
           </div>
         </div>
 
@@ -1284,7 +1269,7 @@ export default function QualitativeExitAnalysis() {
               {t('สำรวจเคสและเจาะลึกปัญหาเชิงคุณภาพรายกรณี (Qualitative Case Explorer)', 'Case-by-Case Qualitative Problem Explorer')}
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              {t('สืบค้นและวิเคราะห์สาเหตุแท้จริงของนักศึกษาแต่ละเคส พร้อมทั้งเสียงสะท้อนและการช่วยเหลือของอาจารย์', 'Filterable individual exit cases linking stated reasons, advisor interventions, and verbatim feedback.')}
+              {t('สืบค้นและวิเคราะห์สาเหตุแท้จริงของนักศึกษาแต่ละเคส พร้อมทั้งเสียงสะท้อนและการช่วยเหลือของอาจารย์', 'Search for a specific case with filters.')}
             </p>
           </div>
 

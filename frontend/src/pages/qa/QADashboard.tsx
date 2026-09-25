@@ -647,8 +647,8 @@ export default function QADashboard() {
                   </div>
                   <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-2xl">
                     {t(
-                      'รวบรวมข้อเสนอแนะโดยสมัครใจจากนักศึกษาที่ขอลาออกหรือลาพัก เพื่อค้นหาปัจจัยสำคัญและนำข้อมูลไปปรับปรุงหลักสูตร',
-                      'Aggregated voluntary feedback from departing or on-leave students to identify key drivers and improve curriculum.'
+                      'รวบรวมและวิเคราะห์ข้อมูลจากนักศึกษาที่ลาออกหรือลาพัก เพื่อปรับปรุงหลักสูตร',
+                      'Aggregation and All leaves data for curriculum improvement.'
                     )}
                   </p>
                 </div>
@@ -667,12 +667,6 @@ export default function QADashboard() {
                 <h3 className="text-base font-bold text-slate-950 dark:text-white">
                   {t('คะแนนประสบการณ์จากนักศึกษา', 'Student Experience Scores')}
                 </h3>
-                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                  {t(
-                    `ค่าเฉลี่ยจากแบบประเมิน ${totalVoiceResponses} รายการ`,
-                    `Average ratings from ${totalVoiceResponses} responses`
-                  )}
-                </p>
               </div>
             </div>
 
@@ -726,12 +720,6 @@ export default function QADashboard() {
                     'Key Contributing Factors from Student Voice'
                   )}
                 </h3>
-                <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">
-                  {t(
-                    'เรียงตามจำนวนครั้งที่ปัจจัยนั้นถูกระบุในแบบประเมิน เพื่อช่วยให้เห็นประเด็นที่ควรให้ความสำคัญก่อน',
-                    'Ranked by frequency of mentions to highlight the issues that may need attention first.'
-                  )}
-                </p>
               </div>
 
               <span className="inline-flex items-center self-start rounded-full border border-sky-100 dark:border-sky-900/50 bg-sky-50 dark:bg-sky-950/35 px-3 py-1 text-[11px] font-semibold text-sky-700 dark:text-sky-300">
@@ -834,12 +822,6 @@ export default function QADashboard() {
                     'Verbatim Student Voice Feedback'
                   )}
                 </h3>
-                <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">
-                  {t(
-                    'อ่านข้อความจริงควบคู่กับปัจจัยหลักและคะแนนประสบการณ์ เพื่อให้เห็นบริบทของแต่ละกรณี',
-                    'Review student comments together with key factors and experience ratings for case context.'
-                  )}
-                </p>
               </div>
 
               <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
