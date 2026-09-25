@@ -350,10 +350,10 @@ export default function ExitCaseReview() {
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 text-xs p-3.5 bg-slate-50/70 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 rounded-xl">
               <div>
                 <span className="text-slate-400 dark:text-slate-400 block font-medium">
-                  {t('นักศึกษา', 'Student')}
+                  {t('รหัสนักศึกษา', 'Student ID')}
                 </span>
-                <p className="font-semibold text-slate-900 dark:text-slate-100 mt-0.5">
-                  {store.users.find(u => u.id === selectedCase.studentId)?.name ||
+                <p className="font-semibold text-slate-900 dark:text-slate-100 mt-0.5 font-mono truncate">
+                  {store.users.find(u => u.id === selectedCase.studentId)?.code ||
                     selectedCase.studentId}
                 </p>
               </div>
@@ -361,7 +361,7 @@ export default function ExitCaseReview() {
                 <span className="text-slate-400 dark:text-slate-400 block font-medium">
                   {t('อาจารย์ที่ปรึกษา', 'Faculty Advisor')}
                 </span>
-                <p className="font-semibold text-slate-900 dark:text-slate-100 mt-0.5">
+                <p className="font-semibold text-slate-900 dark:text-slate-100 mt-0.5 truncate">
                   {store.users.find(u => u.id === selectedCase.advisorId)?.name ||
                     selectedCase.advisorId}
                 </p>
