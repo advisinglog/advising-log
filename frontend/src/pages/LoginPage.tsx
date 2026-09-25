@@ -21,7 +21,6 @@ import {
   Compass,
   Award,
   Lock,
-  LogIn,
   KeyRound,
 } from 'lucide-react'
 
