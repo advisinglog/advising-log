@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useStore } from '@/data/mock-store'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useToast } from '@/contexts/ToastContext'
-import { PageHeader, DataTable, StatusBadge, Button, SearchInput, Modal, UserAvatar } from '@/components/ui'
+import { PageHeader, DataTable, StatusBadge, Button, SearchInput, Modal } from '@/components/ui'
 import type { User, UserRole } from '@/types'
 import { ChevronDown, Bot, ExternalLink, UserPlus, ShieldCheck, User as UserIcon, Users, Info, Trash2, AlertTriangle } from 'lucide-react'
 import { getLocalDateString } from '@/utils/dateUtils'
@@ -263,12 +263,9 @@ export default function UserManagement() {
       key: 'name',
       header: t('ชื่อ-นามสกุล', 'Full Name'),
       render: (u: User) => (
-        <div className="flex items-center gap-2.5">
-          <UserAvatar name={u.name} avatar={u.avatar} size="sm" />
-          <div>
-            <p className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100">{u.name}</p>
-            <p className="text-[11px] text-slate-400 dark:text-slate-400 font-mono">{u.email}</p>
-          </div>
+        <div>
+          <p className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100">{u.name}</p>
+          <p className="text-[11px] text-slate-400 dark:text-slate-400 font-mono">{u.email}</p>
         </div>
       ),
     },

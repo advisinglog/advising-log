@@ -498,11 +498,13 @@ export function Button({ children, onClick, variant = 'primary', size = 'md', di
 export function UserAvatar({
   name,
   avatar,
+  role,
   size = 'md',
   className,
 }: {
   name: string
   avatar?: string | null
+  role?: string
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
   className?: string
 }) {
@@ -526,10 +528,10 @@ export function UserAvatar({
 
   const sizeClasses = {
     xs: 'h-6 w-6 text-[10px] rounded-lg',
-    sm: 'h-8 w-8 text-xs rounded-xl',
-    md: 'h-9 w-9 text-xs rounded-xl',
-    lg: 'h-12 w-12 sm:h-14 sm:w-14 text-base rounded-2xl',
-    xl: 'h-14 w-14 sm:h-16 sm:w-16 md:h-18 md:w-18 text-lg sm:text-xl rounded-2xl',
+    sm: 'h-8 w-8 text-xs rounded-xl font-bold',
+    md: 'h-9 w-9 text-xs rounded-xl font-bold',
+    lg: 'h-12 w-12 sm:h-14 sm:w-14 text-base rounded-2xl font-extrabold',
+    xl: 'h-14 w-14 sm:h-16 sm:w-16 md:h-18 md:w-18 text-lg sm:text-xl rounded-2xl font-extrabold',
   }[size]
 
   if (avatar && !imgError) {
@@ -548,11 +550,27 @@ export function UserAvatar({
     )
   }
 
+  // Role-based gradient theme for crisp initials avatar
+  const getAvatarTheme = () => {
+    if (role === 'advisor') {
+      return 'bg-gradient-to-br from-indigo-50 to-indigo-100/90 dark:from-indigo-950/80 dark:to-indigo-900/60 border border-indigo-200/80 dark:border-indigo-700/60 text-indigo-700 dark:text-indigo-300 ring-1 ring-indigo-500/20'
+    }
+    if (role === 'qa_chair') {
+      return 'bg-gradient-to-br from-emerald-50 to-emerald-100/90 dark:from-emerald-950/80 dark:to-emerald-900/60 border border-emerald-200/80 dark:border-emerald-700/60 text-emerald-700 dark:text-emerald-300 ring-1 ring-emerald-500/20'
+    }
+    if (role === 'admin') {
+      return 'bg-gradient-to-br from-violet-50 to-purple-100/90 dark:from-violet-950/80 dark:to-violet-900/60 border border-violet-200/80 dark:border-violet-700/60 text-violet-700 dark:text-violet-300 ring-1 ring-violet-500/20'
+    }
+    // Default / Student (Sky Theme)
+    return 'bg-gradient-to-br from-sky-50 to-sky-100/90 dark:from-sky-950/80 dark:to-sky-900/60 border border-sky-200/80 dark:border-sky-700/60 text-sky-700 dark:text-sky-300 ring-1 ring-sky-500/20'
+  }
+
   return (
     <div
       className={cn(
         sizeClasses,
-        'bg-sky-50 dark:bg-sky-950/60 border border-sky-100 dark:border-sky-800/80 text-sky-700 dark:text-sky-300 font-extrabold flex items-center justify-center flex-shrink-0 shadow-2xs',
+        getAvatarTheme(),
+        'flex items-center justify-center flex-shrink-0 shadow-2xs select-none tracking-tight',
         className
       )}
     >
