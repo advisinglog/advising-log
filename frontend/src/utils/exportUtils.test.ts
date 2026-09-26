@@ -20,7 +20,7 @@ describe('exportUtils', () => {
     vi.clearAllMocks()
   })
 
-  it('exports clean 4-sheet AUN-QA 4.0 Excel report strictly matching the PDF specification', () => {
+  it('exports AUN-QA Excel report with multiple sheets and triggers download', () => {
     exportAunQaExcelReport({
       language: 'th',
       metrics: {
@@ -38,8 +38,11 @@ describe('exportUtils', () => {
         avgOverall: '4.5',
       },
       categoryData: [
-        { name: 'ทุนการศึกษา', count: 4, percentage: 27 },
-        { name: 'ลงทะเบียนเรียน', count: 3, percentage: 20 },
+        { name: 'การเรียนและผลการศึกษา', count: 7, percentage: 47 },
+        { name: 'ทุนการศึกษาและเอกสาร', count: 4, percentage: 27 },
+      ],
+      advisorWorkload: [
+        { name: 'Dr. Prasit', requests: 8, sessions: 6, students: 10 },
       ],
       users: mockUsers,
       requests: [],
@@ -50,16 +53,16 @@ describe('exportUtils', () => {
 
     expect(XLSX.writeFile).toHaveBeenCalledTimes(1)
     const [wb, filename] = vi.mocked(XLSX.writeFile).mock.calls[0]
-    expect(filename).toMatch(/^AUN_QA_Report_\d{8}_\d{4}\.xlsx$/)
-    expect(wb.SheetNames).toEqual([
-      'Sheet 1 Executive Summary',
-      'Sheet 2 Advising Service',
-      'Sheet 3 Student Risk',
-      'Sheet 4 Student Outcome',
-    ])
+    expect(filename).toMatch(/^AUN_QA_4\.0_Advising_Report_\d{8}_\d{4}\.xlsx$/)
+    expect(wb.SheetNames).toContain('1. Executive Summary')
+    expect(wb.SheetNames).toContain('2. Advising & Advisor')
+    expect(wb.SheetNames).toContain('3. Risk & Intervention')
+    expect(wb.SheetNames).toContain('4. Outcome & Support')
+    expect(wb.SheetNames).toContain('5. เคสลาออก-ลาพัก')
+    expect(wb.SheetNames).toContain('6. เสียงสะท้อนนักศึกษา')
   })
 
-  it('exports clean 4-sheet AUN-QA report in English when language is en', () => {
+  it('exports AUN-QA Excel report in English when language is en', () => {
     exportAunQaExcelReport({
       language: 'en',
       metrics: {
@@ -84,15 +87,16 @@ describe('exportUtils', () => {
 
     expect(XLSX.writeFile).toHaveBeenCalledTimes(1)
     const [wb, filename] = vi.mocked(XLSX.writeFile).mock.calls[0]
-    expect(filename).toMatch(/^AUN_QA_Report_\d{8}_\d{4}\.xlsx$/)
-    expect(wb.SheetNames).toHaveLength(4)
-    expect(wb.SheetNames).toContain('Sheet 1 Executive Summary')
-    expect(wb.SheetNames).toContain('Sheet 2 Advising Service')
-    expect(wb.SheetNames).toContain('Sheet 3 Student Risk')
-    expect(wb.SheetNames).toContain('Sheet 4 Student Outcome')
+    expect(filename).toMatch(/^AUN_QA_4\.0_Advising_Report_\d{8}_\d{4}\.xlsx$/)
+    expect(wb.SheetNames).toContain('1. Executive Summary')
+    expect(wb.SheetNames).toContain('2. Advising & Advisor')
+    expect(wb.SheetNames).toContain('3. Risk & Intervention')
+    expect(wb.SheetNames).toContain('4. Outcome & Support')
+    expect(wb.SheetNames).toContain('5. Exit Cases')
+    expect(wb.SheetNames).toContain('6. Student Voice')
   })
 
-  it('exports Qualitative Retention Audit Excel report cleanly', () => {
+  it('exports Qualitative Retention Audit Excel report with case explorer and CQI sheets', () => {
     exportQualitativeExcelReport({
       language: 'th',
       cases: mockExitCases,
@@ -103,7 +107,8 @@ describe('exportUtils', () => {
 
     expect(XLSX.writeFile).toHaveBeenCalledTimes(1)
     const [wb, filename] = vi.mocked(XLSX.writeFile).mock.calls[0]
-    expect(filename).toMatch(/^Qualitative_Retention_Report_\d{8}_\d{4}\.xlsx$/)
+    expect(filename).toMatch(/^Qualitative_Retention_Diagnostic_Report_\d{8}_\d{4}\.xlsx$/)
     expect(wb.SheetNames).toContain('เจาะลึกสาเหตุการลาออก')
+    expect(wb.SheetNames).toContain('สรุปมาตรการ AUN-QA')
   })
 })
