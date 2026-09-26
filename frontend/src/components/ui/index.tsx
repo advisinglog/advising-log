@@ -177,7 +177,7 @@ export function StatCard({ label, value, icon, color = 'sky' }: { label: string;
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-xl sm:text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 font-sans">{value}</p>
-          <p className="text-[10px] sm:text-xs font-semibold text-slate-400 dark:text-slate-400 mt-0.5 truncate tracking-wide">{label}</p>
+          <p className="text-[10px] sm:text-xs font-semibold text-slate-400 dark:text-slate-400 mt-0.5 break-words leading-tight tracking-wide">{label}</p>
         </div>
       </div>
     </div>
