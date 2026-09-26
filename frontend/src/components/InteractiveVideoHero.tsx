@@ -7,7 +7,7 @@ interface InteractiveVideoHeroProps {
 
 export const InteractiveVideoHero: React.FC<InteractiveVideoHeroProps> = ({
   className = '',
-  totalFrames = 80,
+  totalFrames = 81,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -24,9 +24,11 @@ export const InteractiveVideoHero: React.FC<InteractiveVideoHeroProps> = ({
     currentProgress: 0.5,
     targetProgress: 0.5,
     lastRenderedIndex: -1,
+    lastRenderedProgress: -1,
     glowX: 50,
     glowY: 50,
     lastUserInteractionTime: 0,
+    lastTime: 0,
   })
 
   // Preload and asynchronously decode all 80 frames for zero-hitch iPad rendering
@@ -108,50 +110,76 @@ export const InteractiveVideoHero: React.FC<InteractiveVideoHeroProps> = ({
       const parallaxWrapper = parallaxWrapperRef.current
       const glow = glowRef.current
 
+      if (!p.lastTime) p.lastTime = time
+      const dt = Math.min(32, Math.max(1, time - p.lastTime))
+      p.lastTime = time
+      const deltaRatio = dt / 16.667
+
       const timeSinceInteraction = Date.now() - p.lastUserInteractionTime
 
-      // Ambient auto-sway on iPad / idle (no user touch in 2.5s)
-      if (timeSinceInteraction > 2500) {
-        const t = time * 0.0006
-        p.targetProgress = 0.5 + Math.sin(t) * 0.35
+      // Ambient auto-sway on iPad / idle (no user touch in 1.5s)
+      if (timeSinceInteraction > 1500) {
+        // Continuous cinematic playback using smoothed triangle wave
+        // to maintain constant frame cadence without slow-mo dead-zones at the turnarounds
+        const t = time * 0.0013
+        const smoothedWave = (2 / Math.PI) * Math.asin(Math.sin(t) * 0.94)
+        const idleTargetProgress = 0.5 + smoothedWave * 0.35
+
+        // Smooth 1-second blend from user's last resting position into the ambient flow
+        const idleBlend = Math.min(1, (timeSinceInteraction - 1500) / 1000)
+        p.targetProgress = p.targetProgress * (1 - idleBlend) + idleTargetProgress * idleBlend
+
         p.targetTiltY = Math.sin(t) * 5
         p.targetTiltX = Math.cos(t * 0.7) * 3
         p.glowX = 50 + Math.sin(t) * 25
         p.glowY = 50 + Math.cos(t * 0.8) * 15
       }
 
-      // Spring physics for tilt
-      p.currentTiltX += (p.targetTiltX - p.currentTiltX) * 0.08
-      p.currentTiltY += (p.targetTiltY - p.currentTiltY) * 0.08
+      // Spring physics for tilt (FPS-independent)
+      const tiltLerp = Math.min(1, 0.08 * deltaRatio)
+      p.currentTiltX += (p.targetTiltX - p.currentTiltX) * tiltLerp
+      p.currentTiltY += (p.targetTiltY - p.currentTiltY) * tiltLerp
 
-      // Direct DOM update (no React re-render)
+      // Direct DOM update with full subpixel precision (no React re-render)
       if (parallaxWrapper) {
-        parallaxWrapper.style.transform = `scale(1.05) translate3d(${(p.currentTiltY * 1.5).toFixed(1)}px, ${(p.currentTiltX * 1.5).toFixed(1)}px, 0px)`
+        parallaxWrapper.style.transform = `scale(1.05) translate3d(${p.currentTiltY * 1.5}px, ${p.currentTiltX * 1.5}px, 0px)`
       }
 
       // Direct Glow update (no React re-render)
       if (glow) {
-        glow.style.background = `radial-gradient(circle 500px at ${p.glowX.toFixed(1)}% ${p.glowY.toFixed(1)}%, rgba(56, 189, 248, 0.6) 0%, transparent 80%)`
+        glow.style.background = `radial-gradient(circle 500px at ${p.glowX}% ${p.glowY}%, rgba(56, 189, 248, 0.6) 0%, transparent 80%)`
       }
 
-      // Smooth progress interpolation
-      p.currentProgress += (p.targetProgress - p.currentProgress) * 0.14
+      // Smooth progress interpolation (FPS-independent)
+      const baseLerp = timeSinceInteraction > 1800 ? 0.20 : 0.14
+      const progressLerp = Math.min(1, baseLerp * deltaRatio)
+      p.currentProgress += (p.targetProgress - p.currentProgress) * progressLerp
 
       const count = images.length
       if (count > 0 && canvas) {
-        const frameIndex = Math.max(
-          0,
-          Math.min(count - 1, Math.round(p.currentProgress * (count - 1)))
-        )
+        // Redraw whenever fractional progress changes by a noticeable subpixel amount
+        if (Math.abs(p.currentProgress - p.lastRenderedProgress) > 0.0008) {
+          const rawFrame = p.currentProgress * (count - 1)
+          const frameIndexA = Math.max(0, Math.min(count - 1, Math.floor(rawFrame)))
+          const frameIndexB = Math.max(0, Math.min(count - 1, Math.ceil(rawFrame)))
+          const fraction = rawFrame - frameIndexA
 
-        // Only redraw when frame changes
-        if (frameIndex !== p.lastRenderedIndex) {
-          const img = images[frameIndex]
-          if (img && img.complete && img.naturalWidth > 0) {
+          const imgA = images[frameIndexA]
+          const imgB = images[frameIndexB]
+
+          if (imgA && imgA.complete && imgA.naturalWidth > 0) {
             const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true })
             if (ctx) {
-              ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
-              p.lastRenderedIndex = frameIndex
+              ctx.globalAlpha = 1
+              ctx.drawImage(imgA, 0, 0, canvas.width, canvas.height)
+
+              // Hermite smoothstep curve: 3x^2 - 2x^3 (smooth derivatives at 0 and 1, prevents brightness dip)
+              const smoothFraction = fraction * fraction * (3 - 2 * fraction)
+              if (frameIndexA !== frameIndexB && smoothFraction > 0.01 && imgB && imgB.complete && imgB.naturalWidth > 0) {
+                ctx.globalAlpha = smoothFraction
+                ctx.drawImage(imgB, 0, 0, canvas.width, canvas.height)
+              }
+              p.lastRenderedProgress = p.currentProgress
             }
           }
         }
