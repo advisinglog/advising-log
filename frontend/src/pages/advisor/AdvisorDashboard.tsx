@@ -45,8 +45,8 @@ export default function AdvisorDashboard() {
   // List of all active students
   const allStudents = store.users.filter(u => u.role === 'student' && u.isActive)
   const filteredStudents = allStudents.filter(u => {
-    if (!studentSearch) return true
-    const q = studentSearch.toLowerCase()
+    const q = studentSearch.trim().toLowerCase()
+    if (!q) return true
     return u.name.toLowerCase().includes(q) || u.code.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)
   })
 

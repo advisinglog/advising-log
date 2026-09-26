@@ -183,8 +183,8 @@ export default function AiGovernance() {
     if (personnelAiFilter === 'granted' && u.hasAiAccess !== true) return false
     if (personnelAiFilter === 'revoked' && u.hasAiAccess === true) return false
 
-    if (!personnelSearch) return true
-    const s = personnelSearch.toLowerCase()
+    const s = personnelSearch.trim().toLowerCase()
+    if (!s) return true
     return (
       u.name.toLowerCase().includes(s) ||
       u.code.toLowerCase().includes(s) ||

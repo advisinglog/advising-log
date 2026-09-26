@@ -406,7 +406,7 @@ export default function QualitativeExitAnalysis() {
 
       // Search query
       if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase()
+        const q = searchQuery.trim().toLowerCase()
         const stu = store.users.find(u => u.id === e.studentId)
         const adv = store.users.find(u => u.id === e.advisorId)
         const assess = store.advisorAssessments.find(a => a.exitCaseId === e.id)
