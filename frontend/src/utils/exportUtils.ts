@@ -344,7 +344,7 @@ export function exportAunQaExcelReport(options: AunQaExportOptions): void {
   ]
   const wsSheet1 = XLSX.utils.json_to_sheet(sheet1Rows)
   formatWorksheet(wsSheet1, sheet1Rows)
-  XLSX.utils.book_append_sheet(wb, wsSheet1, isTh ? '1. Executive Summary' : '1. Executive Summary')
+  XLSX.utils.book_append_sheet(wb, wsSheet1, isTh ? '1. สรุปภาพรวมผู้บริหาร' : '1. Executive Summary')
 
   // -------------------------------------------------------------
   // Sheet 2: Advising Service & Advisor Management Report (ตรงตาม PDF Sheet 2)
@@ -469,7 +469,7 @@ export function exportAunQaExcelReport(options: AunQaExportOptions): void {
   ]
   const wsSheet2 = XLSX.utils.json_to_sheet(sheet2Rows)
   formatWorksheet(wsSheet2, sheet2Rows)
-  XLSX.utils.book_append_sheet(wb, wsSheet2, isTh ? '2. Advising & Advisor' : '2. Advising & Advisor')
+  XLSX.utils.book_append_sheet(wb, wsSheet2, isTh ? '2. บริการและอาจารย์ที่ปรึกษา' : '2. Advising & Advisor')
 
   // -------------------------------------------------------------
   // Sheet 3: Student Risk & Intervention Report (ตรงตาม PDF Sheet 3)
@@ -534,7 +534,7 @@ export function exportAunQaExcelReport(options: AunQaExportOptions): void {
   ]
   const wsSheet3 = XLSX.utils.json_to_sheet(sheet3Rows)
   formatWorksheet(wsSheet3, sheet3Rows)
-  XLSX.utils.book_append_sheet(wb, wsSheet3, isTh ? '3. Risk & Intervention' : '3. Risk & Intervention')
+  XLSX.utils.book_append_sheet(wb, wsSheet3, isTh ? '3. ความเสี่ยงและการดูแล' : '3. Risk & Intervention')
 
   // -------------------------------------------------------------
   // Sheet 4: Student Outcome & Support Service Report (ตรงตาม PDF Sheet 4-5)
@@ -659,7 +659,7 @@ export function exportAunQaExcelReport(options: AunQaExportOptions): void {
   ]
   const wsSheet4 = XLSX.utils.json_to_sheet(sheet4Rows)
   formatWorksheet(wsSheet4, sheet4Rows)
-  XLSX.utils.book_append_sheet(wb, wsSheet4, isTh ? '4. Outcome & Support' : '4. Outcome & Support')
+  XLSX.utils.book_append_sheet(wb, wsSheet4, isTh ? '4. ผลลัพธ์และบริการสนับสนุน' : '4. Outcome & Support')
 
   // -------------------------------------------------------------
   // Sheet 5: Exit & Leave Cases Explorer (เคสลาออก-ลาพัก รายกรณี)
@@ -695,7 +695,7 @@ export function exportAunQaExcelReport(options: AunQaExportOptions): void {
   if (exitRows.length > 0) {
     const wsExit = XLSX.utils.json_to_sheet(exitRows)
     formatWorksheet(wsExit, exitRows)
-    XLSX.utils.book_append_sheet(wb, wsExit, isTh ? '5. เคสลาออก-ลาพัก' : '5. Exit Cases')
+    XLSX.utils.book_append_sheet(wb, wsExit, isTh ? '5. เคสลาออกและลาพัก' : '5. Exit Cases')
   }
 
   // -------------------------------------------------------------

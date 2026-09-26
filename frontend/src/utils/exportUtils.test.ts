@@ -54,11 +54,11 @@ describe('exportUtils', () => {
     expect(XLSX.writeFile).toHaveBeenCalledTimes(1)
     const [wb, filename] = vi.mocked(XLSX.writeFile).mock.calls[0]
     expect(filename).toMatch(/^AUN_QA_4\.0_Advising_Report_\d{8}_\d{4}\.xlsx$/)
-    expect(wb.SheetNames).toContain('1. Executive Summary')
-    expect(wb.SheetNames).toContain('2. Advising & Advisor')
-    expect(wb.SheetNames).toContain('3. Risk & Intervention')
-    expect(wb.SheetNames).toContain('4. Outcome & Support')
-    expect(wb.SheetNames).toContain('5. เคสลาออก-ลาพัก')
+    expect(wb.SheetNames).toContain('1. สรุปภาพรวมผู้บริหาร')
+    expect(wb.SheetNames).toContain('2. บริการและอาจารย์ที่ปรึกษา')
+    expect(wb.SheetNames).toContain('3. ความเสี่ยงและการดูแล')
+    expect(wb.SheetNames).toContain('4. ผลลัพธ์และบริการสนับสนุน')
+    expect(wb.SheetNames).toContain('5. เคสลาออกและลาพัก')
     expect(wb.SheetNames).toContain('6. เสียงสะท้อนนักศึกษา')
   })
 
