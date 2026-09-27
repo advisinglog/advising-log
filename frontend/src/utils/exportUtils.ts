@@ -11,7 +11,7 @@ import type {
   AdvisingRequest,
   AdvisingSession,
   FollowUp,
-  EarlyWarning,
+  EarlyWarningCase,
   StudentAdvisorAssignment,
 } from '@/types'
 import { EXIT_TYPES, EXIT_REASON_CODES } from '@/types'
@@ -38,7 +38,7 @@ export interface AunQaExportOptions {
   requests: AdvisingRequest[]
   sessions?: AdvisingSession[]
   followUps?: FollowUp[]
-  earlyWarnings?: EarlyWarning[]
+  earlyWarnings?: EarlyWarningCase[]
   roster?: StudentAdvisorAssignment[]
   exitCases: ExitCase[]
   studentVoiceResponses: StudentVoiceResponse[]
@@ -217,7 +217,7 @@ export function exportAunQaExcelReport(options: AunQaExportOptions): void {
   const {
     language = 'th',
     metrics,
-    categoryData = [],
+    categoryData: _categoryData = [],
     advisorWorkload = [],
     users = [],
     requests = [],
@@ -244,7 +244,6 @@ export function exportAunQaExcelReport(options: AunQaExportOptions): void {
 
   const leaveCount = exitCases.filter(c => c.exitType === 'leave_of_absence').length
   const withdrawalCount = exitCases.filter(c => c.exitType === 'withdrawal' || c.exitType === 'dropout').length
-  const totalExit = exitCases.length || metrics.totalExitCases || 0
   const dropoutRate = totalStudents > 0 ? ((withdrawalCount / totalStudents) * 100).toFixed(1) : '0.0'
   const retentionRate = totalStudents > 0 ? (100 - parseFloat(dropoutRate)).toFixed(1) : '100.0'
 
