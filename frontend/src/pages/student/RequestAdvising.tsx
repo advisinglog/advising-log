@@ -34,8 +34,6 @@ import {
   Tag,
   ArrowRight,
   ArrowLeft,
-  Video,
-  Building2,
   FileText,
   Sparkles,
   Edit3,
@@ -61,7 +59,6 @@ export default function RequestAdvising() {
   const [subCategory, setSubCategory] = useState('')
   const [exitType, setExitType] = useState<ExitType>(initialType)
   const [exitReasonCode, setExitReasonCode] = useState<ExitReasonCode>('academic')
-  const [meetingMode, setMeetingMode] = useState<'onsite' | 'online'>('onsite')
   const [details, setDetails] = useState('')
   const [preferredDate, setPreferredDate] = useState('')
   const [preferredTime, setPreferredTime] = useState('')
@@ -810,54 +807,6 @@ export default function RequestAdvising() {
         {currentStep === 2 && (
           <div className="space-y-5 animate-[fadeIn_0.15s_ease-out]">
             <Card className="space-y-5">
-              {/* Meeting Mode Selector */}
-              <div>
-                <label className="block text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 mb-2">
-                  {t('รูปแบบการเข้าพบอาจารย์', 'Meeting Format')}
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setMeetingMode('onsite')}
-                    className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex items-center gap-3 ${
-                      meetingMode === 'onsite'
-                        ? 'border-sky-500 bg-sky-50/70 dark:bg-sky-950/40 shadow-xs ring-2 ring-sky-500/20'
-                        : 'border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-sky-300'
-                    }`}
-                  >
-                    <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${
-                      meetingMode === 'onsite' ? 'bg-sky-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600'
-                    }`}>
-                      <Building2 className="h-4 w-4" />
-                    </div>
-                    <div>
-                      <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100">{t('เข้าพบ ณ ห้องพักอาจารย์', 'On-site Office')}</p>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400">{t('อาคาร S7A / สำนักวิชา ADT', 'S7A Building / ADT')}</p>
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setMeetingMode('online')}
-                    className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex items-center gap-3 ${
-                      meetingMode === 'online'
-                        ? 'border-sky-500 bg-sky-50/70 dark:bg-sky-950/40 shadow-xs ring-2 ring-sky-500/20'
-                        : 'border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-sky-300'
-                    }`}
-                  >
-                    <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${
-                      meetingMode === 'online' ? 'bg-sky-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600'
-                    }`}>
-                      <Video className="h-4 w-4" />
-                    </div>
-                    <div>
-                      <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100">{t('ออนไลน์ (Google Meet)', 'Online Google Meet')}</p>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400">{t('อาจารย์จะแนบลิงก์การประชุม', 'Meeting link provided')}</p>
-                    </div>
-                  </button>
-                </div>
-              </div>
-
               {/* Date & Time Selection */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
@@ -1073,9 +1022,8 @@ export default function RequestAdvising() {
                     <Calendar className="h-3.5 w-3.5 text-sky-500" />
                     <span>{preferredDate} {preferredTime ? `· ${preferredTime}` : ''}</span>
                   </p>
-                  <p className="text-[11px] text-slate-500 mt-0.5 flex items-center gap-1">
-                    {meetingMode === 'onsite' ? <Building2 className="h-3 w-3" /> : <Video className="h-3 w-3" />}
-                    <span>{meetingMode === 'onsite' ? t('เข้าพบที่ห้องพักอาจารย์ (S7A)', 'On-site Office (S7A)') : t('ประชุมออนไลน์ Google Meet', 'Online Google Meet')}</span>
+                  <p className="text-[11px] text-slate-500 mt-0.5">
+                    {t('รออาจารย์ตอบรับและระบุสถานที่/ช่องทางเข้าพบ', 'Pending advisor confirmation of location / channel')}
                   </p>
                 </div>
 
