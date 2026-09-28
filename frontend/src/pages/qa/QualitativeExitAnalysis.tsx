@@ -1894,39 +1894,36 @@ export default function QualitativeExitAnalysis() {
                 {/* Multi-Provider Form when Option 2 is selected */}
                 {selectedKeySource === 'custom' && (
                   <div className="mt-3.5 pt-3.5 border-t border-slate-200/80 dark:border-slate-700/80 space-y-3.5">
-                    {/* Provider Pills Selector */}
-                    <div>
-                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                        {t('ผู้ให้บริการ (Provider)', 'Provider')}
+                    {/* Provider Dropdown */}
+                    <div className="space-y-1.5">
+                      <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                        {t('ผู้ให้บริการ (Provider)', 'AI Provider')}
                       </label>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                      <select
+                        value={selectedProvider}
+                        onChange={(e) => {
+                          const provId = e.target.value as AIProviderId
+                          setSelectedProvider(provId)
+                          const preset = AI_PROVIDER_PRESETS[provId]
+                          if (preset) {
+                            setCustomModel(preset.defaultModel)
+                            if (provId === 'custom') {
+                              setCustomBaseUrl('http://localhost:11434/v1')
+                            }
+                          }
+                        }}
+                        onClick={e => e.stopPropagation()}
+                        className="w-full px-3 py-2 text-xs font-medium border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-[#0b0f19] text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs cursor-pointer"
+                      >
                         {(Object.keys(AI_PROVIDER_PRESETS) as AIProviderId[]).map((provId) => {
                           const preset = AI_PROVIDER_PRESETS[provId]
-                          const isSelected = selectedProvider === provId
                           return (
-                            <button
-                              key={provId}
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                setSelectedProvider(provId)
-                                setCustomModel(preset.defaultModel)
-                                if (provId === 'custom') {
-                                  setCustomBaseUrl('http://localhost:11434/v1')
-                                }
-                              }}
-                              className={`px-2.5 py-1.5 rounded-xl text-[11px] font-semibold text-left transition-all border flex items-center justify-between cursor-pointer ${
-                                isSelected
-                                  ? 'bg-sky-500 text-white border-sky-600 shadow-2xs font-bold'
-                                  : 'bg-white dark:bg-[#0b0f19] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
-                              }`}
-                            >
-                              <span className="truncate">{preset.name}</span>
-                              {isSelected && <Check className="h-3 w-3 shrink-0 ml-1" />}
-                            </button>
+                            <option key={provId} value={provId} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
+                              {language === 'th' ? preset.labelTh : preset.labelEn} ({preset.defaultModel})
+                            </option>
                           )
                         })}
-                      </div>
+                      </select>
                     </div>
 
                     {/* API Key Input */}
