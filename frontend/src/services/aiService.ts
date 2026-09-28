@@ -37,11 +37,15 @@ export interface AIAnalysisResponse {
 
 export type AiKeySource = 'system' | 'custom' | 'offline'
 
-const STORAGE_KEY = 'advising_log_gemini_key'
+const QA_PERSONAL_STORAGE_KEY = 'advising_log_qa_personal_gemini_key'
 const SOURCE_STORAGE_KEY = 'advising_log_qa_ai_key_source'
 
 export function getStoredAiKeySource(): AiKeySource {
-  return (localStorage.getItem(SOURCE_STORAGE_KEY) as AiKeySource) || (getStoredGeminiKey() ? 'custom' : 'system')
+  const saved = localStorage.getItem(SOURCE_STORAGE_KEY) as AiKeySource | null
+  if (saved === 'system' || saved === 'custom' || saved === 'offline') {
+    return saved
+  }
+  return 'system'
 }
 
 export function setStoredAiKeySource(source: AiKeySource): void {
@@ -49,19 +53,19 @@ export function setStoredAiKeySource(source: AiKeySource): void {
 }
 
 export function getStoredGeminiKey(): string {
-  return localStorage.getItem(STORAGE_KEY) || ''
+  return localStorage.getItem(QA_PERSONAL_STORAGE_KEY) || ''
 }
 
 export function setStoredGeminiKey(key: string): void {
   if (key.trim()) {
-    localStorage.setItem(STORAGE_KEY, key.trim())
+    localStorage.setItem(QA_PERSONAL_STORAGE_KEY, key.trim())
   } else {
-    localStorage.removeItem(STORAGE_KEY)
+    localStorage.removeItem(QA_PERSONAL_STORAGE_KEY)
   }
 }
 
 export function clearStoredGeminiKey(): void {
-  localStorage.removeItem(STORAGE_KEY)
+  localStorage.removeItem(QA_PERSONAL_STORAGE_KEY)
 }
 
 export function isSystemAiEnabled(): boolean {
