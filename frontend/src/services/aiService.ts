@@ -1,6 +1,6 @@
 // ============================================================
-// AdvisingLog — AI LLM Qualitative Analysis Service
-// Google Gemini API / Backend Gateway with Offline Smart Engine
+// AdvisingLog — Multi-Provider AI / LLM Qualitative Analysis Service
+// Supports Google Gemini, OpenAI, Anthropic Claude, DeepSeek, Custom/Local LLM & Offline Heuristic Engine
 // ============================================================
 
 export interface AIAnalysisPayloadCase {
@@ -16,11 +16,86 @@ export interface AIAnalysisPayloadCase {
 
 export type AIAnalysisMode = 'strategic_synthesis' | 'chat_query' | 'case_diagnostic'
 
+export type AIProviderId = 'gemini' | 'openai' | 'claude' | 'deepseek' | 'custom'
+
+export interface AIProviderPreset {
+  id: AIProviderId
+  name: string
+  labelTh: string
+  labelEn: string
+  defaultModel: string
+  keyPlaceholder: string
+  keyFormatHint: string
+  studioUrl: string
+  baseUrl: string
+}
+
+export const AI_PROVIDER_PRESETS: Record<AIProviderId, AIProviderPreset> = {
+  gemini: {
+    id: 'gemini',
+    name: 'Google Gemini',
+    labelTh: 'Google Gemini',
+    labelEn: 'Google Gemini',
+    defaultModel: 'gemini-1.5-flash',
+    keyPlaceholder: 'AIzaSy...',
+    keyFormatHint: 'ขึ้นต้นด้วย AIzaSy... (Google AI Studio)',
+    studioUrl: 'https://aistudio.google.com/app/apikey',
+    baseUrl: 'https://generativelanguage.googleapis.com',
+  },
+  openai: {
+    id: 'openai',
+    name: 'OpenAI (ChatGPT)',
+    labelTh: 'OpenAI (GPT-4o / ChatGPT)',
+    labelEn: 'OpenAI (GPT-4o / ChatGPT)',
+    defaultModel: 'gpt-4o-mini',
+    keyPlaceholder: 'sk-proj-... / sk-...',
+    keyFormatHint: 'ขึ้นต้นด้วย sk-... (OpenAI Platform)',
+    studioUrl: 'https://platform.openai.com/api-keys',
+    baseUrl: 'https://api.openai.com/v1',
+  },
+  claude: {
+    id: 'claude',
+    name: 'Anthropic Claude',
+    labelTh: 'Anthropic Claude',
+    labelEn: 'Anthropic Claude',
+    defaultModel: 'claude-3-5-sonnet-20241022',
+    keyPlaceholder: 'sk-ant-api03-...',
+    keyFormatHint: 'ขึ้นต้นด้วย sk-ant-... (Anthropic Console)',
+    studioUrl: 'https://console.anthropic.com/settings/keys',
+    baseUrl: 'https://api.anthropic.com/v1',
+  },
+  deepseek: {
+    id: 'deepseek',
+    name: 'DeepSeek AI',
+    labelTh: 'DeepSeek AI (V3 / R1)',
+    labelEn: 'DeepSeek AI (V3 / R1)',
+    defaultModel: 'deepseek-chat',
+    keyPlaceholder: 'sk-...',
+    keyFormatHint: 'ขึ้นต้นด้วย sk-... (DeepSeek Open Platform)',
+    studioUrl: 'https://platform.deepseek.com/api_keys',
+    baseUrl: 'https://api.deepseek.com/v1',
+  },
+  custom: {
+    id: 'custom',
+    name: 'Custom / Local LLM (Ollama)',
+    labelTh: 'Custom API / Local LLM (Ollama / vLLM)',
+    labelEn: 'Custom API / Local LLM (Ollama / vLLM)',
+    defaultModel: 'llama3.2',
+    keyPlaceholder: 'sk-... หรือ ollama',
+    keyFormatHint: 'OpenAI-Compatible Endpoint',
+    studioUrl: 'https://ollama.com',
+    baseUrl: 'http://localhost:11434/v1',
+  },
+}
+
 export interface AIAnalysisRequest {
   mode?: AIAnalysisMode
   cases: AIAnalysisPayloadCase[]
   query?: string
   apiKey?: string
+  providerId?: AIProviderId
+  customModel?: string
+  customBaseUrl?: string
   language?: 'th' | 'en'
   userHasAiAccess?: boolean
 }
@@ -39,6 +114,9 @@ export type AiKeySource = 'system' | 'custom' | 'offline'
 
 const QA_PERSONAL_STORAGE_KEY = 'advising_log_qa_personal_gemini_key'
 const SOURCE_STORAGE_KEY = 'advising_log_qa_ai_key_source'
+const PROVIDER_STORAGE_KEY = 'advising_log_qa_ai_provider'
+const MODEL_STORAGE_KEY = 'advising_log_qa_ai_custom_model'
+const BASE_URL_STORAGE_KEY = 'advising_log_qa_ai_custom_base_url'
 
 export function getStoredAiKeySource(): AiKeySource {
   const saved = localStorage.getItem(SOURCE_STORAGE_KEY) as AiKeySource | null
@@ -50,6 +128,42 @@ export function getStoredAiKeySource(): AiKeySource {
 
 export function setStoredAiKeySource(source: AiKeySource): void {
   localStorage.setItem(SOURCE_STORAGE_KEY, source)
+}
+
+export function getStoredAiProvider(): AIProviderId {
+  const saved = localStorage.getItem(PROVIDER_STORAGE_KEY) as AIProviderId | null
+  if (saved && AI_PROVIDER_PRESETS[saved]) {
+    return saved
+  }
+  return 'gemini'
+}
+
+export function setStoredAiProvider(provider: AIProviderId): void {
+  localStorage.setItem(PROVIDER_STORAGE_KEY, provider)
+}
+
+export function getStoredCustomModel(): string {
+  return localStorage.getItem(MODEL_STORAGE_KEY) || ''
+}
+
+export function setStoredCustomModel(model: string): void {
+  if (model.trim()) {
+    localStorage.setItem(MODEL_STORAGE_KEY, model.trim())
+  } else {
+    localStorage.removeItem(MODEL_STORAGE_KEY)
+  }
+}
+
+export function getStoredCustomBaseUrl(): string {
+  return localStorage.getItem(BASE_URL_STORAGE_KEY) || ''
+}
+
+export function setStoredCustomBaseUrl(url: string): void {
+  if (url.trim()) {
+    localStorage.setItem(BASE_URL_STORAGE_KEY, url.trim())
+  } else {
+    localStorage.removeItem(BASE_URL_STORAGE_KEY)
+  }
 }
 
 export function getStoredGeminiKey(): string {
@@ -79,13 +193,19 @@ export function isSystemAiEnabled(): boolean {
   return true
 }
 
-export async function testAiConnection(customKey?: string, source?: AiKeySource): Promise<{ success: boolean; message: string; provider: string }> {
+export async function testAiConnection(
+  customKey?: string,
+  source?: AiKeySource,
+  provider?: AIProviderId,
+  model?: string,
+  baseUrl?: string
+): Promise<{ success: boolean; message: string; provider: string }> {
   const effectiveSource = source || getStoredAiKeySource()
   if (effectiveSource === 'offline') {
     return {
       success: true,
       message: 'Offline Heuristic Engine Operational',
-      provider: 'Internal Smart Engine',
+      provider: 'AdvisingLog Heuristic Engine',
     }
   }
 
@@ -93,12 +213,17 @@ export async function testAiConnection(customKey?: string, source?: AiKeySource)
     ? (customKey !== undefined ? customKey : getStoredGeminiKey())
     : undefined
 
+  const effectiveProvider = provider || getStoredAiProvider()
+
   try {
     const res = await analyzeWithLLM({
       mode: 'chat_query',
       cases: [],
       query: 'Ping Test Connection',
       apiKey: key,
+      providerId: effectiveProvider,
+      customModel: model,
+      customBaseUrl: baseUrl,
       language: 'en',
       userHasAiAccess: true,
     })
@@ -107,7 +232,7 @@ export async function testAiConnection(customKey?: string, source?: AiKeySource)
         success: true,
         message: effectiveSource === 'system'
           ? 'System Central Key Connection Verified'
-          : (key ? 'Personal API Key Connected' : 'Engine Operational'),
+          : (key ? `${res.provider} Connection Verified` : 'Engine Operational'),
         provider: res.provider,
       }
     } else {
@@ -304,7 +429,6 @@ export async function analyzeWithLLM(req: AIAnalysisRequest): Promise<AIAnalysis
     }
   }
 
-
   // 1. Try Calling Backend Hono API (Cloudflare Workers)
   try {
     const backendUrl = 'http://localhost:8787/api/qa/ai-analyze'
@@ -326,26 +450,29 @@ export async function analyzeWithLLM(req: AIAnalysisRequest): Promise<AIAnalysis
       return data
     }
   } catch (_err) {
-    // Backend may be offline during standalone frontend test/demo; proceed to Direct Gemini / Fallback
+    // Backend may be offline during standalone frontend test/demo; proceed to Direct Provider / Fallback
   }
 
-  // 2. If client has entered a Gemini API Key, call Gemini REST API directly
-  if (userApiKey && userApiKey.length > 10) {
-    try {
-      const systemInstruction = `You are a Higher Education Quality Assurance (QA) and Student Retention specialist advising the Program Chair under AUN-QA Criteria 6 & 8.
+  // 2. Multi-Provider Direct Dispatch (Client-Side Key)
+  if (userApiKey && userApiKey.length > 5) {
+    const providerId = req.providerId || getStoredAiProvider()
+    const customModel = req.customModel || getStoredCustomModel()
+    const customBaseUrl = req.customBaseUrl || getStoredCustomBaseUrl()
+
+    const systemInstruction = `You are a Higher Education Quality Assurance (QA) and Student Retention specialist advising the Program Chair under AUN-QA Criteria 6 & 8.
 All student names have been masked for PDPA compliance. Analyze qualitative departure data with empathy and academic rigor.
 Respond in ${lang === 'th' ? 'Thai with clear markdown bullet points, bold keywords, and strategic recommendations' : 'English with clear markdown bullet points, bold keywords, and strategic recommendations'}.`
 
-      const sanitizedSummary = req.cases.map((c, idx) => {
-        return `Case #${idx + 1} [ID: ${c.studentCode || c.id} | Year: ${c.academicYear || 'N/A'} | Type: ${c.exitType} | Reason: ${c.reasonCode}]
+    const sanitizedSummary = req.cases.map((c, idx) => {
+      return `Case #${idx + 1} [ID: ${c.studentCode || c.id} | Year: ${c.academicYear || 'N/A'} | Type: ${c.exitType} | Reason: ${c.reasonCode}]
 - Student Stated Reason: "${c.details}"
 - Advisor Assessment: "${c.advisorAssessment || 'N/A'}"
-- Student Survey Voice: "${c.studentVoiceFeedback || 'N/A'}"`
-      }).join('\n\n')
+- Student Voice Feedback: "${c.studentVoiceFeedback || 'N/A'}"`
+    }).join('\n\n')
 
-      let prompt = ''
-      if (mode === 'strategic_synthesis') {
-        prompt = `Analyze these student departure cases (Withdrawal vs. Leave of Absence):
+    let prompt = ''
+    if (mode === 'strategic_synthesis') {
+      prompt = `Analyze these student departure cases (Withdrawal vs. Leave of Absence):
 ${sanitizedSummary}
 
 Provide:
@@ -353,56 +480,95 @@ Provide:
 2. **Key Differences: Why Withdraw vs Why Take Leave (เปรียบเทียบทำไมลาออก vs ทำไมพักการศึกษา)**
 3. **Curriculum & Foundation Gaps (ปัญหาหลักสูตรและการเรียนการสอนปี 1)**
 4. **Actionable CQI Recommendations (มาตรการระดับหลักสูตรตามเกณฑ์ AUN-QA)**`
-      } else if (mode === 'case_diagnostic') {
-        prompt = `Diagnose this specific departure case:
+    } else if (mode === 'case_diagnostic') {
+      prompt = `Diagnose this specific departure case:
 ${sanitizedSummary}
 
 Provide:
 1. **Root Cause Analysis (การวินิจฉัยสาเหตุแท้จริง)**
 2. **Advisor Intervention Feasibility (การประเมินแนวทางช่วยเหลือ)**
 3. **Re-entry & Retention Recommendation (ข้อเสนอแนะสู่อาจารย์ที่ปรึกษาและหลักสูตร)**`
-      } else {
-        prompt = `Based on these cases:
+    } else {
+      prompt = `Based on these cases:
 ${sanitizedSummary}
 
 Answer the Program Chair query:
 "${req.query}"`
+    }
+
+    try {
+      // 2A. Google Gemini Provider
+      if (providerId === 'gemini') {
+        const candidateEndpoints = [
+          'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent',
+          'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent',
+          'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
+          'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent',
+          'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
+          'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent',
+          'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent',
+        ]
+
+        for (const endpoint of candidateEndpoints) {
+          try {
+            const geminiUrl = `${endpoint}?key=${encodeURIComponent(userApiKey.trim())}`
+            const geminiRes = await fetch(geminiUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [{ parts: [{ text: `${systemInstruction}\n\n${prompt}` }] }],
+                generationConfig: {
+                  temperature: 0.3,
+                  maxOutputTokens: 2048,
+                },
+              }),
+            })
+
+            if (geminiRes.ok) {
+              const data = await geminiRes.json() as any
+              const text = data?.candidates?.[0]?.content?.parts?.[0]?.text
+              if (text) {
+                const match = endpoint.match(/models\/([^:]+)/)
+                const modelTag = match ? match[1] : 'gemini'
+                return {
+                  success: true,
+                  provider: `Google Gemini (${modelTag})`,
+                  mode,
+                  analysis: text,
+                  timestamp: new Date().toISOString(),
+                }
+              }
+            }
+          } catch (_err) {}
+        }
       }
 
-      const candidateEndpoints = [
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent',
-        'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent',
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent',
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent',
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent',
-      ]
-
-      for (const endpoint of candidateEndpoints) {
+      // 2B. Anthropic Claude Provider
+      if (providerId === 'claude') {
+        const model = customModel || 'claude-3-5-sonnet-20241022'
         try {
-          const geminiUrl = `${endpoint}?key=${encodeURIComponent(userApiKey.trim())}`
-          const geminiRes = await fetch(geminiUrl, {
+          const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json',
+              'x-api-key': userApiKey.trim(),
+              'anthropic-version': '2023-06-01',
+              'dangerously-allow-browser': 'true',
+            },
             body: JSON.stringify({
-              contents: [{ parts: [{ text: `${systemInstruction}\n\n${prompt}` }] }],
-              generationConfig: {
-                temperature: 0.3,
-                maxOutputTokens: 2048,
-              },
+              model,
+              max_tokens: 2048,
+              system: systemInstruction,
+              messages: [{ role: 'user', content: prompt }],
             }),
           })
-
-          if (geminiRes.ok) {
-            const data = await geminiRes.json() as any
-            const text = data?.candidates?.[0]?.content?.parts?.[0]?.text
+          if (claudeRes.ok) {
+            const data = await claudeRes.json() as any
+            const text = data?.content?.[0]?.text
             if (text) {
-              const match = endpoint.match(/models\/([^:]+)/)
-              const modelTag = match ? match[1] : 'gemini'
               return {
                 success: true,
-                provider: `Google Gemini (${modelTag}) (Direct Client Key)`,
+                provider: `Anthropic Claude (${model})`,
                 mode,
                 analysis: text,
                 timestamp: new Date().toISOString(),
@@ -410,6 +576,62 @@ Answer the Program Chair query:
             }
           }
         } catch (_err) {}
+      }
+
+      // 2C. OpenAI / DeepSeek / Custom OpenAI-Compatible Endpoints
+      if (providerId === 'openai' || providerId === 'deepseek' || providerId === 'custom') {
+        const baseUrl = providerId === 'openai'
+          ? 'https://api.openai.com/v1/chat/completions'
+          : providerId === 'deepseek'
+          ? 'https://api.deepseek.com/v1/chat/completions'
+          : `${(customBaseUrl || 'http://localhost:11434/v1').replace(/\/+$/, '')}/chat/completions`
+
+        const defaultModel = providerId === 'openai'
+          ? 'gpt-4o-mini'
+          : providerId === 'deepseek'
+          ? 'deepseek-chat'
+          : 'llama3.2'
+        const model = customModel || defaultModel
+
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json',
+        }
+        if (userApiKey && userApiKey.trim() !== 'none' && userApiKey.trim() !== 'ollama') {
+          headers['Authorization'] = `Bearer ${userApiKey.trim()}`
+        }
+
+        const openAiRes = await fetch(baseUrl, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            model,
+            messages: [
+              { role: 'system', content: systemInstruction },
+              { role: 'user', content: prompt },
+            ],
+            temperature: 0.3,
+            max_tokens: 2048,
+          }),
+        })
+
+        if (openAiRes.ok) {
+          const data = await openAiRes.json() as any
+          const text = data?.choices?.[0]?.message?.content
+          if (text) {
+            const brandLabel = providerId === 'openai'
+              ? 'OpenAI'
+              : providerId === 'deepseek'
+              ? 'DeepSeek AI'
+              : 'Custom LLM'
+            return {
+              success: true,
+              provider: `${brandLabel} (${model})`,
+              mode,
+              analysis: text,
+              timestamp: new Date().toISOString(),
+            }
+          }
+        }
       }
     } catch (_err) {
       // Fallback below

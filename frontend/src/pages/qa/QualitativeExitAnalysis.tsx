@@ -50,9 +50,17 @@ import {
   setStoredGeminiKey,
   getStoredAiKeySource,
   setStoredAiKeySource,
+  getStoredAiProvider,
+  setStoredAiProvider,
+  getStoredCustomModel,
+  setStoredCustomModel,
+  getStoredCustomBaseUrl,
+  setStoredCustomBaseUrl,
   testAiConnection,
+  AI_PROVIDER_PRESETS,
   type AIAnalysisPayloadCase,
   type AiKeySource,
+  type AIProviderId,
 } from '@/services/aiService'
 import { exportQualitativeExcelReport } from '@/utils/exportUtils'
 import {
@@ -121,10 +129,13 @@ export default function QualitativeExitAnalysis() {
   const [caseAiDiagnostic, setCaseAiDiagnostic] = useState<Record<string, string>>({})
   const [caseAiLoading, setCaseAiLoading] = useState(false)
 
-  // Personal Gemini API Key states (QA Role capability)
+  // Multi-Provider Personal API Key states (QA Role capability)
   const [showApiKeyModal, setShowApiKeyModal] = useState(false)
   const [selectedKeySource, setSelectedKeySource] = useState<AiKeySource>(getStoredAiKeySource())
+  const [selectedProvider, setSelectedProvider] = useState<AIProviderId>(getStoredAiProvider())
   const [personalApiKey, setPersonalApiKey] = useState(getStoredGeminiKey())
+  const [customModel, setCustomModel] = useState(getStoredCustomModel())
+  const [customBaseUrl, setCustomBaseUrl] = useState(getStoredCustomBaseUrl())
   const [showKeySecret, setShowKeySecret] = useState(false)
   const [testingApiKey, setTestingApiKey] = useState(false)
 
@@ -161,6 +172,9 @@ export default function QualitativeExitAnalysis() {
       const res = await analyzeWithLLM({
         mode: 'strategic_synthesis',
         cases: casePayloads,
+        providerId: selectedProvider,
+        customModel,
+        customBaseUrl,
         language,
         userHasAiAccess: isUserAiAuthorized,
       })
@@ -192,6 +206,9 @@ export default function QualitativeExitAnalysis() {
         mode: 'chat_query',
         cases: casePayloads,
         query: userMsg.text,
+        providerId: selectedProvider,
+        customModel,
+        customBaseUrl,
         language,
         userHasAiAccess: isUserAiAuthorized,
       })
@@ -213,6 +230,9 @@ export default function QualitativeExitAnalysis() {
       const res = await analyzeWithLLM({
         mode: 'case_diagnostic',
         cases: singlePayload.length > 0 ? singlePayload : casePayloads.slice(0, 1),
+        providerId: selectedProvider,
+        customModel,
+        customBaseUrl,
         language,
         userHasAiAccess: isUserAiAuthorized,
       })
@@ -228,14 +248,18 @@ export default function QualitativeExitAnalysis() {
     setStoredAiKeySource(selectedKeySource)
     if (selectedKeySource === 'custom') {
       setStoredGeminiKey(personalApiKey)
+      setStoredAiProvider(selectedProvider)
+      setStoredCustomModel(customModel)
+      setStoredCustomBaseUrl(customBaseUrl)
     }
+    const preset = AI_PROVIDER_PRESETS[selectedProvider]
     addToast(
       'success',
       t('บันทึกการตั้งค่าแหล่งประมวลผลแล้ว', 'Configuration Saved'),
       selectedKeySource === 'system'
         ? t('เชื่อมต่อระบบประมวลผลผ่านกุญแจส่วนกลางของระบบ (Central System Gateway) เรียบร้อยแล้ว', 'Connected using Central System Gateway.')
         : selectedKeySource === 'custom'
-        ? t('เปิดใช้งาน Google Gemini API Key ส่วนบุคคลสำหรับบัญชีนี้เรียบร้อยแล้ว', 'Personal Google Gemini API Key activated.')
+        ? t(`เปิดใช้งาน ${preset?.name || 'AI'} ส่วนบุคคลเรียบร้อยแล้ว`, `Personal ${preset?.name} activated.`)
         : t('เปิดใช้งานระบบประมวลผลออฟไลน์ภายในเครื่อง (Local Heuristic Engine) เรียบร้อยแล้ว', 'Reverted to internal offline heuristic engine.')
     )
     setShowApiKeyModal(false)
@@ -246,7 +270,10 @@ export default function QualitativeExitAnalysis() {
     try {
       const res = await testAiConnection(
         selectedKeySource === 'custom' ? personalApiKey.trim() : undefined,
-        selectedKeySource
+        selectedKeySource,
+        selectedProvider,
+        customModel,
+        customBaseUrl
       )
       if (res.success) {
         addToast('success', t('เชื่อมต่อสำเร็จ', 'Connection Verified'), res.message)
@@ -1831,7 +1858,7 @@ export default function QualitativeExitAnalysis() {
               </div>
             </div>
 
-            {/* Option 2: Personal Key */}
+            {/* Option 2: Personal Key & Multi-Provider */}
             <div
               onClick={() => setSelectedKeySource('custom')}
               className={`p-4 rounded-2xl border text-left transition-all cursor-pointer flex items-start gap-3.5 relative ${
@@ -1848,53 +1875,144 @@ export default function QualitativeExitAnalysis() {
                 <Key className="h-4 w-4" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-xs font-bold text-slate-900 dark:text-white">
-                  {t('2. กุญแจส่วนบุคคล (Personal Google Gemini API Key)', '2. Personal Google Gemini API Key')}
-                </p>
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-xs font-bold text-slate-900 dark:text-white">
+                    {t('2. กุญแจส่วนบุคคล / เลือกรุ่นและผู้ให้บริการ AI (Personal Multi-Provider AI)', '2. Personal API Key (Multi-Provider: Gemini, OpenAI, Claude, DeepSeek, Ollama)')}
+                  </p>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border border-sky-200/80 dark:border-sky-800 flex items-center gap-1">
+                    <Sparkles className="h-3 w-3" />
+                    {t('ยืดหยุ่นสูง (Flexible)', 'Multi-LLM')}
+                  </span>
+                </div>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
                   {t(
-                    'ใช้กุญแจ API ส่วนบุคคลของคุณจาก Google AI Studio สำหรับการประมวลผลเฉพาะบัญชีของคุณ ข้อมูลกุญแจจะถูกจัดเก็บบนเว็บเบราว์เซอร์เครื่องนี้เท่านั้น',
-                    'Utilize your personal Google AI Studio credential. Key is stored locally in your browser storage and never shared across users.'
+                    'รองรับโมเดลภาษาขั้นสูงหลากหลายค่าย (Google Gemini, OpenAI ChatGPT, Anthropic Claude, DeepSeek หรือ Local Server ผ่าน Ollama) กุญแจจะจัดเก็บบนเบราว์เซอร์เครื่องนี้เท่านั้น',
+                    'Supports leading foundation models (Google Gemini, OpenAI ChatGPT, Anthropic Claude, DeepSeek, or Local Ollama/vLLM). Stored locally in your client browser.'
                   )}
                 </p>
 
-                {/* Input field appears when Option 2 is selected */}
+                {/* Multi-Provider Form when Option 2 is selected */}
                 {selectedKeySource === 'custom' && (
-                  <div className="mt-3.5 pt-3.5 border-t border-slate-200/80 dark:border-slate-700/80 space-y-2.5">
-                    <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
-                      {t('ระบุ Google Gemini API Key ส่วนบุคคล', 'Personal Gemini API Key')} <span className="text-rose-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <input
-                        type={showKeySecret ? 'text' : 'password'}
-                        value={personalApiKey}
-                        onChange={e => setPersonalApiKey(e.target.value)}
-                        placeholder="AIzaSy..."
-                        onClick={e => e.stopPropagation()}
-                        className="w-full pl-3.5 pr-10 py-2.5 text-xs font-mono border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-[#0b0f19] text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
-                      />
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setShowKeySecret(!showKeySecret)
-                        }}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
-                        title={showKeySecret ? t('ซ่อนรหัส', 'Hide Key') : t('แสดงรหัส', 'Show Key')}
-                      >
-                        {showKeySecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </button>
+                  <div className="mt-3.5 pt-3.5 border-t border-slate-200/80 dark:border-slate-700/80 space-y-3.5">
+                    {/* Provider Pills Selector */}
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                        {t('เลือกผู้ให้บริการ AI (AI Provider)', 'Select AI Provider')}
+                      </label>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                        {(Object.keys(AI_PROVIDER_PRESETS) as AIProviderId[]).map((provId) => {
+                          const preset = AI_PROVIDER_PRESETS[provId]
+                          const isSelected = selectedProvider === provId
+                          return (
+                            <button
+                              key={provId}
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setSelectedProvider(provId)
+                                setCustomModel(preset.defaultModel)
+                                if (provId === 'custom') {
+                                  setCustomBaseUrl('http://localhost:11434/v1')
+                                }
+                              }}
+                              className={`px-2.5 py-1.5 rounded-xl text-[11px] font-semibold text-left transition-all border flex items-center justify-between cursor-pointer ${
+                                isSelected
+                                  ? 'bg-sky-500 text-white border-sky-600 shadow-2xs font-bold'
+                                  : 'bg-white dark:bg-[#0b0f19] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-sky-700'
+                              }`}
+                            >
+                              <span className="truncate">{preset.name}</span>
+                              {isSelected && <Check className="h-3 w-3 shrink-0 ml-1" />}
+                            </button>
+                          )
+                        })}
+                      </div>
                     </div>
-                    <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
-                      <span>{t('รูปแบบมาตรฐาน: เริ่มต้นด้วย AIzaSy...', 'Format standard: Starts with AIzaSy...')}</span>
+
+                    {/* API Key Input */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                          {t('ระบุ API Key', 'API Key')} <span className="text-rose-500">*</span>
+                        </label>
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
+                          {AI_PROVIDER_PRESETS[selectedProvider].keyFormatHint}
+                        </span>
+                      </div>
+                      <div className="relative">
+                        <input
+                          type={showKeySecret ? 'text' : 'password'}
+                          value={personalApiKey}
+                          onChange={e => setPersonalApiKey(e.target.value)}
+                          placeholder={AI_PROVIDER_PRESETS[selectedProvider].keyPlaceholder}
+                          onClick={e => e.stopPropagation()}
+                          className="w-full pl-3.5 pr-10 py-2 text-xs font-mono border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-[#0b0f19] text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
+                        />
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setShowKeySecret(!showKeySecret)
+                          }}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                          title={showKeySecret ? t('ซ่อนรหัส', 'Hide Key') : t('แสดงรหัส', 'Show Key')}
+                        >
+                          {showKeySecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Model ID Input & Quick Suggestions */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                          {t('ชื่อรุ่นโมเดล (Model Name / ID)', 'Model Name / ID')}
+                        </label>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500">
+                          {t('ค่าเริ่มต้น:', 'Default:')} <span className="font-mono text-slate-600 dark:text-slate-300">{AI_PROVIDER_PRESETS[selectedProvider].defaultModel}</span>
+                        </span>
+                      </div>
+                      <input
+                        type="text"
+                        value={customModel}
+                        onChange={e => setCustomModel(e.target.value)}
+                        placeholder={AI_PROVIDER_PRESETS[selectedProvider].defaultModel}
+                        onClick={e => e.stopPropagation()}
+                        className="w-full px-3 py-1.5 text-xs font-mono border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-[#0b0f19] text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
+                      />
+                    </div>
+
+                    {/* Custom Base URL (shown when custom provider is active) */}
+                    {selectedProvider === 'custom' && (
+                      <div className="space-y-1.5">
+                        <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                          {t('Base URL (OpenAI-compatible Endpoint)', 'Base URL (OpenAI-compatible Endpoint)')}
+                        </label>
+                        <input
+                          type="text"
+                          value={customBaseUrl}
+                          onChange={e => setCustomBaseUrl(e.target.value)}
+                          placeholder="http://localhost:11434/v1"
+                          onClick={e => e.stopPropagation()}
+                          className="w-full px-3 py-1.5 text-xs font-mono border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-[#0b0f19] text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
+                        />
+                        <p className="text-[10px] text-slate-400 dark:text-slate-500">
+                          {t('รองรับ Ollama, vLLM, LM Studio หรือ Local Proxy', 'Compatible with Ollama, vLLM, LM Studio, or Local Proxy')}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Documentation / Key generation link */}
+                    <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 pt-1">
+                      <span>{t('ผู้ให้บริการปัจจุบัน:', 'Active Provider:')} <strong className="text-slate-700 dark:text-slate-200">{AI_PROVIDER_PRESETS[selectedProvider].name}</strong></span>
                       <a
-                        href="https://aistudio.google.com/app/apikey"
+                        href={AI_PROVIDER_PRESETS[selectedProvider].studioUrl}
                         target="_blank"
                         rel="noreferrer"
                         onClick={e => e.stopPropagation()}
                         className="text-sky-600 dark:text-sky-400 hover:underline font-semibold inline-flex items-center gap-1"
                       >
-                        <span>{t('ขอรับ API Key ได้ที่ Google AI Studio', 'Get API Key at Google AI Studio')}</span>
+                        <span>{t('คู่มือการขอ API Key', 'Get / Manage API Key')}</span>
                         <ExternalLink className="h-3 w-3" />
                       </a>
                     </div>
