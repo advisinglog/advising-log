@@ -43,6 +43,7 @@ import {
   Copy,
   AlertTriangle,
   ArrowRightLeft,
+  X,
 } from 'lucide-react'
 import {
   analyzeWithLLM,
@@ -123,7 +124,15 @@ export default function QualitativeExitAnalysis() {
   const [aiMode, setAiMode] = useState<'strategic' | 'chat'>('strategic')
   const [aiLoading, setAiLoading] = useState(false)
   const [aiResult, setAiResult] = useState<string | null>(null)
-  const [aiProvider, setAiProvider] = useState<string>('Google Gemini 1.5 Flash')
+  const [aiProvider, setAiProvider] = useState<string>(() => {
+    const src = getStoredAiKeySource()
+    if (src === 'system') return 'System Gateway'
+    if (src === 'offline') return 'Local Engine (Offline)'
+    const p = getStoredAiProvider()
+    const m = getStoredCustomModel()
+    const preset = AI_PROVIDER_PRESETS[p]
+    return `${preset?.name || 'AI'} (${m || preset?.defaultModel})`
+  })
   const [aiChatMessages, setAiChatMessages] = useState<Array<{ role: 'user' | 'assistant'; text: string; timestamp: string }>>([])
   const [chatInput, setChatInput] = useState('')
   const [caseAiDiagnostic, setCaseAiDiagnostic] = useState<Record<string, string>>({})
@@ -138,6 +147,7 @@ export default function QualitativeExitAnalysis() {
   const [customBaseUrl, setCustomBaseUrl] = useState(getStoredCustomBaseUrl())
   const [showKeySecret, setShowKeySecret] = useState(false)
   const [testingApiKey, setTestingApiKey] = useState(false)
+  const [testResult, setTestResult] = useState<{ success: boolean; message: string; provider: string; latencyMs?: number } | null>(null)
 
   // 1. Master System Switch
   const isSystemAiEnabled = store.systemApiConfig?.isAiApiEnabled !== false
@@ -253,20 +263,27 @@ export default function QualitativeExitAnalysis() {
       setStoredCustomBaseUrl(customBaseUrl)
     }
     const preset = AI_PROVIDER_PRESETS[selectedProvider]
+    const activeLabel = selectedKeySource === 'system'
+      ? 'System Gateway'
+      : selectedKeySource === 'custom'
+      ? `${preset?.name || 'Custom'} (${customModel || preset?.defaultModel})`
+      : 'Local Engine (Offline)'
+    setAiProvider(activeLabel)
     addToast(
       'success',
       t('บันทึกการตั้งค่าแหล่งประมวลผลแล้ว', 'Configuration Saved'),
       selectedKeySource === 'system'
         ? t('เชื่อมต่อระบบประมวลผลผ่านกุญแจส่วนกลางของระบบ (Central System Gateway) เรียบร้อยแล้ว', 'Connected using Central System Gateway.')
         : selectedKeySource === 'custom'
-        ? t(`เปิดใช้งาน ${preset?.name || 'AI'} ส่วนบุคคลเรียบร้อยแล้ว`, `Personal ${preset?.name} activated.`)
-        : t('เปิดใช้งานระบบประมวลผลออฟไลน์ภายในเครื่อง (Local Heuristic Engine) เรียบร้อยแล้ว', 'Reverted to internal offline heuristic engine.')
+        ? t(`เปิดใช้งาน ${preset?.name || 'AI'} (${customModel || preset?.defaultModel}) เรียบร้อยแล้ว`, `Personal ${preset?.name} activated.`)
+        : t('เปิดใช้งานระบบประมวลผลออฟไลน์ภายในเครื่อง (Local Offline Engine) เรียบร้อยแล้ว', 'Reverted to internal offline engine.')
     )
     setShowApiKeyModal(false)
   }
 
   async function handleTestApiKey() {
     setTestingApiKey(true)
+    setTestResult(null)
     try {
       const res = await testAiConnection(
         selectedKeySource === 'custom' ? personalApiKey.trim() : undefined,
@@ -275,12 +292,18 @@ export default function QualitativeExitAnalysis() {
         customModel,
         customBaseUrl
       )
+      setTestResult(res)
       if (res.success) {
-        addToast('success', t('เชื่อมต่อสำเร็จ', 'Connection Verified'), res.message)
+        addToast('success', t('เชื่อมต่อสำเร็จ', 'Connection Verified'), `${res.message} (${res.latencyMs || 0}ms)`)
       } else {
         addToast('warning', t('ทดสอบไม่สำเร็จ', 'Test Warning'), res.message)
       }
     } catch (err: any) {
+      setTestResult({
+        success: false,
+        message: err?.message || 'Connection failed',
+        provider: 'Error',
+      })
       addToast('error', t('เกิดข้อผิดพลาด', 'Error'), err?.message || 'Connection failed')
     } finally {
       setTestingApiKey(false)
@@ -1798,278 +1821,360 @@ export default function QualitativeExitAnalysis() {
       {/* ============================================================ */}
       {/* Choice Modal: System Key vs Personal Key vs Offline (QA Role) */}
       {/* ============================================================ */}
-      {/* ============================================================ */}
-      {/* Choice Modal: System Key vs Personal Key vs Offline (QA Role) */}
-      {/* ============================================================ */}
       <Modal
         isOpen={showApiKeyModal}
-        onClose={() => setShowApiKeyModal(false)}
+        onClose={() => {
+          setShowApiKeyModal(false)
+          setTestResult(null)
+        }}
+        size="lg"
         title={t('การตั้งค่าโมเดลและช่องทางประมวลผล (Model & Engine Settings)', 'Model & Engine Settings')}
       >
         <div className="space-y-4">
           <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
             {t(
-              'เลือกแหล่งประมวลผลสำหรับงานวิเคราะห์ข้อมูลเชิงคุณภาพและระบบถาม-ตอบตามความต้องการ:',
-              'Select the computation source for qualitative departure analysis and query assistant:'
+              'เลือกช่องทางประมวลผลสำหรับงานวิเคราะห์ข้อมูลเชิงคุณภาพและระบบถาม-ตอบตามความต้องการของคุณ:',
+              'Select your preferred computation engine for qualitative departure analysis and query assistant:'
             )}
           </p>
 
-          {/* 3 Interactive Mode Options */}
-          <div className="space-y-3">
-            {/* Option 1: System Gateway */}
-            <div
-              onClick={() => setSelectedKeySource('system')}
-              className={`p-4 rounded-2xl border text-left transition-all cursor-pointer flex items-start gap-3.5 relative ${
+          {/* Top 3-Way Segmented Control */}
+          <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800">
+            <button
+              type="button"
+              onClick={() => { setSelectedKeySource('system'); setTestResult(null) }}
+              className={`flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 selectedKeySource === 'system'
-                  ? 'border-sky-500 bg-sky-50/50 dark:bg-sky-950/20 ring-1 ring-sky-500/30 shadow-2xs'
-                  : 'border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#0e1424] hover:border-slate-300 dark:hover:border-slate-700'
+                  ? 'bg-white dark:bg-[#0e1424] text-sky-600 dark:text-sky-400 shadow-2xs border border-slate-200/80 dark:border-slate-700'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
               }`}
             >
-              <div className={`h-9 w-9 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
-                selectedKeySource === 'system'
-                  ? 'border border-sky-200 dark:border-sky-800/80 bg-sky-100 dark:bg-sky-900/50 text-sky-600 dark:text-sky-400'
-                  : 'border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800 text-slate-500'
-              }`}>
-                <ShieldCheck className="h-4 w-4" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between gap-2">
-                  <p className="text-xs font-bold text-slate-900 dark:text-white">
-                    {t('1. ระบบส่วนกลาง (System Gateway)', '1. System Gateway (Managed by Admin)')}
-                  </p>
-                  <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700">
-                    {t('ค่าเริ่มต้นระบบ', 'System Default')}
-                  </span>
+              <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+              <span className="truncate">{t('1. ระบบส่วนกลาง', '1. System Gateway')}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => { setSelectedKeySource('custom'); setTestResult(null) }}
+              className={`flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                selectedKeySource === 'custom'
+                  ? 'bg-white dark:bg-[#0e1424] text-sky-600 dark:text-sky-400 shadow-2xs border border-slate-200/80 dark:border-slate-700'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+              }`}
+            >
+              <Key className="h-4 w-4 shrink-0 text-sky-600 dark:text-sky-400" />
+              <span className="truncate">{t('2. คีย์ส่วนบุคคล', '2. Custom Key')}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => { setSelectedKeySource('offline'); setTestResult(null) }}
+              className={`flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                selectedKeySource === 'offline'
+                  ? 'bg-white dark:bg-[#0e1424] text-sky-600 dark:text-sky-400 shadow-2xs border border-slate-200/80 dark:border-slate-700'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+              }`}
+            >
+              <Bot className="h-4 w-4 shrink-0 text-slate-500" />
+              <span className="truncate">{t('3. ออฟไลน์ในเครื่อง', '3. Offline Engine')}</span>
+            </button>
+          </div>
+
+          {/* Mode 1: Central System Gateway */}
+          {selectedKeySource === 'system' && (
+            <div className="p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-[#0e1424] space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="h-9 w-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-100 dark:border-emerald-900/50">
+                    <ShieldCheck className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-slate-900 dark:text-white">
+                      {t('เชื่อมต่อผ่านเกตเวย์ส่วนกลางของสถาบัน (Central System Gateway)', 'Institution Managed Central Gateway')}
+                    </p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      {t('กำหนดค่าและดูแลโดยผู้ดูแลระบบ (Super Admin)', 'Configured & maintained centrally by Administrator')}
+                    </p>
+                  </div>
                 </div>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-                  {t(
-                    'ประมวลผลผ่านเกตเวย์ส่วนกลางที่ผู้ดูแลระบบกำหนดไว้ โดยระบบจะซ่อนคีย์การเข้าถึงเพื่อความปลอดภัยตามมาตรฐาน',
-                    'Processes via institution-managed central gateway. Master credentials remain confidential and protected.'
-                  )}
-                </p>
+                <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800">
+                  {t('พร้อมใช้งาน', 'Active & Ready')}
+                </span>
               </div>
-              <div className="mt-0.5 shrink-0">
-                <div className={`h-4 w-4 rounded-full border flex items-center justify-center transition-colors ${
-                  selectedKeySource === 'system'
-                    ? 'border-sky-500 bg-sky-500 text-white'
-                    : 'border-slate-300 dark:border-slate-600'
-                }`}>
-                  {selectedKeySource === 'system' && <div className="h-1.5 w-1.5 rounded-full bg-white" />}
-                </div>
-              </div>
+              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed pt-2 border-t border-slate-200/60 dark:border-slate-800">
+                {t(
+                  'ระบบจะประมวลผลคำขอผ่านเซิร์ฟเวอร์ส่วนกลางโดยอัตโนมัติ กุญแจการเข้าถึงหลักจะถูกปกป้องและเข้ารหัสตามมาตรฐานความปลอดภัยสารสนเทศ',
+                  'API requests route through the institution gateway. Credentials remain confidential and fully masked on the client.'
+                )}
+              </p>
             </div>
+          )}
 
-            {/* Option 2: Personal Key & Multi-Provider */}
-            <div
-              onClick={() => setSelectedKeySource('custom')}
-              className={`p-4 rounded-2xl border text-left transition-all cursor-pointer flex items-start gap-3.5 relative ${
-                selectedKeySource === 'custom'
-                  ? 'border-sky-500 bg-sky-50/50 dark:bg-sky-950/20 ring-1 ring-sky-500/30 shadow-2xs'
-                  : 'border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#0e1424] hover:border-slate-300 dark:hover:border-slate-700'
-              }`}
-            >
-              <div className={`h-9 w-9 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
-                selectedKeySource === 'custom'
-                  ? 'border border-sky-200 dark:border-sky-800/80 bg-sky-100 dark:bg-sky-900/50 text-sky-600 dark:text-sky-400'
-                  : 'border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800 text-slate-500'
-              }`}>
-                <Key className="h-4 w-4" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between gap-2">
-                  <p className="text-xs font-bold text-slate-900 dark:text-white">
-                    {t('2. คีย์ส่วนบุคคล / เลือกผู้ให้บริการ (Custom API Key & Provider)', '2. Custom API Key & Provider (Gemini, OpenAI, Claude, DeepSeek, Ollama)')}
-                  </p>
-                  <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700">
-                    {t('บันทึกในเครื่องนี้', 'Client Stored')}
-                  </span>
-                </div>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-                  {t(
-                    'เลือกใช้โมเดลภาษาจาก Google Gemini, OpenAI, Claude, DeepSeek หรือเซิร์ฟเวอร์ส่วนตัว (Ollama) โดยคีย์จะจัดเก็บบนเบราว์เซอร์เครื่องนี้เท่านั้น',
-                    'Supports Google Gemini, OpenAI, Claude, DeepSeek, or Local Ollama/vLLM endpoints. Stored locally in your client browser.'
-                  )}
-                </p>
-
-                {/* Multi-Provider Form when Option 2 is selected */}
-                {selectedKeySource === 'custom' && (
-                  <div className="mt-3.5 pt-3.5 border-t border-slate-200/80 dark:border-slate-700/80 space-y-3.5">
-                    {/* Provider Dropdown */}
-                    <div className="space-y-1.5">
-                      <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
-                        {t('ผู้ให้บริการ (Provider)', 'AI Provider')}
-                      </label>
-                      <select
-                        value={selectedProvider}
-                        onChange={(e) => {
-                          const provId = e.target.value as AIProviderId
+          {/* Mode 2: Custom Personal Key & Multi-Provider */}
+          {selectedKeySource === 'custom' && (
+            <div className="p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#0e1424] space-y-4 shadow-2xs">
+              {/* Provider Visual Grid Selector */}
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                  {t('เลือกผู้ให้บริการโมเดล (AI Provider)', 'Select AI Provider')}
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                  {(Object.keys(AI_PROVIDER_PRESETS) as AIProviderId[]).map((provId) => {
+                    const preset = AI_PROVIDER_PRESETS[provId]
+                    const isSelected = selectedProvider === provId
+                    return (
+                      <button
+                        key={provId}
+                        type="button"
+                        onClick={() => {
                           setSelectedProvider(provId)
-                          const preset = AI_PROVIDER_PRESETS[provId]
-                          if (preset) {
-                            setCustomModel(preset.defaultModel)
-                            if (provId === 'custom') {
-                              setCustomBaseUrl('http://localhost:11434/v1')
-                            }
+                          setTestResult(null)
+                          setCustomModel(preset.defaultModel)
+                          if (provId === 'custom') {
+                            setCustomBaseUrl('http://localhost:11434/v1')
                           }
                         }}
-                        onClick={e => e.stopPropagation()}
-                        className="w-full px-3 py-2 text-xs font-medium border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-[#0b0f19] text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs cursor-pointer"
+                        className={`text-left p-3 rounded-xl border transition-all cursor-pointer flex flex-col justify-between gap-1.5 relative ${
+                          isSelected
+                            ? 'bg-sky-50/70 dark:bg-sky-950/40 border-sky-500 ring-1 ring-sky-500 shadow-2xs'
+                            : 'bg-slate-50/60 dark:bg-slate-900/60 border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+                        }`}
                       >
-                        {(Object.keys(AI_PROVIDER_PRESETS) as AIProviderId[]).map((provId) => {
-                          const preset = AI_PROVIDER_PRESETS[provId]
-                          return (
-                            <option key={provId} value={provId} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
-                              {language === 'th' ? preset.labelTh : preset.labelEn} ({preset.defaultModel})
-                            </option>
-                          )
-                        })}
-                      </select>
-                    </div>
-
-                    {/* API Key Input */}
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
-                          {t('API Key', 'API Key')} <span className="text-rose-500">*</span>
-                        </label>
-                        <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
-                          {AI_PROVIDER_PRESETS[selectedProvider].keyFormatHint}
-                        </span>
-                      </div>
-                      <div className="relative">
-                        <input
-                          type={showKeySecret ? 'text' : 'password'}
-                          value={personalApiKey}
-                          onChange={e => setPersonalApiKey(e.target.value)}
-                          placeholder={AI_PROVIDER_PRESETS[selectedProvider].keyPlaceholder}
-                          onClick={e => e.stopPropagation()}
-                          className="w-full pl-3.5 pr-10 py-2 text-xs font-mono border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-[#0b0f19] text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
-                        />
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            setShowKeySecret(!showKeySecret)
-                          }}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
-                          title={showKeySecret ? t('ซ่อนรหัส', 'Hide Key') : t('แสดงรหัส', 'Show Key')}
-                        >
-                          {showKeySecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Model ID Input */}
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                          {t('ชื่อรุ่นโมเดล (Model ID)', 'Model ID')}
-                        </label>
-                        <span className="text-[10px] text-slate-400 dark:text-slate-500">
-                          {t('ค่าเริ่มต้น:', 'Default:')} <span className="font-mono text-slate-600 dark:text-slate-300">{AI_PROVIDER_PRESETS[selectedProvider].defaultModel}</span>
-                        </span>
-                      </div>
-                      <input
-                        type="text"
-                        value={customModel}
-                        onChange={e => setCustomModel(e.target.value)}
-                        placeholder={AI_PROVIDER_PRESETS[selectedProvider].defaultModel}
-                        onClick={e => e.stopPropagation()}
-                        className="w-full px-3 py-1.5 text-xs font-mono border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-[#0b0f19] text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
-                      />
-                    </div>
-
-                    {/* Custom Base URL (shown when custom provider is active) */}
-                    {selectedProvider === 'custom' && (
-                      <div className="space-y-1.5">
-                        <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                          {t('Base URL (OpenAI-compatible Endpoint)', 'Base URL (OpenAI-compatible Endpoint)')}
-                        </label>
-                        <input
-                          type="text"
-                          value={customBaseUrl}
-                          onChange={e => setCustomBaseUrl(e.target.value)}
-                          placeholder="http://localhost:11434/v1"
-                          onClick={e => e.stopPropagation()}
-                          className="w-full px-3 py-1.5 text-xs font-mono border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-[#0b0f19] text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
-                        />
-                        <p className="text-[10px] text-slate-400 dark:text-slate-500">
-                          {t('รองรับ Ollama, vLLM หรือ Local Proxy', 'Compatible with Ollama, vLLM, or Local Proxy')}
+                        <div className="flex items-center justify-between gap-1">
+                          <span className={`text-xs font-bold ${isSelected ? 'text-sky-900 dark:text-sky-200' : 'text-slate-800 dark:text-slate-200'}`}>
+                            {language === 'th' ? preset.labelTh : preset.labelEn}
+                          </span>
+                          <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700 font-mono">
+                            {preset.badge}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight">
+                          {language === 'th' ? preset.taglineTh : preset.taglineEn}
                         </p>
-                      </div>
-                    )}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
 
-                    {/* Documentation / Key generation link */}
-                    <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 pt-1">
-                      <span>{t('ผู้ให้บริการปัจจุบัน:', 'Active Provider:')} <strong className="text-slate-700 dark:text-slate-200">{AI_PROVIDER_PRESETS[selectedProvider].name}</strong></span>
-                      <a
-                        href={AI_PROVIDER_PRESETS[selectedProvider].studioUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        onClick={e => e.stopPropagation()}
-                        className="text-slate-600 dark:text-slate-400 hover:underline font-semibold inline-flex items-center gap-1"
+              {/* API Key Input with Live Format Check & Actions */}
+              <div className="space-y-1.5 pt-1">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                    {t('ระบุ API Key ส่วนบุคคล', 'Personal API Key')} <span className="text-rose-500">*</span>
+                  </label>
+                  {personalApiKey.trim() && (
+                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 flex items-center gap-1">
+                      <Check className="h-3 w-3" />
+                      {t('ระบุคีย์แล้ว', 'Key Entered')}
+                    </span>
+                  )}
+                </div>
+                <div className="relative flex items-center">
+                  <input
+                    type={showKeySecret ? 'text' : 'password'}
+                    value={personalApiKey}
+                    onChange={e => {
+                      setPersonalApiKey(e.target.value)
+                      setTestResult(null)
+                    }}
+                    placeholder={AI_PROVIDER_PRESETS[selectedProvider].keyPlaceholder}
+                    className="w-full pl-3.5 pr-20 py-2 text-xs font-mono border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-[#0b0f19] text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
+                  />
+                  <div className="absolute right-2 flex items-center gap-1.5">
+                    {personalApiKey && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPersonalApiKey('')
+                          setTestResult(null)
+                        }}
+                        className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 cursor-pointer"
+                        title={t('ล้างข้อความ', 'Clear')}
                       >
-                        <span>{t('ขอรับ API Key', 'Get API Key')}</span>
-                        <ExternalLink className="h-3 w-3" />
-                      </a>
-                    </div>
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setShowKeySecret(!showKeySecret)}
+                      className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 cursor-pointer"
+                      title={showKeySecret ? t('ซ่อนรหัส', 'Hide Key') : t('แสดงรหัส', 'Show Key')}
+                    >
+                      {showKeySecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 pt-0.5">
+                  <span className="font-mono text-[10px] text-slate-400">
+                    {AI_PROVIDER_PRESETS[selectedProvider].keyFormatHint}
+                  </span>
+                  <a
+                    href={AI_PROVIDER_PRESETS[selectedProvider].studioUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-sky-600 dark:text-sky-400 hover:underline font-semibold inline-flex items-center gap-1 text-[11px]"
+                  >
+                    <span>{t('ขอรับ API Key ฟรี', 'Get API Key')}</span>
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
+              </div>
+
+              {/* Model ID Input & Quick Clickable Chips */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                    {t('รุ่นโมเดล (Model Name / ID)', 'Model Name / ID')}
+                  </label>
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500">
+                    {t('ค่าเริ่มต้น:', 'Default:')} <span className="font-mono text-slate-600 dark:text-slate-300">{AI_PROVIDER_PRESETS[selectedProvider].defaultModel}</span>
+                  </span>
+                </div>
+                <input
+                  type="text"
+                  value={customModel}
+                  onChange={e => {
+                    setCustomModel(e.target.value)
+                    setTestResult(null)
+                  }}
+                  placeholder={AI_PROVIDER_PRESETS[selectedProvider].defaultModel}
+                  className="w-full px-3 py-1.5 text-xs font-mono border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-[#0b0f19] text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
+                />
+
+                {/* Popular Model Pills */}
+                {AI_PROVIDER_PRESETS[selectedProvider].popularModels?.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                    <span className="text-[10px] text-slate-400">{t('เลือกรุ่นด่วน:', 'Quick models:')}</span>
+                    {AI_PROVIDER_PRESETS[selectedProvider].popularModels.map((m) => {
+                      const isCurrent = (customModel || AI_PROVIDER_PRESETS[selectedProvider].defaultModel) === m
+                      return (
+                        <button
+                          key={m}
+                          type="button"
+                          onClick={() => {
+                            setCustomModel(m)
+                            setTestResult(null)
+                          }}
+                          className={`text-[10px] font-mono px-2 py-0.5 rounded-md border transition-all cursor-pointer ${
+                            isCurrent
+                              ? 'bg-sky-50 dark:bg-sky-950/60 border-sky-400 text-sky-700 dark:text-sky-300 font-bold'
+                              : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                          }`}
+                        >
+                          {m}
+                        </button>
+                      )
+                    })}
                   </div>
                 )}
               </div>
-              <div className="mt-0.5 shrink-0">
-                <div className={`h-4 w-4 rounded-full border flex items-center justify-center transition-colors ${
-                  selectedKeySource === 'custom'
-                    ? 'border-sky-500 bg-sky-500 text-white'
-                    : 'border-slate-300 dark:border-slate-600'
-                }`}>
-                  {selectedKeySource === 'custom' && <div className="h-1.5 w-1.5 rounded-full bg-white" />}
-                </div>
-              </div>
-            </div>
 
-            {/* Option 3: Offline Mode */}
-            <div
-              onClick={() => setSelectedKeySource('offline')}
-              className={`p-4 rounded-2xl border text-left transition-all cursor-pointer flex items-start gap-3.5 relative ${
-                selectedKeySource === 'offline'
-                  ? 'border-sky-500 bg-sky-50/50 dark:bg-sky-950/20 ring-1 ring-sky-500/30 shadow-2xs'
-                  : 'border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#0e1424] hover:border-slate-300 dark:hover:border-slate-700'
-              }`}
-            >
-              <div className={`h-9 w-9 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
-                selectedKeySource === 'offline'
-                  ? 'border border-sky-200 dark:border-sky-800/80 bg-sky-100 dark:bg-sky-900/50 text-sky-600 dark:text-sky-400'
-                  : 'border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800 text-slate-500'
-              }`}>
-                <Bot className="h-4 w-4" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between gap-2">
-                  <p className="text-xs font-bold text-slate-900 dark:text-white">
-                    {t('3. ประมวลผลภายในเครื่อง (Local Offline Engine)', '3. Local Offline Engine')}
-                  </p>
-                  <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700">
-                    {t('ออฟไลน์', 'Offline')}
-                  </span>
+              {/* Custom Base URL & Port Presets (shown when custom provider is active) */}
+              {selectedProvider === 'custom' && (
+                <div className="space-y-1.5 pt-1">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                      {t('Base URL (OpenAI-compatible Endpoint)', 'Base URL (OpenAI-compatible Endpoint)')}
+                    </label>
+                    <div className="flex items-center gap-1 text-[10px]">
+                      <button
+                        type="button"
+                        onClick={() => { setCustomBaseUrl('http://localhost:11434/v1'); setTestResult(null) }}
+                        className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 cursor-pointer font-mono"
+                      >
+                        Ollama :11434
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setCustomBaseUrl('http://localhost:1234/v1'); setTestResult(null) }}
+                        className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 cursor-pointer font-mono"
+                      >
+                        LM Studio :1234
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setCustomBaseUrl('http://localhost:8000/v1'); setTestResult(null) }}
+                        className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 cursor-pointer font-mono"
+                      >
+                        vLLM :8000
+                      </button>
+                    </div>
+                  </div>
+                  <input
+                    type="text"
+                    value={customBaseUrl}
+                    onChange={e => {
+                      setCustomBaseUrl(e.target.value)
+                      setTestResult(null)
+                    }}
+                    placeholder="http://localhost:11434/v1"
+                    className="w-full px-3 py-1.5 text-xs font-mono border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-[#0b0f19] text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
+                  />
                 </div>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-                  {t(
-                    'ประมวลผลด้วยตรรกะสถิติภายในระบบโดยตรง โดยไม่มีการส่งข้อมูลออกนอกเครื่อง',
-                    'Analyzes qualitative patterns locally using built-in statistical logic without external network requests.'
-                  )}
-                </p>
-              </div>
-              <div className="mt-0.5 shrink-0">
-                <div className={`h-4 w-4 rounded-full border flex items-center justify-center transition-colors ${
-                  selectedKeySource === 'offline'
-                    ? 'border-sky-500 bg-sky-500 text-white'
-                    : 'border-slate-300 dark:border-slate-600'
-                }`}>
-                  {selectedKeySource === 'offline' && <div className="h-1.5 w-1.5 rounded-full bg-white" />}
-                </div>
+              )}
+
+              {/* Privacy Guarantee Note */}
+              <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                <span>{t('จัดเก็บบนอุปกรณ์นี้เท่านั้น (Client-Side Storage) ปลอดภัยตามมาตรฐาน PDPA ไม่มีการส่งคีย์ไปเก็บในฐานข้อมูลกลาง', 'API key is stored locally in client browser only with PDPA compliance.')}</span>
               </div>
             </div>
-          </div>
+          )}
+
+          {/* Mode 3: Local Offline Engine */}
+          {selectedKeySource === 'offline' && (
+            <div className="p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-[#0e1424] space-y-2.5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="h-8 w-8 rounded-lg bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 flex items-center justify-center">
+                    <Bot className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-slate-900 dark:text-white">
+                      {t('ประมวลผลภายในเครื่องแบบออฟไลน์ (Local Engine)', 'Local Offline Intelligence Engine')}
+                    </p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      {t('ไม่ต้องใช้อินเทอร์เน็ต • ปลอดภัยสูงสุด', 'Zero External Network Transfer • High Privacy')}
+                    </p>
+                  </div>
+                </div>
+                <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border border-sky-200/80 dark:border-sky-800">
+                  {t('ออฟไลน์ 100%', '100% Offline')}
+                </span>
+              </div>
+              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed pt-1 border-t border-slate-200/60 dark:border-slate-800">
+                {t(
+                  'สังเคราะห์รูปแบบคำร้องและสร้างข้อเสนอแนะด้วยขั้นตอนวิธีเชิงสถิติและตรรกะภายในระบบ เหมาะสำหรับการใช้งานในสภาวะที่ไม่ต้องการส่งข้อมูลออกนอกเครื่อง',
+                  'Evaluates departure patterns locally using built-in statistical logic. Ideal for offline or strictly isolated environments.'
+                )}
+              </p>
+            </div>
+          )}
+
+          {/* Rich Inline Test Result Banner */}
+          {testResult && (
+            <div className={`p-3 rounded-xl border text-xs flex items-center justify-between gap-2 animate-in fade-in duration-200 ${
+              testResult.success
+                ? 'bg-emerald-50/90 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200'
+                : 'bg-rose-50/90 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-200'
+            }`}>
+              <div className="flex items-center gap-2 min-w-0">
+                {testResult.success ? (
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                ) : (
+                  <AlertTriangle className="h-4 w-4 text-rose-600 dark:text-rose-400 shrink-0" />
+                )}
+                <div className="truncate">
+                  <p className="font-bold truncate">{testResult.message}</p>
+                  <p className="text-[10px] opacity-80">{testResult.provider}</p>
+                </div>
+              </div>
+              {testResult.latencyMs !== undefined && (
+                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-white dark:bg-slate-900 border shrink-0">
+                  ⚡ {testResult.latencyMs}ms
+                </span>
+              )}
+            </div>
+          )}
 
           {/* Modal Footer Controls */}
           <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800 gap-2">
@@ -2084,7 +2189,7 @@ export default function QualitativeExitAnalysis() {
               {testingApiKey ? (
                 <>
                   <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
-                  {t('กำลังทดสอบการเชื่อมต่อ...', 'Testing Connection...')}
+                  {t('กำลังทดสอบ...', 'Testing...')}
                 </>
               ) : (
                 <>
@@ -2098,7 +2203,7 @@ export default function QualitativeExitAnalysis() {
               <Button type="button" variant="secondary" size="sm" onClick={() => setShowApiKeyModal(false)} className="cursor-pointer">
                 {t('ยกเลิก', 'Cancel')}
               </Button>
-              <Button type="button" variant="primary" size="sm" onClick={handleSaveKeyConfiguration} className="font-bold cursor-pointer shadow-xs">
+              <Button type="button" variant="primary" size="sm" onClick={handleSaveKeyConfiguration} className="font-bold cursor-pointer shadow-2xs">
                 <Check className="h-3.5 w-3.5 mr-1" />
                 {t('บันทึกการตั้งค่า', 'Save Configuration')}
               </Button>

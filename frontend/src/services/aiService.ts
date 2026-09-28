@@ -23,9 +23,14 @@ export interface AIProviderPreset {
   name: string
   labelTh: string
   labelEn: string
+  taglineTh: string
+  taglineEn: string
+  badge: string
   defaultModel: string
+  popularModels: string[]
   keyPlaceholder: string
   keyFormatHint: string
+  keyPrefix?: string
   studioUrl: string
   baseUrl: string
 }
@@ -36,20 +41,30 @@ export const AI_PROVIDER_PRESETS: Record<AIProviderId, AIProviderPreset> = {
     name: 'Google Gemini',
     labelTh: 'Google Gemini',
     labelEn: 'Google Gemini',
+    taglineTh: 'ประมวลผลรวดเร็ว มีโควตาฟรีจาก Google AI Studio',
+    taglineEn: 'Fast & responsive with Google AI Studio free tier',
+    badge: 'Google AI',
     defaultModel: 'gemini-1.5-flash',
+    popularModels: ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-2.0-flash'],
     keyPlaceholder: 'AIzaSy...',
     keyFormatHint: 'ขึ้นต้นด้วย AIzaSy... (Google AI Studio)',
+    keyPrefix: 'AIzaSy',
     studioUrl: 'https://aistudio.google.com/app/apikey',
     baseUrl: 'https://generativelanguage.googleapis.com',
   },
   openai: {
     id: 'openai',
-    name: 'OpenAI (ChatGPT)',
-    labelTh: 'OpenAI (GPT-4o / ChatGPT)',
-    labelEn: 'OpenAI (GPT-4o / ChatGPT)',
+    name: 'OpenAI (GPT-4o)',
+    labelTh: 'OpenAI (ChatGPT / GPT-4o)',
+    labelEn: 'OpenAI (ChatGPT / GPT-4o)',
+    taglineTh: 'มาตรฐานสากล คุณภาพการวิเคราะห์และความแม่นยำสูง',
+    taglineEn: 'Industry standard with high diagnostic accuracy',
+    badge: 'OpenAI',
     defaultModel: 'gpt-4o-mini',
+    popularModels: ['gpt-4o-mini', 'gpt-4o', 'gpt-3.5-turbo'],
     keyPlaceholder: 'sk-proj-... / sk-...',
     keyFormatHint: 'ขึ้นต้นด้วย sk-... (OpenAI Platform)',
+    keyPrefix: 'sk-',
     studioUrl: 'https://platform.openai.com/api-keys',
     baseUrl: 'https://api.openai.com/v1',
   },
@@ -58,9 +73,14 @@ export const AI_PROVIDER_PRESETS: Record<AIProviderId, AIProviderPreset> = {
     name: 'Anthropic Claude',
     labelTh: 'Anthropic Claude',
     labelEn: 'Anthropic Claude',
+    taglineTh: 'โดดเด่นด้านภาษา ความเข้าใจบริบท และการเขียนเชิงวิชาการ',
+    taglineEn: 'Exceptional qualitative reasoning & academic writing',
+    badge: 'Anthropic',
     defaultModel: 'claude-3-5-sonnet-20241022',
+    popularModels: ['claude-3-5-sonnet-20241022', 'claude-3-5-haiku-20241022'],
     keyPlaceholder: 'sk-ant-api03-...',
     keyFormatHint: 'ขึ้นต้นด้วย sk-ant-... (Anthropic Console)',
+    keyPrefix: 'sk-ant',
     studioUrl: 'https://console.anthropic.com/settings/keys',
     baseUrl: 'https://api.anthropic.com/v1',
   },
@@ -69,18 +89,27 @@ export const AI_PROVIDER_PRESETS: Record<AIProviderId, AIProviderPreset> = {
     name: 'DeepSeek AI',
     labelTh: 'DeepSeek AI (V3 / R1)',
     labelEn: 'DeepSeek AI (V3 / R1)',
+    taglineTh: 'ประสิทธิภาพการคิดวิเคราะห์เชิงลึกสูง คุ้มค่า',
+    taglineEn: 'High deep-reasoning efficiency & affordability',
+    badge: 'DeepSeek',
     defaultModel: 'deepseek-chat',
+    popularModels: ['deepseek-chat', 'deepseek-reasoner'],
     keyPlaceholder: 'sk-...',
-    keyFormatHint: 'ขึ้นต้นด้วย sk-... (DeepSeek Open Platform)',
+    keyFormatHint: 'ขึ้นต้นด้วย sk-... (DeepSeek Platform)',
+    keyPrefix: 'sk-',
     studioUrl: 'https://platform.deepseek.com/api_keys',
     baseUrl: 'https://api.deepseek.com/v1',
   },
   custom: {
     id: 'custom',
-    name: 'Custom / Local LLM (Ollama)',
+    name: 'Local LLM / Ollama',
     labelTh: 'Custom API / Local LLM (Ollama / vLLM)',
     labelEn: 'Custom API / Local LLM (Ollama / vLLM)',
+    taglineTh: 'ประมวลผลบนเครื่องส่วนตัว หรือ Private On-Premise',
+    taglineEn: 'Run locally via Ollama / vLLM with zero cloud leakage',
+    badge: 'Self-Hosted',
     defaultModel: 'llama3.2',
+    popularModels: ['llama3.2', 'qwen2.5', 'mistral', 'deepseek-r1:8b'],
     keyPlaceholder: 'sk-... หรือ ollama',
     keyFormatHint: 'OpenAI-Compatible Endpoint',
     studioUrl: 'https://ollama.com',
@@ -199,13 +228,14 @@ export async function testAiConnection(
   provider?: AIProviderId,
   model?: string,
   baseUrl?: string
-): Promise<{ success: boolean; message: string; provider: string }> {
+): Promise<{ success: boolean; message: string; provider: string; latencyMs?: number }> {
   const effectiveSource = source || getStoredAiKeySource()
   if (effectiveSource === 'offline') {
     return {
       success: true,
-      message: 'Offline Heuristic Engine Operational',
-      provider: 'AdvisingLog Heuristic Engine',
+      message: 'Local Offline Engine Ready',
+      provider: 'Local Engine (Offline)',
+      latencyMs: 12,
     }
   }
 
@@ -214,6 +244,7 @@ export async function testAiConnection(
     : undefined
 
   const effectiveProvider = provider || getStoredAiProvider()
+  const startTime = performance.now()
 
   try {
     const res = await analyzeWithLLM({
@@ -227,26 +258,31 @@ export async function testAiConnection(
       language: 'en',
       userHasAiAccess: true,
     })
+    const latencyMs = Math.round(performance.now() - startTime)
     if (res.success) {
       return {
         success: true,
         message: effectiveSource === 'system'
-          ? 'System Central Key Connection Verified'
-          : (key ? `${res.provider} Connection Verified` : 'Engine Operational'),
+          ? 'System Gateway Connected'
+          : (key ? `${res.provider} Connected` : 'Engine Operational'),
         provider: res.provider,
+        latencyMs,
       }
     } else {
       return {
         success: false,
         message: res.analysis || 'Connection failed',
         provider: res.provider,
+        latencyMs,
       }
     }
   } catch (err: any) {
+    const latencyMs = Math.round(performance.now() - startTime)
     return {
       success: false,
       message: err?.message || 'Connection error',
       provider: 'Error',
+      latencyMs,
     }
   }
 }
