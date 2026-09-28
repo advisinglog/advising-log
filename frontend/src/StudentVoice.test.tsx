@@ -237,7 +237,7 @@ describe('Student Voice Feature', () => {
   })
 
 
-  it('does not expose API Key configuration modal or button in QA view', () => {
+  it('allows QA role to configure personal Google Gemini API Key in qualitative view', async () => {
     mockUser = qaUser
     renderWithProviders(<QADashboard />)
 
@@ -246,8 +246,15 @@ describe('Student Voice Feature', () => {
       fireEvent.click(qualitativeTabBtn)
     })
 
-    expect(screen.queryByRole('button', { name: /API Key/i })).not.toBeInTheDocument()
-    expect(screen.queryByText(/ตั้งค่า Google Gemini API Key/i)).not.toBeInTheDocument()
+    const apiKeyBtn = screen.getByRole('button', { name: /ตั้งค่า Google Gemini API Key/i })
+    expect(apiKeyBtn).toBeInTheDocument()
+
+    act(() => {
+      fireEvent.click(apiKeyBtn)
+    })
+
+    expect(screen.getByText(/ตั้งค่า Google Gemini API Key ส่วนตัว/i)).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('AIzaSy...')).toBeInTheDocument()
   })
 
   it('enforces mandatory Student Voice survey in RequestAdvising when category is withdrawal_leave', async () => {
