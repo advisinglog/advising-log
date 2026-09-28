@@ -241,7 +241,7 @@ export default function RequestAdvising() {
     // 2. If withdrawal/leave/transfer, also record ExitCase
     if (category === 'withdrawal_leave') {
       const newExitCase = store.addExitCase({
-        studentId: currentUser!.id,
+        studentId: effectiveStudentId,
         advisorId: advisor.id,
         exitType,
         reasonCode: exitReasonCode,
@@ -252,7 +252,7 @@ export default function RequestAdvising() {
       })
 
       store.addAuditLog({
-        userId: currentUser!.id,
+        userId: effectiveStudentId,
         userName: currentUser!.name,
         userRole: 'student',
         action: 'exit_case_created',
