@@ -657,8 +657,14 @@ export default function QualitativeExitAnalysis() {
               size="sm"
               variant="secondary"
               onClick={() => {
-                setSelectedKeySource(getStoredAiKeySource())
+                const src = getStoredAiKeySource()
+                const prov = getStoredAiProvider()
+                setSelectedKeySource(src)
+                setSelectedProvider(prov)
                 setPersonalApiKey(getStoredGeminiKey())
+                setCustomModel(getStoredCustomModel() || AI_PROVIDER_PRESETS[prov].defaultModel)
+                setCustomBaseUrl(getStoredCustomBaseUrl())
+                setTestResult(null)
                 setShowApiKeyModal(true)
               }}
               className="cursor-pointer border-slate-200/80 dark:border-slate-800 text-xs font-semibold"
@@ -2042,28 +2048,58 @@ export default function QualitativeExitAnalysis() {
 
                 {/* Popular Model Pills */}
                 {AI_PROVIDER_PRESETS[selectedProvider].popularModels?.length > 0 && (
-                  <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                    <span className="text-[10px] text-slate-400">{t('เลือกรุ่นด่วน:', 'Quick models:')}</span>
-                    {AI_PROVIDER_PRESETS[selectedProvider].popularModels.map((m) => {
-                      const isCurrent = (customModel || AI_PROVIDER_PRESETS[selectedProvider].defaultModel) === m
-                      return (
-                        <button
-                          key={m}
-                          type="button"
-                          onClick={() => {
-                            setCustomModel(m)
-                            setTestResult(null)
-                          }}
-                          className={`text-[10px] font-mono px-2 py-0.5 rounded-md border transition-all cursor-pointer ${
-                            isCurrent
-                              ? 'bg-sky-50 dark:bg-sky-950/60 border-sky-400 text-sky-700 dark:text-sky-300 font-bold'
-                              : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300'
-                          }`}
-                        >
-                          {m}
-                        </button>
-                      )
-                    })}
+                  <div className="space-y-1.5 pt-1">
+                    <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
+                      <span className="font-semibold flex items-center gap-1">
+                        <Sparkles className="h-3 w-3 text-sky-600 dark:text-sky-400" />
+                        {t('เลือกรุ่นด่วน (คลิกเพื่อเปลี่ยนทันที):', 'Quick models (click to auto-fill):')}
+                      </span>
+                      <span className="text-[10px] text-slate-400">
+                        {t('คลิกแล้วระบบจะกรอก Model ID ให้อัตโนมัติ', 'Clicking auto-fills Model ID')}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {AI_PROVIDER_PRESETS[selectedProvider].popularModels.map((m) => {
+                        const isCurrent = (customModel || AI_PROVIDER_PRESETS[selectedProvider].defaultModel) === m
+                        const chipBadge = m.includes('flash') || m.includes('mini') || m.includes('haiku')
+                          ? t('⚡ เร็ว', '⚡ Fast')
+                          : m.includes('pro') || m.includes('sonnet') || m.includes('reasoner') || m.includes('r1')
+                          ? t('🧠 ลึก', '🧠 Deep')
+                          : m === 'gpt-4o'
+                          ? t('⭐ เรือธง', '⭐ Flagship')
+                          : m.includes('qwen')
+                          ? t('🌐 หลายภาษา', '🌐 Multi')
+                          : null
+
+                        return (
+                          <button
+                            key={m}
+                            type="button"
+                            onClick={() => {
+                              setCustomModel(m)
+                              setTestResult(null)
+                            }}
+                            className={`text-xs font-mono px-2.5 py-1 rounded-lg border transition-all cursor-pointer flex items-center gap-1.5 ${
+                              isCurrent
+                                ? 'bg-sky-50 dark:bg-sky-950/60 border-sky-500 text-sky-700 dark:text-sky-300 font-bold ring-1 ring-sky-500 shadow-2xs'
+                                : 'bg-slate-50/80 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-slate-300 hover:bg-white dark:hover:bg-slate-800'
+                            }`}
+                          >
+                            {isCurrent && <Check className="h-3 w-3 text-sky-600 dark:text-sky-400" />}
+                            <span>{m}</span>
+                            {chipBadge && (
+                              <span className={`text-[9px] px-1 py-0.2 rounded font-sans font-medium ${
+                                isCurrent
+                                  ? 'bg-sky-200/60 dark:bg-sky-900/60 text-sky-800 dark:text-sky-200'
+                                  : 'bg-slate-200/70 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
+                              }`}>
+                                {chipBadge}
+                              </span>
+                            )}
+                          </button>
+                        )
+                      })}
+                    </div>
                   </div>
                 )}
               </div>
