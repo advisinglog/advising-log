@@ -22,7 +22,6 @@ import {
   Clock,
   AlertTriangle,
   ChevronDown,
-  Info,
   Check,
   GraduationCap,
   Coins,
@@ -34,7 +33,6 @@ import {
   Tag,
   ArrowRight,
   ArrowLeft,
-  FileText,
   Sparkles,
   Edit3,
 } from 'lucide-react'
@@ -67,9 +65,6 @@ export default function RequestAdvising() {
   const [showCalendarModal, setShowCalendarModal] = useState(false)
   const [calendarTab, setCalendarTab] = useState<'google' | 'system'>('google')
   const [selectedAdvisorId, setSelectedAdvisorId] = useState<string>('')
-  const [showAdvisorDropdown, setShowAdvisorDropdown] = useState(false)
-  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false)
-  const [showSubCategoryDropdown, setShowSubCategoryDropdown] = useState(false)
   const [showExitReasonDropdown, setShowExitReasonDropdown] = useState(false)
 
   function getCategoryIcon(cat: AdvisingCategory | '') {
@@ -694,12 +689,11 @@ export default function RequestAdvising() {
               </Button>
               <div className="flex items-center gap-2">
                 <Button
-                  type="submit"
+                  type="button"
                   variant="primary"
                   disabled={category === 'withdrawal_leave' && !hasVoiceResponse}
-                  onClick={(e) => {
+                  onClick={() => {
                     if (validateStep1()) {
-                      e.preventDefault()
                       setCurrentStep(2)
                       window.scrollTo({ top: 0, behavior: 'smooth' })
                     }
