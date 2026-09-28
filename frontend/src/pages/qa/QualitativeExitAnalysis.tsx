@@ -48,9 +48,11 @@ import {
   analyzeWithLLM,
   getStoredGeminiKey,
   setStoredGeminiKey,
-  clearStoredGeminiKey,
+  getStoredAiKeySource,
+  setStoredAiKeySource,
   testAiConnection,
   type AIAnalysisPayloadCase,
+  type AiKeySource,
 } from '@/services/aiService'
 import { exportQualitativeExcelReport } from '@/utils/exportUtils'
 import {
@@ -121,10 +123,10 @@ export default function QualitativeExitAnalysis() {
 
   // Personal Gemini API Key states (QA Role capability)
   const [showApiKeyModal, setShowApiKeyModal] = useState(false)
+  const [selectedKeySource, setSelectedKeySource] = useState<AiKeySource>(getStoredAiKeySource())
   const [personalApiKey, setPersonalApiKey] = useState(getStoredGeminiKey())
   const [showKeySecret, setShowKeySecret] = useState(false)
   const [testingApiKey, setTestingApiKey] = useState(false)
-  const [isKeySaved, setIsKeySaved] = useState(Boolean(getStoredGeminiKey()))
 
   // 1. Master System Switch
   const isSystemAiEnabled = store.systemApiConfig?.isAiApiEnabled !== false
@@ -222,15 +224,19 @@ export default function QualitativeExitAnalysis() {
     }
   }
 
-  function handleSavePersonalApiKey() {
-    setStoredGeminiKey(personalApiKey)
-    setIsKeySaved(Boolean(personalApiKey.trim()))
+  function handleSaveKeyConfiguration() {
+    setStoredAiKeySource(selectedKeySource)
+    if (selectedKeySource === 'custom') {
+      setStoredGeminiKey(personalApiKey)
+    }
     addToast(
       'success',
-      t('บันทึก API Key แล้ว', 'API Key Saved'),
-      personalApiKey.trim()
-        ? t('เปิดใช้งาน Google Gemini API Key ส่วนตัวสำหรับการวิเคราะห์แล้ว', 'Your personal Gemini API Key is now active for AI analyses.')
-        : t('ล้าง API Key แล้ว ระบบจะใช้โหมดมาตรฐาน', 'Cleared personal key. System will use default AI engine.')
+      t('บันทึกการตั้งค่าแล้ว', 'Configuration Saved'),
+      selectedKeySource === 'system'
+        ? t('เลือกใช้ Google Gemini ผ่านกุญแจกลางของระบบ (Super Admin)', 'Connected using System Central Key.')
+        : selectedKeySource === 'custom'
+        ? t('เปิดใช้งาน Google Gemini API Key ส่วนตัวเรียบร้อยแล้ว', 'Personal API Key active.')
+        : t('เลือกโหมดประมวลผลภายใน (Offline Heuristic Engine)', 'Reverted to internal offline engine.')
     )
     setShowApiKeyModal(false)
   }
@@ -238,9 +244,12 @@ export default function QualitativeExitAnalysis() {
   async function handleTestApiKey() {
     setTestingApiKey(true)
     try {
-      const res = await testAiConnection(personalApiKey.trim())
+      const res = await testAiConnection(
+        selectedKeySource === 'custom' ? personalApiKey.trim() : undefined,
+        selectedKeySource
+      )
       if (res.success) {
-        addToast('success', t('เชื่อมต่อ API สำเร็จ', 'Connection Successful'), t('สามารถเชื่อมต่อ Google Gemini API ได้สมบูรณ์', 'Successfully connected to Google Gemini API.'))
+        addToast('success', t('เชื่อมต่อสำเร็จ', 'Connection Verified'), res.message)
       } else {
         addToast('warning', t('ทดสอบไม่สำเร็จ', 'Test Warning'), res.message)
       }
@@ -249,13 +258,6 @@ export default function QualitativeExitAnalysis() {
     } finally {
       setTestingApiKey(false)
     }
-  }
-
-  function handleClearApiKey() {
-    clearStoredGeminiKey()
-    setPersonalApiKey('')
-    setIsKeySaved(false)
-    addToast('info', t('ล้าง API Key แล้ว', 'API Key Cleared'), t('ระบบจะกลับไปใช้การประมวลผลเริ่มต้น', 'System reverted to default AI engine.'))
   }
 
 
@@ -606,6 +608,7 @@ export default function QualitativeExitAnalysis() {
               size="sm"
               variant="secondary"
               onClick={() => {
+                setSelectedKeySource(getStoredAiKeySource())
                 setPersonalApiKey(getStoredGeminiKey())
                 setShowApiKeyModal(true)
               }}
@@ -613,11 +616,13 @@ export default function QualitativeExitAnalysis() {
             >
               <Key className="h-3.5 w-3.5 mr-1.5 text-amber-500" />
               <span>{t('ตั้งค่า Google Gemini API Key', 'Configure Gemini API Key')}</span>
-              {isKeySaved && (
-                <span className="ml-1.5 px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                  {t('ใช้งานอยู่', 'Active')}
-                </span>
-              )}
+              <span className="ml-1.5 px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                {getStoredAiKeySource() === 'custom'
+                  ? t('คีย์ส่วนตัว', 'Custom Key')
+                  : getStoredAiKeySource() === 'system'
+                  ? t('กุญแจกลาง (Admin)', 'System Key')
+                  : t('ออฟไลน์', 'Offline')}
+              </span>
             </Button>
 
             <Button
@@ -1767,84 +1772,160 @@ export default function QualitativeExitAnalysis() {
       )}
 
       {/* ============================================================ */}
-      {/* Personal Gemini API Key Modal (QA Role) */}
+      {/* Choice Modal: System Key vs Personal Key vs Offline (QA Role) */}
       {/* ============================================================ */}
       <Modal
         isOpen={showApiKeyModal}
         onClose={() => setShowApiKeyModal(false)}
-        title={t('ตั้งค่า Google Gemini API Key ส่วนตัว (QA Role)', 'Personal Google Gemini API Key (QA Role)')}
+        title={t('ตั้งค่าแหล่งเชื่อมต่อ Google Gemini API Key (QA Role)', 'Configure Google Gemini API Key Source (QA Role)')}
       >
         <div className="space-y-4">
-          <div className="p-3.5 bg-sky-50/70 dark:bg-sky-950/40 border border-sky-100 dark:border-sky-900/40 rounded-xl text-xs text-sky-900 dark:text-sky-200 space-y-1.5">
-            <p className="font-bold flex items-center gap-1.5">
-              <Sparkles className="h-4 w-4 text-sky-600 dark:text-sky-400" />
-              <span>{t('การใช้ API Key ส่วนตัวสำหรับผู้รับผิดชอบงานประกันคุณภาพ (QA)', 'Personal API Key for QA Coordinator / Program Chair')}</span>
-            </p>
-            <p className="leading-relaxed text-slate-600 dark:text-slate-300">
-              {t(
-                'คุณสามารถระบุ Google Gemini API Key ส่วนตัวเพื่อใช้ในการประมวลผลการวิเคราะห์เชิงคุณภาพ (Qualitative Exit Analysis) และการถาม-ตอบ AI กุญแจจะถูกบันทึกไว้ในเบราว์เซอร์ของคุณอย่างปลอดภัย',
-                'You can configure your personal Google Gemini API Key to power deep qualitative synthesis and interactive chat. Your key is stored securely in your local browser storage.'
-              )}
-            </p>
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">
-              {t('Google Gemini API Key', 'Google Gemini API Key')}
-            </label>
-            <div className="relative">
-              <input
-                type={showKeySecret ? 'text' : 'password'}
-                value={personalApiKey}
-                onChange={e => setPersonalApiKey(e.target.value)}
-                placeholder="AIzaSy..."
-                className="w-full pl-3.5 pr-10 py-2.5 text-xs font-mono border border-slate-200/90 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-xs"
-              />
-              <button
-                type="button"
-                onClick={() => setShowKeySecret(!showKeySecret)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
-              >
-                {showKeySecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
-            </div>
-            <div className="flex items-center justify-between mt-1.5 text-[11px] text-slate-500 dark:text-slate-400">
-              <span>{t('รูปแบบ: เริ่มต้นด้วย AIzaSy...', 'Format: Starts with AIzaSy...')}</span>
-              <a
-                href="https://aistudio.google.com/app/apikey"
-                target="_blank"
-                rel="noreferrer"
-                className="text-sky-600 dark:text-sky-400 hover:underline font-semibold inline-flex items-center gap-1"
-              >
-                <span>{t('รับ API Key ฟรีที่ Google AI Studio', 'Get free key at Google AI Studio')}</span>
-                <ExternalLink className="h-3 w-3" />
-              </a>
-            </div>
-          </div>
-
-          <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-800 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className={`h-2.5 w-2.5 rounded-full ${isKeySaved ? 'bg-emerald-500' : 'bg-slate-400'}`} />
-              <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                {isKeySaved
-                  ? t('สถานะ: เปิดใช้งานกุญแจส่วนตัวแล้ว', 'Status: Personal Key Active')
-                  : t('สถานะ: ใช้งานระบบวิเคราะห์มาตรฐาน (Default Engine)', 'Status: Default System Engine Active')}
-              </span>
-            </div>
-            {isKeySaved && (
-              <Button size="sm" variant="ghost" onClick={handleClearApiKey} className="text-xs text-rose-600 hover:text-rose-700 py-1 px-2 h-auto">
-                {t('ล้างกุญแจ', 'Clear Key')}
-              </Button>
+          <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+            {t(
+              'เลือกแหล่งกุญแจ API สำหรับการประมวลผลการวิเคราะห์เชิงคุณภาพ (AUN-QA) และการถาม-ตอบ AI ตามความต้องการของคุณ:',
+              'Choose your preferred Google Gemini connection source for qualitative analysis and AI assistant:'
             )}
+          </p>
+
+          {/* 3 Interactive Mode Options */}
+          <div className="space-y-2.5">
+            {/* Option 1: System Key (Hidden) */}
+            <div
+              onClick={() => setSelectedKeySource('system')}
+              className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex items-start gap-3 ${
+                selectedKeySource === 'system'
+                  ? 'border-sky-500 bg-sky-50/70 dark:bg-sky-950/40 ring-2 ring-sky-500/20 shadow-xs'
+                  : 'border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300'
+              }`}
+            >
+              <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${
+                selectedKeySource === 'system' ? 'bg-sky-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
+              }`}>
+                <ShieldCheck className="h-4 w-4" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                    {t('1. ใช้กุญแจส่วนกลางของระบบ (Super Admin)', '1. Use System Shared Key (Super Admin)')}
+                  </p>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800">
+                    {t('ซ่อนรหัสความปลอดภัย', 'Security Masked')}
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                  {t(
+                    'เชื่อมต่อ Google Gemini ผ่านกุญแจกลางที่ Super Admin ตั้งค่าไว้ในระบบโดยอัตโนมัติ (ไม่เปิดเผยตัวคีย์ เพื่อความปลอดภัยสูงสุด)',
+                    'Connects securely via institution central credentials configured by Super Admin. Key value remains strictly confidential.'
+                  )}
+                </p>
+              </div>
+            </div>
+
+            {/* Option 2: Personal Key */}
+            <div
+              onClick={() => setSelectedKeySource('custom')}
+              className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex items-start gap-3 ${
+                selectedKeySource === 'custom'
+                  ? 'border-sky-500 bg-sky-50/70 dark:bg-sky-950/40 ring-2 ring-sky-500/20 shadow-xs'
+                  : 'border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300'
+              }`}
+            >
+              <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${
+                selectedKeySource === 'custom' ? 'bg-amber-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
+              }`}>
+                <Key className="h-4 w-4" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                  {t('2. ใช้ API Key ส่วนตัวของฉัน (My Personal Key)', '2. Use My Personal Key')}
+                </p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                  {t(
+                    'ระบุ Google Gemini API Key ของคุณเองจาก Google AI Studio (บันทึกเฉพาะในเบราว์เซอร์ของคุณเท่านั้น)',
+                    'Provide your personal Google AI Studio API key. Saved securely only on this local browser.'
+                  )}
+                </p>
+
+                {/* Input field appears when Option 2 is selected */}
+                {selectedKeySource === 'custom' && (
+                  <div className="mt-3 pt-3 border-t border-slate-200/80 dark:border-slate-700/80 space-y-2">
+                    <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                      {t('ระบุ Gemini API Key ส่วนตัว', 'Enter Personal Gemini Key')} <span className="text-rose-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showKeySecret ? 'text' : 'password'}
+                        value={personalApiKey}
+                        onChange={e => setPersonalApiKey(e.target.value)}
+                        placeholder="AIzaSy..."
+                        onClick={e => e.stopPropagation()}
+                        className="w-full pl-3.5 pr-10 py-2 text-xs font-mono border border-slate-200/90 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
+                      />
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setShowKeySecret(!showKeySecret)
+                        }}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                      >
+                        {showKeySecret ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                      </button>
+                    </div>
+                    <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
+                      <span>{t('เริ่มต้นด้วย AIzaSy...', 'Starts with AIzaSy...')}</span>
+                      <a
+                        href="https://aistudio.google.com/app/apikey"
+                        target="_blank"
+                        rel="noreferrer"
+                        onClick={e => e.stopPropagation()}
+                        className="text-sky-600 dark:text-sky-400 hover:underline font-semibold inline-flex items-center gap-1"
+                      >
+                        <span>{t('รับ API Key ฟรีที่ Google AI Studio', 'Get free key at Google AI Studio')}</span>
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Option 3: Offline Heuristic Engine */}
+            <div
+              onClick={() => setSelectedKeySource('offline')}
+              className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex items-start gap-3 ${
+                selectedKeySource === 'offline'
+                  ? 'border-sky-500 bg-sky-50/70 dark:bg-sky-950/40 ring-2 ring-sky-500/20 shadow-xs'
+                  : 'border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300'
+              }`}
+            >
+              <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${
+                selectedKeySource === 'offline' ? 'bg-slate-700 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
+              }`}>
+                <Bot className="h-4 w-4" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                  {t('3. ไม่ใช้งาน AI / โหมดจำลองภายใน (Offline Heuristic Engine)', '3. Offline / Internal Heuristic Engine')}
+                </p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                  {t(
+                    'ประมวลผลสังเคราะห์ข้อมูลเชิงคุณภาพด้วยกฎและสถิติภายในเครื่อง โดยไม่ส่งข้อมูลหรือเรียกใช้ Cloud API ภายนอก',
+                    'Synthesizes qualitative data locally using rule-based diagnostic algorithms without sending any data to external Cloud APIs.'
+                  )}
+                </p>
+              </div>
+            </div>
           </div>
 
-          <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800 gap-2">
+          {/* Modal Footer Controls */}
+          <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800 gap-2">
             <Button
               type="button"
               variant="secondary"
               size="sm"
               onClick={handleTestApiKey}
-              disabled={testingApiKey || !personalApiKey.trim()}
+              disabled={testingApiKey || (selectedKeySource === 'custom' && !personalApiKey.trim())}
               className="text-xs font-semibold"
             >
               {testingApiKey ? (
@@ -1864,7 +1945,7 @@ export default function QualitativeExitAnalysis() {
               <Button type="button" variant="secondary" size="sm" onClick={() => setShowApiKeyModal(false)}>
                 {t('ยกเลิก', 'Cancel')}
               </Button>
-              <Button type="button" variant="primary" size="sm" onClick={handleSavePersonalApiKey} className="font-bold">
+              <Button type="button" variant="primary" size="sm" onClick={handleSaveKeyConfiguration} className="font-bold">
                 <Check className="h-3.5 w-3.5 mr-1" />
                 {t('บันทึกการตั้งค่า', 'Save Configuration')}
               </Button>

@@ -253,7 +253,15 @@ describe('Student Voice Feature', () => {
       fireEvent.click(apiKeyBtn)
     })
 
-    expect(screen.getByText(/ตั้งค่า Google Gemini API Key ส่วนตัว/i)).toBeInTheDocument()
+    expect(screen.getByText(/ตั้งค่าแหล่งเชื่อมต่อ Google Gemini API Key/i)).toBeInTheDocument()
+    expect(screen.getByText(/1. ใช้กุญแจส่วนกลางของระบบ/i)).toBeInTheDocument()
+    expect(screen.getByText(/2. ใช้ API Key ส่วนตัวของฉัน/i)).toBeInTheDocument()
+
+    // Click option 2 to show custom key input
+    act(() => {
+      fireEvent.click(screen.getByText(/2. ใช้ API Key ส่วนตัวของฉัน/i))
+    })
+
     expect(screen.getByPlaceholderText('AIzaSy...')).toBeInTheDocument()
   })
 
