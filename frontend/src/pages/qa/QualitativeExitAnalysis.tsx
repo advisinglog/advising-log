@@ -147,6 +147,8 @@ export default function QualitativeExitAnalysis() {
   const [customBaseUrl, setCustomBaseUrl] = useState(getStoredCustomBaseUrl())
   const [showKeySecret, setShowKeySecret] = useState(false)
   const [isCustomModelInput, setIsCustomModelInput] = useState(false)
+  const [showProviderDropdown, setShowProviderDropdown] = useState(false)
+  const [showModelDropdown, setShowModelDropdown] = useState(false)
   const [testingApiKey, setTestingApiKey] = useState(false)
   const [testResult, setTestResult] = useState<{ success: boolean; message: string; provider: string; latencyMs?: number } | null>(null)
 
@@ -663,6 +665,8 @@ export default function QualitativeExitAnalysis() {
                 setCustomModel(storedM || AI_PROVIDER_PRESETS[prov].defaultModel)
                 setCustomBaseUrl(getStoredCustomBaseUrl())
                 setIsCustomModelInput(!!storedM && !AI_PROVIDER_PRESETS[prov].popularModels.includes(storedM))
+                setShowProviderDropdown(false)
+                setShowModelDropdown(false)
                 setTestResult(null)
                 setShowApiKeyModal(true)
               }}
@@ -1828,6 +1832,8 @@ export default function QualitativeExitAnalysis() {
         isOpen={showApiKeyModal}
         onClose={() => {
           setShowApiKeyModal(false)
+          setShowProviderDropdown(false)
+          setShowModelDropdown(false)
           setTestResult(null)
         }}
         size="md"
@@ -1898,34 +1904,74 @@ export default function QualitativeExitAnalysis() {
               <div className="space-y-4">
                 {/* 2-Column Responsive Grid: Provider & Model */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                  {/* Col 1: Provider Select Dropdown */}
+                  {/* Col 1: Custom AI Provider Dropdown */}
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-slate-800 dark:text-slate-200">
                       {t('ผู้ให้บริการ AI', 'AI Provider')}
                     </label>
                     <div className="relative">
-                      <select
-                        value={selectedProvider}
-                        onChange={(e) => {
-                          const provId = e.target.value as AIProviderId
-                          setSelectedProvider(provId)
-                          setTestResult(null)
-                          setCustomModel(AI_PROVIDER_PRESETS[provId].defaultModel)
-                          setIsCustomModelInput(false)
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowProviderDropdown(!showProviderDropdown)
+                          setShowModelDropdown(false)
                         }}
-                        className="w-full appearance-none rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/60 py-2.5 pl-3.5 pr-10 text-xs font-medium text-slate-900 dark:text-slate-100 shadow-2xs focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20 cursor-pointer transition-colors"
+                        className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/60 text-xs font-semibold text-slate-900 dark:text-slate-100 shadow-2xs hover:border-sky-400 dark:hover:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20 cursor-pointer transition-all text-left"
                       >
-                        {(Object.keys(AI_PROVIDER_PRESETS) as AIProviderId[]).map((provId) => (
-                          <option key={provId} value={provId} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
-                            {AI_PROVIDER_PRESETS[provId].name}
-                          </option>
-                        ))}
-                      </select>
-                      <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="truncate">{currentPreset.name}</span>
+                        </div>
+                        <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform duration-200 shrink-0 ${showProviderDropdown ? 'rotate-180 text-sky-500' : ''}`} />
+                      </button>
+
+                      {showProviderDropdown && (
+                        <>
+                          <div className="fixed inset-0 z-40" onClick={() => setShowProviderDropdown(false)} />
+                          <div className="absolute left-0 right-0 top-full mt-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl z-50 py-1.5 max-h-64 overflow-y-auto animate-[slideIn_0.12s_ease-out]">
+                            {(Object.keys(AI_PROVIDER_PRESETS) as AIProviderId[]).map((provId) => {
+                              const preset = AI_PROVIDER_PRESETS[provId]
+                              const isSelected = selectedProvider === provId
+                              return (
+                                <button
+                                  key={provId}
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedProvider(provId)
+                                    setTestResult(null)
+                                    setCustomModel(preset.defaultModel)
+                                    setIsCustomModelInput(false)
+                                    setShowProviderDropdown(false)
+                                  }}
+                                  className={`w-full text-left px-3.5 py-2.5 text-xs transition-colors cursor-pointer flex items-center justify-between gap-2.5 ${
+                                    isSelected
+                                      ? 'bg-sky-50/80 dark:bg-sky-950/50 text-sky-700 dark:text-sky-300 font-bold'
+                                      : 'text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/80'
+                                  }`}
+                                >
+                                  <div className="min-w-0 flex-1">
+                                    <div className="flex items-center justify-between gap-1">
+                                      <span className="truncate">{preset.name}</span>
+                                      <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 shrink-0">
+                                        {preset.badge}
+                                      </span>
+                                    </div>
+                                    <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate mt-0.5 font-normal">
+                                      {language === 'th' ? preset.taglineTh : preset.taglineEn}
+                                    </p>
+                                  </div>
+                                  {isSelected && (
+                                    <Check className="h-4 w-4 text-sky-600 dark:text-sky-400 shrink-0" />
+                                  )}
+                                </button>
+                              )
+                            })}
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
 
-                  {/* Col 2: Model Select / Custom */}
+                  {/* Col 2: Custom Model Dropdown */}
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
                       <label className="text-xs font-semibold text-slate-800 dark:text-slate-200">
@@ -1936,32 +1982,92 @@ export default function QualitativeExitAnalysis() {
                       </span>
                     </div>
                     <div className="relative">
-                      <select
-                        value={isCustomModelOption ? '__custom__' : (customModel || currentPreset.defaultModel)}
-                        onChange={(e) => {
-                          if (e.target.value === '__custom__') {
-                            setIsCustomModelInput(true)
-                            if (currentPreset.popularModels.includes(customModel)) {
-                              setCustomModel('')
-                            }
-                          } else {
-                            setIsCustomModelInput(false)
-                            setCustomModel(e.target.value)
-                          }
-                          setTestResult(null)
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowModelDropdown(!showModelDropdown)
+                          setShowProviderDropdown(false)
                         }}
-                        className="w-full appearance-none rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/60 py-2.5 pl-3.5 pr-10 text-xs font-mono font-medium text-slate-900 dark:text-slate-100 shadow-2xs focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20 cursor-pointer transition-colors"
+                        className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/60 text-xs font-mono font-medium text-slate-900 dark:text-slate-100 shadow-2xs hover:border-sky-400 dark:hover:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20 cursor-pointer transition-all text-left"
                       >
-                        {currentPreset.popularModels.map((m) => (
-                          <option key={m} value={m} className="bg-white dark:bg-slate-900 font-mono text-slate-900 dark:text-slate-100">
-                            {m} {m === currentPreset.defaultModel ? `(${t('แนะนำ', 'Recommended')})` : ''}
-                          </option>
-                        ))}
-                        <option value="__custom__" className="bg-white dark:bg-slate-900 font-sans text-slate-900 dark:text-slate-100">
-                          {t('ระบุรุ่นเอง (Custom ID)...', 'Custom Model ID...')}
-                        </option>
-                      </select>
-                      <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                        <span className="truncate">
+                          {isCustomModelOption
+                            ? (customModel ? `${customModel} (${t('กำหนดเอง', 'Custom')})` : t('ระบุรุ่นเอง (Custom ID)...', 'Custom Model ID...'))
+                            : (customModel || currentPreset.defaultModel)}
+                        </span>
+                        <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform duration-200 shrink-0 ${showModelDropdown ? 'rotate-180 text-sky-500' : ''}`} />
+                      </button>
+
+                      {showModelDropdown && (
+                        <>
+                          <div className="fixed inset-0 z-40" onClick={() => setShowModelDropdown(false)} />
+                          <div className="absolute left-0 right-0 top-full mt-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl z-50 py-1.5 max-h-64 overflow-y-auto animate-[slideIn_0.12s_ease-out]">
+                            <div className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                              {t('โมเดลแนะนำสำหรับค่ายนี้', 'Recommended for this Provider')}
+                            </div>
+                            {currentPreset.popularModels.map((m) => {
+                              const isSelected = !isCustomModelOption && (customModel || currentPreset.defaultModel) === m
+                              const isDefault = m === currentPreset.defaultModel
+                              return (
+                                <button
+                                  key={m}
+                                  type="button"
+                                  onClick={() => {
+                                    setCustomModel(m)
+                                    setIsCustomModelInput(false)
+                                    setTestResult(null)
+                                    setShowModelDropdown(false)
+                                  }}
+                                  className={`w-full text-left px-3.5 py-2.5 text-xs font-mono transition-colors cursor-pointer flex items-center justify-between gap-2.5 ${
+                                    isSelected
+                                      ? 'bg-sky-50/80 dark:bg-sky-950/50 text-sky-700 dark:text-sky-300 font-bold'
+                                      : 'text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/80'
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-2 min-w-0">
+                                    <span className="truncate">{m}</span>
+                                    {isDefault && (
+                                      <span className="text-[10px] font-sans px-1.5 py-0.2 rounded bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800 shrink-0">
+                                        {t('แนะนำ', 'Recommended')}
+                                      </span>
+                                    )}
+                                  </div>
+                                  {isSelected && (
+                                    <Check className="h-4 w-4 text-sky-600 dark:text-sky-400 shrink-0" />
+                                  )}
+                                </button>
+                              )
+                            })}
+
+                            <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setIsCustomModelInput(true)
+                                if (currentPreset.popularModels.includes(customModel)) {
+                                  setCustomModel('')
+                                }
+                                setTestResult(null)
+                                setShowModelDropdown(false)
+                              }}
+                              className={`w-full text-left px-3.5 py-2.5 text-xs transition-colors cursor-pointer flex items-center justify-between gap-2.5 ${
+                                isCustomModelOption
+                                  ? 'bg-sky-50/80 dark:bg-sky-950/50 text-sky-700 dark:text-sky-300 font-bold'
+                                  : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/80'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2 min-w-0">
+                                <Sparkles className="h-3.5 w-3.5 text-sky-500 shrink-0" />
+                                <span className="truncate">{t('ระบุรุ่นเอง (Custom Model ID)...', 'Custom Model ID...')}</span>
+                              </div>
+                              {isCustomModelOption && (
+                                <Check className="h-4 w-4 text-sky-600 dark:text-sky-400 shrink-0" />
+                              )}
+                            </button>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
