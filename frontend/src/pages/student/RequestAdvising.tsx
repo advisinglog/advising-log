@@ -857,39 +857,22 @@ export default function RequestAdvising() {
                 </div>
 
                 {/* Collision Banner */}
-                {preferredDate && (
-                  <div
-                    className={`p-3 rounded-xl text-xs flex items-start gap-2.5 transition-all ${
-                      sameDateAppointments.length > 0
-                        ? 'bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-amber-800 dark:text-amber-300'
-                        : 'bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300'
-                    }`}
-                  >
-                    {sameDateAppointments.length > 0 ? (
-                      <>
-                        <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
-                        <div className="space-y-0.5">
-                          <p className="font-bold">
-                            {t(
-                              `วันที่ ${preferredDate} อาจารย์มีนัดหมายในระบบแล้ว ${sameDateAppointments.length} รายการ:`,
-                              `Selected date (${preferredDate}) has ${sameDateAppointments.length} existing booking(s):`
-                            )}
-                          </p>
-                          <p className="text-[11px] leading-relaxed">
-                            {t('ช่วงเวลาที่ติดนัดหมาย:', 'Busy slots:')}{' '}
-                            <span className="font-semibold">{sameDateAppointments.map(a => a.scheduledTime).join(', ')}</span>{' '}
-                            — {t('แนะนำให้เลือกช่วงเวลาอื่นเพื่อหลีกเลี่ยงการนัดชนกัน', 'Please pick an open hour to avoid collision.')}
-                          </p>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                        <p className="font-semibold">
-                          {t(`วันที่ ${preferredDate} ยังไม่มีคิวนัดหมายในระบบ AdvisingLog (สามารถระบุเวลาที่สะดวกได้)`, `No existing AdvisingLog appointments on ${preferredDate}. You may propose an open hour.`)}
-                        </p>
-                      </>
-                    )}
+                {preferredDate && sameDateAppointments.length > 0 && (
+                  <div className="p-3 rounded-xl text-xs flex items-start gap-2.5 transition-all bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-amber-800 dark:text-amber-300">
+                    <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+                    <div className="space-y-0.5">
+                      <p className="font-bold">
+                        {t(
+                          `วันที่ ${preferredDate} อาจารย์มีนัดหมายในระบบแล้ว ${sameDateAppointments.length} รายการ:`,
+                          `Selected date (${preferredDate}) has ${sameDateAppointments.length} existing booking(s):`
+                        )}
+                      </p>
+                      <p className="text-[11px] leading-relaxed">
+                        {t('ช่วงเวลาที่ติดนัดหมาย:', 'Busy slots:')}{' '}
+                        <span className="font-semibold">{sameDateAppointments.map(a => a.scheduledTime).join(', ')}</span>{' '}
+                        — {t('แนะนำให้เลือกช่วงเวลาอื่นเพื่อหลีกเลี่ยงการนัดชนกัน', 'Please pick an open hour to avoid collision.')}
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>
