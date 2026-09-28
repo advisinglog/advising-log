@@ -349,164 +349,77 @@ export default function RequestAdvising() {
         {/* ============================================================ */}
         {currentStep === 1 && (
           <div className="space-y-5 animate-[fadeIn_0.15s_ease-out]">
-            {/* Advisor Selection Card */}
+            {/* Advisor Card */}
             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 p-4 sm:p-5 shadow-xs space-y-3">
-              <div className="flex items-center justify-between gap-2 flex-wrap">
-                <label htmlFor="advisor-select" className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                  <User className="h-4 w-4 text-sky-600 dark:text-sky-400" />
-                  {t('อาจารย์ผู้รับคำร้อง / นัดหมายเข้าพบ', 'Select Advising Faculty / Advisor')} <span className="text-rose-500">*</span>
-                </label>
-                {isAssignedAdvisor && assignedAdvisor && (
-                  <span className="text-[11px] font-medium text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-200/80 dark:border-emerald-800">
-                    {t('อาจารย์ที่ปรึกษาประจำตัว (ค่าเริ่มต้น)', 'Assigned Advisor (Default)')}
-                  </span>
-                )}
-                {!isAssignedAdvisor && assignedAdvisor && (
-                  <span className="text-[11px] font-medium text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-2 py-0.5 rounded-md border border-amber-200/80 dark:border-amber-800">
-                    {t('อาจารย์ท่านอื่นในสาขา', 'Other Faculty Member')}
-                  </span>
-                )}
-              </div>
+              <label htmlFor="advisor-select" className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                <User className="h-4 w-4 text-sky-600 dark:text-sky-400" />
+                {t('อาจารย์ที่ปรึกษาผู้รับคำร้อง', 'Assigned Faculty Advisor')} <span className="text-rose-500">*</span>
+              </label>
 
-              {/* Dropdown + Action Buttons */}
-              <div className="flex flex-col sm:flex-row items-stretch gap-2.5">
-                <div className="relative flex-1 min-w-0">
-                  <button
-                    type="button"
-                    onClick={() => setShowAdvisorDropdown(!showAdvisorDropdown)}
-                    className={`w-full h-full min-h-[50px] flex items-center justify-between px-3.5 py-2 border rounded-xl text-xs sm:text-sm font-medium transition-colors shadow-2xs text-left cursor-pointer ${
-                      !advisor
-                        ? 'border-amber-300 dark:border-amber-800/80 bg-amber-50/40 dark:bg-amber-950/20 hover:bg-amber-50/70'
-                        : 'border-slate-200/90 dark:border-slate-700 text-slate-900 dark:text-slate-100 bg-slate-50/70 dark:bg-slate-800/80 hover:bg-slate-100/80 dark:hover:bg-slate-800'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5 min-w-0 flex-1 pr-2">
-                      <div className={`h-8 w-8 rounded-lg flex items-center justify-center font-bold flex-shrink-0 ${
-                        !advisor
-                          ? 'bg-amber-100 dark:bg-amber-950 text-amber-600 dark:text-amber-400'
-                          : 'bg-sky-100 dark:bg-sky-950 text-sky-600 dark:text-sky-400'
-                      }`}>
-                        <User className="h-4 w-4" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <span className={`font-semibold truncate block ${!advisor ? 'text-amber-700 dark:text-amber-300' : 'text-slate-900 dark:text-slate-100'}`}>
-                          {advisor?.name || t('-- กรุณาเลือกอาจารย์ที่ปรึกษาเพื่อรับคำร้อง --', '-- Please select a faculty advisor --')}
-                        </span>
-                        <span className="text-[11px] text-slate-500 dark:text-slate-400 truncate block">
-                          {advisor ? (advisor.department || 'School of Applied Digital Technology (ADT)') : t('ยังไม่มีอาจารย์ที่ปรึกษาประจำตัวที่ระบุในระบบ Roster', 'No assigned advisor in system roster')}
-                        </span>
-                      </div>
+              {advisor ? (
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-xl border border-slate-200/90 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/60">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-xl bg-sky-100 dark:bg-sky-950 text-sky-600 dark:text-sky-400 flex items-center justify-center font-bold flex-shrink-0">
+                      <User className="h-5 w-5" />
                     </div>
-                    <ChevronDown className={`h-4 w-4 transition-transform duration-150 flex-shrink-0 ${
-                      showAdvisorDropdown ? 'rotate-180 text-sky-500' : !advisor ? 'text-amber-500' : 'text-slate-400'
-                    }`} />
-                  </button>
-
-                  {/* Dropdown Menu */}
-                  {showAdvisorDropdown && (
-                    <>
-                      <div className="fixed inset-0 z-40" onClick={() => setShowAdvisorDropdown(false)} />
-                      <div className="absolute left-0 right-0 top-full mt-1.5 bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-xl shadow-xl z-50 py-1 divide-y divide-slate-100 dark:divide-slate-800/80 max-h-72 overflow-y-auto animate-[slideIn_0.12s_ease-out]">
-                        {assignedAdvisor && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setSelectedAdvisorId(assignedAdvisor.id)
-                              setShowAdvisorDropdown(false)
-                            }}
-                            className={`w-full text-left px-3.5 py-2.5 text-xs sm:text-sm transition-colors cursor-pointer flex items-center justify-between gap-3 ${
-                              advisor?.id === assignedAdvisor.id
-                                ? 'bg-sky-50/80 dark:bg-sky-950/50 text-sky-700 dark:text-sky-300 font-semibold'
-                                : 'text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/60'
-                            }`}
-                          >
-                            <div className="min-w-0">
-                              <p className="font-bold flex items-center gap-1.5">
-                                <span>{assignedAdvisor.name}</span>
-                                <span className="text-[10px] font-normal text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.2 rounded border border-emerald-200/80 dark:border-emerald-800">
-                                  {t('ที่ปรึกษาประจำตัว', 'Assigned')}
-                                </span>
-                              </p>
-                              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                                {assignedAdvisor.department || 'School of Applied Digital Technology (ADT)'}
-                                {assignedAdvisor.code ? ` · ${assignedAdvisor.code}` : ''}
-                              </p>
-                            </div>
-                            {advisor?.id === assignedAdvisor.id && (
-                              <Check className="h-4 w-4 text-sky-600 dark:text-sky-400 flex-shrink-0" />
-                            )}
-                          </button>
+                    <div>
+                      <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                        <span>{advisor.name}</span>
+                        {isAssignedAdvisor && (
+                          <span className="text-[10px] font-normal text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.2 rounded border border-emerald-200/80 dark:border-emerald-800">
+                            {t('อาจารย์ที่ปรึกษาประจำตัว', 'Assigned Advisor')}
+                          </span>
                         )}
+                      </p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                        {advisor.department || 'School of Applied Digital Technology (ADT)'}
+                        {advisor.code ? ` · ${advisor.code}` : ''}
+                      </p>
+                    </div>
+                  </div>
 
-                        <div className="py-0.5">
-                          <div className="px-3.5 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50/50 dark:bg-slate-800/30">
-                            {t('อาจารย์ท่านอื่นในสาขา / สำนักวิชา', 'Other Faculty in Department')}
-                          </div>
-                          {availableAdvisors
-                            .filter(u => u.id !== assignedAdvisor?.id)
-                            .map(u => (
-                              <button
-                                key={u.id}
-                                type="button"
-                                onClick={() => {
-                                  setSelectedAdvisorId(u.id)
-                                  setShowAdvisorDropdown(false)
-                                }}
-                                className={`w-full text-left px-3.5 py-2.5 text-xs sm:text-sm transition-colors cursor-pointer flex items-center justify-between gap-3 ${
-                                  advisor?.id === u.id
-                                    ? 'bg-sky-50/80 dark:bg-sky-950/50 text-sky-700 dark:text-sky-300 font-semibold'
-                                    : 'text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/60'
-                                }`}
-                              >
-                                <div className="min-w-0">
-                                  <p className="font-semibold text-slate-900 dark:text-slate-100">{u.name}</p>
-                                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                                    {u.department || 'School of Applied Digital Technology (ADT)'}
-                                    {u.code ? ` · ${u.code}` : ''}
-                                  </p>
-                                </div>
-                                {advisor?.id === u.id && (
-                                  <Check className="h-4 w-4 text-sky-600 dark:text-sky-400 flex-shrink-0" />
-                                )}
-                              </button>
-                            ))}
-                        </div>
-                      </div>
-                    </>
+                  {advisor.email && (
+                    <button
+                      type="button"
+                      onClick={() => setShowCalendarModal(true)}
+                      className="inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl border border-sky-200/90 dark:border-sky-800/80 bg-white dark:bg-slate-900 hover:bg-sky-50 dark:hover:bg-sky-950 text-sky-700 dark:text-sky-300 text-xs font-semibold transition-all shadow-2xs whitespace-nowrap cursor-pointer hover:border-sky-300 dark:hover:border-sky-700 active:scale-[0.98] flex-shrink-0"
+                    >
+                      <Calendar className="h-4 w-4 text-sky-600 dark:text-sky-400" />
+                      <span>{t('ดูตารางเวลาว่างอาจารย์', 'View Advisor Calendar')}</span>
+                    </button>
                   )}
-
-                  {/* Hidden native select for accessibility & automation testing */}
-                  <select
-                    id="advisor-select"
-                    aria-hidden="true"
-                    tabIndex={-1}
-                    aria-label={t('อาจารย์ผู้รับคำร้อง / นัดหมายเข้าพบ', 'Select Advising Faculty / Advisor')}
-                    value={advisor?.id || ''}
-                    onChange={e => setSelectedAdvisorId(e.target.value)}
-                    className="sr-only"
-                  >
-                    {assignedAdvisor && (
-                      <option value={assignedAdvisor.id}>{assignedAdvisor.name}</option>
-                    )}
-                    {availableAdvisors
-                      .filter(u => u.id !== assignedAdvisor?.id)
-                      .map(u => (
-                        <option key={u.id} value={u.id}>{u.name}</option>
-                      ))}
-                  </select>
                 </div>
+              ) : (
+                <div className="p-3.5 rounded-xl border border-amber-200 dark:border-amber-900/60 bg-amber-50/60 dark:bg-amber-950/30 text-xs text-amber-800 dark:text-amber-200 flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4 text-amber-600 flex-shrink-0" />
+                  <span>
+                    {t(
+                      'ยังไม่มีการจัดสรรอาจารย์ที่ปรึกษาในระบบ กรุณาติดต่อสำนักวิชาเพื่อดำเนินการจัดสรรอาจารย์ที่ปรึกษา',
+                      'No assigned advisor found in system roster. Please contact the department coordinator.'
+                    )}
+                  </span>
+                </div>
+              )}
 
-                {advisor?.email && (
-                  <button
-                    type="button"
-                    onClick={() => setShowCalendarModal(true)}
-                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-sky-200/90 dark:border-sky-800/80 bg-sky-50 dark:bg-sky-950/60 hover:bg-sky-100 dark:hover:bg-sky-900/80 text-sky-700 dark:text-sky-300 text-xs sm:text-sm font-semibold transition-all shadow-2xs whitespace-nowrap cursor-pointer hover:border-sky-300 dark:hover:border-sky-700 active:scale-[0.98] flex-shrink-0"
-                  >
-                    <Calendar className="h-4 w-4 text-sky-600 dark:text-sky-400" />
-                    <span>{t('ดูตารางเวลาว่างอาจารย์', 'View Advisor Calendar')}</span>
-                  </button>
+              {/* Hidden native select for accessibility & automation testing */}
+              <select
+                id="advisor-select"
+                aria-hidden="true"
+                tabIndex={-1}
+                aria-label={t('อาจารย์ผู้รับคำร้อง / นัดหมายเข้าพบ', 'Select Advising Faculty / Advisor')}
+                value={advisor?.id || ''}
+                onChange={e => setSelectedAdvisorId(e.target.value)}
+                className="sr-only"
+              >
+                {assignedAdvisor && (
+                  <option value={assignedAdvisor.id}>{assignedAdvisor.name}</option>
                 )}
-              </div>
+                {availableAdvisors
+                  .filter(u => u.id !== assignedAdvisor?.id)
+                  .map(u => (
+                    <option key={u.id} value={u.id}>{u.name}</option>
+                  ))}
+              </select>
             </div>
 
             {/* Category Selection Cards */}
