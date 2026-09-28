@@ -44,6 +44,9 @@ import {
   AlertTriangle,
   ArrowRightLeft,
   X,
+  Lock,
+  Terminal,
+  Cpu,
 } from 'lucide-react'
 import {
   analyzeWithLLM,
@@ -1916,16 +1919,57 @@ export default function QualitativeExitAnalysis() {
 
           {/* Mode 2: Custom Personal Key & Multi-Provider */}
           {selectedKeySource === 'custom' && (
-            <div className="p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#0e1424] space-y-4 shadow-2xs">
-              {/* Provider Visual Grid Selector */}
-              <div className="space-y-2">
-                <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
-                  {t('เลือกผู้ให้บริการโมเดล (AI Provider)', 'Select AI Provider')}
-                </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+            <div className="space-y-4">
+              {/* Step 1: Provider Selection with Branded Visual Cards */}
+              <div className="p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#0e1424] space-y-3 shadow-2xs">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="flex items-center justify-center h-5 w-5 rounded-full bg-sky-100 dark:bg-sky-950/80 text-sky-700 dark:text-sky-300 text-[11px] font-bold">
+                      1
+                    </span>
+                    <label className="text-xs font-bold text-slate-900 dark:text-white">
+                      {t('เลือกผู้ให้บริการโมเดล AI (Select AI Provider)', 'Select AI Provider')}
+                    </label>
+                  </div>
+                  <span className="text-[10px] text-slate-400 font-medium">
+                    {t('รองรับ 5 ผู้ให้บริการชั้นนำ', '5 Providers Supported')}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
                   {(Object.keys(AI_PROVIDER_PRESETS) as AIProviderId[]).map((provId) => {
                     const preset = AI_PROVIDER_PRESETS[provId]
                     const isSelected = selectedProvider === provId
+
+                    // Aesthetic styling per provider
+                    const providerTheme = {
+                      gemini: {
+                        icon: <Sparkles className="h-4 w-4 text-sky-500" />,
+                        activeBg: 'bg-gradient-to-br from-sky-50/90 via-sky-50/40 to-white dark:from-sky-950/50 dark:via-sky-950/20 dark:to-transparent border-sky-500 ring-1 ring-sky-500',
+                        badge: 'bg-sky-100 dark:bg-sky-900/60 text-sky-700 dark:text-sky-300 border-sky-200/80 dark:border-sky-800',
+                      },
+                      openai: {
+                        icon: <Bot className="h-4 w-4 text-emerald-500" />,
+                        activeBg: 'bg-gradient-to-br from-emerald-50/90 via-emerald-50/40 to-white dark:from-emerald-950/50 dark:via-emerald-950/20 dark:to-transparent border-emerald-500 ring-1 ring-emerald-500',
+                        badge: 'bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 border-emerald-200/80 dark:border-emerald-800',
+                      },
+                      claude: {
+                        icon: <Compass className="h-4 w-4 text-amber-500" />,
+                        activeBg: 'bg-gradient-to-br from-amber-50/90 via-amber-50/40 to-white dark:from-amber-950/50 dark:via-amber-950/20 dark:to-transparent border-amber-500 ring-1 ring-amber-500',
+                        badge: 'bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300 border-amber-200/80 dark:border-amber-800',
+                      },
+                      deepseek: {
+                        icon: <Brain className="h-4 w-4 text-indigo-500" />,
+                        activeBg: 'bg-gradient-to-br from-indigo-50/90 via-indigo-50/40 to-white dark:from-indigo-950/50 dark:via-indigo-950/20 dark:to-transparent border-indigo-500 ring-1 ring-indigo-500',
+                        badge: 'bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border-indigo-200/80 dark:border-indigo-800',
+                      },
+                      custom: {
+                        icon: <Terminal className="h-4 w-4 text-purple-500" />,
+                        activeBg: 'bg-gradient-to-br from-purple-50/90 via-purple-50/40 to-white dark:from-purple-950/50 dark:via-purple-950/20 dark:to-transparent border-purple-500 ring-1 ring-purple-500',
+                        badge: 'bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300 border-purple-200/80 dark:border-purple-800',
+                      },
+                    }[provId]
+
                     return (
                       <button
                         key={provId}
@@ -1938,21 +1982,33 @@ export default function QualitativeExitAnalysis() {
                             setCustomBaseUrl('http://localhost:11434/v1')
                           }
                         }}
-                        className={`text-left p-3 rounded-xl border transition-all cursor-pointer flex flex-col justify-between gap-1.5 relative ${
+                        className={`text-left p-3.5 rounded-2xl border transition-all duration-150 cursor-pointer flex flex-col justify-between gap-2 relative ${
                           isSelected
-                            ? 'bg-sky-50/70 dark:bg-sky-950/40 border-sky-500 ring-1 ring-sky-500 shadow-2xs'
-                            : 'bg-slate-50/60 dark:bg-slate-900/60 border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+                            ? `${providerTheme.activeBg} shadow-sm`
+                            : 'bg-slate-50/60 dark:bg-slate-900/50 border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-900'
                         }`}
                       >
-                        <div className="flex items-center justify-between gap-1">
-                          <span className={`text-xs font-bold ${isSelected ? 'text-sky-900 dark:text-sky-200' : 'text-slate-800 dark:text-slate-200'}`}>
-                            {language === 'th' ? preset.labelTh : preset.labelEn}
-                          </span>
-                          <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700 font-mono">
-                            {preset.badge}
-                          </span>
+                        <div className="flex items-start justify-between gap-1.5">
+                          <div className="flex items-center gap-2">
+                            <div className="h-7 w-7 rounded-lg bg-white dark:bg-slate-800 flex items-center justify-center border border-slate-200/60 dark:border-slate-700 shadow-2xs shrink-0">
+                              {providerTheme.icon}
+                            </div>
+                            <div>
+                              <span className={`text-xs font-bold block ${isSelected ? 'text-slate-950 dark:text-white' : 'text-slate-800 dark:text-slate-200'}`}>
+                                {language === 'th' ? preset.labelTh : preset.labelEn}
+                              </span>
+                              <span className={`text-[9px] font-semibold px-1.5 py-0.2 rounded border font-mono inline-block mt-0.5 ${providerTheme.badge}`}>
+                                {preset.badge}
+                              </span>
+                            </div>
+                          </div>
+                          {isSelected && (
+                            <span className="h-5 w-5 rounded-full bg-sky-600 dark:bg-sky-500 text-white flex items-center justify-center shrink-0 shadow-2xs">
+                              <Check className="h-3 w-3 stroke-[3]" />
+                            </span>
+                          )}
                         </div>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight">
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">
                           {language === 'th' ? preset.taglineTh : preset.taglineEn}
                         </p>
                       </button>
@@ -1961,20 +2017,34 @@ export default function QualitativeExitAnalysis() {
                 </div>
               </div>
 
-              {/* API Key Input with Live Format Check & Actions */}
-              <div className="space-y-1.5 pt-1">
+              {/* Step 2: Credentials Vault & Key Input */}
+              <div className="p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#0e1424] space-y-3 shadow-2xs">
                 <div className="flex items-center justify-between">
-                  <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
-                    {t('ระบุ API Key ส่วนบุคคล', 'Personal API Key')} <span className="text-rose-500">*</span>
-                  </label>
-                  {personalApiKey.trim() && (
-                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 flex items-center gap-1">
+                  <div className="flex items-center gap-2">
+                    <span className="flex items-center justify-center h-5 w-5 rounded-full bg-sky-100 dark:bg-sky-950/80 text-sky-700 dark:text-sky-300 text-[11px] font-bold">
+                      2
+                    </span>
+                    <label className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                      <Lock className="h-3.5 w-3.5 text-slate-500" />
+                      {t('ระบุ API Key ส่วนบุคคล', 'Personal API Key')} <span className="text-rose-500">*</span>
+                    </label>
+                  </div>
+                  {personalApiKey.trim() ? (
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 flex items-center gap-1">
                       <Check className="h-3 w-3" />
-                      {t('ระบุคีย์แล้ว', 'Key Entered')}
+                      {t('ระบุคีย์เรียบร้อย', 'Key Configured')}
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-slate-400 font-medium">
+                      {t('ยังไม่ได้ระบุคีย์', 'Key not entered')}
                     </span>
                   )}
                 </div>
+
                 <div className="relative flex items-center">
+                  <div className="absolute left-3.5 text-slate-400 pointer-events-none flex items-center">
+                    <Key className="h-3.5 w-3.5" />
+                  </div>
                   <input
                     type={showKeySecret ? 'text' : 'password'}
                     value={personalApiKey}
@@ -1983,9 +2053,9 @@ export default function QualitativeExitAnalysis() {
                       setTestResult(null)
                     }}
                     placeholder={AI_PROVIDER_PRESETS[selectedProvider].keyPlaceholder}
-                    className="w-full pl-3.5 pr-20 py-2 text-xs font-mono border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-[#0b0f19] text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
+                    className="w-full pl-9 pr-20 py-2.5 text-xs font-mono border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50/50 dark:bg-[#0b0f19] text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 focus:bg-white dark:focus:bg-[#0b0f19] transition-all shadow-2xs"
                   />
-                  <div className="absolute right-2 flex items-center gap-1.5">
+                  <div className="absolute right-2 flex items-center gap-1">
                     {personalApiKey && (
                       <button
                         type="button"
@@ -1993,7 +2063,7 @@ export default function QualitativeExitAnalysis() {
                           setPersonalApiKey('')
                           setTestResult(null)
                         }}
-                        className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 cursor-pointer"
+                        className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                         title={t('ล้างข้อความ', 'Clear')}
                       >
                         <X className="h-3.5 w-3.5" />
@@ -2002,74 +2072,82 @@ export default function QualitativeExitAnalysis() {
                     <button
                       type="button"
                       onClick={() => setShowKeySecret(!showKeySecret)}
-                      className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 cursor-pointer"
+                      className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                       title={showKeySecret ? t('ซ่อนรหัส', 'Hide Key') : t('แสดงรหัส', 'Show Key')}
                     >
-                      {showKeySecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      {showKeySecret ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                     </button>
                   </div>
                 </div>
+
                 <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 pt-0.5">
-                  <span className="font-mono text-[10px] text-slate-400">
+                  <span className="font-mono text-[10px] text-slate-400 flex items-center gap-1">
+                    <span className="h-1.5 w-1.5 rounded-full bg-slate-300 dark:bg-slate-600" />
                     {AI_PROVIDER_PRESETS[selectedProvider].keyFormatHint}
                   </span>
                   <a
                     href={AI_PROVIDER_PRESETS[selectedProvider].studioUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-sky-600 dark:text-sky-400 hover:underline font-semibold inline-flex items-center gap-1 text-[11px]"
+                    className="text-sky-600 dark:text-sky-400 hover:underline font-semibold inline-flex items-center gap-1 text-[11px] hover:text-sky-700 dark:hover:text-sky-300 transition-colors"
                   >
-                    <span>{t('ขอรับ API Key ฟรี', 'Get API Key')}</span>
+                    <span>{t('ขอรับ API Key ฟรีที่นี่', 'Get API Key')}</span>
                     <ExternalLink className="h-3 w-3" />
                   </a>
                 </div>
               </div>
 
-              {/* Model ID Input & Quick Clickable Chips */}
-              <div className="space-y-1.5">
+              {/* Step 3: Model Selection & Quick Pills */}
+              <div className="p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#0e1424] space-y-3 shadow-2xs">
                 <div className="flex items-center justify-between">
-                  <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
-                    {t('รุ่นโมเดล (Model Name / ID)', 'Model Name / ID')}
-                  </label>
-                  <span className="text-[10px] text-slate-400 dark:text-slate-500">
-                    {t('ค่าเริ่มต้น:', 'Default:')} <span className="font-mono text-slate-600 dark:text-slate-300">{AI_PROVIDER_PRESETS[selectedProvider].defaultModel}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="flex items-center justify-center h-5 w-5 rounded-full bg-sky-100 dark:bg-sky-950/80 text-sky-700 dark:text-sky-300 text-[11px] font-bold">
+                      3
+                    </span>
+                    <label className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                      <Cpu className="h-3.5 w-3.5 text-slate-500" />
+                      {t('เลือกรุ่นโมเดล (Model Selection)', 'Model Selection')}
+                    </label>
+                  </div>
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">
+                    {t('ค่าเริ่มต้น:', 'Default:')} <span className="font-bold text-slate-700 dark:text-slate-300">{AI_PROVIDER_PRESETS[selectedProvider].defaultModel}</span>
                   </span>
                 </div>
-                <input
-                  type="text"
-                  value={customModel}
-                  onChange={e => {
-                    setCustomModel(e.target.value)
-                    setTestResult(null)
-                  }}
-                  placeholder={AI_PROVIDER_PRESETS[selectedProvider].defaultModel}
-                  className="w-full px-3 py-1.5 text-xs font-mono border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-[#0b0f19] text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
-                />
 
-                {/* Popular Model Pills */}
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={customModel}
+                    onChange={e => {
+                      setCustomModel(e.target.value)
+                      setTestResult(null)
+                    }}
+                    placeholder={AI_PROVIDER_PRESETS[selectedProvider].defaultModel}
+                    className="w-full px-3.5 py-2 text-xs font-mono border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50/50 dark:bg-[#0b0f19] text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 focus:bg-white dark:focus:bg-[#0b0f19] transition-all shadow-2xs"
+                  />
+                </div>
+
+                {/* Popular Model Tiles with Visual Badges */}
                 {AI_PROVIDER_PRESETS[selectedProvider].popularModels?.length > 0 && (
                   <div className="space-y-1.5 pt-1">
                     <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
-                      <span className="font-semibold flex items-center gap-1">
+                      <span className="font-semibold flex items-center gap-1 text-slate-700 dark:text-slate-300">
                         <Sparkles className="h-3 w-3 text-sky-600 dark:text-sky-400" />
-                        {t('เลือกรุ่นด่วน (คลิกเพื่อเปลี่ยนทันที):', 'Quick models (click to auto-fill):')}
-                      </span>
-                      <span className="text-[10px] text-slate-400">
-                        {t('คลิกแล้วระบบจะกรอก Model ID ให้อัตโนมัติ', 'Clicking auto-fills Model ID')}
+                        {t('รุ่นโมเดลแนะนำ (คลิกเพื่อเปลี่ยนทันที):', 'Recommended models (click to auto-fill):')}
                       </span>
                     </div>
-                    <div className="flex flex-wrap items-center gap-1.5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                       {AI_PROVIDER_PRESETS[selectedProvider].popularModels.map((m) => {
                         const isCurrent = (customModel || AI_PROVIDER_PRESETS[selectedProvider].defaultModel) === m
                         const chipBadge = m.includes('flash') || m.includes('mini') || m.includes('haiku')
-                          ? t('⚡ เร็ว', '⚡ Fast')
+                          ? t('⚡ เร็ว & แนะนำ', '⚡ Fast')
                           : m.includes('pro') || m.includes('sonnet') || m.includes('reasoner') || m.includes('r1')
-                          ? t('🧠 ลึก', '🧠 Deep')
+                          ? t('🧠 วิเคราะห์ลึก', '🧠 Deep')
                           : m === 'gpt-4o'
                           ? t('⭐ เรือธง', '⭐ Flagship')
                           : m.includes('qwen')
                           ? t('🌐 หลายภาษา', '🌐 Multi')
-                          : null
+                          : t('📦 มาตรฐาน', '📦 Standard')
 
                         return (
                           <button
@@ -2079,21 +2157,25 @@ export default function QualitativeExitAnalysis() {
                               setCustomModel(m)
                               setTestResult(null)
                             }}
-                            className={`text-xs font-mono px-2.5 py-1 rounded-lg border transition-all cursor-pointer flex items-center gap-1.5 ${
+                            className={`p-2.5 rounded-xl border text-left transition-all duration-150 cursor-pointer flex items-center justify-between gap-1.5 ${
                               isCurrent
-                                ? 'bg-sky-50 dark:bg-sky-950/60 border-sky-500 text-sky-700 dark:text-sky-300 font-bold ring-1 ring-sky-500 shadow-2xs'
-                                : 'bg-slate-50/80 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-slate-300 hover:bg-white dark:hover:bg-slate-800'
+                                ? 'bg-sky-50/90 dark:bg-sky-950/60 border-sky-500 text-sky-900 dark:text-sky-200 font-bold ring-1 ring-sky-500 shadow-2xs'
+                                : 'bg-slate-50/60 dark:bg-slate-900/40 border-slate-200/80 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-white dark:hover:bg-slate-800'
                             }`}
                           >
-                            {isCurrent && <Check className="h-3 w-3 text-sky-600 dark:text-sky-400" />}
-                            <span>{m}</span>
-                            {chipBadge && (
-                              <span className={`text-[9px] px-1 py-0.2 rounded font-sans font-medium ${
+                            <div className="min-w-0">
+                              <span className="font-mono text-xs block truncate">{m}</span>
+                              <span className={`text-[9px] font-sans font-medium inline-block mt-0.5 ${
                                 isCurrent
-                                  ? 'bg-sky-200/60 dark:bg-sky-900/60 text-sky-800 dark:text-sky-200'
-                                  : 'bg-slate-200/70 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
+                                  ? 'text-sky-700 dark:text-sky-300'
+                                  : 'text-slate-500 dark:text-slate-400'
                               }`}>
                                 {chipBadge}
+                              </span>
+                            </div>
+                            {isCurrent && (
+                              <span className="h-4 w-4 rounded-full bg-sky-600 text-white flex items-center justify-center shrink-0">
+                                <Check className="h-2.5 w-2.5 stroke-[3]" />
                               </span>
                             )}
                           </button>
@@ -2104,32 +2186,33 @@ export default function QualitativeExitAnalysis() {
                 )}
               </div>
 
-              {/* Custom Base URL & Port Presets (shown when custom provider is active) */}
+              {/* Step 4: Custom Base URL & Port Presets (shown when custom provider is active) */}
               {selectedProvider === 'custom' && (
-                <div className="space-y-1.5 pt-1">
+                <div className="p-4 rounded-2xl border border-purple-200/80 dark:border-purple-900/60 bg-purple-50/30 dark:bg-purple-950/20 space-y-3">
                   <div className="flex items-center justify-between">
-                    <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                    <label className="text-xs font-bold text-purple-900 dark:text-purple-200 flex items-center gap-1.5">
+                      <Terminal className="h-3.5 w-3.5 text-purple-600" />
                       {t('Base URL (OpenAI-compatible Endpoint)', 'Base URL (OpenAI-compatible Endpoint)')}
                     </label>
                     <div className="flex items-center gap-1 text-[10px]">
                       <button
                         type="button"
                         onClick={() => { setCustomBaseUrl('http://localhost:11434/v1'); setTestResult(null) }}
-                        className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 cursor-pointer font-mono"
+                        className="px-2 py-0.5 rounded-md bg-white dark:bg-purple-900/60 text-purple-700 dark:text-purple-300 hover:bg-purple-100 border border-purple-200/80 dark:border-purple-800 cursor-pointer font-mono"
                       >
                         Ollama :11434
                       </button>
                       <button
                         type="button"
                         onClick={() => { setCustomBaseUrl('http://localhost:1234/v1'); setTestResult(null) }}
-                        className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 cursor-pointer font-mono"
+                        className="px-2 py-0.5 rounded-md bg-white dark:bg-purple-900/60 text-purple-700 dark:text-purple-300 hover:bg-purple-100 border border-purple-200/80 dark:border-purple-800 cursor-pointer font-mono"
                       >
                         LM Studio :1234
                       </button>
                       <button
                         type="button"
                         onClick={() => { setCustomBaseUrl('http://localhost:8000/v1'); setTestResult(null) }}
-                        className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 cursor-pointer font-mono"
+                        className="px-2 py-0.5 rounded-md bg-white dark:bg-purple-900/60 text-purple-700 dark:text-purple-300 hover:bg-purple-100 border border-purple-200/80 dark:border-purple-800 cursor-pointer font-mono"
                       >
                         vLLM :8000
                       </button>
@@ -2143,15 +2226,27 @@ export default function QualitativeExitAnalysis() {
                       setTestResult(null)
                     }}
                     placeholder="http://localhost:11434/v1"
-                    className="w-full px-3 py-1.5 text-xs font-mono border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-[#0b0f19] text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
+                    className="w-full px-3.5 py-2 text-xs font-mono border border-purple-200 dark:border-purple-800 rounded-xl bg-white dark:bg-[#0b0f19] text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 shadow-2xs"
                   />
                 </div>
               )}
 
-              {/* Privacy Guarantee Note */}
-              <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-2">
-                <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                <span>{t('จัดเก็บบนอุปกรณ์นี้เท่านั้น (Client-Side Storage) ปลอดภัยตามมาตรฐาน PDPA ไม่มีการส่งคีย์ไปเก็บในฐานข้อมูลกลาง', 'API key is stored locally in client browser only with PDPA compliance.')}</span>
+              {/* PDPA Privacy Shield Guarantee Card */}
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 flex items-start gap-3">
+                <div className="h-8 w-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-100 dark:border-emerald-900/50 mt-0.5">
+                  <ShieldCheck className="h-4 w-4" />
+                </div>
+                <div className="space-y-0.5 text-xs">
+                  <p className="font-bold text-slate-900 dark:text-slate-100">
+                    {t('การจัดเก็บปลอดภัยตามมาตรฐาน PDPA (Client-Side Storage)', 'PDPA Compliant Local Storage')}
+                  </p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                    {t(
+                      'ข้อมูลกุญแจ API ส่วนบุคคลจะถูกจัดเก็บไว้เฉพาะใน Browser LocalStorage ของเครื่องนี้เท่านั้น โดยไม่มีการส่งไปบันทึกลงฐานข้อมูลส่วนกลางของระบบ จึงมั่นใจในความเป็นส่วนตัวสูงสุด',
+                      'Your personal API key is stored strictly on this client browser and never saved on central AdvisingLog servers.'
+                    )}
+                  </p>
+                </div>
               </div>
             </div>
           )}
