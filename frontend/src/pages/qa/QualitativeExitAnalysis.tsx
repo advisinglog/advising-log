@@ -50,6 +50,8 @@ import {
   analyzeWithLLM,
   getStoredGeminiKey,
   setStoredGeminiKey,
+  getStoredApiKeyForProvider,
+  setStoredApiKeyForProvider,
   getStoredAiKeySource,
   setStoredAiKeySource,
   getStoredAiProvider,
@@ -142,7 +144,10 @@ export default function QualitativeExitAnalysis() {
   const [showApiKeyModal, setShowApiKeyModal] = useState(false)
   const [selectedKeySource, setSelectedKeySource] = useState<AiKeySource>(getStoredAiKeySource())
   const [selectedProvider, setSelectedProvider] = useState<AIProviderId>(getStoredAiProvider())
-  const [personalApiKey, setPersonalApiKey] = useState(getStoredGeminiKey())
+  const [personalApiKey, setPersonalApiKey] = useState(() => {
+    const prov = getStoredAiProvider()
+    return getStoredApiKeyForProvider(prov) || getStoredGeminiKey()
+  })
   const [customModel, setCustomModel] = useState(getStoredCustomModel())
   const [customBaseUrl, setCustomBaseUrl] = useState(getStoredCustomBaseUrl())
   const [showKeySecret, setShowKeySecret] = useState(false)
@@ -261,21 +266,23 @@ export default function QualitativeExitAnalysis() {
     setStoredAiKeySource(selectedKeySource)
     if (selectedKeySource === 'custom') {
       setStoredGeminiKey(personalApiKey)
+      setStoredApiKeyForProvider(selectedProvider, personalApiKey)
       setStoredAiProvider(selectedProvider)
       setStoredCustomModel(customModel)
       setStoredCustomBaseUrl(customBaseUrl)
     }
     const preset = AI_PROVIDER_PRESETS[selectedProvider]
+    const effectiveModel = customModel || preset?.defaultModel
     const activeLabel = selectedKeySource === 'system'
       ? 'System Gateway'
-      : `${preset?.name || 'AI'} (${customModel || preset?.defaultModel})`
+      : `${preset?.name || 'AI'} (${effectiveModel})`
     setAiProvider(activeLabel)
     addToast(
       'success',
       t('บันทึกการตั้งค่าแหล่งประมวลผลแล้ว', 'Configuration Saved'),
       selectedKeySource === 'system'
         ? t('เชื่อมต่อระบบประมวลผลผ่านกุญแจส่วนกลางของระบบ (Central System Gateway) เรียบร้อยแล้ว', 'Connected using Central System Gateway.')
-        : t(`เปิดใช้งาน ${preset?.name || 'AI'} (${customModel || preset?.defaultModel}) เรียบร้อยแล้ว`, `Personal ${preset?.name} activated.`)
+        : t(`เปิดใช้งาน ${preset?.name || 'AI'} (${effectiveModel}) เรียบร้อยแล้ว`, `Personal ${preset?.name} activated.`)
     )
     setShowApiKeyModal(false)
   }
@@ -284,11 +291,13 @@ export default function QualitativeExitAnalysis() {
     setTestingApiKey(true)
     setTestResult(null)
     try {
+      const preset = AI_PROVIDER_PRESETS[selectedProvider]
+      const effectiveModel = customModel || preset?.defaultModel
       const res = await testAiConnection(
         selectedKeySource === 'custom' ? personalApiKey.trim() : undefined,
         selectedKeySource,
         selectedProvider,
-        customModel,
+        effectiveModel,
         customBaseUrl
       )
       setTestResult(res)
@@ -1937,6 +1946,7 @@ export default function QualitativeExitAnalysis() {
                                   type="button"
                                   onClick={() => {
                                     setSelectedProvider(provId)
+                                    setPersonalApiKey(getStoredApiKeyForProvider(provId) || '')
                                     setTestResult(null)
                                     setCustomModel(preset.defaultModel)
                                     setIsCustomModelInput(false)

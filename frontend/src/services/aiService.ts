@@ -196,6 +196,25 @@ export function clearStoredGeminiKey(): void {
   localStorage.removeItem(QA_PERSONAL_STORAGE_KEY)
 }
 
+export function getStoredApiKeyForProvider(providerId: AIProviderId): string {
+  if (providerId === 'gemini') {
+    return getStoredGeminiKey()
+  }
+  return localStorage.getItem(`advising_log_qa_key_${providerId}`) || ''
+}
+
+export function setStoredApiKeyForProvider(providerId: AIProviderId, key: string): void {
+  if (providerId === 'gemini') {
+    setStoredGeminiKey(key)
+    return
+  }
+  if (key.trim()) {
+    localStorage.setItem(`advising_log_qa_key_${providerId}`, key.trim())
+  } else {
+    localStorage.removeItem(`advising_log_qa_key_${providerId}`)
+  }
+}
+
 export function isSystemAiEnabled(): boolean {
   try {
     const raw = localStorage.getItem('advising_log_system_api_config')
@@ -224,11 +243,20 @@ export async function testAiConnection(
     }
   }
 
+  const effectiveProvider = provider || getStoredAiProvider()
   const key = effectiveSource === 'custom'
-    ? (customKey !== undefined ? customKey : getStoredGeminiKey())
+    ? (customKey !== undefined ? customKey : getStoredApiKeyForProvider(effectiveProvider))
     : undefined
 
-  const effectiveProvider = provider || getStoredAiProvider()
+  if (effectiveSource === 'custom' && (!key || key.trim().length === 0)) {
+    return {
+      success: false,
+      message: 'กรุณาระบุ API Key ก่อนทำการทดสอบการเชื่อมต่อ (API Key is required for testing)',
+      provider: AI_PROVIDER_PRESETS[effectiveProvider]?.name || effectiveProvider,
+      latencyMs: 0,
+    }
+  }
+
   const startTime = performance.now()
 
   try {
@@ -419,9 +447,10 @@ export async function analyzeWithLLM(req: AIAnalysisRequest): Promise<AIAnalysis
     return generateSmartAnalysis(req, mode, lang)
   }
 
+  const effectiveProv = req.providerId || getStoredAiProvider()
   const userApiKey = req.apiKey !== undefined
     ? req.apiKey
-    : (keySource === 'custom' ? getStoredGeminiKey() : undefined)
+    : (keySource === 'custom' ? getStoredApiKeyForProvider(effectiveProv) : undefined)
 
   // 1. Check Master Switch (System-Wide)
   if (!isSystemAiEnabled()) {
@@ -522,16 +551,16 @@ Answer the Program Chair query:
     try {
       // 2A. Google Gemini Provider
       if (providerId === 'gemini') {
+        const targetModel = customModel || 'gemini-1.5-flash'
         const candidateEndpoints = [
+          `https://generativelanguage.googleapis.com/v1beta/models/${targetModel}:generateContent`,
+          `https://generativelanguage.googleapis.com/v1/models/${targetModel}:generateContent`,
           'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent',
-          'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent',
           'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
-          'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent',
-          'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
           'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent',
-          'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent',
         ]
 
+        let lastErrorMsg = ''
         for (const endpoint of candidateEndpoints) {
           try {
             const geminiUrl = `${endpoint}?key=${encodeURIComponent(userApiKey.trim())}`
@@ -552,7 +581,7 @@ Answer the Program Chair query:
               const text = data?.candidates?.[0]?.content?.parts?.[0]?.text
               if (text) {
                 const match = endpoint.match(/models\/([^:]+)/)
-                const modelTag = match ? match[1] : 'gemini'
+                const modelTag = match ? match[1] : targetModel
                 return {
                   success: true,
                   provider: `Google Gemini (${modelTag})`,
@@ -561,8 +590,26 @@ Answer the Program Chair query:
                   timestamp: new Date().toISOString(),
                 }
               }
+            } else {
+              try {
+                const errData = await geminiRes.json() as any
+                lastErrorMsg = errData?.error?.message || `HTTP ${geminiRes.status}: ${geminiRes.statusText}`
+              } catch {
+                lastErrorMsg = `HTTP ${geminiRes.status}: ${geminiRes.statusText}`
+              }
             }
-          } catch (_err) {}
+          } catch (fetchErr: any) {
+            lastErrorMsg = fetchErr?.message || 'Network error'
+          }
+        }
+
+        return {
+          success: false,
+          provider: `Google Gemini (${targetModel})`,
+          mode,
+          analysis: `Gemini API Error: ${lastErrorMsg || 'Request failed. Please verify your Google AI Studio API key.'}`,
+          error: 'GEMINI_API_ERROR',
+          timestamp: new Date().toISOString(),
         }
       }
 
@@ -597,8 +644,28 @@ Answer the Program Chair query:
                 timestamp: new Date().toISOString(),
               }
             }
+          } else {
+            const errData = await claudeRes.json().catch(() => null) as any
+            const errMsg = errData?.error?.message || `HTTP ${claudeRes.status}: ${claudeRes.statusText}`
+            return {
+              success: false,
+              provider: `Anthropic Claude (${model})`,
+              mode,
+              analysis: `Claude API Error: ${errMsg}`,
+              error: 'CLAUDE_API_ERROR',
+              timestamp: new Date().toISOString(),
+            }
           }
-        } catch (_err) {}
+        } catch (fetchErr: any) {
+          return {
+            success: false,
+            provider: `Anthropic Claude (${model})`,
+            mode,
+            analysis: `Claude Connection Error: ${fetchErr?.message || 'Network error'}`,
+            error: 'CLAUDE_NETWORK_ERROR',
+            timestamp: new Date().toISOString(),
+          }
+        }
       }
 
       // 2C. OpenAI / DeepSeek Endpoints
@@ -607,9 +674,8 @@ Answer the Program Chair query:
           ? 'https://api.openai.com/v1/chat/completions'
           : 'https://api.deepseek.com/v1/chat/completions'
 
-        const defaultModel = providerId === 'openai'
-          ? 'gpt-4o-mini'
-          : 'deepseek-chat'
+        const brandLabel = providerId === 'openai' ? 'OpenAI' : 'DeepSeek AI'
+        const defaultModel = providerId === 'openai' ? 'gpt-4o-mini' : 'deepseek-chat'
         const model = customModel || defaultModel
 
         const headers: Record<string, string> = {
@@ -619,36 +685,53 @@ Answer the Program Chair query:
           headers['Authorization'] = `Bearer ${userApiKey.trim()}`
         }
 
-        const openAiRes = await fetch(baseUrl, {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({
-            model,
-            messages: [
-              { role: 'system', content: systemInstruction },
-              { role: 'user', content: prompt },
-            ],
-            temperature: 0.3,
-            max_tokens: 2048,
-          }),
-        })
+        try {
+          const openAiRes = await fetch(baseUrl, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({
+              model,
+              messages: [
+                { role: 'system', content: systemInstruction },
+                { role: 'user', content: prompt },
+              ],
+              temperature: 0.3,
+              max_tokens: 2048,
+            }),
+          })
 
-        if (openAiRes.ok) {
-          const data = await openAiRes.json() as any
-          const text = data?.choices?.[0]?.message?.content
-          if (text) {
-            const brandLabel = providerId === 'openai'
-              ? 'OpenAI'
-              : providerId === 'deepseek'
-              ? 'DeepSeek AI'
-              : 'Custom LLM'
+          if (openAiRes.ok) {
+            const data = await openAiRes.json() as any
+            const text = data?.choices?.[0]?.message?.content
+            if (text) {
+              return {
+                success: true,
+                provider: `${brandLabel} (${model})`,
+                mode,
+                analysis: text,
+                timestamp: new Date().toISOString(),
+              }
+            }
+          } else {
+            const errData = await openAiRes.json().catch(() => null) as any
+            const errMsg = errData?.error?.message || `HTTP ${openAiRes.status}: ${openAiRes.statusText}`
             return {
-              success: true,
+              success: false,
               provider: `${brandLabel} (${model})`,
               mode,
-              analysis: text,
+              analysis: `${brandLabel} API Error: ${errMsg}`,
+              error: `${providerId.toUpperCase()}_API_ERROR`,
               timestamp: new Date().toISOString(),
             }
+          }
+        } catch (fetchErr: any) {
+          return {
+            success: false,
+            provider: `${brandLabel} (${model})`,
+            mode,
+            analysis: `${brandLabel} Connection Error: ${fetchErr?.message || 'Network error'}`,
+            error: `${providerId.toUpperCase()}_NETWORK_ERROR`,
+            timestamp: new Date().toISOString(),
           }
         }
       }
