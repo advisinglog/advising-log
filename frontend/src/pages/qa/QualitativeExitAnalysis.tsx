@@ -231,12 +231,12 @@ export default function QualitativeExitAnalysis() {
     }
     addToast(
       'success',
-      t('บันทึกการตั้งค่าแล้ว', 'Configuration Saved'),
+      t('บันทึกการตั้งค่าแหล่งประมวลผลแล้ว', 'Configuration Saved'),
       selectedKeySource === 'system'
-        ? t('เลือกใช้ Google Gemini ผ่านกุญแจกลางของระบบ (Super Admin)', 'Connected using System Central Key.')
+        ? t('เชื่อมต่อระบบประมวลผลผ่านกุญแจส่วนกลางของระบบ (Central System Gateway) เรียบร้อยแล้ว', 'Connected using Central System Gateway.')
         : selectedKeySource === 'custom'
-        ? t('เปิดใช้งาน Google Gemini API Key ส่วนตัวเรียบร้อยแล้ว', 'Personal API Key active.')
-        : t('เลือกโหมดประมวลผลภายใน (Offline Heuristic Engine)', 'Reverted to internal offline engine.')
+        ? t('เปิดใช้งาน Google Gemini API Key ส่วนบุคคลสำหรับบัญชีนี้เรียบร้อยแล้ว', 'Personal Google Gemini API Key activated.')
+        : t('เปิดใช้งานระบบประมวลผลออฟไลน์ภายในเครื่อง (Local Heuristic Engine) เรียบร้อยแล้ว', 'Reverted to internal offline heuristic engine.')
     )
     setShowApiKeyModal(false)
   }
@@ -615,13 +615,13 @@ export default function QualitativeExitAnalysis() {
               className="cursor-pointer border-slate-200 dark:border-slate-700 text-xs font-semibold"
             >
               <Key className="h-3.5 w-3.5 mr-1.5 text-amber-500" />
-              <span>{t('ตั้งค่า Google Gemini API Key', 'Configure Gemini API Key')}</span>
-              <span className="ml-1.5 px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+              <span>{t('ตั้งค่าแหล่งประมวลผล AI', 'AI Engine Settings')}</span>
+              <span className="ml-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                 {getStoredAiKeySource() === 'custom'
-                  ? t('คีย์ส่วนตัว', 'Custom Key')
+                  ? t('กุญแจส่วนบุคคล', 'Personal Key')
                   : getStoredAiKeySource() === 'system'
-                  ? t('กุญแจกลาง (Admin)', 'System Key')
-                  : t('ออฟไลน์', 'Offline')}
+                  ? t('กุญแจส่วนกลาง (Admin)', 'System Central Key')
+                  : t('ประมวลผลออฟไลน์', 'Offline Heuristic')}
               </span>
             </Button>
 
@@ -1777,19 +1777,19 @@ export default function QualitativeExitAnalysis() {
       <Modal
         isOpen={showApiKeyModal}
         onClose={() => setShowApiKeyModal(false)}
-        title={t('ตั้งค่าแหล่งเชื่อมต่อ Google Gemini API Key (QA Role)', 'Configure Google Gemini API Key Source (QA Role)')}
+        title={t('กำหนดค่าแหล่งประมวลผลปัญญาประดิษฐ์ (AI Engine & API Key Configuration)', 'AI Engine & API Key Configuration')}
       >
         <div className="space-y-4">
           <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
             {t(
-              'เลือกแหล่งกุญแจ API สำหรับการประมวลผลการวิเคราะห์เชิงคุณภาพ (AUN-QA) และการถาม-ตอบ AI ตามความต้องการของคุณ:',
-              'Choose your preferred Google Gemini connection source for qualitative analysis and AI assistant:'
+              'กรุณาเลือกช่องทางการเชื่อมต่อปัญญาประดิษฐ์สำหรับการสังเคราะห์ข้อมูลเชิงคุณภาพ (AUN-QA Criteria 6 & 8) และระบบถาม-ตอบอัจฉริยะตามระดับความเป็นส่วนตัวที่ต้องการ:',
+              'Select your preferred AI execution environment for qualitative exit analysis and strategic inquiry:'
             )}
           </p>
 
           {/* 3 Interactive Mode Options */}
           <div className="space-y-2.5">
-            {/* Option 1: System Key (Hidden) */}
+            {/* Option 1: System Key (Hidden & Secure) */}
             <div
               onClick={() => setSelectedKeySource('system')}
               className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex items-start gap-3 ${
@@ -1799,23 +1799,24 @@ export default function QualitativeExitAnalysis() {
               }`}
             >
               <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${
-                selectedKeySource === 'system' ? 'bg-sky-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
+                selectedKeySource === 'system' ? 'bg-sky-600 text-white shadow-xs' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
               }`}>
                 <ShieldCheck className="h-4 w-4" />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                    {t('1. ใช้กุญแจส่วนกลางของระบบ (Super Admin)', '1. Use System Shared Key (Super Admin)')}
+                    {t('1. กุญแจส่วนกลางของระบบ (Central System Key - Super Admin)', '1. Central System Key (Managed by Super Admin)')}
                   </p>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800">
-                    {t('ซ่อนรหัสความปลอดภัย', 'Security Masked')}
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800 flex items-center gap-1">
+                    <ShieldCheck className="h-3 w-3" />
+                    {t('ปกป้องความลับ (Masked)', 'Protected & Masked')}
                   </span>
                 </div>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
                   {t(
-                    'เชื่อมต่อ Google Gemini ผ่านกุญแจกลางที่ Super Admin ตั้งค่าไว้ในระบบโดยอัตโนมัติ (ไม่เปิดเผยตัวคีย์ เพื่อความปลอดภัยสูงสุด)',
-                    'Connects securely via institution central credentials configured by Super Admin. Key value remains strictly confidential.'
+                    'เชื่อมต่อผ่านระบบประมวลผลส่วนกลางของสถาบันที่ผู้ดูแลระบบกำหนดไว้ โดยระบบจะซ่อนคีย์การเข้าถึงเพื่อความปลอดภัยตามมาตรฐานความมั่นคงปลอดภัยสารสนเทศ',
+                    'Processes via institution-managed central gateway. The master credential string remains strictly confidential and protected from client exposure.'
                   )}
                 </p>
               </div>
@@ -1831,18 +1832,18 @@ export default function QualitativeExitAnalysis() {
               }`}
             >
               <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${
-                selectedKeySource === 'custom' ? 'bg-amber-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
+                selectedKeySource === 'custom' ? 'bg-amber-500 text-white shadow-xs' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
               }`}>
                 <Key className="h-4 w-4" />
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                  {t('2. ใช้ API Key ส่วนตัวของฉัน (My Personal Key)', '2. Use My Personal Key')}
+                  {t('2. กุญแจส่วนบุคคล (Personal Google Gemini API Key)', '2. Personal Google Gemini API Key')}
                 </p>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
                   {t(
-                    'ระบุ Google Gemini API Key ของคุณเองจาก Google AI Studio (บันทึกเฉพาะในเบราว์เซอร์ของคุณเท่านั้น)',
-                    'Provide your personal Google AI Studio API key. Saved securely only on this local browser.'
+                    'ใช้กุญแจ API ส่วนบุคคลของคุณจาก Google AI Studio สำหรับการประมวลผลเฉพาะบัญชีของคุณ ข้อมูลกุญแจจะถูกจัดเก็บบนเว็บเบราว์เซอร์เครื่องนี้เท่านั้น',
+                    'Utilize your personal Google AI Studio credential. Key is stored locally in your browser storage and never shared across users.'
                   )}
                 </p>
 
@@ -1850,7 +1851,7 @@ export default function QualitativeExitAnalysis() {
                 {selectedKeySource === 'custom' && (
                   <div className="mt-3 pt-3 border-t border-slate-200/80 dark:border-slate-700/80 space-y-2">
                     <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
-                      {t('ระบุ Gemini API Key ส่วนตัว', 'Enter Personal Gemini Key')} <span className="text-rose-500">*</span>
+                      {t('ระบุ Google Gemini API Key ส่วนบุคคล', 'Personal Gemini API Key')} <span className="text-rose-500">*</span>
                     </label>
                     <div className="relative">
                       <input
@@ -1868,12 +1869,13 @@ export default function QualitativeExitAnalysis() {
                           setShowKeySecret(!showKeySecret)
                         }}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                        title={showKeySecret ? t('ซ่อนรหัส', 'Hide Key') : t('แสดงรหัส', 'Show Key')}
                       >
                         {showKeySecret ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                       </button>
                     </div>
                     <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
-                      <span>{t('เริ่มต้นด้วย AIzaSy...', 'Starts with AIzaSy...')}</span>
+                      <span>{t('รูปแบบมาตรฐาน: เริ่มต้นด้วย AIzaSy...', 'Format standard: Starts with AIzaSy...')}</span>
                       <a
                         href="https://aistudio.google.com/app/apikey"
                         target="_blank"
@@ -1881,7 +1883,7 @@ export default function QualitativeExitAnalysis() {
                         onClick={e => e.stopPropagation()}
                         className="text-sky-600 dark:text-sky-400 hover:underline font-semibold inline-flex items-center gap-1"
                       >
-                        <span>{t('รับ API Key ฟรีที่ Google AI Studio', 'Get free key at Google AI Studio')}</span>
+                        <span>{t('ขอรับ API Key ได้ที่ Google AI Studio', 'Get API Key at Google AI Studio')}</span>
                         <ExternalLink className="h-3 w-3" />
                       </a>
                     </div>
@@ -1900,18 +1902,18 @@ export default function QualitativeExitAnalysis() {
               }`}
             >
               <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${
-                selectedKeySource === 'offline' ? 'bg-slate-700 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
+                selectedKeySource === 'offline' ? 'bg-slate-700 text-white shadow-xs' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
               }`}>
                 <Bot className="h-4 w-4" />
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                  {t('3. ไม่ใช้งาน AI / โหมดจำลองภายใน (Offline Heuristic Engine)', '3. Offline / Internal Heuristic Engine')}
+                  {t('3. การประมวลผลออฟไลน์ภายในระบบ (Local Heuristic Intelligence Engine)', '3. Local Heuristic Intelligence Engine (Offline)')}
                 </p>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
                   {t(
-                    'ประมวลผลสังเคราะห์ข้อมูลเชิงคุณภาพด้วยกฎและสถิติภายในเครื่อง โดยไม่ส่งข้อมูลหรือเรียกใช้ Cloud API ภายนอก',
-                    'Synthesizes qualitative data locally using rule-based diagnostic algorithms without sending any data to external Cloud APIs.'
+                    'ประมวลผลและวินิจฉัยข้อมูลเชิงคุณภาพด้วยขั้นตอนวิธีทางสถิติและแบบจำลองเชิงตรรกะภายในเครื่องโดยสมบูรณ์ โดยไม่มีการส่งข้อมูลออกสู่คลาวด์ภายนอก (Zero External Data Transfer)',
+                    'Analyzes qualitative patterns locally using embedded statistical logic and domain rules without transmitting any student data to external cloud services.'
                   )}
                 </p>
               </div>
@@ -1926,12 +1928,12 @@ export default function QualitativeExitAnalysis() {
               size="sm"
               onClick={handleTestApiKey}
               disabled={testingApiKey || (selectedKeySource === 'custom' && !personalApiKey.trim())}
-              className="text-xs font-semibold"
+              className="text-xs font-semibold cursor-pointer"
             >
               {testingApiKey ? (
                 <>
                   <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
-                  {t('กำลังทดสอบ...', 'Testing...')}
+                  {t('กำลังทดสอบการเชื่อมต่อ...', 'Testing Connection...')}
                 </>
               ) : (
                 <>
@@ -1942,10 +1944,10 @@ export default function QualitativeExitAnalysis() {
             </Button>
 
             <div className="flex items-center gap-2">
-              <Button type="button" variant="secondary" size="sm" onClick={() => setShowApiKeyModal(false)}>
+              <Button type="button" variant="secondary" size="sm" onClick={() => setShowApiKeyModal(false)} className="cursor-pointer">
                 {t('ยกเลิก', 'Cancel')}
               </Button>
-              <Button type="button" variant="primary" size="sm" onClick={handleSaveKeyConfiguration} className="font-bold">
+              <Button type="button" variant="primary" size="sm" onClick={handleSaveKeyConfiguration} className="font-bold cursor-pointer shadow-xs">
                 <Check className="h-3.5 w-3.5 mr-1" />
                 {t('บันทึกการตั้งค่า', 'Save Configuration')}
               </Button>
