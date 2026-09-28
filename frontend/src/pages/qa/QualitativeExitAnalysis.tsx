@@ -128,7 +128,6 @@ export default function QualitativeExitAnalysis() {
   const [aiProvider, setAiProvider] = useState<string>(() => {
     const src = getStoredAiKeySource()
     if (src === 'system') return 'System Gateway'
-    if (src === 'offline') return 'Local Engine (Offline)'
     const p = getStoredAiProvider()
     const m = getStoredCustomModel()
     const preset = AI_PROVIDER_PRESETS[p]
@@ -267,18 +266,14 @@ export default function QualitativeExitAnalysis() {
     const preset = AI_PROVIDER_PRESETS[selectedProvider]
     const activeLabel = selectedKeySource === 'system'
       ? 'System Gateway'
-      : selectedKeySource === 'custom'
-      ? `${preset?.name || 'Custom'} (${customModel || preset?.defaultModel})`
-      : 'Local Engine (Offline)'
+      : `${preset?.name || 'AI'} (${customModel || preset?.defaultModel})`
     setAiProvider(activeLabel)
     addToast(
       'success',
       t('บันทึกการตั้งค่าแหล่งประมวลผลแล้ว', 'Configuration Saved'),
       selectedKeySource === 'system'
         ? t('เชื่อมต่อระบบประมวลผลผ่านกุญแจส่วนกลางของระบบ (Central System Gateway) เรียบร้อยแล้ว', 'Connected using Central System Gateway.')
-        : selectedKeySource === 'custom'
-        ? t(`เปิดใช้งาน ${preset?.name || 'AI'} (${customModel || preset?.defaultModel}) เรียบร้อยแล้ว`, `Personal ${preset?.name} activated.`)
-        : t('เปิดใช้งานระบบประมวลผลออฟไลน์ภายในเครื่อง (Local Offline Engine) เรียบร้อยแล้ว', 'Reverted to internal offline engine.')
+        : t(`เปิดใช้งาน ${preset?.name || 'AI'} (${customModel || preset?.defaultModel}) เรียบร้อยแล้ว`, `Personal ${preset?.name} activated.`)
     )
     setShowApiKeyModal(false)
   }
@@ -678,9 +673,7 @@ export default function QualitativeExitAnalysis() {
               <span className="ml-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700">
                 {getStoredAiKeySource() === 'custom'
                   ? t('คีย์ส่วนบุคคล', 'Personal Key')
-                  : getStoredAiKeySource() === 'system'
-                  ? t('ระบบส่วนกลาง', 'System Gateway')
-                  : t('ออฟไลน์', 'Offline')}
+                  : t('ระบบส่วนกลาง', 'System Gateway')}
               </span>
             </Button>
 
@@ -1842,7 +1835,8 @@ export default function QualitativeExitAnalysis() {
       >
         <div className="space-y-5">
           {/* Top 3-Way Segmented Switcher */}
-          <div className="grid grid-cols-3 gap-1 p-1 bg-slate-100 dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800">
+          {/* Top 2-Way Segmented Switcher */}
+          <div className="grid grid-cols-2 gap-1 p-1 bg-slate-100 dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800">
             <button
               type="button"
               onClick={() => { setSelectedKeySource('system'); setTestResult(null) }}
@@ -1866,18 +1860,6 @@ export default function QualitativeExitAnalysis() {
             >
               <Key className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400 shrink-0" />
               <span className="truncate">{t('2. คีย์ส่วนบุคคล', '2. Custom Key')}</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => { setSelectedKeySource('offline'); setTestResult(null) }}
-              className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                selectedKeySource === 'offline'
-                  ? 'bg-white dark:bg-[#0e1424] text-slate-900 dark:text-white shadow-2xs border border-slate-200/80 dark:border-slate-700 font-bold'
-                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
-              }`}
-            >
-              <Bot className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-              <span className="truncate">{t('3. ออฟไลน์ในเครื่อง', '3. Offline Engine')}</span>
             </button>
           </div>
 
@@ -1930,7 +1912,6 @@ export default function QualitativeExitAnalysis() {
                           setTestResult(null)
                           setCustomModel(AI_PROVIDER_PRESETS[provId].defaultModel)
                           setIsCustomModelInput(false)
-                          if (provId === 'custom') setCustomBaseUrl('http://localhost:11434/v1')
                         }}
                         className="w-full appearance-none rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/60 py-2.5 pl-3.5 pr-10 text-xs font-medium text-slate-900 dark:text-slate-100 shadow-2xs focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20 cursor-pointer transition-colors"
                       >
@@ -2067,50 +2048,6 @@ export default function QualitativeExitAnalysis() {
                   </div>
                 </div>
 
-                {/* Base URL (Local / Custom only) */}
-                {selectedProvider === 'custom' && (
-                  <div className="space-y-1.5 pt-1">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs font-semibold text-slate-800 dark:text-slate-200">
-                        {t('Base URL (Endpoint)', 'Base URL (Endpoint)')}
-                      </label>
-                      <div className="flex items-center gap-1.5 text-[10px]">
-                        <button
-                          type="button"
-                          onClick={() => { setCustomBaseUrl('http://localhost:11434/v1'); setTestResult(null) }}
-                          className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer font-mono transition-colors"
-                        >
-                          :11434 Ollama
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => { setCustomBaseUrl('http://localhost:1234/v1'); setTestResult(null) }}
-                          className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer font-mono transition-colors"
-                        >
-                          :1234 LM Studio
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => { setCustomBaseUrl('http://localhost:8000/v1'); setTestResult(null) }}
-                          className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer font-mono transition-colors"
-                        >
-                          :8000 vLLM
-                        </button>
-                      </div>
-                    </div>
-                    <input
-                      type="text"
-                      value={customBaseUrl}
-                      onChange={e => {
-                        setCustomBaseUrl(e.target.value)
-                        setTestResult(null)
-                      }}
-                      placeholder="http://localhost:11434/v1"
-                      className="w-full px-3.5 py-2.5 text-xs font-mono border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50/50 dark:bg-slate-900/60 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
-                    />
-                  </div>
-                )}
-
                 {/* Minimal PDPA Assurance */}
                 <div className="flex items-center gap-1.5 text-[11px] text-slate-400 pt-0.5">
                   <ShieldCheck className="h-3.5 w-3.5 text-slate-400 shrink-0" />
@@ -2119,36 +2056,6 @@ export default function QualitativeExitAnalysis() {
               </div>
             )
           })()}
-
-          {/* Mode 3: Local Offline Engine */}
-          {selectedKeySource === 'offline' && (
-            <div className="p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-[#0e1424] space-y-2.5">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="h-8 w-8 rounded-lg bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 flex items-center justify-center">
-                    <Bot className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-slate-900 dark:text-white">
-                      {t('ประมวลผลภายในเครื่องแบบออฟไลน์ (Local Engine)', 'Local Offline Intelligence Engine')}
-                    </p>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                      {t('ไม่ต้องใช้อินเทอร์เน็ต • ปลอดภัยสูงสุด', 'Zero External Network Transfer • High Privacy')}
-                    </p>
-                  </div>
-                </div>
-                <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border border-sky-200/80 dark:border-sky-800">
-                  {t('ออฟไลน์ 100%', '100% Offline')}
-                </span>
-              </div>
-              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed pt-1 border-t border-slate-200/60 dark:border-slate-800">
-                {t(
-                  'สังเคราะห์รูปแบบคำร้องและสร้างข้อเสนอแนะด้วยขั้นตอนวิธีเชิงสถิติและตรรกะภายในระบบ เหมาะสำหรับการใช้งานในสภาวะที่ไม่ต้องการส่งข้อมูลออกนอกเครื่อง',
-                  'Evaluates departure patterns locally using built-in statistical logic. Ideal for offline or strictly isolated environments.'
-                )}
-              </p>
-            </div>
-          )}
 
           {/* Rich Inline Test Result Banner */}
           {testResult && (

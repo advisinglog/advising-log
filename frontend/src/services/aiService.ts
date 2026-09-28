@@ -16,7 +16,7 @@ export interface AIAnalysisPayloadCase {
 
 export type AIAnalysisMode = 'strategic_synthesis' | 'chat_query' | 'case_diagnostic'
 
-export type AIProviderId = 'gemini' | 'openai' | 'claude' | 'deepseek' | 'custom'
+export type AIProviderId = 'gemini' | 'openai' | 'claude' | 'deepseek'
 
 export interface AIProviderPreset {
   id: AIProviderId
@@ -99,21 +99,6 @@ export const AI_PROVIDER_PRESETS: Record<AIProviderId, AIProviderPreset> = {
     keyPrefix: 'sk-',
     studioUrl: 'https://platform.deepseek.com/api_keys',
     baseUrl: 'https://api.deepseek.com/v1',
-  },
-  custom: {
-    id: 'custom',
-    name: 'Local LLM / Ollama',
-    labelTh: 'Custom API / Local LLM (Ollama / vLLM)',
-    labelEn: 'Custom API / Local LLM (Ollama / vLLM)',
-    taglineTh: 'ประมวลผลบนเครื่องส่วนตัว หรือ Private On-Premise',
-    taglineEn: 'Run locally via Ollama / vLLM with zero cloud leakage',
-    badge: 'Self-Hosted',
-    defaultModel: 'llama3.2',
-    popularModels: ['llama3.2', 'qwen2.5', 'mistral', 'deepseek-r1:8b'],
-    keyPlaceholder: 'sk-... หรือ ollama',
-    keyFormatHint: 'OpenAI-Compatible Endpoint',
-    studioUrl: 'https://ollama.com',
-    baseUrl: 'http://localhost:11434/v1',
   },
 }
 
@@ -496,7 +481,6 @@ export async function analyzeWithLLM(req: AIAnalysisRequest): Promise<AIAnalysis
   if (userApiKey && userApiKey.length > 5) {
     const providerId = req.providerId || getStoredAiProvider()
     const customModel = req.customModel || getStoredCustomModel()
-    const customBaseUrl = req.customBaseUrl || getStoredCustomBaseUrl()
 
     const systemInstruction = `You are a Higher Education Quality Assurance (QA) and Student Retention specialist advising the Program Chair under AUN-QA Criteria 6 & 8.
 All student names have been masked for PDPA compliance. Analyze qualitative departure data with empathy and academic rigor.
@@ -617,25 +601,21 @@ Answer the Program Chair query:
         } catch (_err) {}
       }
 
-      // 2C. OpenAI / DeepSeek / Custom OpenAI-Compatible Endpoints
-      if (providerId === 'openai' || providerId === 'deepseek' || providerId === 'custom') {
+      // 2C. OpenAI / DeepSeek Endpoints
+      if (providerId === 'openai' || providerId === 'deepseek') {
         const baseUrl = providerId === 'openai'
           ? 'https://api.openai.com/v1/chat/completions'
-          : providerId === 'deepseek'
-          ? 'https://api.deepseek.com/v1/chat/completions'
-          : `${(customBaseUrl || 'http://localhost:11434/v1').replace(/\/+$/, '')}/chat/completions`
+          : 'https://api.deepseek.com/v1/chat/completions'
 
         const defaultModel = providerId === 'openai'
           ? 'gpt-4o-mini'
-          : providerId === 'deepseek'
-          ? 'deepseek-chat'
-          : 'llama3.2'
+          : 'deepseek-chat'
         const model = customModel || defaultModel
 
         const headers: Record<string, string> = {
           'Content-Type': 'application/json',
         }
-        if (userApiKey && userApiKey.trim() !== 'none' && userApiKey.trim() !== 'ollama') {
+        if (userApiKey && userApiKey.trim() !== 'none') {
           headers['Authorization'] = `Bearer ${userApiKey.trim()}`
         }
 
