@@ -585,17 +585,17 @@ export default function QualitativeExitAnalysis() {
       {/* AI QUALITATIVE ANALYSIS (POWERED BY LLM) */}
       {/* ============================================================ */}
       <Card className="border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#0e1424] overflow-hidden shadow-sm relative">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-sky-100 dark:border-slate-800">
-          <div className="flex items-center gap-2.5">
-            <div className="h-10 w-10 rounded-xl bg-sky-600 text-white flex items-center justify-center shadow-sm">
-              <Sparkles className="h-4 w-4" />
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3.5 border-b border-slate-100 dark:border-slate-800">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-xl border border-sky-100 dark:border-sky-900/50 bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0">
+              <Sparkles className="h-5 w-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-base font-bold text-slate-950 dark:text-white">
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">
                   {t('ผู้ช่วย AI วิเคราะห์ปัญหาเชิงคุณภาพ', 'AI Qualitative Analysis')}
                 </h3>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700">
                   {aiProvider}
                 </span>
               </div>
@@ -612,11 +612,11 @@ export default function QualitativeExitAnalysis() {
                 setPersonalApiKey(getStoredGeminiKey())
                 setShowApiKeyModal(true)
               }}
-              className="cursor-pointer border-slate-200 dark:border-slate-700 text-xs font-semibold"
+              className="cursor-pointer border-slate-200/80 dark:border-slate-800 text-xs font-semibold"
             >
-              <Key className="h-3.5 w-3.5 mr-1.5 text-amber-500" />
+              <Key className="h-3.5 w-3.5 mr-1.5 text-sky-600 dark:text-sky-400" />
               <span>{t('ตั้งค่าแหล่งประมวลผล AI', 'AI Engine Settings')}</span>
-              <span className="ml-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+              <span className="ml-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800">
                 {getStoredAiKeySource() === 'custom'
                   ? t('กุญแจส่วนบุคคล', 'Personal Key')
                   : getStoredAiKeySource() === 'system'
@@ -692,16 +692,14 @@ export default function QualitativeExitAnalysis() {
         )}
 
         {/* AI Modes Toggle */}
-
-
-        <div className="flex items-center gap-2 mb-4 border-b border-slate-100 dark:border-slate-800 pb-2">
+        <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-900 rounded-xl border border-slate-200/60 dark:border-slate-800 w-fit mb-4">
           <button
             type="button"
             onClick={() => setAiMode('strategic')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
               aiMode === 'strategic'
-                ? 'bg-sky-600 text-white shadow-xs'
-                : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                ? 'bg-white dark:bg-[#0e1424] text-sky-600 dark:text-sky-400 shadow-2xs border border-slate-200/80 dark:border-slate-700'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
             }`}
           >
             <Layers className="h-3.5 w-3.5" />
@@ -711,16 +709,16 @@ export default function QualitativeExitAnalysis() {
           <button
             type="button"
             onClick={() => setAiMode('chat')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
               aiMode === 'chat'
-                ? 'bg-sky-600 text-white shadow-xs'
-                : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                ? 'bg-white dark:bg-[#0e1424] text-sky-600 dark:text-sky-400 shadow-2xs border border-slate-200/80 dark:border-slate-700'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
             }`}
           >
             <Bot className="h-3.5 w-3.5" />
             <span>{t('ถาม-ตอบกับ AI', 'AI Q&A')}</span>
             {aiChatMessages.length > 0 && (
-              <span className="px-1.5 py-0.2 rounded-full text-xs bg-sky-200/50 text-sky-900 font-bold">
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-sky-100 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 font-bold">
                 {aiChatMessages.length}
               </span>
             )}
@@ -1788,59 +1786,72 @@ export default function QualitativeExitAnalysis() {
           </p>
 
           {/* 3 Interactive Mode Options */}
-          <div className="space-y-2.5">
+          <div className="space-y-3">
             {/* Option 1: System Key (Hidden & Secure) */}
             <div
               onClick={() => setSelectedKeySource('system')}
-              className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex items-start gap-3 ${
+              className={`p-4 rounded-2xl border text-left transition-all cursor-pointer flex items-start gap-3.5 relative ${
                 selectedKeySource === 'system'
-                  ? 'border-sky-500 bg-sky-50/70 dark:bg-sky-950/40 ring-2 ring-sky-500/20 shadow-xs'
-                  : 'border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300'
+                  ? 'border-sky-500 bg-sky-50/50 dark:bg-sky-950/20 ring-1 ring-sky-500/30 shadow-xs'
+                  : 'border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#0e1424] hover:border-slate-300 dark:hover:border-slate-700'
               }`}
             >
-              <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${
-                selectedKeySource === 'system' ? 'bg-sky-600 text-white shadow-xs' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
+              <div className={`h-9 w-9 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
+                selectedKeySource === 'system'
+                  ? 'border border-sky-200 dark:border-sky-800/80 bg-sky-100 dark:bg-sky-900/50 text-sky-600 dark:text-sky-400'
+                  : 'border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800 text-slate-500'
               }`}>
                 <ShieldCheck className="h-4 w-4" />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-2">
-                  <p className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                  <p className="text-xs font-bold text-slate-900 dark:text-white">
                     {t('1. กุญแจส่วนกลางของระบบ (Central System Key - Super Admin)', '1. Central System Key (Managed by Super Admin)')}
                   </p>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800 flex items-center gap-1">
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800 flex items-center gap-1">
                     <ShieldCheck className="h-3 w-3" />
                     {t('ปกป้องความลับ (Masked)', 'Protected & Masked')}
                   </span>
                 </div>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
                   {t(
                     'เชื่อมต่อผ่านระบบประมวลผลส่วนกลางของสถาบันที่ผู้ดูแลระบบกำหนดไว้ โดยระบบจะซ่อนคีย์การเข้าถึงเพื่อความปลอดภัยตามมาตรฐานความมั่นคงปลอดภัยสารสนเทศ',
                     'Processes via institution-managed central gateway. The master credential string remains strictly confidential and protected from client exposure.'
                   )}
                 </p>
               </div>
+              <div className="mt-0.5 shrink-0">
+                <div className={`h-4 w-4 rounded-full border flex items-center justify-center transition-colors ${
+                  selectedKeySource === 'system'
+                    ? 'border-sky-500 bg-sky-500 text-white'
+                    : 'border-slate-300 dark:border-slate-600'
+                }`}>
+                  {selectedKeySource === 'system' && <div className="h-1.5 w-1.5 rounded-full bg-white" />}
+                </div>
+              </div>
             </div>
 
             {/* Option 2: Personal Key */}
             <div
               onClick={() => setSelectedKeySource('custom')}
-              className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex items-start gap-3 ${
+              className={`p-4 rounded-2xl border text-left transition-all cursor-pointer flex items-start gap-3.5 relative ${
                 selectedKeySource === 'custom'
-                  ? 'border-sky-500 bg-sky-50/70 dark:bg-sky-950/40 ring-2 ring-sky-500/20 shadow-xs'
-                  : 'border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300'
+                  ? 'border-sky-500 bg-sky-50/50 dark:bg-sky-950/20 ring-1 ring-sky-500/30 shadow-xs'
+                  : 'border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#0e1424] hover:border-slate-300 dark:hover:border-slate-700'
               }`}
             >
-              <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${
-                selectedKeySource === 'custom' ? 'bg-amber-500 text-white shadow-xs' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
+              <div className={`h-9 w-9 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
+                selectedKeySource === 'custom'
+                  ? 'border border-sky-200 dark:border-sky-800/80 bg-sky-100 dark:bg-sky-900/50 text-sky-600 dark:text-sky-400'
+                  : 'border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800 text-slate-500'
               }`}>
                 <Key className="h-4 w-4" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                <p className="text-xs font-bold text-slate-900 dark:text-white">
                   {t('2. กุญแจส่วนบุคคล (Personal Google Gemini API Key)', '2. Personal Google Gemini API Key')}
                 </p>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
                   {t(
                     'ใช้กุญแจ API ส่วนบุคคลของคุณจาก Google AI Studio สำหรับการประมวลผลเฉพาะบัญชีของคุณ ข้อมูลกุญแจจะถูกจัดเก็บบนเว็บเบราว์เซอร์เครื่องนี้เท่านั้น',
                     'Utilize your personal Google AI Studio credential. Key is stored locally in your browser storage and never shared across users.'
@@ -1849,7 +1860,7 @@ export default function QualitativeExitAnalysis() {
 
                 {/* Input field appears when Option 2 is selected */}
                 {selectedKeySource === 'custom' && (
-                  <div className="mt-3 pt-3 border-t border-slate-200/80 dark:border-slate-700/80 space-y-2">
+                  <div className="mt-3.5 pt-3.5 border-t border-slate-200/80 dark:border-slate-700/80 space-y-2.5">
                     <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
                       {t('ระบุ Google Gemini API Key ส่วนบุคคล', 'Personal Gemini API Key')} <span className="text-rose-500">*</span>
                     </label>
@@ -1860,7 +1871,7 @@ export default function QualitativeExitAnalysis() {
                         onChange={e => setPersonalApiKey(e.target.value)}
                         placeholder="AIzaSy..."
                         onClick={e => e.stopPropagation()}
-                        className="w-full pl-3.5 pr-10 py-2 text-xs font-mono border border-slate-200/90 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
+                        className="w-full pl-3.5 pr-10 py-2.5 text-xs font-mono border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-[#0b0f19] text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-2xs"
                       />
                       <button
                         type="button"
@@ -1871,7 +1882,7 @@ export default function QualitativeExitAnalysis() {
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
                         title={showKeySecret ? t('ซ่อนรหัส', 'Hide Key') : t('แสดงรหัส', 'Show Key')}
                       >
-                        {showKeySecret ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                        {showKeySecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
                     </div>
                     <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
@@ -1890,32 +1901,52 @@ export default function QualitativeExitAnalysis() {
                   </div>
                 )}
               </div>
+              <div className="mt-0.5 shrink-0">
+                <div className={`h-4 w-4 rounded-full border flex items-center justify-center transition-colors ${
+                  selectedKeySource === 'custom'
+                    ? 'border-sky-500 bg-sky-500 text-white'
+                    : 'border-slate-300 dark:border-slate-600'
+                }`}>
+                  {selectedKeySource === 'custom' && <div className="h-1.5 w-1.5 rounded-full bg-white" />}
+                </div>
+              </div>
             </div>
 
             {/* Option 3: Offline Heuristic Engine */}
             <div
               onClick={() => setSelectedKeySource('offline')}
-              className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex items-start gap-3 ${
+              className={`p-4 rounded-2xl border text-left transition-all cursor-pointer flex items-start gap-3.5 relative ${
                 selectedKeySource === 'offline'
-                  ? 'border-sky-500 bg-sky-50/70 dark:bg-sky-950/40 ring-2 ring-sky-500/20 shadow-xs'
-                  : 'border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300'
+                  ? 'border-sky-500 bg-sky-50/50 dark:bg-sky-950/20 ring-1 ring-sky-500/30 shadow-xs'
+                  : 'border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#0e1424] hover:border-slate-300 dark:hover:border-slate-700'
               }`}
             >
-              <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${
-                selectedKeySource === 'offline' ? 'bg-slate-700 text-white shadow-xs' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
+              <div className={`h-9 w-9 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
+                selectedKeySource === 'offline'
+                  ? 'border border-sky-200 dark:border-sky-800/80 bg-sky-100 dark:bg-sky-900/50 text-sky-600 dark:text-sky-400'
+                  : 'border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800 text-slate-500'
               }`}>
                 <Bot className="h-4 w-4" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                <p className="text-xs font-bold text-slate-900 dark:text-white">
                   {t('3. การประมวลผลออฟไลน์ภายในระบบ (Local Heuristic Intelligence Engine)', '3. Local Heuristic Intelligence Engine (Offline)')}
                 </p>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
                   {t(
                     'ประมวลผลและวินิจฉัยข้อมูลเชิงคุณภาพด้วยขั้นตอนวิธีทางสถิติและแบบจำลองเชิงตรรกะภายในเครื่องโดยสมบูรณ์ โดยไม่มีการส่งข้อมูลออกสู่คลาวด์ภายนอก (Zero External Data Transfer)',
                     'Analyzes qualitative patterns locally using embedded statistical logic and domain rules without transmitting any student data to external cloud services.'
                   )}
                 </p>
+              </div>
+              <div className="mt-0.5 shrink-0">
+                <div className={`h-4 w-4 rounded-full border flex items-center justify-center transition-colors ${
+                  selectedKeySource === 'offline'
+                    ? 'border-sky-500 bg-sky-500 text-white'
+                    : 'border-slate-300 dark:border-slate-600'
+                }`}>
+                  {selectedKeySource === 'offline' && <div className="h-1.5 w-1.5 rounded-full bg-white" />}
+                </div>
               </div>
             </div>
           </div>
