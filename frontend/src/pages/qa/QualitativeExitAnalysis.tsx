@@ -537,25 +537,24 @@ export default function QualitativeExitAnalysis() {
   return (
     <div className="space-y-6 text-slate-700 dark:text-slate-200 font-sans antialiased">
       {/* Top Banner: Qualitative Diagnosis Focus */}
-      <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-gradient-to-r from-sky-50/50 via-white to-white dark:from-sky-950/20 dark:via-[#0e1424] dark:to-[#0e1424] p-5 sm:p-6 shadow-sm flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+      <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-[#0e1424] p-5 sm:p-6 shadow-2xs flex flex-col xl:flex-row xl:items-center justify-between gap-4">
         <div className="flex items-start sm:items-center gap-3.5 min-w-0">
-          <div className="h-11 w-11 rounded-xl bg-sky-100 dark:bg-sky-950 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0">
+          <div className="h-11 w-11 rounded-xl border border-sky-100 dark:border-sky-900/50 bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0">
             <Brain className="h-5 w-5" />
           </div>
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2 mb-1">
               <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 tracking-tight">
-                {t('การวิเคราะห์ปัญหาเชิงคุณภาพ: ทำไมเด็กลาออก / พักการศึกษา?', 'Qualitative Analysis: Why Do Students Resign or Take Leave?')}
+                {t('การวิเคราะห์สาเหตุเชิงคุณภาพ: ทำไมเด็กลาออก / พักการศึกษา?', 'Qualitative Analysis: Why Do Students Resign or Take Leave?')}
               </h3>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-50 dark:bg-sky-950/50 text-sky-700 dark:text-sky-300 border border-sky-200/70 dark:border-sky-800">
-                <Sparkles className="h-3 w-3 text-sky-600 dark:text-sky-400" />
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700">
                 AUN-QA Criteria 6.4 & 8.3
               </span>
             </div>
             <p className="max-w-3xl text-xs sm:text-sm leading-relaxed text-slate-500 dark:text-slate-400">
               {t(
-                'การวิเคราะห์หาสาเหตุที่แท้จริงสำหรับทุกประเด็นย่อย โดยบูรณาการความคิดเห็นของนักศึกษาร่วมกับการประเมินของอาจารย์ที่ปรึกษา',
-                'Root-cause diagnosis for all leaves, synthesizing student voices with advisors evaluations.'
+                'สรุปและวิเคราะห์เจาะลึกสาเหตุการลาออกและการพักการศึกษา โดยบูรณาการข้อมูลคำร้องของนักศึกษาและการประเมินของอาจารย์ที่ปรึกษา',
+                'Synthesizing root causes of departures by integrating student exit narratives with advisor assessments.'
               )}
             </p>
           </div>
@@ -564,7 +563,7 @@ export default function QualitativeExitAnalysis() {
         <div className="flex items-center gap-2 shrink-0 self-start xl:self-auto">
           <Button variant="secondary" size="sm" onClick={handleExportQualitative} className="text-xs">
             <Download className="h-3.5 w-3.5 mr-1.5 text-slate-500" />
-            {t('ส่งออกรายงานวิเคราะห์เชิงคุณภาพ', 'Export Qualitative Audit')}
+            {t('ส่งออกรายงานวิเคราะห์เชิงคุณภาพ', 'Export Qualitative Report')}
           </Button>
         </div>
       </div>
@@ -609,20 +608,20 @@ export default function QualitativeExitAnalysis() {
       </div>
 
       {/* ============================================================ */}
-      {/* AI QUALITATIVE ANALYSIS (POWERED BY LLM) */}
+      {/* AI QUALITATIVE ANALYSIS */}
       {/* ============================================================ */}
-      <Card className="border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#0e1424] overflow-hidden shadow-sm relative">
+      <Card className="border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#0e1424] overflow-hidden shadow-2xs relative">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3.5 border-b border-slate-100 dark:border-slate-800">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl border border-sky-100 dark:border-sky-900/50 bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0">
-              <Sparkles className="h-5 w-5" />
+            <div className="h-10 w-10 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 flex items-center justify-center shrink-0">
+              <Bot className="h-5 w-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                  {t('ผู้ช่วย AI วิเคราะห์ปัญหาเชิงคุณภาพ', 'AI Qualitative Analysis')}
+                  {t('การวิเคราะห์และสรุปประเด็นด้วย AI', 'Qualitative Synthesis & AI Assistant')}
                 </h3>
-                <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700">
+                <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700 font-mono">
                   {aiProvider}
                 </span>
               </div>
@@ -641,14 +640,14 @@ export default function QualitativeExitAnalysis() {
               }}
               className="cursor-pointer border-slate-200/80 dark:border-slate-800 text-xs font-semibold"
             >
-              <Key className="h-3.5 w-3.5 mr-1.5 text-sky-600 dark:text-sky-400" />
-              <span>{t('ตั้งค่าแหล่งประมวลผล AI', 'AI Engine Settings')}</span>
-              <span className="ml-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800">
+              <Key className="h-3.5 w-3.5 mr-1.5 text-slate-500" />
+              <span>{t('ตั้งค่าโมเดล', 'Model Settings')}</span>
+              <span className="ml-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700">
                 {getStoredAiKeySource() === 'custom'
-                  ? t('กุญแจส่วนบุคคล', 'Personal Key')
+                  ? t('คีย์ส่วนบุคคล', 'Personal Key')
                   : getStoredAiKeySource() === 'system'
-                  ? t('กุญแจส่วนกลาง (Admin)', 'System Central Key')
-                  : t('ประมวลผลออฟไลน์', 'Offline Heuristic')}
+                  ? t('ระบบส่วนกลาง', 'System Gateway')
+                  : t('ออฟไลน์', 'Offline')}
               </span>
             </Button>
 
@@ -657,17 +656,17 @@ export default function QualitativeExitAnalysis() {
               variant="primary"
               onClick={() => handleRunAiStrategicSynthesis()}
               disabled={aiLoading || !isAiFullyOperational}
-              className="cursor-pointer shadow-sm shadow-sky-600/20 disabled:opacity-50"
+              className="cursor-pointer font-bold shadow-2xs disabled:opacity-50"
             >
               {aiLoading ? (
                 <>
                   <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-                  {t('AI กำลังวิเคราะห์...', 'Analyzing...')}
+                  {t('กำลังประมวลผล...', 'Processing...')}
                 </>
               ) : (
                 <>
-                  <Sparkles className="h-3.5 w-3.5 mr-1.5" />
-                  {t('วิเคราะห์ภาพรวมเชิงกลยุทธ์ด้วย AI', 'Generate AI Synthesis')}
+                  <Layers className="h-3.5 w-3.5 mr-1.5" />
+                  {t('ประมวลผลสรุปภาพรวม', 'Generate Summary')}
                 </>
               )}
             </Button>
@@ -723,29 +722,29 @@ export default function QualitativeExitAnalysis() {
           <button
             type="button"
             onClick={() => setAiMode('strategic')}
-            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
               aiMode === 'strategic'
-                ? 'bg-white dark:bg-[#0e1424] text-sky-600 dark:text-sky-400 shadow-2xs border border-slate-200/80 dark:border-slate-700'
+                ? 'bg-white dark:bg-[#0e1424] text-slate-900 dark:text-white shadow-2xs border border-slate-200/80 dark:border-slate-700 font-bold'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
             }`}
           >
-            <Layers className="h-3.5 w-3.5" />
-            <span>{t('บทวิเคราะห์เชิงกลยุทธ์ (Strategic Synthesis)', 'Strategic Synthesis')}</span>
+            <Layers className="h-3.5 w-3.5 text-slate-500" />
+            <span>{t('สรุปภาพรวมเชิงกลยุทธ์', 'Strategic Summary')}</span>
           </button>
 
           <button
             type="button"
             onClick={() => setAiMode('chat')}
-            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
               aiMode === 'chat'
-                ? 'bg-white dark:bg-[#0e1424] text-sky-600 dark:text-sky-400 shadow-2xs border border-slate-200/80 dark:border-slate-700'
+                ? 'bg-white dark:bg-[#0e1424] text-slate-900 dark:text-white shadow-2xs border border-slate-200/80 dark:border-slate-700 font-bold'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
             }`}
           >
-            <Bot className="h-3.5 w-3.5" />
-            <span>{t('ถาม-ตอบกับ AI', 'AI Q&A')}</span>
+            <Bot className="h-3.5 w-3.5 text-slate-500" />
+            <span>{t('ถาม-ตอบข้อมูลคำร้อง', 'Query Assistant')}</span>
             {aiChatMessages.length > 0 && (
-              <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-sky-100 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 font-bold">
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium">
                 {aiChatMessages.length}
               </span>
             )}
@@ -756,40 +755,40 @@ export default function QualitativeExitAnalysis() {
         {aiMode === 'strategic' && (
           <div className="space-y-3">
             {aiResult ? (
-              <div className="p-4 sm:p-5 bg-white dark:bg-slate-900/90 rounded-2xl border border-sky-100 dark:border-slate-800 shadow-xs space-y-3">
+              <div className="p-4 sm:p-5 bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-2xs space-y-3">
                 <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2 text-xs">
                   <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 font-medium">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                    <span>{t('วิเคราะห์สังเคราะห์จากเคสทั้งหมดในระบบ', 'Synthesized across all cohort departure records')}</span>
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                    <span>{t('วิเคราะห์และสังเคราะห์จากข้อมูลคำร้องทั้งหมดในระบบ', 'Synthesized across all cohort departure records')}</span>
                   </div>
                   <button
                     type="button"
                     onClick={() => {
                       navigator.clipboard.writeText(aiResult)
-                      addToast('success', t('คัดลอกแล้ว', 'Copied'), t('คัดลอกบทวิเคราะห์ AI ไปยังคลิปบอร์ดแล้ว', 'Copied AI analysis to clipboard.'))
+                      addToast('success', t('คัดลอกแล้ว', 'Copied'), t('คัดลอกรายงานสรุปไปยังคลิปบอร์ดแล้ว', 'Copied analysis report to clipboard.'))
                     }}
-                    className="flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-sky-600 transition-colors cursor-pointer"
+                    className="flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition-colors cursor-pointer"
                   >
                     <Copy className="h-3 w-3" />
                     <span>{t('คัดลอก', 'Copy')}</span>
                   </button>
                 </div>
 
-                <div className="prose prose-sm dark:prose-invert max-w-none text-sm leading-6 text-slate-800 dark:text-slate-200 whitespace-pre-line">
+                <div className="prose prose-sm dark:prose-invert max-w-none text-xs sm:text-sm leading-6 text-slate-800 dark:text-slate-200 whitespace-pre-line">
                   {aiResult}
                 </div>
               </div>
             ) : (
-              <div className="text-center py-8 bg-white/70 dark:bg-slate-900/60 rounded-2xl border border-dashed border-sky-200 dark:border-slate-800 space-y-3 p-4">
-                <div className="h-10 w-10 rounded-full bg-sky-100 dark:bg-sky-950 text-sky-600 dark:text-sky-400 flex items-center justify-center mx-auto">
-                  <Sparkles className="h-5 w-5" />
+              <div className="text-center py-8 bg-slate-50/50 dark:bg-slate-900/40 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 space-y-3 p-4">
+                <div className="h-10 w-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center mx-auto">
+                  <Layers className="h-5 w-5" />
                 </div>
                 <div>
                   <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
-                    {t('ยังไม่ได้สร้างบทวิเคราะห์เชิงกลยุทธ์รอบปัจจุบัน', 'No current AI synthesis generated yet')}
+                    {t('ยังไม่ได้ประมวลผลสรุปภาพรวมในรอบปัจจุบัน', 'No current synthesis report generated yet')}
                   </p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                    {t('คลิกปุ่ม "วิเคราะห์ภาพรวมเชิงกลยุทธ์ด้วย AI" ด้านบน เพื่อให้ LLM ประมวลผลเคสทั้งหมดและร่างข้อเสนอแนะส่งประธานหลักสูตร', 'Click "Generate AI Synthesis" to evaluate departure causes and formulate AUN-QA interventions.')}
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 max-w-md mx-auto">
+                    {t('คลิกปุ่ม "ประมวลผลสรุปภาพรวม" เพื่อรวบรวมข้อมูลคำร้องทั้งหมดและสังเคราะห์ข้อเสนอแนะเสนอประธานหลักสูตร', 'Click "Generate Summary" to evaluate departure causes and formulate curriculum CQI recommendations.')}
                   </p>
                 </div>
                 <Button
@@ -797,10 +796,10 @@ export default function QualitativeExitAnalysis() {
                   variant="primary"
                   onClick={() => handleRunAiStrategicSynthesis()}
                   disabled={aiLoading}
-                  className="cursor-pointer mx-auto"
+                  className="cursor-pointer mx-auto font-bold"
                 >
-                  <Sparkles className="h-3.5 w-3.5 mr-1.5" />
-                  {t('วิเคราะห์ภาพรวมเชิงกลยุทธ์ด้วย AI', 'Generate AI Synthesis')}
+                  <Layers className="h-3.5 w-3.5 mr-1.5" />
+                  {t('ประมวลผลสรุปภาพรวม', 'Generate Summary')}
                 </Button>
               </div>
             )}
@@ -812,21 +811,21 @@ export default function QualitativeExitAnalysis() {
           <div className="space-y-3">
             {/* Quick Prompt Chips */}
             <div className="flex flex-wrap items-center gap-1.5 pb-1">
-              <span className="text-xs font-semibold text-slate-400 mr-1 flex items-center gap-1">
-                <Lightbulb className="h-3 w-3 text-amber-500" />
-                {t('คำถามแนะนำ:', 'Suggested Prompts:')}
+              <span className="text-xs font-medium text-slate-500 mr-1 flex items-center gap-1">
+                <Lightbulb className="h-3.5 w-3.5 text-slate-400" />
+                {t('คำถามแนะนำ:', 'Suggested Topics:')}
               </span>
               {[
-                { labelTh: 'ทำไมเด็กปี 1 ถึงลาออกเยอะ?', labelEn: 'Why do Year 1 students resign?' },
+                { labelTh: 'สรุปปัจจัยหลักของนักศึกษาชั้นปีที่ 1', labelEn: 'Summary of Year 1 departure factors' },
                 { labelTh: 'เปรียบเทียบสาเหตุการลาออกกับการพักการศึกษา', labelEn: 'Compare withdrawal vs leave drivers' },
-                { labelTh: 'เสนอแนวทางปรับปรุงวิชาการเขียนโปรแกรมปี 1', labelEn: 'Recommendations for Year 1 programming' },
-                { labelTh: 'วิเคราะห์ความเสี่ยงด้านสุขภาพจิตและภาวะหมดไฟ', labelEn: 'Evaluate mental health & burnout risk' },
+                { labelTh: 'ข้อเสนอแนะในการปรับปรุงวิชาแกน', labelEn: 'Recommendations for core courses' },
+                { labelTh: 'สรุปประเด็นภาระครอบครัวและค่าใช้จ่าย', labelEn: 'Summary of family & financial cases' },
               ].map((chip, idx) => (
                 <button
                   key={idx}
                   type="button"
                   onClick={() => handleSendAiChat(language === 'th' ? chip.labelTh : chip.labelEn)}
-                  className="text-[10px] font-medium px-2.5 py-1 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-sky-400 hover:text-sky-600 transition-all cursor-pointer shadow-2xs"
+                  className="text-[11px] font-medium px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer shadow-2xs"
                 >
                   {language === 'th' ? chip.labelTh : chip.labelEn}
                 </button>
@@ -837,12 +836,12 @@ export default function QualitativeExitAnalysis() {
             <div className="max-h-80 overflow-y-auto space-y-3 p-3.5 bg-slate-50/70 dark:bg-slate-900/60 rounded-2xl border border-slate-200/70 dark:border-slate-800">
               {aiChatMessages.length === 0 ? (
                 <div className="text-center py-6 text-xs text-slate-400 space-y-1.5">
-                  <Bot className="h-7 w-7 mx-auto text-sky-500 opacity-60" />
+                  <Bot className="h-7 w-7 mx-auto text-slate-400 opacity-80" />
                   <p className="font-semibold text-slate-600 dark:text-slate-300">
-                    {t('ระบบ AI พร้อมตอบคำถามเชิงคุณภาพเกี่ยวกับข้อมูลนักศึกษา', 'AI is ready to analyze qualitative student data.')}
+                    {t('พิมพ์คำถามเพื่อสืบค้นข้อมูลเชิงคุณภาพของนักศึกษา', 'Ask questions to explore qualitative departure records.')}
                   </p>
                   <p className="text-xs text-slate-400">
-                    {t('พิมพ์คำถามหรือเลือกหัวข้อแนะนำด้านบนเพื่อเริ่มสนทนา', 'Type a question or click a suggested prompt above.')}
+                    {t('เลือกหัวข้อแนะนำด้านบนหรือพิมพ์คำถามในช่องด้านล่าง', 'Select a suggested topic above or enter your query below.')}
                   </p>
                 </div>
               ) : (
@@ -1799,27 +1798,30 @@ export default function QualitativeExitAnalysis() {
       {/* ============================================================ */}
       {/* Choice Modal: System Key vs Personal Key vs Offline (QA Role) */}
       {/* ============================================================ */}
+      {/* ============================================================ */}
+      {/* Choice Modal: System Key vs Personal Key vs Offline (QA Role) */}
+      {/* ============================================================ */}
       <Modal
         isOpen={showApiKeyModal}
         onClose={() => setShowApiKeyModal(false)}
-        title={t('กำหนดค่าแหล่งประมวลผลปัญญาประดิษฐ์ (AI Engine & API Key Configuration)', 'AI Engine & API Key Configuration')}
+        title={t('การตั้งค่าโมเดลและช่องทางประมวลผล (Model & Engine Settings)', 'Model & Engine Settings')}
       >
         <div className="space-y-4">
           <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
             {t(
-              'กรุณาเลือกช่องทางการเชื่อมต่อปัญญาประดิษฐ์สำหรับการสังเคราะห์ข้อมูลเชิงคุณภาพ (AUN-QA Criteria 6 & 8) และระบบถาม-ตอบอัจฉริยะตามระดับความเป็นส่วนตัวที่ต้องการ:',
-              'Select your preferred AI execution environment for qualitative exit analysis and strategic inquiry:'
+              'เลือกแหล่งประมวลผลสำหรับงานวิเคราะห์ข้อมูลเชิงคุณภาพและระบบถาม-ตอบตามความต้องการ:',
+              'Select the computation source for qualitative departure analysis and query assistant:'
             )}
           </p>
 
           {/* 3 Interactive Mode Options */}
           <div className="space-y-3">
-            {/* Option 1: System Key (Hidden & Secure) */}
+            {/* Option 1: System Gateway */}
             <div
               onClick={() => setSelectedKeySource('system')}
               className={`p-4 rounded-2xl border text-left transition-all cursor-pointer flex items-start gap-3.5 relative ${
                 selectedKeySource === 'system'
-                  ? 'border-sky-500 bg-sky-50/50 dark:bg-sky-950/20 ring-1 ring-sky-500/30 shadow-xs'
+                  ? 'border-sky-500 bg-sky-50/50 dark:bg-sky-950/20 ring-1 ring-sky-500/30 shadow-2xs'
                   : 'border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#0e1424] hover:border-slate-300 dark:hover:border-slate-700'
               }`}
             >
@@ -1833,17 +1835,16 @@ export default function QualitativeExitAnalysis() {
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-xs font-bold text-slate-900 dark:text-white">
-                    {t('1. กุญแจส่วนกลางของระบบ (Central System Key - Super Admin)', '1. Central System Key (Managed by Super Admin)')}
+                    {t('1. ระบบส่วนกลาง (System Gateway)', '1. System Gateway (Managed by Admin)')}
                   </p>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800 flex items-center gap-1">
-                    <ShieldCheck className="h-3 w-3" />
-                    {t('ปกป้องความลับ (Masked)', 'Protected & Masked')}
+                  <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700">
+                    {t('ค่าเริ่มต้นระบบ', 'System Default')}
                   </span>
                 </div>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
                   {t(
-                    'เชื่อมต่อผ่านระบบประมวลผลส่วนกลางของสถาบันที่ผู้ดูแลระบบกำหนดไว้ โดยระบบจะซ่อนคีย์การเข้าถึงเพื่อความปลอดภัยตามมาตรฐานความมั่นคงปลอดภัยสารสนเทศ',
-                    'Processes via institution-managed central gateway. The master credential string remains strictly confidential and protected from client exposure.'
+                    'ประมวลผลผ่านเกตเวย์ส่วนกลางที่ผู้ดูแลระบบกำหนดไว้ โดยระบบจะซ่อนคีย์การเข้าถึงเพื่อความปลอดภัยตามมาตรฐาน',
+                    'Processes via institution-managed central gateway. Master credentials remain confidential and protected.'
                   )}
                 </p>
               </div>
@@ -1863,7 +1864,7 @@ export default function QualitativeExitAnalysis() {
               onClick={() => setSelectedKeySource('custom')}
               className={`p-4 rounded-2xl border text-left transition-all cursor-pointer flex items-start gap-3.5 relative ${
                 selectedKeySource === 'custom'
-                  ? 'border-sky-500 bg-sky-50/50 dark:bg-sky-950/20 ring-1 ring-sky-500/30 shadow-xs'
+                  ? 'border-sky-500 bg-sky-50/50 dark:bg-sky-950/20 ring-1 ring-sky-500/30 shadow-2xs'
                   : 'border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#0e1424] hover:border-slate-300 dark:hover:border-slate-700'
               }`}
             >
@@ -1877,17 +1878,16 @@ export default function QualitativeExitAnalysis() {
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-xs font-bold text-slate-900 dark:text-white">
-                    {t('2. กุญแจส่วนบุคคล / เลือกรุ่นและผู้ให้บริการ AI (Personal Multi-Provider AI)', '2. Personal API Key (Multi-Provider: Gemini, OpenAI, Claude, DeepSeek, Ollama)')}
+                    {t('2. คีย์ส่วนบุคคล / เลือกผู้ให้บริการ (Custom API Key & Provider)', '2. Custom API Key & Provider (Gemini, OpenAI, Claude, DeepSeek, Ollama)')}
                   </p>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border border-sky-200/80 dark:border-sky-800 flex items-center gap-1">
-                    <Sparkles className="h-3 w-3" />
-                    {t('ยืดหยุ่นสูง (Flexible)', 'Multi-LLM')}
+                  <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700">
+                    {t('บันทึกในเครื่องนี้', 'Client Stored')}
                   </span>
                 </div>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
                   {t(
-                    'รองรับโมเดลภาษาขั้นสูงหลากหลายค่าย (Google Gemini, OpenAI ChatGPT, Anthropic Claude, DeepSeek หรือ Local Server ผ่าน Ollama) กุญแจจะจัดเก็บบนเบราว์เซอร์เครื่องนี้เท่านั้น',
-                    'Supports leading foundation models (Google Gemini, OpenAI ChatGPT, Anthropic Claude, DeepSeek, or Local Ollama/vLLM). Stored locally in your client browser.'
+                    'เลือกใช้โมเดลภาษาจาก Google Gemini, OpenAI, Claude, DeepSeek หรือเซิร์ฟเวอร์ส่วนตัว (Ollama) โดยคีย์จะจัดเก็บบนเบราว์เซอร์เครื่องนี้เท่านั้น',
+                    'Supports Google Gemini, OpenAI, Claude, DeepSeek, or Local Ollama/vLLM endpoints. Stored locally in your client browser.'
                   )}
                 </p>
 
@@ -1897,7 +1897,7 @@ export default function QualitativeExitAnalysis() {
                     {/* Provider Pills Selector */}
                     <div>
                       <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                        {t('เลือกผู้ให้บริการ AI (AI Provider)', 'Select AI Provider')}
+                        {t('ผู้ให้บริการ (Provider)', 'Provider')}
                       </label>
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
                         {(Object.keys(AI_PROVIDER_PRESETS) as AIProviderId[]).map((provId) => {
@@ -1918,7 +1918,7 @@ export default function QualitativeExitAnalysis() {
                               className={`px-2.5 py-1.5 rounded-xl text-[11px] font-semibold text-left transition-all border flex items-center justify-between cursor-pointer ${
                                 isSelected
                                   ? 'bg-sky-500 text-white border-sky-600 shadow-2xs font-bold'
-                                  : 'bg-white dark:bg-[#0b0f19] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-sky-700'
+                                  : 'bg-white dark:bg-[#0b0f19] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
                               }`}
                             >
                               <span className="truncate">{preset.name}</span>
@@ -1933,7 +1933,7 @@ export default function QualitativeExitAnalysis() {
                     <div className="space-y-1.5">
                       <div className="flex items-center justify-between">
                         <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
-                          {t('ระบุ API Key', 'API Key')} <span className="text-rose-500">*</span>
+                          {t('API Key', 'API Key')} <span className="text-rose-500">*</span>
                         </label>
                         <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
                           {AI_PROVIDER_PRESETS[selectedProvider].keyFormatHint}
@@ -1962,11 +1962,11 @@ export default function QualitativeExitAnalysis() {
                       </div>
                     </div>
 
-                    {/* Model ID Input & Quick Suggestions */}
+                    {/* Model ID Input */}
                     <div className="space-y-1.5">
                       <div className="flex items-center justify-between">
                         <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                          {t('ชื่อรุ่นโมเดล (Model Name / ID)', 'Model Name / ID')}
+                          {t('ชื่อรุ่นโมเดล (Model ID)', 'Model ID')}
                         </label>
                         <span className="text-[10px] text-slate-400 dark:text-slate-500">
                           {t('ค่าเริ่มต้น:', 'Default:')} <span className="font-mono text-slate-600 dark:text-slate-300">{AI_PROVIDER_PRESETS[selectedProvider].defaultModel}</span>
@@ -1997,7 +1997,7 @@ export default function QualitativeExitAnalysis() {
                           className="w-full px-3 py-1.5 text-xs font-mono border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-[#0b0f19] text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
                         />
                         <p className="text-[10px] text-slate-400 dark:text-slate-500">
-                          {t('รองรับ Ollama, vLLM, LM Studio หรือ Local Proxy', 'Compatible with Ollama, vLLM, LM Studio, or Local Proxy')}
+                          {t('รองรับ Ollama, vLLM หรือ Local Proxy', 'Compatible with Ollama, vLLM, or Local Proxy')}
                         </p>
                       </div>
                     )}
@@ -2010,9 +2010,9 @@ export default function QualitativeExitAnalysis() {
                         target="_blank"
                         rel="noreferrer"
                         onClick={e => e.stopPropagation()}
-                        className="text-sky-600 dark:text-sky-400 hover:underline font-semibold inline-flex items-center gap-1"
+                        className="text-slate-600 dark:text-slate-400 hover:underline font-semibold inline-flex items-center gap-1"
                       >
-                        <span>{t('คู่มือการขอ API Key', 'Get / Manage API Key')}</span>
+                        <span>{t('ขอรับ API Key', 'Get API Key')}</span>
                         <ExternalLink className="h-3 w-3" />
                       </a>
                     </div>
@@ -2030,12 +2030,12 @@ export default function QualitativeExitAnalysis() {
               </div>
             </div>
 
-            {/* Option 3: Offline Heuristic Engine */}
+            {/* Option 3: Offline Mode */}
             <div
               onClick={() => setSelectedKeySource('offline')}
               className={`p-4 rounded-2xl border text-left transition-all cursor-pointer flex items-start gap-3.5 relative ${
                 selectedKeySource === 'offline'
-                  ? 'border-sky-500 bg-sky-50/50 dark:bg-sky-950/20 ring-1 ring-sky-500/30 shadow-xs'
+                  ? 'border-sky-500 bg-sky-50/50 dark:bg-sky-950/20 ring-1 ring-sky-500/30 shadow-2xs'
                   : 'border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#0e1424] hover:border-slate-300 dark:hover:border-slate-700'
               }`}
             >
@@ -2047,13 +2047,18 @@ export default function QualitativeExitAnalysis() {
                 <Bot className="h-4 w-4" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-xs font-bold text-slate-900 dark:text-white">
-                  {t('3. การประมวลผลออฟไลน์ภายในระบบ (Local Heuristic Intelligence Engine)', '3. Local Heuristic Intelligence Engine (Offline)')}
-                </p>
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-xs font-bold text-slate-900 dark:text-white">
+                    {t('3. ประมวลผลภายในเครื่อง (Local Offline Engine)', '3. Local Offline Engine')}
+                  </p>
+                  <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700">
+                    {t('ออฟไลน์', 'Offline')}
+                  </span>
+                </div>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
                   {t(
-                    'ประมวลผลและวินิจฉัยข้อมูลเชิงคุณภาพด้วยขั้นตอนวิธีทางสถิติและแบบจำลองเชิงตรรกะภายในเครื่องโดยสมบูรณ์ โดยไม่มีการส่งข้อมูลออกสู่คลาวด์ภายนอก (Zero External Data Transfer)',
-                    'Analyzes qualitative patterns locally using embedded statistical logic and domain rules without transmitting any student data to external cloud services.'
+                    'ประมวลผลด้วยตรรกะสถิติภายในระบบโดยตรง โดยไม่มีการส่งข้อมูลออกนอกเครื่อง',
+                    'Analyzes qualitative patterns locally using built-in statistical logic without external network requests.'
                   )}
                 </p>
               </div>

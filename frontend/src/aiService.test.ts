@@ -55,7 +55,7 @@ describe('aiService (LLM Qualitative Retention Analysis)', () => {
     expect(result.success).toBe(true)
     expect(result.mode).toBe('strategic_synthesis')
     expect(result.analysis).toContain('AUN-QA')
-    expect(result.analysis).toContain('กลุ่มขอลาออกถาวร')
+    expect(result.analysis).toContain('กลุ่มลาออกถาวร')
     expect(result.analysis).toContain('กลุ่มขอพักการศึกษา')
   })
 
@@ -100,7 +100,7 @@ describe('aiService (LLM Qualitative Retention Analysis)', () => {
 
     expect(result.success).toBe(true)
     expect(result.mode).toBe('case_diagnostic')
-    expect(result.analysis).toContain('การวินิจฉัยเคสรายบุคคลเชิงลึก')
+    expect(result.analysis).toContain('ข้อมูลการประเมินเคสรายบุคคล')
     expect(result.analysis).toContain('6631503001')
   })
 
@@ -121,7 +121,7 @@ describe('aiService (LLM Qualitative Retention Analysis)', () => {
     })
 
     expect(result.success).toBe(true)
-    expect(result.analysis).toContain('Programme-Level Qualitative Synthesis')
+    expect(result.analysis).toContain('Qualitative Retention Analysis')
     expect(result.analysis).toContain('Permanent Withdrawals')
   })
 })

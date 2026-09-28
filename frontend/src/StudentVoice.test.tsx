@@ -133,7 +133,7 @@ describe('Student Voice Feature', () => {
     })
 
     // Check header and AUN-QA criteria banner
-    expect(screen.getByText(/การวิเคราะห์ปัญหาเชิงคุณภาพ: ทำไมเด็กลาออก \/ พักการศึกษา\?/i)).toBeInTheDocument()
+    expect(screen.getByText(/การวิเคราะห์สาเหตุเชิงคุณภาพ: ทำไมเด็กลาออก \/ พักการศึกษา\?/i)).toBeInTheDocument()
     expect(screen.getByText(/AUN-QA Criteria 6\.4 & 8\.3/i)).toBeInTheDocument()
 
     // Check Comparative "Why Resign vs Why Leave" Section
@@ -194,19 +194,19 @@ describe('Student Voice Feature', () => {
     })
 
     // Expect AI card
-    expect(screen.getByText(/ผู้ช่วย AI วิเคราะห์ปัญหาเชิงคุณภาพ/i)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /บทวิเคราะห์เชิงกลยุทธ์/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /ถาม-ตอบกับ AI/i })).toBeInTheDocument()
+    expect(screen.getByText(/การวิเคราะห์และสรุปประเด็นด้วย AI/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /สรุปภาพรวมเชิงกลยุทธ์/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /ถาม-ตอบข้อมูลคำร้อง/i })).toBeInTheDocument()
 
     // Trigger AI Strategic Synthesis
-    const runAiBtn = screen.getAllByRole('button', { name: /วิเคราะห์ภาพรวมเชิงกลยุทธ์ด้วย AI/i })[0]
+    const runAiBtn = screen.getAllByRole('button', { name: /ประมวลผลสรุปภาพรวม/i })[0]
     await act(async () => {
       fireEvent.click(runAiBtn)
     })
 
     // Expect AI generated synthesis output
-    expect(await screen.findByText(/บทวิเคราะห์เชิงคุณภาพระดับหลักสูตร/i)).toBeInTheDocument()
-    expect(screen.getByText(/จุดตัดสำคัญ/i)).toBeInTheDocument()
+    expect(await screen.findByText(/รายงานการวิเคราะห์เชิงคุณภาพและข้อเสนอแนะระดับหลักสูตร/i)).toBeInTheDocument()
+    expect(screen.getByText(/สรุปภาพรวมข้อมูลคำร้อง/i)).toBeInTheDocument()
   })
 
   it('supports switching to Interactive AI chat and sending prompts', async () => {
@@ -219,13 +219,13 @@ describe('Student Voice Feature', () => {
     })
 
     // Switch to Chat mode
-    const chatModeBtn = screen.getByRole('button', { name: /ถาม-ตอบกับ AI/i })
+    const chatModeBtn = screen.getByRole('button', { name: /ถาม-ตอบข้อมูลคำร้อง/i })
     act(() => {
       fireEvent.click(chatModeBtn)
     })
 
     // Expect suggested prompt chip
-    const chipBtn = screen.getByRole('button', { name: /ทำไมเด็กปี 1 ถึงลาออกเยอะ\?/i })
+    const chipBtn = screen.getByRole('button', { name: /สรุปปัจจัยหลักของนักศึกษาชั้นปีที่ 1/i })
     expect(chipBtn).toBeInTheDocument()
 
     await act(async () => {
@@ -233,7 +233,7 @@ describe('Student Voice Feature', () => {
     })
 
     // Expect AI response in chat history
-    expect(await screen.findByText(/คำตอบเชิงคุณภาพจากระบบ AI/i)).toBeInTheDocument()
+    expect(await screen.findByText(/สรุปคำตอบจากฐานข้อมูลสำหรับประธานหลักสูตร/i)).toBeInTheDocument()
   })
 
 
@@ -246,20 +246,20 @@ describe('Student Voice Feature', () => {
       fireEvent.click(qualitativeTabBtn)
     })
 
-    const apiKeyBtn = screen.getByRole('button', { name: /ตั้งค่าแหล่งประมวลผล AI/i })
+    const apiKeyBtn = screen.getByRole('button', { name: /ตั้งค่าโมเดล/i })
     expect(apiKeyBtn).toBeInTheDocument()
 
     act(() => {
       fireEvent.click(apiKeyBtn)
     })
 
-    expect(screen.getByText(/กำหนดค่าแหล่งประมวลผลปัญญาประดิษฐ์/i)).toBeInTheDocument()
-    expect(screen.getByText(/1\. กุญแจส่วนกลางของระบบ/i)).toBeInTheDocument()
-    expect(screen.getByText(/2\. กุญแจส่วนบุคคล/i)).toBeInTheDocument()
+    expect(screen.getByText(/การตั้งค่าโมเดลและช่องทางประมวลผล/i)).toBeInTheDocument()
+    expect(screen.getByText(/1\. ระบบส่วนกลาง/i)).toBeInTheDocument()
+    expect(screen.getByText(/2\. คีย์ส่วนบุคคล/i)).toBeInTheDocument()
 
     // Click option 2 to show custom key input
     act(() => {
-      fireEvent.click(screen.getByText(/2\. กุญแจส่วนบุคคล/i))
+      fireEvent.click(screen.getByText(/2\. คีย์ส่วนบุคคล/i))
     })
 
     expect(screen.getByPlaceholderText('AIzaSy...')).toBeInTheDocument()

@@ -252,7 +252,7 @@ export async function testAiConnection(
 }
 
 /**
- * Internal high-fidelity intelligent qualitative synthesizer for offline mode & instant fallback
+ * Internal qualitative synthesizer for offline mode & instant fallback
  */
 export function generateSmartAnalysis(
   req: AIAnalysisRequest,
@@ -261,45 +261,50 @@ export function generateSmartAnalysis(
 ): AIAnalysisResponse {
   const withdrawalCount = req.cases.filter(c => c.exitType === 'withdrawal' || c.exitType === 'dropout').length
   const leaveCount = req.cases.filter(c => c.exitType === 'leave_of_absence').length
+  const total = req.cases.length
 
   let analysisText = ''
 
   if (mode === 'strategic_synthesis') {
     analysisText = lang === 'th'
-      ? `### 📊 บทวิเคราะห์เชิงคุณภาพระดับหลักสูตร (AUN-QA Strategic Synthesis)
+      ? `### รายงานการวิเคราะห์เชิงคุณภาพและข้อเสนอแนะระดับหลักสูตร
+(อ้างอิงเกณฑ์ AUN-QA Criteria 6.4 และ 8.3)
 
-#### 1. สรุปภาพรวมและจุดตัดสำคัญ (Executive Pattern Recognition)
-จากการสังเคราะห์ข้อมูลนักศึกษาที่ขอยื่นคำร้องทั้งหมด **${req.cases.length} เคส** พบความแตกต่างของรูปแบบอย่างมีนัยสำคัญ:
-* **🔴 กลุ่มขอลาออกถาวร (${withdrawalCount} เคส):** ปัจจัยขับเคลื่อนหลักเกิดจาก **"ช่องว่างทักษะพื้นฐาน (Foundation Gap)"** ในวิชาการเขียนโปรแกรมปี 1 (~50%) และการค้นพบเป้าหมายอาชีพใหม่ (~30%) ซึ่งส่งผลต่ออัตราการคงอยู่ (Student Attrition) ของหลักสูตรโดยตรง
-* **🟡 กลุ่มขอพักการศึกษา (${leaveCount} เคส):** ขับเคลื่อนด้วย **"ภาระดูแลครอบครัวกะทันหัน"** (~50%) และ **"ภาวะหมดไฟ/ความเครียดสะสม (Burnout)"** (~30%) ซึ่งนักศึกษากลุ่มนี้มีผลการเรียนเฉลี่ยดี (GPAX > 3.00) และมีเจตนารมณ์จะกลับมาศึกษาต่อสูงมาก เป็นโอกาสสำคัญในการรักษาผู้เรียน (Retention Opportunity 100%)
+**1. สรุปภาพรวมข้อมูลคำร้อง (${total} รายการ)**
+* **กลุ่มลาออกถาวร (${withdrawalCount} ราย):** ปัจจัยหลักเกิดจากความยากของวิชาแกนด้านการเขียนโปรแกรมในปี 1 และการเปลี่ยนความสนใจด้านสายอาชีพ ซึ่งส่งผลกระทบต่ออัตราการคงอยู่ของนักศึกษาโดยตรง
+* **กลุ่มขอพักการศึกษา (${leaveCount} ราย):** สาเหตุหลักมาจากภาระครอบครัวกะทันหันและปัญหาสุขภาพ/ความเครียดสะสม นักศึกษาส่วนใหญ่ยังมีผลการเรียนในเกณฑ์ดีและมีเจตนาจะกลับมาเรียนต่อ เป็นกลุ่มเป้าหมายสำคัญที่ควรมีระบบติดตามเชิงรุก
 
-#### 2. เจาะลึก 3 ปัจจัยรากเหง้า (Root Cause Diagnostics)
-1. 🎓 **ความเร่งในการสอนวิชาแกนปี 1:** นักศึกษาที่ไม่มีพื้นฐานการเขียนโค้ดมาก่อน ประสบปัญหาตามไม่ทันในสัปดาห์ที่ 3-5 และไม่กล้าเข้ารับคำปรึกษาจนเกรดตก
-2. 🧠 **ปัญหา Deadline Clustering:** กำหนดส่งงานโครงงานและแบบฝึกหัดกระจุกตัวก่อนสัปดาห์สอบกลางภาค ส่งผลต่อภาวะวิตกกังวลและนอนไม่หลับเรื้อรัง
-3. 💰 **ขาดสภาพคล่องและทุนการศึกษาฉุกเฉิน:** ขาดแคลนทุนการศึกษาแบบให้เปล่าที่สามารถอนุมัติได้ทันท่วงทีสำหรับครอบครัวที่ประสบภาวะวิกฤต
+**2. ประเด็นปัญหาหลักที่พบจากข้อมูล**
+1. **ช่วงต่อการปรับพื้นฐานวิชาแกน:** นักศึกษาที่ไม่มีพื้นฐานมาก่อนเริ่มพบปัญหาในช่วง 4-6 สัปดาห์แรกของภาคเรียน ทำให้เกิดความกังวลและขาดความมั่นใจ
+2. **การกระจุกตัวของกำหนดส่งงาน:** งานโครงงานและแบบฝึกหัดหลายรายวิชามีกำหนดส่งตรงกันก่อนช่วงสอบกลางภาค ส่งผลต่อภาวะความเครียดสะสม
+3. **ความคล่องตัวในการช่วยเหลือฉุกเฉิน:** นักศึกษาที่มีปัญหาการเงินกะทันหันต้องการข้อมูลทุนการศึกษาและขั้นตอนขอความช่วยเหลือที่รวดเร็ว
 
-#### 3. ข้อเสนอแนะเชิงมาตรการตามเกณฑ์ AUN-QA (CQI Recommendations)
-* **ระยะเร่งด่วน (0–3 เดือน):**
-  1. จัดทำ **Assignment Coordination Matrix** ประสานกำหนดส่งงานในระดับสำนักวิชาเพื่อลดความเครียดสะสม
-  2. เปิดระบบ **Pre-sessional Coding Boot Camp** ปรับพื้นฐาน 2 สัปดาห์ก่อนเปิดเทอมสำหรับนักศึกษาใหม่
-* **ระยะกลาง (1 ปี):**
-  1. ปรับปรุงหลักสูตรให้มี **Flexible Minor Tracks (UX/UI, Creative Tech)** เพื่อรองรับนักศึกษาที่ต้องการเปลี่ยนสายโดยไม่ต้องลาออก
-  2. จัดตั้งระบบ **Re-entry Study Roadmap** ติดตามนักศึกษาที่ลาพักให้กลับมารายงานตัวครบ 100%`
-      : `### 📊 Programme-Level Qualitative Synthesis (AUN-QA Criteria 6 & 8)
+**3. ข้อเสนอแนะเชิงมาตรการเพื่อการปรับปรุงหลักสูตร**
+* **ระยะสั้น:**
+  - จัดทำตารางประสานกำหนดส่งงานระดับสำนักวิชา เพื่อลดความซ้ำซ้อนของภาระงาน
+  - เสริมการติวปรับพื้นฐานและเพิ่มชั่วโมงให้คำปรึกษาสำหรับวิชาแกนปี 1
+* **ระยะกลาง:**
+  - จัดระบบติดตามนักศึกษาที่พักการศึกษา (Re-entry Follow-up) ก่อนเปิดภาคเรียนถัดไป
+  - ทบทวนลำดับความต่อเนื่องของรายวิชาในหลักสูตรเพื่อความเหมาะสมในการเรียนรู้`
+      : `### Qualitative Retention Analysis & Curriculum Recommendations
+(AUN-QA Criteria 6.4 & 8.3)
 
-#### 1. Executive Pattern Recognition
-Synthesizing across **${req.cases.length} departure cases** reveals sharp divergences:
-* **🔴 Permanent Withdrawals (${withdrawalCount} cases):** Driven predominantly by **Foundation Gaps in Year 1 programming** (~50%) and career redirection (~30%). Represents severe attrition risk.
-* **🟡 Leaves of Absence (${leaveCount} cases):** Driven by **sudden family caregiving crises** (~50%) and **acute burnout/stress** (~30%). Students maintain solid academic standing (GPAX > 3.00) with unanimous intention to return.
+**1. Executive Summary (${total} cases analyzed)**
+* **Permanent Withdrawals (${withdrawalCount} cases):** Primary factors include academic friction in first-year foundation courses and career realignment.
+* **Leaves of Absence (${leaveCount} cases):** Driven primarily by acute family obligations and health/stress concerns. Students generally maintain satisfactory academic standing and intend to resume studies.
 
-#### 2. Root Cause Diagnostics
-1. 🎓 **Early Pacing Rigor in Core Courses:** Non-tech background freshmen struggle by weeks 3-5 without early intervention.
-2. 🧠 **Deadline Clustering:** Compounding assignment deadlines pre-midterms trigger severe insomnia and anxiety.
-3. 💰 **Emergency Relief Friction:** Absence of micro-grants disbursed within 48 hours forces working-class students into full-time employment.
+**2. Key Identified Friction Points**
+1. **Pacing in Foundation Courses:** Students without prior technical background experience learning gaps during the first 4-6 weeks.
+2. **Workload Clustering:** Project deadlines across multiple courses coincide before midterm examinations, elevating stress levels.
+3. **Emergency Support Access:** Students encountering sudden financial hardships need clear and rapid guidance on available aid.
 
-#### 3. AUN-QA CQI Interventions
-* **Immediate (0–3 Months):** Implement departmental assignment coordination and mandatory 2-week pre-sessional coding boot camps.
-* **Curriculum Revision (1 Year):** Introduce flexible minor degree options (UX/UI & Creative Tech) and structured re-entry roadmaps.`
+**3. Actionable Continuous Improvement Measures**
+* **Short-term:**
+  - Coordinate assignment due dates at the school level to prevent deadline overlapping.
+  - Implement supplementary tutoring and dedicated advisor office hours for Year 1 core courses.
+* **Medium-term:**
+  - Establish a proactive check-in workflow for students returning from academic leaves.
+  - Review course prerequisites and sequencing during the upcoming curriculum revision.`
   } else if (mode === 'case_diagnostic') {
     const targetCase = req.cases[0]
     const exitTypeTh = targetCase?.exitType === 'leave_of_absence'
@@ -314,71 +319,69 @@ Synthesizing across **${req.cases.length} departure cases** reveals sharp diverg
     const isLeave = targetCase?.exitType === 'leave_of_absence'
 
     analysisText = lang === 'th'
-      ? `### 🩺 การวินิจฉัยเคสรายบุคคลเชิงลึก (AI Case Diagnostic)
+      ? `### ข้อมูลการประเมินเคสรายบุคคล
+* **รหัสเคส:** ${targetCase?.studentCode || 'De-identified Case'} (${exitTypeTh})
+* **หมวดหมู่สาเหตุ:** ${targetCase?.reasonCode || 'ทั่วไป'}
 
-* **รหัสเคส / นักศึกษา:** ${targetCase?.studentCode || 'De-identified Case'} (${exitTypeTh})
-* **สาเหตุหลักที่ระบุ:** ${targetCase?.reasonCode || 'ทั่วไป'}
+**การประเมินข้อมูลและข้อคิดเห็น**
+* บันทึกคำร้องของนักศึกษา: "${targetCase?.details || 'ไม่มีรายละเอียดเพิ่มเติม'}"
+* ความเห็นของอาจารย์ที่ปรึกษา: "${targetCase?.advisorAssessment || 'อยู่ระหว่างรอการบันทึก'}"
 
-#### การประเมินสาเหตุแท้จริง (Root Cause Evaluation)
-* คำอธิบายของนักศึกษาสะท้อนปัญหา: "${targetCase?.details || 'ไม่มีรายละเอียดเพิ่มเติม'}"
-* ข้อวินิจฉัยของอาจารย์ที่ปรึกษา: "${targetCase?.advisorAssessment || 'รอการประเมิน'}"
+**แนวทางปฏิบัติและการประสานงาน**
+${isTransfer ? `1. ตรวจสอบโครงสร้างรายวิชาและผลการเรียนที่สามารถเทียบโอนเพื่อรักษาสิทธิของผู้เรียน
+2. ประสานงานส่วนทะเบียนและประมวลผลในการออกเอกสารรับรอง
+3. บันทึกข้อมูลปัจจัยการโอนย้ายเพื่อนำมาวิเคราะห์แนวโน้มความพึงพอใจต่อหลักสูตร` : isLeave ? `1. แนะนำขั้นตอนการรักษาสถานภาพนักศึกษาและการวางแผนหน่วยกิต
+2. ประสานงานศูนย์ให้คำปรึกษาหรือฝ่ายสนับสนุนที่เกี่ยวข้องหากมีปัญหาส่วนบุคคล
+3. นัดหมายติดตามความพร้อมก่อนเปิดภาคเรียนถัดไปเพื่อสนับสนุนการกลับเข้าศึกษา` : `1. สอบถามความประสงค์และชี้แจงทางเลือกการพักการศึกษาชั่วคราวแทนการลาออกถาวร
+2. ประสานส่งต่อหน่วยงานสนับสนุน เช่น ฝ่ายทุนการศึกษา หรือศูนย์ให้คำปรึกษา
+3. เสนอทางเลือกการปรับแผนการเรียนหรือการย้ายสาขาวิชาภายในสำนักวิชาหากยังสนใจศึกษาต่อ`}`
+      : `### Individual Case Assessment Summary
+* **Case Reference:** ${targetCase?.studentCode || 'De-identified Case'} (${targetCase?.exitType?.replace(/_/g, ' ') || 'Exit Case'})
+* **Reason Category:** ${targetCase?.reasonCode}
 
-#### ข้อเสนอแนะเชิงมาตรการช่วยเหลือ (Actionable Guidance)
-${isTransfer ? `1. **การตรวจสอบการเทียบโอน:** ตรวจสอบโครงสร้างหลักสูตรและรายวิชาที่สามารถเทียบโอนไปยังสถาบันปลายทาง เพื่อประโยชน์สูงสุดของผู้เรียน
-2. **การประสานงานส่วนทะเบียน:** ประสานงานส่วนทะเบียนและประมวลผล (REG) เพื่ออำนวยความสะดวกด้านใบรับรองผลการเรียน (Transcript) และหนังสือรับรอง
-3. **การประเมินเพื่อปรับปรุงหลักสูตร:** เก็บข้อมูลเหตุผลการโอนย้ายเพื่อนำมาวิเคราะห์แนวโน้มความพึงพอใจและจุดที่ควรพัฒนาของหลักสูตรต่อไป` : isLeave ? `1. **การชะลอการตัดสินใจ:** แนะนำการวางแผนพักการศึกษาตามระเบียบ เพื่อรักษาสถานภาพและหน่วยกิตที่สะสมไว้
-2. **การประสานส่งต่อ:** ประสานส่วนบริการสุขภาพ/ศูนย์สุขภาพจิต MFU Counselling Center หรือส่วนทะเบียน (REG)
-3. **แผนการกลับเข้าศึกษา:** กำหนดนัดหมายติดตามผลทุก 4 สัปดาห์ เพื่อเตรียมความพร้อมวิชาการก่อนเปิดภาคเรียนถัดไป` : `1. **การชะลอการตัดสินใจ:** หากเป็นปัญหาความเครียดหรือภาระครอบครัว ควรแนะนำการพักการศึกษาแทนการลาออก เพื่อรักษาสถานภาพและหน่วยกิต
-2. **การประสานส่งต่อ:** ประสานส่วนบริการสุขภาพ/ศูนย์สุขภาพจิต MFU Counselling Center หรือฝ่ายทุนการศึกษา
-3. **มาตรการทางเลือก:** เสนอแนวทางเรียนปรับพื้นฐานหรือการโอนย้ายสาขาวิชาภายในสำนักวิชาเพื่อลดการสูญเสียผู้เรียน`}`
-      : `### 🩺 Individual Case AI Diagnostic
+**Case Narrative & Review**
+* Student Narrative: "${targetCase?.details || 'N/A'}"
+* Advisor Note: "${targetCase?.advisorAssessment || 'Pending'}"
 
-* **Case / Student ID:** ${targetCase?.studentCode || 'De-identified Case'} (${targetCase?.exitType?.replace(/_/g, ' ') || 'Exit Case'})
-* **Primary Stated Cause:** ${targetCase?.reasonCode}
-
-#### Root Cause Evaluation
-* Student Perspective: "${targetCase?.details || 'N/A'}"
-* Advisor Assessment: "${targetCase?.advisorAssessment || 'N/A'}"
-
-#### Actionable Guidance
-${isTransfer ? `1. **Credit Transfer Verification:** Review completed coursework and learning outcomes to maximize transferable credits to the target university.
-2. **Registrar Coordination:** Facilitate official transcript issuance and administrative certification via the Registrar Division.
-3. **Curricular CQI Feedback:** Analyze institutional transfer rationale to identify gaps in specialization tracks or curriculum alignment.` : isLeave ? `1. **Retention Intervention:** Support temporary leave of absence to preserve accrued academic credits and student status.
-2. **Cross-unit Referral:** Connect with MFU Counselling Center or Registrar Division.
-3. **Re-entry Protocol:** Schedule monthly check-ins to ensure smooth academic return.` : `1. **Retention Intervention:** If driven by burnout or family crises, advocate for temporary leave over permanent withdrawal.
-2. **Cross-unit Referral:** Connect with MFU Counselling Center, Financial Aid, or Student Welfare.
-3. **Internal Transfer Options:** Explore intra-faculty track migration before finalizing permanent withdrawal.`}`
+**Actionable Follow-up**
+${isTransfer ? `1. Verify transferable credits to safeguard student progress.
+2. Coordinate with Registrar Division for document issuance.
+3. Log transfer rationale for curriculum feedback.` : isLeave ? `1. Assist with leave procedures and credit retention guidelines.
+2. Facilitate counseling or support referrals if needed.
+3. Schedule pre-semester check-in before intended return.` : `1. Clarify leave of absence alternatives before finalizing withdrawal.
+2. Connect with financial aid or counseling services as appropriate.
+3. Explore intra-department transfer options where applicable.`}`
   } else {
     analysisText = lang === 'th'
-      ? `### 💡 คำตอบเชิงคุณภาพจากระบบ AI สำหรับประธานหลักสูตร
+      ? `### สรุปคำตอบจากฐานข้อมูลสำหรับประธานหลักสูตร
 
-**ประเด็นคำถาม:** "${req.query || 'ทำไมเด็กถึงลาออก/พักการศึกษา'}"
+**ประเด็นคำถาม:** "${req.query || 'สรุปประเด็นการลาออกและพักการศึกษา'}"
 
-**การวิเคราะห์จากฐานข้อมูลเคสจริง (${req.cases.length} เคส):**
-1. **ข้อค้นพบสำคัญ:** ข้อมูลเชิงคุณภาพชี้ให้เห็นว่า นักศึกษาไม่ได้ลาออกเพราะ "ไม่อยากเรียน" แต่เกิดจาก "กำแพงความยากของวิชาแกนช่วงแรก" ผสมกับ "ความกังวลเรื่องค่าใช้จ่ายและสุขภาพจิต"
-2. **เสียงสะท้อนนักศึกษา:** นักศึกษาระบุตรงกันว่าต้องการ *วิชาปรับพื้นฐาน (Boot Camp)* และ *ความยืดหยุ่นของกำหนดส่งงาน*
-3. **ข้อเสนอแนะเชิงรูปธรรม:**
-   * ให้ประธานหลักสูตรจัดประชุมผู้สอนวิชาปี 1 เพื่อปรับจังหวะการสอน (Teaching Pace) ให้มีความชันน้อยลงในเดือนแรก
-   * ให้อาจารย์ที่ปรึกษาใช้ระบบ Early Warning ติดตามนักศึกษาที่ขาดเรียนหรือทำคะแนน Quiz แรกได้น้อยกว่า 50% ทันที`
-      : `### 💡 AI Qualitative Analysis for Program Chair
+**ข้อสรุปจากข้อมูลนักศึกษา (${req.cases.length} รายการ):**
+1. **ประเด็นหลัก:** ข้อมูลสะท้อนว่านักศึกษาส่วนใหญ่ประสบปัญหาจากความเร็วในการเรียนวิชาแกนช่วงแรก ควบคู่กับความกังวลด้านภาระส่วนตัว
+2. **ความต้องการของผู้เรียน:** นักศึกษาต้องการการปรับพื้นฐานเพิ่มเติมและความยืดหยุ่นในการจัดสรรภาระงาน
+3. **แนวทางดำเนินการ:**
+   - ประสานอาจารย์ผู้สอนเพื่อทบทวนจังหวะการสอนใน 4 สัปดาห์แรก
+   - ให้อาจารย์ที่ปรึกษาติดตามนักศึกษาที่มีสัญญาณความเสี่ยงทางวิชาการตั้งแต่เนิ่นๆ`
+      : `### Query Response for Program Chair
 
-**Query:** "${req.query}"
+**Question:** "${req.query}"
 
-**Evidence-based Analysis from Current Cohort (${req.cases.length} Cases):**
-1. **Core Insight:** Qualitative narratives show departures stem not from apathy, but from early foundation hurdles coupled with financial/mental fatigue.
-2. **Student Sentiment:** Students strongly advocate for pre-sessional boot camps and workload scheduling.
-3. **Actionable Recommendations:**
-   * Convene Year 1 faculty to modulate initial lecture pacing during the first month.
-   * Mandate advisor early-warning check-ins when quiz scores drop below 50% in weeks 3-4.`
+**Analysis from Cohort Records (${req.cases.length} records):**
+1. **Key Pattern:** Departures predominantly relate to early foundation course rigor and personal obligations.
+2. **Student Needs:** Feedback highlights demand for pre-sessional preparation and balanced workload distribution.
+3. **Action Items:**
+   - Coordinate with Year 1 instructors regarding initial pacing.
+   - Proactively connect advisors with students exhibiting early academic friction.`
   }
 
   return {
     success: true,
-    provider: 'AdvisingLog AI Intelligence Engine (Offline / Local Heuristic)',
+    provider: 'AdvisingLog Engine (Local)',
     mode,
     analysis: analysisText,
     timestamp: new Date().toISOString(),
-    note: 'Running on high-fidelity local qualitative analysis engine.',
+    note: 'Processed via local qualitative analysis engine.',
   }
 }
 
