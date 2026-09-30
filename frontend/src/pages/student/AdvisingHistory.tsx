@@ -7,7 +7,9 @@ import { useStore } from '@/data/mock-store'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useNavigate } from 'react-router-dom'
 import { PageHeader, DataTable, StatusBadge, SearchInput, Button } from '@/components/ui'
+import { ADVISING_CATEGORIES } from '@/types'
 import type { AdvisingRequest } from '@/types'
+import { getLocalDateString } from '@/utils/dateUtils'
 import { useState } from 'react'
 import { FileEdit, Clock, X, CheckCircle, Sparkles } from 'lucide-react'
 
@@ -17,6 +19,8 @@ export default function AdvisingHistory() {
   const { t, getCategoryLabel, getSubCategoryLabel } = useLanguage()
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
+  const [timeframeFilter, setTimeframeFilter] = useState('all')
+  const [categoryFilter, setCategoryFilter] = useState('all')
 
   const viewedRequestsKey = currentUser ? `advising_log_viewed_requests_${currentUser.id}` : ''
 
@@ -62,14 +66,48 @@ export default function AdvisingHistory() {
       (currentUser.email && r.studentId?.toLowerCase() === currentUser.email.toLowerCase())
     )
     .filter(r => {
+      // 1. Text Search Filter
       const q = search.trim().toLowerCase()
-      if (!q) return true
-      const cat = getCategoryLabel(r.category)
-      const subCat = r.subCategory ? getSubCategoryLabel(r.subCategory) : ''
-      const details = r.details || ''
-      return cat.toLowerCase().includes(q) ||
-        subCat.toLowerCase().includes(q) ||
-        details.toLowerCase().includes(q)
+      if (q) {
+        const cat = getCategoryLabel(r.category)
+        const subCat = r.subCategory ? getSubCategoryLabel(r.subCategory) : ''
+        const details = r.details || ''
+        if (!cat.toLowerCase().includes(q) &&
+            !subCat.toLowerCase().includes(q) &&
+            !details.toLowerCase().includes(q)) {
+          return false
+        }
+      }
+
+      // 2. Category Filter
+      if (categoryFilter !== 'all' && r.category !== categoryFilter) {
+        return false
+      }
+
+      // 3. Timeframe / Status Filter
+      if (timeframeFilter !== 'all') {
+        const apt = store.appointments.find(a => a.requestId === r.id)
+        
+        // Some timeframe filters require an appointment
+        if (['present', 'future', 'past', 'confirmed', 'unconfirmed'].includes(timeframeFilter) && !apt) {
+          return false
+        }
+
+        if (apt) {
+          const today = getLocalDateString()
+          const isPast = apt.scheduledDate < today
+          const isToday = apt.scheduledDate === today
+          const isFuture = apt.scheduledDate > today
+
+          if (timeframeFilter === 'future' && !isFuture) return false
+          if (timeframeFilter === 'past' && !isPast) return false
+          if (timeframeFilter === 'present' && !isToday) return false
+          if (timeframeFilter === 'confirmed' && !apt.studentConfirmed) return false
+          if (timeframeFilter === 'unconfirmed' && (apt.studentConfirmed || apt.studentDeclined)) return false
+        }
+      }
+
+      return true
     })
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
 
@@ -156,8 +194,36 @@ export default function AdvisingHistory() {
           </Button>
         }
       />
-      <div className="mb-5 sm:mb-6 max-w-sm">
-        <SearchInput value={search} onChange={setSearch} placeholder={t('ค้นหาตามหมวดหมู่ หรือคำสำคัญ...', 'Search by category or keyword...')} />
+      <div className="mb-5 sm:mb-6 flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+        <div className="w-full sm:max-w-sm">
+          <SearchInput value={search} onChange={setSearch} placeholder={t('ค้นหาตามหมวดหมู่ หรือคำสำคัญ...', 'Search by category or keyword...')} />
+        </div>
+        
+        <select 
+          className="w-full sm:w-48 text-sm border-slate-200 dark:border-slate-800 rounded-md shadow-sm bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 p-2"
+          value={timeframeFilter}
+          onChange={(e) => setTimeframeFilter(e.target.value)}
+        >
+          <option value="all">{t('ช่วงเวลาทั้งหมด', 'All Timeframes')}</option>
+          <option value="present">{t('วันนี้', 'Present (Today)')}</option>
+          <option value="future">{t('อนาคต', 'Future')}</option>
+          <option value="past">{t('อดีต', 'Past')}</option>
+          <option value="confirmed">{t('ยืนยันแล้ว', 'Confirmed')}</option>
+          <option value="unconfirmed">{t('รอยืนยัน', 'Unconfirmed')}</option>
+        </select>
+
+        <select 
+          className="w-full sm:w-48 text-sm border-slate-200 dark:border-slate-800 rounded-md shadow-sm bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 p-2"
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value)}
+        >
+          <option value="all">{t('ทุกหมวดหมู่', 'All Categories')}</option>
+          {ADVISING_CATEGORIES.map(cat => (
+            <option key={cat.value} value={cat.value}>
+              {t(cat.labelTh, cat.labelEn)}
+            </option>
+          ))}
+        </select>
       </div>
       <DataTable
         columns={columns}

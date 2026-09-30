@@ -231,36 +231,22 @@ export default function AdminDashboard() {
         }
       />
 
-      {/* Hero Welcome & Live Telemetry Banner */}
-      <div className="group relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-gradient-to-br from-white via-sky-50/35 to-white dark:from-slate-900 dark:via-slate-900 dark:to-sky-950/20 p-4 sm:p-5 md:p-6 shadow-premium transition-all duration-200 hover:border-sky-200/90 dark:hover:border-sky-500/35 hover:shadow-premium-hover">
-        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-sky-500 via-sky-400 to-sky-600" />
-        <div className="absolute inset-y-3 left-0 w-1 rounded-r-full bg-sky-400/70" />
-
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="flex items-start gap-4">
-            <div className="space-y-1.5">
-              <div className="flex flex-wrap items-center gap-2.5">
-                <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
-                  {t('ยินดีต้อนรับ ผู้ดูแลระบบ (Admin Console)', 'Welcome to Admin Console')}
-                </h2>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-sky-50 dark:bg-sky-500/10 text-sky-700 dark:text-sky-300 border border-sky-200/70 dark:border-sky-500/25 shadow-2xs">
-                  <span className="h-2 w-2 rounded-full bg-sky-500 dark:bg-sky-400 animate-pulse ring-4 ring-sky-500/20" />
-                  {t('ระบบทำงานปกติ 100%', 'All Systems Operational')}
-                </span>
-              </div>
-            </div>
+      {/* Live Operational Status Telemetry Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/60 shadow-xs">
+        <div className="flex items-center gap-2.5">
+          <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold bg-sky-50 dark:bg-sky-500/10 text-sky-700 dark:text-sky-300 border border-sky-200/70 dark:border-sky-500/25">
+            <span className="h-2 w-2 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse ring-4 ring-emerald-500/20" />
+            {t('ระบบทำงานปกติ 100%', 'All Systems Operational')}
+          </span>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2 text-xs font-semibold text-sky-700 dark:text-sky-300 bg-white dark:bg-slate-800 border border-sky-200/70 dark:border-slate-700/80 px-3.5 py-1.5 rounded-xl shadow-2xs">
+            <CloudLightning className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400" />
+            <span>Cloudflare D1 & Hono Edge</span>
           </div>
-
-          {/* Quick Telemetry Pills */}
-          <div className="flex flex-wrap md:flex-col items-start md:items-end gap-2">
-            <div className="flex items-center gap-2 text-xs font-semibold text-sky-700 dark:text-sky-300 bg-white/80 dark:bg-slate-800/80 border border-sky-200/70 dark:border-slate-700/80 px-3.5 py-1.5 rounded-xl shadow-2xs backdrop-blur-xs">
-              <CloudLightning className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400" />
-              <span>Cloudflare D1 & Hono Edge</span>
-            </div>
-            <div className="flex items-center gap-2 text-[11px] font-medium text-slate-500 dark:text-slate-400 bg-slate-100/80 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 px-3 py-1 rounded-lg">
-              <span className="h-1.5 w-1.5 rounded-full bg-sky-500" />
-              <span>Bangkok Edge Node · 12ms</span>
-            </div>
+          <div className="flex items-center gap-2 text-[11px] font-medium text-slate-500 dark:text-slate-400 bg-white/80 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 px-3 py-1.5 rounded-xl">
+            <span className="h-1.5 w-1.5 rounded-full bg-sky-500" />
+            <span>Bangkok Edge Node · 12ms</span>
           </div>
         </div>
       </div>
