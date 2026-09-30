@@ -238,9 +238,6 @@ export default function AdminDashboard() {
 
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-start gap-4">
-            <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl bg-white/80 dark:bg-sky-950/50 border-2 border-sky-100 dark:border-sky-800/60 text-sky-700 dark:text-sky-300 flex items-center justify-center flex-shrink-0 shadow-sm ring-4 ring-sky-50/80 dark:ring-sky-500/10 transition-transform duration-200 group-hover:scale-[1.03]">
-              <Shield className="h-6 w-6" />
-            </div>
             <div className="space-y-1.5">
               <div className="flex flex-wrap items-center gap-2.5">
                 <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
@@ -251,12 +248,6 @@ export default function AdminDashboard() {
                   {t('ระบบทำงานปกติ 100%', 'All Systems Operational')}
                 </span>
               </div>
-              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300/90 max-w-2xl leading-relaxed">
-                {t(
-                  'ควบคุมและดูแลแพลตฟอร์มคำปรึกษาทางวิชาการ มหาวิทยาลัยแม่ฟ้าหลวง ภาคการศึกษา 1/2569 ข้อมูลทั้งหมดได้รับการเข้ารหัสและซิงค์กับ Cloudflare Edge',
-                  'Supervise and control MFU Academic Advisory Platform for Semester 1/2026. All data is encrypted and synced with Cloudflare Edge services.'
-                )}
-              </p>
             </div>
           </div>
 
