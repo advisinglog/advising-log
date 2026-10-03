@@ -299,35 +299,12 @@ export default function RequestAdvising() {
       />
 
       {/* 3-Step Wizard Navigation Indicator */}
-      <div className="mb-6 bg-white dark:bg-slate-900 rounded-2xl border border-sky-100 dark:border-slate-800 p-2.5 sm:p-3 shadow-xs">
-        {/* Visual Progress Bar */}
-        <div className="h-1 bg-slate-100 dark:bg-slate-800 w-full rounded-full overflow-hidden mb-2.5">
-          <div
-            className="h-full bg-gradient-to-r from-sky-400 via-sky-500 to-blue-600 transition-all duration-300 ease-out"
-            style={{ width: currentStep === 1 ? '33.33%' : currentStep === 2 ? '66.66%' : '100%' }}
-          />
-        </div>
-
-        <div className="grid grid-cols-3 gap-1.5 sm:gap-2.5">
+      <div className="mb-6 bg-slate-100 dark:bg-slate-800/80 p-1 sm:p-1.5 rounded-2xl border border-slate-200/70 dark:border-slate-700/60 shadow-2xs">
+        <div className="grid grid-cols-3 gap-1 sm:gap-1.5">
           {[
-            {
-              step: 1,
-              stepNumLabel: t('ขั้นตอนที่ 1', 'Step 1'),
-              title: t('หัวข้อและอาจารย์', 'Topic & Advisor'),
-              icon: <Tag className="h-3.5 w-3.5" />,
-            },
-            {
-              step: 2,
-              stepNumLabel: t('ขั้นตอนที่ 2', 'Step 2'),
-              title: t('วันเวลาและรายละเอียด', 'Schedule & Details'),
-              icon: <Calendar className="h-3.5 w-3.5" />,
-            },
-            {
-              step: 3,
-              stepNumLabel: t('ขั้นตอนที่ 3', 'Step 3'),
-              title: t('ตรวจสอบและยืนยัน', 'Review & Confirm'),
-              icon: <ShieldCheck className="h-3.5 w-3.5" />,
-            },
+            { step: 1, label: t('1. หัวข้อและอาจารย์', '1. Topic & Advisor'), icon: <Tag className="h-4 w-4" /> },
+            { step: 2, label: t('2. วันเวลาและรายละเอียด', '2. Schedule & Details'), icon: <Calendar className="h-4 w-4" /> },
+            { step: 3, label: t('3. ตรวจสอบและยืนยัน', '3. Review & Submit'), icon: <ShieldCheck className="h-4 w-4" /> },
           ].map(s => {
             const isActive = currentStep === s.step
             const isCompleted = currentStep > s.step
@@ -340,35 +317,21 @@ export default function RequestAdvising() {
                   if (s.step === 2 && validateStep1()) setCurrentStep(2)
                   if (s.step === 3 && validateStep1() && validateStep2()) setCurrentStep(3)
                 }}
-                className={`flex items-center justify-center sm:justify-start gap-2 py-2 px-2.5 sm:px-3 rounded-xl text-xs transition-all cursor-pointer border text-left ${
+                className={`flex items-center justify-center gap-1.5 sm:gap-2 py-2 px-2 sm:px-3 rounded-xl text-xs transition-all cursor-pointer ${
                   isActive
-                    ? 'bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-sm shadow-sky-500/20 border-transparent font-bold'
+                    ? 'bg-sky-600 text-white shadow-xs font-extrabold'
                     : isCompleted
-                    ? 'bg-sky-50/80 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border-sky-200/80 dark:border-sky-800/60 hover:bg-sky-100/80'
-                    : 'bg-slate-50/70 dark:bg-slate-800/40 text-slate-500 dark:text-slate-400 border-slate-200/60 dark:border-slate-800 hover:bg-slate-100/70'
+                    ? 'bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 hover:bg-sky-100/90 font-bold border border-sky-200/60 dark:border-sky-800/50'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200/60 dark:hover:bg-slate-700/60 font-medium'
                 }`}
               >
-                <div
-                  className={`h-6 w-6 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 transition-colors ${
-                    isActive
-                      ? 'bg-white/25 text-white border border-white/40'
-                      : isCompleted
-                      ? 'bg-sky-500 text-white'
-                      : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
-                  }`}
-                >
-                  {isCompleted ? <Check className="h-3.5 w-3.5 stroke-[2.5]" /> : s.step}
+                <div className={`h-5 w-5 rounded-full flex items-center justify-center text-[10px] ${
+                  isActive ? 'bg-white/25 text-white font-extrabold' : isCompleted ? 'bg-sky-600 text-white font-bold' : 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 font-medium'
+                }`}>
+                  {isCompleted ? <Check className="h-3 w-3" /> : s.step}
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className={`text-[10px] font-medium leading-tight hidden sm:block ${
-                    isActive ? 'text-sky-100' : isCompleted ? 'text-sky-600 dark:text-sky-400' : 'text-slate-400 dark:text-slate-500'
-                  }`}>
-                    {s.stepNumLabel}
-                  </p>
-                  <p className="text-xs font-semibold truncate leading-tight mt-0.5">
-                    {s.title}
-                  </p>
-                </div>
+                <span className="truncate hidden sm:inline">{s.label}</span>
+                <span className="truncate sm:hidden">{s.step}</span>
               </button>
             )
           })}
