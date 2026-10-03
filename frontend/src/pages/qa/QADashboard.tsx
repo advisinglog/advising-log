@@ -9,7 +9,7 @@ import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useTheme } from '@/contexts/ThemeContext'
 import { PageHeader, Card, StatCard, Button } from '@/components/ui'
-import { ADVISING_CATEGORIES, EXIT_REASON_CODES } from '@/types'
+import { ADVISING_CATEGORIES, EXIT_REASON_CODES, STUDENT_VOICE_FACTORS } from '@/types'
 import { exportAunQaExcelReport } from '@/utils/exportUtils'
 import {
   BarChart3,
@@ -156,12 +156,14 @@ export default function QADashboard() {
     ? (store.studentVoiceResponses.reduce((acc, r) => acc + (r.ratings?.overallExperience ?? (r as any).overallRating ?? 0), 0) / totalVoiceResponses).toFixed(1)
     : '0'
 
-  // Student Voice factor frequency
+  // Student Voice factor frequency (Canonicalized & Bilingual)
   const factorCounts: Record<string, number> = {}
   store.studentVoiceResponses.forEach(r => {
     const factors = Array.isArray(r.primaryFactors) ? r.primaryFactors : []
     factors.forEach(f => {
-      factorCounts[f] = (factorCounts[f] || 0) + 1
+      const opt = STUDENT_VOICE_FACTORS.find(o => o.id === f || o.labelTh === f || o.labelEn === f)
+      const label = opt ? (language === 'th' ? opt.labelTh : opt.labelEn) : f
+      factorCounts[label] = (factorCounts[label] || 0) + 1
     })
   })
   const voiceFactorData = Object.entries(factorCounts)
@@ -652,7 +654,7 @@ export default function QADashboard() {
                   <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-2xl">
                     {t(
                       'รวบรวมและวิเคราะห์ข้อมูลจากนักศึกษาที่ลาออกหรือลาพัก เพื่อปรับปรุงหลักสูตร',
-                      'Aggregation and All leaves data for curriculum improvement.'
+                      'Aggregation and analysis of student departure data for continuous curriculum improvement.'
                     )}
                   </p>
                 </div>

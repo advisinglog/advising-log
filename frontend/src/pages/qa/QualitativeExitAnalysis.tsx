@@ -434,7 +434,7 @@ export default function QualitativeExitAnalysis() {
       const matchingCases = store.exitCases.filter(c => def.matchReason(c.reasonCode))
       const count = matchingCases.length
       const percentage = Math.round((count / totalCases) * 100)
-      const withdrawalCount = matchingCases.filter(c => c.exitType === 'withdrawal').length
+      const withdrawalCount = matchingCases.filter(c => c.exitType === 'withdrawal' || c.exitType === 'dropout' || c.exitType === 'transfer').length
       const leaveCount = matchingCases.filter(c => c.exitType === 'leave_of_absence').length
 
       // Pull real student statements from matching cases and matching student voice responses

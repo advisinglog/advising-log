@@ -112,6 +112,18 @@ export const EXIT_REASON_CODES: { value: ExitReasonCode; label: string; labelEn:
   { value: 'other', label: 'Other Reasons', labelEn: 'Other Reasons', labelTh: 'เหตุผลอื่นๆ' },
 ]
 
+export const STUDENT_VOICE_FACTORS: { id: string; labelTh: string; labelEn: string }[] = [
+  { id: 'curriculum_fit', labelTh: 'ความยากของหลักสูตร / ไม่ตรงกับความถนัด', labelEn: 'Curriculum Difficulty & Fit' },
+  { id: 'workload_teaching', labelTh: 'การสอนและภาระงานวิชาการ', labelEn: 'Teaching Pace & Course Workload' },
+  { id: 'financial', labelTh: 'ปัญหาทางการเงินและค่าครองชีพ', labelEn: 'Financial Hardship & Living Costs' },
+  { id: 'mental_health', labelTh: 'ความเครียดและสภาวะสุขภาพจิต', labelEn: 'Mental Health & Stress' },
+  { id: 'physical_health', labelTh: 'ปัญหาสุขภาพทางกาย', labelEn: 'Physical Health Issues' },
+  { id: 'family_personal', labelTh: 'ภาระครอบครัว / ความจำเป็นส่วนตัว', labelEn: 'Family & Personal Commitments' },
+  { id: 'career_shift', labelTh: 'เป้าหมายอาชีพเปลี่ยนไป / ต้องการทำงาน', labelEn: 'Career Path Redirection & Employment' },
+  { id: 'campus_social', labelTh: 'การปรับตัวและสภาพแวดล้อมในมหาวิทยาลัย', labelEn: 'Campus Life & Social Adaptation' },
+  { id: 'transfer', labelTh: 'ต้องการโอนย้ายไปสถาบันหรือสาขาอื่น', labelEn: 'University or Major Transfer' },
+]
+
 export type ExitCaseStatus = 'open' | 'under_review' | 'resolved' | 'closed'
 
 export type EarlyWarningType = 'academic_risk' | 'financial_risk' | 'attendance' | 'personal'
