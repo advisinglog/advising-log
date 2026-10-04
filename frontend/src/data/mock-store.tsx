@@ -663,7 +663,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const addCategory = useCallback((cat: Omit<AdvisingCategoryConfig, 'id'>) => {
     const newCat: AdvisingCategoryConfig = { ...cat, id: nextId('CAT') }
     setCategoryConfigs(prev => [...prev, newCat])
-    api.saveCategory(newCat).catch(() => {})
+    api.saveCategory(newCat).then(res => {
+      if (res?.category?.id) {
+        setCategoryConfigs(prev => prev.map(c => c.id === newCat.id ? { ...c, id: res.category.id } : c))
+      }
+    }).catch(err => {
+      console.error('Failed to save category to backend:', err)
+    })
   }, [])
 
   const updateCategory = useCallback((id: string, updates: Partial<AdvisingCategoryConfig>) => {
@@ -679,7 +685,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const addDocumentType = useCallback((dt: Omit<DocumentType, 'id'>) => {
     const newDt: DocumentType = { ...dt, id: nextId('DT') }
     setDocumentTypes(prev => [...prev, newDt])
-    api.saveDocumentType(newDt).catch(() => {})
+    api.saveDocumentType(newDt).then(res => {
+      if (res?.documentType?.id) {
+        setDocumentTypes(prev => prev.map(d => d.id === newDt.id ? { ...d, id: res.documentType.id } : d))
+      }
+    }).catch(err => {
+      console.error('Failed to save document type to backend:', err)
+    })
   }, [])
 
   const updateDocumentType = useCallback((id: string, updates: Partial<DocumentType>) => {
