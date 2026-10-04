@@ -146,17 +146,17 @@ export default function AdminDashboard() {
       color: 'text-sky-700 dark:text-sky-300',
       bg: 'bg-sky-50 dark:bg-sky-500/12 border-sky-200/70 dark:border-sky-500/25',
     },
-    sub_admin: {
-      labelTh: 'เจ้าหน้าที่สำนักวิชา',
-      labelEn: 'Department Staff',
-      color: 'text-indigo-700 dark:text-indigo-300',
-      bg: 'bg-indigo-50 dark:bg-indigo-500/12 border-indigo-200/70 dark:border-indigo-500/25',
-    },
     admin: {
       labelTh: 'ผู้ดูแลระบบ',
-      labelEn: 'System Admin',
-      color: 'text-slate-700 dark:text-slate-300',
-      bg: 'bg-slate-50 dark:bg-slate-800/70 border-slate-200/70 dark:border-slate-700/60',
+      labelEn: 'Admin',
+      color: 'text-sky-700 dark:text-sky-300',
+      bg: 'bg-sky-50 dark:bg-sky-500/12 border-sky-200/70 dark:border-sky-500/25',
+    },
+    super_admin: {
+      labelTh: 'ผู้ดูแลระบบระดับสูง',
+      labelEn: 'Super Admin',
+      color: 'text-purple-700 dark:text-purple-300',
+      bg: 'bg-purple-50 dark:bg-purple-500/12 border-purple-200/70 dark:border-purple-500/25',
     },
   }
 

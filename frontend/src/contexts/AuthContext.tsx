@@ -125,7 +125,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         }
 
-        let role: User['role'] = existingUser ? existingUser.role : (isAuthorizedAdmin ? 'admin' : 'advisor')
+        let role: User['role'] = existingUser ? existingUser.role : (isAuthorizedAdmin ? 'super_admin' : 'advisor')
 
         // 3. Student Advisee Check: Student MUST be assigned to an advisor
         if (role === 'student') {
@@ -144,14 +144,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           ...existingUser,
           name: (existingUser.name.startsWith('Student ') || existingUser.name.includes('@') || existingUser.name === userCode) && name ? name : existingUser.name,
           code: isAuthorizedAdmin ? 'ADM-SUPER' : existingUser.code,
+          role: isAuthorizedAdmin ? 'super_admin' : existingUser.role,
           avatar: picture || existingUser.avatar,
         } : {
-          id: isAuthorizedAdmin ? 'ADM_SE_GOOGLE' : `${role === 'student' ? 'STU' : role === 'admin' ? 'ADM' : role === 'qa_chair' ? 'QA' : 'ADV'}_${googleId.substring(0, 6)}`,
+          id: isAuthorizedAdmin ? 'ADM_SE_GOOGLE' : `${role === 'student' ? 'STU' : role === 'super_admin' ? 'ADM' : role === 'admin' ? 'ADM' : role === 'qa_chair' ? 'QA' : 'ADV'}_${googleId.substring(0, 6)}`,
           code: userCode,
-          name: isAuthorizedAdmin ? 'System Admin (SE AdvisingLog)' : name,
+          name: isAuthorizedAdmin ? 'System Super Admin (SE AdvisingLog)' : name,
           email,
           role,
-          department: isAuthorizedAdmin ? 'Academic Affairs (SE Admin)' : 'School of Applied Digital Technology (ADT)',
+          department: isAuthorizedAdmin ? 'Academic & System Affairs' : 'School of Applied Digital Technology (ADT)',
           avatar: picture,
           isActive: true,
           hasAiAccess: true,

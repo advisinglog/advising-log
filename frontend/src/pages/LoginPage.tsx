@@ -30,6 +30,7 @@ const ROLE_REDIRECT: Record<string, string> = {
   advisor: '/advisor',
   qa_chair: '/qa',
   admin: '/admin',
+  super_admin: '/admin',
 }
 
 export default function LoginPage() {
@@ -44,7 +45,7 @@ export default function LoginPage() {
     if (role === 'student') navigate(ROLE_REDIRECT.student)
     else if (role === 'advisor') navigate(ROLE_REDIRECT.advisor)
     else if (role === 'qa_chair') navigate(ROLE_REDIRECT.qa_chair)
-    else if (role === 'admin') navigate(ROLE_REDIRECT.admin)
+    else if (role === 'admin' || role === 'super_admin') navigate(ROLE_REDIRECT.admin)
     else navigate('/')
   }
 

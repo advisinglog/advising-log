@@ -132,7 +132,7 @@ app.post('/api/auth/google', async (c) => {
         }, 403)
       }
 
-      let role: 'student' | 'advisor' | 'qa_chair' | 'admin' | 'sub_admin' = 'advisor'
+      let role: 'student' | 'advisor' | 'qa_chair' | 'admin' | 'super_admin' = isAuthorizedSuperAdmin ? 'super_admin' : 'advisor'
       if (/^\d/.test(codePrefix) || lowerEmail.includes('student') || lowerEmail.includes('lamduan')) {
         role = 'student'
       }
@@ -140,7 +140,7 @@ app.post('/api/auth/google', async (c) => {
       const fallbackUser = {
         id: `GOOGLE_${googleId.substring(0, 8)}`,
         code: codePrefix,
-        name: name || 'Google User',
+        name: isAuthorizedSuperAdmin ? 'System Super Admin (SE AdvisingLog)' : (name || 'Google User'),
         email: lowerEmail,
         role,
         department: 'School of Applied Digital Technology (ADT)',
@@ -180,9 +180,9 @@ app.post('/api/auth/google', async (c) => {
       const newAdmin = {
         id: 'ADM_SE_GOOGLE',
         code: 'ADM-SUPER',
-        name: 'System Admin (SE AdvisingLog)',
+        name: 'System Super Admin (SE AdvisingLog)',
         email: lowerEmail,
-        role: 'admin' as const,
+        role: 'super_admin' as const,
         department: 'Academic & System Affairs',
         phone: null,
         isActive: true,
@@ -191,8 +191,8 @@ app.post('/api/auth/google', async (c) => {
       }
       await database.insert(schema.users).values(newAdmin)
       user = newAdmin
-    } else if (user && isAuthorizedSuperAdmin && user.code !== 'ADM-SUPER') {
-      await database.update(schema.users).set({ code: 'ADM-SUPER' }).where(eq(schema.users.id, user.id))
+    } else if (user && isAuthorizedSuperAdmin && (user.code !== 'ADM-SUPER' || user.role !== 'super_admin')) {
+      await database.update(schema.users).set({ code: 'ADM-SUPER', role: 'super_admin' }).where(eq(schema.users.id, user.id))
       user = { ...user, code: 'ADM-SUPER' }
     }
 

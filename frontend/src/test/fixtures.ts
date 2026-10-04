@@ -46,10 +46,10 @@ export const mockUsers: User[] = [
   { id: 'ADV003', code: 'EMP-1003', name: 'Dr. Chaiwat Namsai', email: 'chaiwat.n@mfu.ac.th', role: 'advisor', department: 'School of Applied Digital Technology (ADT)', phone: '053-916-003', isActive: true, hasAiAccess: false, createdAt: '2021-01-10' },
   // QA Chair
   { id: 'QA001', code: 'EMP-2001', name: 'Assoc. Prof. Rattana Pongsakorn', email: 'rattana.p@mfu.ac.th', role: 'qa_chair', department: 'School of Applied Digital Technology (ADT)', phone: '053-916-010', isActive: true, hasAiAccess: true, createdAt: '2018-01-01' },
-  // Sub-Admin (Department Staff)
-  { id: 'STAFF001', code: 'STAFF-1001', name: 'Natthawut Saelim', email: 'natthawut.s@mfu.ac.th', role: 'sub_admin', department: 'School of Applied Digital Technology (ADT)', phone: '053-916-015', isActive: true, hasAiAccess: false, createdAt: '2022-04-01' },
   // Admin
   { id: 'ADM001', code: 'EMP-3001', name: 'Supattra Kaewmanee', email: 'supattra.k@mfu.ac.th', role: 'admin', department: 'Academic Affairs', phone: '053-916-020', isActive: true, hasAiAccess: true, createdAt: '2019-03-01' },
+  // Super Admin (Root System Admin)
+  { id: 'ADM_SUPER', code: 'ADM-SUPER', name: 'System Super Admin', email: 'se.advisinglog@gmail.com', role: 'super_admin', department: 'Academic & System Affairs', phone: '053-916-000', isActive: true, hasAiAccess: true, createdAt: '2018-01-01' },
 ]
 
 

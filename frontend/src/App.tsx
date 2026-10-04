@@ -52,7 +52,7 @@ function RequireRole({ children, allowedRoles }: { children: import('react').Rea
     if (currentUser.role === 'student') return <Navigate to="/student" replace />
     if (currentUser.role === 'advisor') return <Navigate to="/advisor" replace />
     if (currentUser.role === 'qa_chair') return <Navigate to="/qa" replace />
-    if (currentUser.role === 'admin' || currentUser.role === 'sub_admin') return <Navigate to="/admin" replace />
+    if (currentUser.role === 'admin' || currentUser.role === 'super_admin') return <Navigate to="/admin" replace />
   }
   return children
 }
@@ -64,7 +64,7 @@ function RootRedirect() {
   if (currentUser?.role === 'student') return <Navigate to="/student" replace />
   if (currentUser?.role === 'advisor') return <Navigate to="/advisor" replace />
   if (currentUser?.role === 'qa_chair') return <Navigate to="/qa" replace />
-  if (currentUser?.role === 'admin' || currentUser?.role === 'sub_admin') return <Navigate to="/admin" replace />
+  if (currentUser?.role === 'admin' || currentUser?.role === 'super_admin') return <Navigate to="/admin" replace />
   return <Navigate to="/login" replace />
 }
 
@@ -107,14 +107,14 @@ export default function App() {
                       <Route path="qa" element={<RequireRole allowedRoles={['qa_chair']}><QADashboard /></RequireRole>} />
                       <Route path="qa/exit-review" element={<RequireRole allowedRoles={['qa_chair']}><ExitCaseReview /></RequireRole>} />
 
-                      {/* Admin & Sub-Admin Routes */}
-                      <Route path="admin" element={<RequireRole allowedRoles={['admin', 'sub_admin']}><AdminDashboard /></RequireRole>} />
-                      <Route path="admin/users" element={<RequireRole allowedRoles={['admin', 'sub_admin']}><UserManagement /></RequireRole>} />
-                      <Route path="admin/ai-governance" element={<RequireRole allowedRoles={['admin']}><AiGovernance /></RequireRole>} />
-                      <Route path="admin/roster" element={<RequireRole allowedRoles={['admin', 'sub_admin']}><Roster /></RequireRole>} />
-                      <Route path="admin/categories" element={<RequireRole allowedRoles={['admin', 'sub_admin']}><Categories /></RequireRole>} />
-                      <Route path="admin/document-types" element={<RequireRole allowedRoles={['admin', 'sub_admin']}><DocumentTypes /></RequireRole>} />
-                      <Route path="admin/audit-logs" element={<RequireRole allowedRoles={['admin', 'sub_admin']}><AuditLogs /></RequireRole>} />
+                      {/* Admin & Super Admin Routes */}
+                      <Route path="admin" element={<RequireRole allowedRoles={['admin', 'super_admin']}><AdminDashboard /></RequireRole>} />
+                      <Route path="admin/users" element={<RequireRole allowedRoles={['admin', 'super_admin']}><UserManagement /></RequireRole>} />
+                      <Route path="admin/ai-governance" element={<RequireRole allowedRoles={['super_admin']}><AiGovernance /></RequireRole>} />
+                      <Route path="admin/roster" element={<RequireRole allowedRoles={['admin', 'super_admin']}><Roster /></RequireRole>} />
+                      <Route path="admin/categories" element={<RequireRole allowedRoles={['admin', 'super_admin']}><Categories /></RequireRole>} />
+                      <Route path="admin/document-types" element={<RequireRole allowedRoles={['admin', 'super_admin']}><DocumentTypes /></RequireRole>} />
+                      <Route path="admin/audit-logs" element={<RequireRole allowedRoles={['admin', 'super_admin']}><AuditLogs /></RequireRole>} />
                     </Route>
                   </Routes>
                   <ToastContainer />
