@@ -4,7 +4,7 @@ import { useLanguage } from '@/contexts/LanguageContext'
 import { useToast } from '@/contexts/ToastContext'
 import { PageHeader, DataTable, StatusBadge, Button, SearchInput, Modal } from '@/components/ui'
 import type { AdvisingCategoryConfig } from '@/types'
-import { Tag, Plus, Edit2, Trash2, X, CheckCircle2, Sparkles, BookOpen, Briefcase, HeartHandshake, Award, Globe, FlaskConical } from 'lucide-react'
+import { Tag, Plus, Edit2, Trash2, X, CheckCircle2, Sparkles, BookOpen, Briefcase, HeartHandshake, Award, Globe, FlaskConical, LogOut } from 'lucide-react'
 
 // Pre-built University Advising Category Templates with clean separate Thai & English
 const PRESET_TEMPLATES = [
@@ -55,6 +55,22 @@ const PRESET_TEMPLATES = [
     icon: <FlaskConical className="h-4 w-4 text-purple-500" />,
     subCategoriesEn: ['Thesis Topic Selection', 'Advisor Matching', 'Lab Equipment Access', 'Research Publication'],
     subCategoriesTh: ['การเลือกหัวข้อปริญญานิพนธ์', 'การจับคู่อาจารย์ที่ปรึกษาวิจัย', 'การเข้าใช้ห้องปฏิบัติการ', 'การตีพิมพ์เผยแพร่ผลงานวิจัย'],
+  },
+  {
+    labelEn: 'Withdrawal & Leave of Absence',
+    labelTh: 'การลาพักการศึกษาหรือลาออก',
+    value: 'withdrawal_leave',
+    icon: <LogOut className="h-4 w-4 text-orange-500" />,
+    subCategoriesEn: ['Temporary Leave of Absence', 'Major Transfer', 'Permanent Withdrawal', 'Academic Restart'],
+    subCategoriesTh: ['การลาพักการศึกษาชั่วคราว', 'การขอย้ายสาขาวิชา', 'การขอลาออกจากการเป็นนักศึกษา', 'การขอเริ่มแผนการเรียนใหม่'],
+  },
+  {
+    labelEn: 'Course Registration & Enrollment',
+    labelTh: 'การลงทะเบียนเรียนและแผนการเรียน',
+    value: 'registration',
+    icon: <BookOpen className="h-4 w-4 text-cyan-500" />,
+    subCategoriesEn: ['Add/Drop Course Petition', 'Section Change Request', 'Registration Hold Resolution', 'Credit Overload Permit'],
+    subCategoriesTh: ['คำร้องขอเพิ่ม/ถอนรายวิชา', 'คำร้องขอย้ายกลุ่มเรียน', 'การปลดล็อกเงื่อนไขการลงทะเบียน', 'การขออนุมัติลงทะเบียนเกินหน่วยกิต'],
   },
 ]
 
