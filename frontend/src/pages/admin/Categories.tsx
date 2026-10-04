@@ -4,7 +4,7 @@ import { useLanguage } from '@/contexts/LanguageContext'
 import { useToast } from '@/contexts/ToastContext'
 import { PageHeader, DataTable, StatusBadge, Button, SearchInput, Modal } from '@/components/ui'
 import type { AdvisingCategoryConfig } from '@/types'
-import { Tag, Plus, Edit2, Trash2, X, CheckCircle2, Sparkles, BookOpen, Briefcase, HeartHandshake, Award, Globe, FlaskConical, LogOut } from 'lucide-react'
+import { Tag, Plus, Edit2, Trash2, X, CheckCircle2, Sparkles, BookOpen, Briefcase, HeartHandshake, Award, Globe, FlaskConical, LogOut, Settings2, ChevronDown, ChevronUp } from 'lucide-react'
 
 // Pre-built University Advising Category Templates with clean separate Thai & English
 const PRESET_TEMPLATES = [
@@ -88,6 +88,7 @@ export default function Categories() {
   const [formSubCategories, setFormSubCategories] = useState<string[]>([])
   const [newSubInput, setNewSubInput] = useState('')
   const [formIsActive, setFormIsActive] = useState(true)
+  const [showAdvancedKey, setShowAdvancedKey] = useState(false)
 
   // Delete State
   const [categoryToDelete, setCategoryToDelete] = useState<AdvisingCategoryConfig | null>(null)
@@ -101,7 +102,7 @@ export default function Categories() {
 
   function handleLabelChange(text: string) {
     setFormLabel(text)
-    // Automatically derive clean key from label if creating new
+    // Automatically derive clean key from label if creating new and user hasn't explicitly customized it
     if (!editingCategory) {
       const derived = text
         .toLowerCase()
@@ -147,6 +148,7 @@ export default function Categories() {
     setFormSubCategories([])
     setNewSubInput('')
     setFormIsActive(true)
+    setShowAdvancedKey(false)
     setShowModal(true)
   }
 
@@ -157,6 +159,7 @@ export default function Categories() {
     setFormSubCategories([...c.subCategories])
     setNewSubInput('')
     setFormIsActive(c.isActive)
+    setShowAdvancedKey(false)
     setShowModal(true)
   }
 
@@ -176,13 +179,27 @@ export default function Categories() {
   }
 
   function handleSave() {
-    const cleanKey = formKey.trim().toLowerCase().replace(/\s+/g, '_')
-    if (!cleanKey) {
-      addToast('warning', t('กรุณากรอกรหัสหมวดหมู่', 'Category Key Required'), t('โปรดระบุรหัสอ้างอิงหมวดหมู่', 'Please enter a category key.'))
+    const trimmedLabel = formLabel.trim()
+    if (!trimmedLabel) {
+      addToast('warning', t('กรุณากรอกชื่อหมวดหมู่', 'Category Name Required'), t('โปรดระบุชื่อหมวดหมู่การให้คำปรึกษา', 'Please enter a category display name.'))
       return
     }
 
-    const cleanLabel = formLabel.trim() || cleanKey
+    // Auto-generate key if empty
+    let cleanKey = formKey.trim().toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '')
+    if (!cleanKey) {
+      cleanKey = trimmedLabel
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/g, '')
+        .trim()
+        .replace(/\s+/g, '_')
+        .slice(0, 32)
+    }
+    if (!cleanKey) {
+      cleanKey = `cat_${Date.now().toString(36)}`
+    }
+
+    const cleanLabel = trimmedLabel
 
     if (editingCategory) {
       store.updateCategory(editingCategory.id, {
@@ -193,12 +210,14 @@ export default function Categories() {
       })
       addToast('success', t('บันทึกสำเร็จ', 'Updated Successfully'), t('แก้ไขข้อมูลหมวดหมู่เรียบร้อยแล้ว', 'Advising category has been updated.'))
     } else {
-      // Check duplicate
-      const exists = store.categoryConfigs.some(c => c.value.toLowerCase() === cleanKey)
-      if (exists) {
-        addToast('warning', t('รหัสหมวดหมู่ซ้ำ', 'Duplicate Key'), t('มีรหัสหมวดหมู่นี้ในระบบแล้ว', 'This category key already exists.'))
-        return
+      // Ensure unique key if creating new
+      let candidateKey = cleanKey
+      let counter = 1
+      while (store.categoryConfigs.some(c => c.value.toLowerCase() === candidateKey.toLowerCase())) {
+        candidateKey = `${cleanKey}_${counter}`
+        counter++
       }
+      cleanKey = candidateKey
 
       store.addCategory({
         value: cleanKey as any,
@@ -399,7 +418,7 @@ export default function Categories() {
 
           <div>
             <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
-              {t('ชื่อหมวดหมู่การให้คำปรึกษา *', 'Category Display Name *')}
+              {t('ชื่อหมวดหมู่การให้คำปรึกษา *', 'Category Name *')}
             </label>
             <input
               type="text"
@@ -407,23 +426,38 @@ export default function Categories() {
               onChange={e => handleLabelChange(e.target.value)}
               placeholder={t('เช่น การดูแลสุขภาวะและสุขภาพจิต', 'e.g. Mental Health & Well-being Support')}
               className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500"
+              autoFocus
             />
           </div>
 
-          <div>
-            <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
-              {t('รหัสอ้างอิงหมวดหมู่ (Internal Key) *', 'Category Key / Slug *')}
-            </label>
-            <input
-              type="text"
-              value={formKey}
-              onChange={e => setFormKey(e.target.value)}
-              placeholder={t('เช่น mental_health, academic_advising', 'e.g. mental_health, academic_advising')}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 font-mono"
-            />
-            <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">
-              {t('สร้างให้อัตโนมัติจากชื่อหมวดหมู่ หรือแก้ไขตามที่ต้องการ', 'Auto-generated from category name. You can customize it if needed.')}
-            </p>
+          {/* Optional Advanced Settings Toggle */}
+          <div className="pt-0.5">
+            <button
+              type="button"
+              onClick={() => setShowAdvancedKey(!showAdvancedKey)}
+              className="inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-400 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-300 transition-colors cursor-pointer"
+            >
+              <Settings2 className="h-3 w-3" />
+              <span>{t('การตั้งค่าขั้นสูง (รหัสระบบ)', 'Advanced Settings (System Key)')}</span>
+              {showAdvancedKey ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+            </button>
+            {showAdvancedKey && (
+              <div className="mt-2 p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/70 dark:border-slate-800 space-y-1">
+                <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                  {t('รหัสอ้างอิงหมวดหมู่ (Internal Key / Slug)', 'Internal Key / Slug')}
+                </label>
+                <input
+                  type="text"
+                  value={formKey}
+                  onChange={e => setFormKey(e.target.value)}
+                  placeholder="e.g. mental_health, academic_advising"
+                  className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-mono text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                />
+                <p className="text-[10px] text-slate-400 dark:text-slate-500">
+                  {t('ระบบจะสร้างรหัสให้อัตโนมัติจากชื่อหมวดหมู่ หากเว้นว่างไว้', 'Auto-generated from category name. Leave empty to auto-generate.')}
+                </p>
+              </div>
+            )}
           </div>
 
           <div>
