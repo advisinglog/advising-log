@@ -1704,15 +1704,9 @@ const defaultDocumentTypes = [
 app.get('/api/categories', async (c) => {
   const database = db(c)
   if (!database) {
-    return c.json({ success: true, categories: defaultCategories.map(cat => ({ ...cat, subCategories: JSON.parse(cat.subCategories) })) })
+    return c.json({ success: true, categories: [] })
   }
-  let cats = await database.select().from(schema.advisingCategoryConfigs).all()
-  if (cats.length === 0) {
-    for (const cat of defaultCategories) {
-      await database.insert(schema.advisingCategoryConfigs).values(cat).onConflictDoNothing()
-    }
-    cats = await database.select().from(schema.advisingCategoryConfigs).all()
-  }
+  const cats = await database.select().from(schema.advisingCategoryConfigs).all()
   const formatted = cats.map(cat => ({
     ...cat,
     subCategories: typeof cat.subCategories === 'string' ? JSON.parse(cat.subCategories || '[]') : (cat.subCategories || []),
@@ -1786,15 +1780,9 @@ const documentTypeSchema = z.object({
 app.get('/api/document-types', async (c) => {
   const database = db(c)
   if (!database) {
-    return c.json({ success: true, documentTypes: defaultDocumentTypes.map(d => ({ ...d, allowedFormats: JSON.parse(d.allowedFormats) })) })
+    return c.json({ success: true, documentTypes: [] })
   }
-  let dts = await database.select().from(schema.documentTypeConfigs).all()
-  if (dts.length === 0) {
-    for (const dt of defaultDocumentTypes) {
-      await database.insert(schema.documentTypeConfigs).values(dt).onConflictDoNothing()
-    }
-    dts = await database.select().from(schema.documentTypeConfigs).all()
-  }
+  const dts = await database.select().from(schema.documentTypeConfigs).all()
   const formatted = dts.map(d => ({
     ...d,
     allowedFormats: typeof d.allowedFormats === 'string' ? JSON.parse(d.allowedFormats || '[]') : (d.allowedFormats || []),
