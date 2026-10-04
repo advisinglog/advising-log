@@ -259,15 +259,15 @@ export default function AdvisorLog() {
                   if (studentPendingFollowUps.length === 0) return null
                   return (
                     <div className="pt-2 border-t border-sky-100 dark:border-sky-900/60 space-y-1.5">
-                      <span className="text-[11px] font-bold text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
-                        <Sparkles className="h-3.5 w-3.5 text-amber-600" />
+                      <span className="text-[11px] font-bold text-sky-900 dark:text-sky-200 flex items-center gap-1.5">
+                        <Sparkles className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400" />
                         {t(`งานติดตามผลที่ค้างอยู่ (${studentPendingFollowUps.length} รายการ)`, `Previous Pending Tasks (${studentPendingFollowUps.length})`)}
                       </span>
                       <div className="space-y-1">
                         {studentPendingFollowUps.map(fu => (
-                          <div key={fu.id} className="flex items-center justify-between gap-2 bg-amber-50/80 dark:bg-amber-950/40 p-2 rounded-lg border border-amber-200/70 dark:border-amber-900/50 text-[11px] text-amber-900 dark:text-amber-200">
+                          <div key={fu.id} className="flex items-center justify-between gap-2 bg-white/90 dark:bg-slate-900/80 p-2 rounded-lg border border-sky-100 dark:border-slate-800 text-[11px] text-slate-700 dark:text-slate-200">
                             <span className="truncate font-medium">{fu.task}</span>
-                            {fu.dueDate && <span className="font-mono text-[10px] text-amber-700 dark:text-amber-400 shrink-0">{t('กำหนด:', 'Due:')} {fu.dueDate}</span>}
+                            {fu.dueDate && <span className="font-mono text-[10px] text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/80 px-1.5 py-0.5 rounded border border-sky-200/50 dark:border-sky-800/50 shrink-0">{t('กำหนด:', 'Due:')} {fu.dueDate}</span>}
                           </div>
                         ))}
                       </div>

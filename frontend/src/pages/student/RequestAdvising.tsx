@@ -402,31 +402,31 @@ export default function RequestAdvising() {
           <div className="space-y-5 animate-[fadeIn_0.15s_ease-out]">
             {/* Gentle Reminder for Open Tasks from Previous Sessions */}
             {pendingTasks.length > 0 && (
-              <div className="bg-amber-50/90 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 rounded-2xl p-4 text-xs sm:text-sm text-amber-900 dark:text-amber-200 shadow-2xs">
-                <div className="flex items-start gap-3">
-                  <div className="h-7 w-7 rounded-xl bg-amber-100 dark:bg-amber-900/60 text-amber-600 dark:text-amber-400 flex items-center justify-center flex-shrink-0 mt-0.5">
+              <div className="bg-gradient-to-br from-sky-50/90 via-sky-50/40 to-slate-50/80 dark:from-sky-950/40 dark:via-slate-900/40 dark:to-slate-900/60 border border-sky-200/80 dark:border-sky-800/60 rounded-2xl p-4 sm:p-5 text-xs sm:text-sm shadow-xs">
+                <div className="flex items-start gap-3.5">
+                  <div className="h-8 w-8 rounded-xl bg-sky-500 text-white flex items-center justify-center flex-shrink-0 shadow-2xs mt-0.5">
                     <Sparkles className="h-4 w-4" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-bold text-amber-900 dark:text-amber-100">
+                    <p className="font-bold text-sky-950 dark:text-sky-100 text-sm">
                       {t(
                         `คุณมี ${pendingTasks.length} สิ่งที่ต้องทำจากการเข้าพบครั้งก่อน`,
                         `You have ${pendingTasks.length} pending task${pendingTasks.length > 1 ? 's' : ''} from previous advising`
                       )}
                     </p>
-                    <p className="text-[11px] text-amber-700/90 dark:text-amber-300/80 mt-0.5 leading-relaxed">
+                    <p className="text-xs text-sky-800/80 dark:text-sky-300/80 mt-1 leading-relaxed">
                       {t(
                         'หากติดปัญหาหรือไม่แน่ใจในการทำภารกิจเดิม คุณสามารถนำมาพูดคุยหรือปรึกษาอาจารย์ในการนัดหมายครั้งนี้ได้โดยตรง',
                         'If you encountered roadblocks with your previous action items, you can discuss them with your advisor during this session.'
                       )}
                     </p>
-                    <div className="mt-2.5 space-y-1.5">
+                    <div className="mt-3 space-y-2">
                       {pendingTasks.slice(0, 3).map(fu => (
-                        <div key={fu.id} className="flex items-center gap-2 text-[11px] text-amber-900 dark:text-amber-100 bg-amber-100/60 dark:bg-amber-900/40 px-3 py-1.5 rounded-lg border border-amber-200/60 dark:border-amber-800/40">
-                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 flex-shrink-0" />
+                        <div key={fu.id} className="flex items-center gap-2.5 text-xs text-slate-700 dark:text-slate-200 bg-white/90 dark:bg-slate-900/80 px-3.5 py-2 rounded-xl border border-sky-100 dark:border-slate-800 shadow-2xs">
+                          <span className="h-2 w-2 rounded-full bg-sky-500 flex-shrink-0 ring-2 ring-sky-200 dark:ring-sky-900" />
                           <span className="truncate font-medium">{fu.task}</span>
                           {fu.dueDate && (
-                            <span className="text-amber-700 dark:text-amber-300 font-mono text-[10px] ml-auto flex-shrink-0">
+                            <span className="text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/80 px-2 py-0.5 rounded-md font-mono text-[10px] font-medium ml-auto flex-shrink-0 border border-sky-200/60 dark:border-sky-800/50">
                               {t('ครบกำหนด:', 'Due:')} {fu.dueDate}
                             </span>
                           )}

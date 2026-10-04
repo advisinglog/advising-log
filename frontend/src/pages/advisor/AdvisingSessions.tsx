@@ -344,16 +344,16 @@ export default function AdvisingSessions() {
               )
               if (studentPendingTasks.length === 0) return null
               return (
-                <div className="p-3 bg-amber-50/80 dark:bg-amber-950/30 rounded-xl border border-amber-200/80 dark:border-amber-800/60 text-xs">
-                  <div className="flex items-center gap-2 font-bold text-amber-900 dark:text-amber-200 mb-1">
-                    <Sparkles className="h-3.5 w-3.5 text-amber-600" />
+                <div className="p-3.5 bg-sky-50/70 dark:bg-sky-950/40 rounded-xl border border-sky-200/80 dark:border-sky-800/60 text-xs shadow-2xs">
+                  <div className="flex items-center gap-2 font-bold text-sky-950 dark:text-sky-200 mb-1.5">
+                    <Sparkles className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400" />
                     <span>{t(`มีงานติดตามผลค้างอยู่ ${studentPendingTasks.length} รายการ`, `${studentPendingTasks.length} Pending Follow-up Task${studentPendingTasks.length > 1 ? 's' : ''}`)}</span>
                   </div>
                   <div className="space-y-1 mt-1.5">
                     {studentPendingTasks.map(fu => (
-                      <div key={fu.id} className="flex items-center justify-between gap-2 text-[11px] text-amber-800 dark:text-amber-300 bg-amber-100/50 dark:bg-amber-900/40 px-2.5 py-1 rounded-lg">
-                        <span className="truncate">{fu.task}</span>
-                        {fu.dueDate && <span className="font-mono text-[10px] text-amber-600 dark:text-amber-400 shrink-0">{fu.dueDate}</span>}
+                      <div key={fu.id} className="flex items-center justify-between gap-2 text-[11px] text-slate-700 dark:text-slate-200 bg-white/90 dark:bg-slate-900/80 px-2.5 py-1.5 rounded-lg border border-sky-100 dark:border-slate-800">
+                        <span className="truncate font-medium">{fu.task}</span>
+                        {fu.dueDate && <span className="font-mono text-[10px] text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/80 px-1.5 py-0.5 rounded border border-sky-200/50 dark:border-sky-800/50 shrink-0">{fu.dueDate}</span>}
                       </div>
                     ))}
                   </div>
