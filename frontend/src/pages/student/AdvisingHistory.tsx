@@ -185,12 +185,12 @@ export default function AdvisingHistory() {
   return (
     <div>
       <PageHeader
-        title={t('ประวัติคำร้องขอรับคำปรึกษา', 'Advising History')}
-        description={t('ติดตามและตรวจสอบประวัติการขอคำปรึกษา บันทึก และตารางนัดหมายทั้งหมด', 'Review all past and ongoing advising requests, notes, and session logs.')}
+        title={t('ประวัติและรายการนัดหมาย', 'Meetings & History')}
+        description={t('ติดตามและตรวจสอบการนัดหมาย บันทึกผลการเข้าพบ และประวัติคำร้องขอรับคำปรึกษาทั้งหมด', 'Review your upcoming appointments, session logs, notes, and advising history.')}
         actions={
           <Button onClick={() => navigate('/student/request')}>
             <FileEdit className="h-4 w-4 mr-1.5" />
-            {t('ยื่นคำร้องขอเข้าพบ', 'Request Advising')}
+            {t('นัดพบอาจารย์', 'Meet Advisor')}
           </Button>
         }
       />

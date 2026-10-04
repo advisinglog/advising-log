@@ -43,7 +43,7 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
         return [
           { to: '/student', label: t('หน้าหลัก', 'Dashboard'), icon: <LayoutDashboard className="h-4 w-4" /> },
           { to: '/student/request', label: t('นัดพบอาจารย์', 'Meet Advisor'), icon: <FileEdit className="h-4 w-4" /> },
-          { to: '/student/history', label: t('ประวัติการเข้าพบ', 'Past Meetings & Notes'), icon: <History className="h-4 w-4" /> },
+          { to: '/student/history', label: t('ประวัติและนัดหมาย', 'Meetings & History'), icon: <History className="h-4 w-4" /> },
           { to: '/student/followups', label: t('สิ่งที่ต้องทำต่อ', 'Tasks & Next Steps'), icon: <ListChecks className="h-4 w-4" /> },
           { to: '/student/voice', label: t('เสียงสะท้อนนักศึกษา', 'Student Feedback'), icon: <MessageSquareHeart className="h-4 w-4" /> },
         ]
