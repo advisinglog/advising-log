@@ -356,7 +356,7 @@ app.post('/api/users', async (c) => {
   const isStudent = /^\d/.test(emailPrefix) || cleanEmail.includes('@student.') || cleanEmail.includes('@lamduan.')
   const assignedRole = isStudent
     ? 'student'
-    : (cleanEmail === superAdminEmail ? 'super_admin' : (body.role || 'advisor'))
+    : (cleanEmail === superAdminEmail ? 'super_admin' : (body.role === 'super_admin' ? 'admin' : (body.role || 'advisor')))
   const autoCode = body.code ? String(body.code).trim() : (isStudent ? emailPrefix : `STAFF_${Date.now().toString().slice(-4)}`)
   const derivedName = body.name?.trim() || deriveNameFromEmail(body.email)
 
@@ -409,7 +409,7 @@ app.post('/api/users/bulk', async (c) => {
     const isStudent = /^\d/.test(emailPrefix) || cleanEmail.includes('@student.') || cleanEmail.includes('@lamduan.')
     const assignedRole = isStudent
       ? 'student'
-      : (item.role === 'admin' && cleanEmail !== superAdminEmail ? 'advisor' : item.role || 'advisor')
+      : (cleanEmail === superAdminEmail ? 'super_admin' : (item.role === 'super_admin' ? 'admin' : (item.role || 'advisor')))
 
     const autoCode = item.code ? String(item.code).trim() : (isStudent ? emailPrefix : `STAFF_${Date.now().toString().slice(-4)}`)
     const derivedName = item.name?.trim() || deriveNameFromEmail(item.email)

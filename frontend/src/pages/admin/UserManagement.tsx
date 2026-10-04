@@ -563,9 +563,6 @@ export default function UserManagement() {
                       <option value="advisor">{t('อาจารย์ที่ปรึกษา (Advisor)', 'Faculty Advisor')}</option>
                       <option value="qa_chair">{t('ประกันคุณภาพ/ประธานหลักสูตร (QA Chair)', 'QA Chair / Program Chair')}</option>
                       <option value="admin">{t('ผู้ดูแลระบบ (Admin)', 'Administrator')}</option>
-                      {currentUser?.role === 'super_admin' && (
-                        <option value="super_admin">{t('ผู้ดูแลระบบระดับสูง (Super Admin)', 'Super Administrator')}</option>
-                      )}
                     </select>
                   </div>
 
@@ -752,7 +749,6 @@ export default function UserManagement() {
                               <option value="advisor">Advisor</option>
                               <option value="qa_chair">QA Chair</option>
                               <option value="admin">Admin</option>
-                              {currentUser?.role === 'super_admin' && <option value="super_admin">Super Admin</option>}
                             </select>
                           )}
                           {u.isDuplicate && (
