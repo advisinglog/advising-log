@@ -271,13 +271,14 @@ export default function RequestAdvising() {
       attachments.forEach(fileName => {
         store.addDocument({
           studentId: effectiveStudentId,
-          title: fileName,
-          type: category === 'scholarship_document' ? 'Scholarship Form' : category === 'withdrawal_leave' ? 'Exit Form' : 'Advising Attachment',
-          status: 'pending',
-          publicId: `advising_docs/${currentUser?.code || 'std'}_${fileName.replace(/[^a-zA-Z0-9._-]/g, '_')}`,
-          url: `/uploads/${fileName}`,
+          documentName: fileName,
+          fileName,
+          documentTypeId: category === 'scholarship_document' ? 'doc-scholarship' : category === 'withdrawal_leave' ? 'doc-exit' : 'doc-general',
+          status: 'uploaded',
+          signatureMethod: 'e_signature',
+          cloudinaryPublicId: `advising_docs/${currentUser?.code || 'std'}_${fileName.replace(/[^a-zA-Z0-9._-]/g, '_')}`,
+          fileUrl: `/uploads/${fileName}`,
           uploadedAt: getLocalDateString(),
-          fileSize: '1.2 MB',
         })
       })
     }

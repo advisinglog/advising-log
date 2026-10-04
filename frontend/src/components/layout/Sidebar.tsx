@@ -7,7 +7,6 @@ import {
   LayoutDashboard,
   FileEdit,
   History,
-  FileText,
   ListChecks,
   CalendarClock,
   ClipboardList,

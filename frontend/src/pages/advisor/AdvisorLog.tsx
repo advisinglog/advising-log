@@ -276,7 +276,7 @@ export default function AdvisorLog() {
                 })()}
 
                 {/* Attached Documents Preview Box */}
-                {(getAttachments(selectedReq).length > 0 || store.documents.some(d => (d.studentId === selectedReq.studentId || (student?.code && d.studentId.toUpperCase() === student.code.toUpperCase())) && d.status === 'pending')) && (
+                {(getAttachments(selectedReq).length > 0 || store.documents.some(d => (d.studentId === selectedReq.studentId || (student?.code && d.studentId.toUpperCase() === student.code.toUpperCase())) && (d.status === 'uploaded' || d.status === 'required'))) && (
                   <div className="pt-2 border-t border-sky-100 dark:border-sky-900/60 space-y-2">
                     <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
                       <FileText className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400" />
@@ -292,21 +292,20 @@ export default function AdvisorLog() {
                         </div>
                       ))}
                       {store.documents
-                        .filter(d => (d.studentId === selectedReq.studentId || (student?.code && d.studentId.toUpperCase() === student.code.toUpperCase())) && d.status === 'pending')
+                        .filter(d => (d.studentId === selectedReq.studentId || (student?.code && d.studentId.toUpperCase() === student.code.toUpperCase())) && (d.status === 'uploaded' || d.status === 'required'))
                         .map(doc => (
                           <div key={doc.id} className="flex items-center justify-between gap-2 bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs">
-                            <span className="truncate font-medium text-slate-700 dark:text-slate-300">{doc.title}</span>
+                            <span className="truncate font-medium text-slate-700 dark:text-slate-300">{doc.documentName || doc.fileName}</span>
                             <Button
                               size="sm"
                               variant="secondary"
                               type="button"
                               onClick={() => setPreviewDoc({
                                 id: doc.id,
-                                title: doc.title,
-                                fileName: doc.title,
-                                fileUrl: doc.url,
-                                cloudinaryPublicId: doc.publicId,
-                                fileType: doc.type,
+                                title: doc.documentName,
+                                fileName: doc.fileName || doc.documentName,
+                                fileUrl: doc.fileUrl,
+                                cloudinaryPublicId: doc.cloudinaryPublicId,
                               })}
                               className="h-7 text-[11px] px-2"
                             >
