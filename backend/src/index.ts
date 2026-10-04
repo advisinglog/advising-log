@@ -191,9 +191,11 @@ app.post('/api/auth/google', async (c) => {
       }
       await database.insert(schema.users).values(newAdmin)
       user = newAdmin
-    } else if (user && isAuthorizedSuperAdmin && (user.code !== 'ADM-SUPER' || user.role !== 'super_admin')) {
-      await database.update(schema.users).set({ code: 'ADM-SUPER', role: 'super_admin' }).where(eq(schema.users.id, user.id))
-      user = { ...user, code: 'ADM-SUPER' }
+    } else if (user && isAuthorizedSuperAdmin) {
+      if (user.code !== 'ADM-SUPER' || user.role !== 'super_admin') {
+        await database.update(schema.users).set({ code: 'ADM-SUPER', role: 'super_admin' }).where(eq(schema.users.id, user.id))
+      }
+      user = { ...user, code: 'ADM-SUPER', role: 'super_admin', name: user.name || 'Super Admin' }
     }
 
     // If not found in database (not registered by Admin)

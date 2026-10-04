@@ -38,7 +38,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const saved = localStorage.getItem('advising_log_auth_user')
     if (saved) {
       try {
-        return JSON.parse(saved)
+        const u = JSON.parse(saved)
+        if (u && (u.email?.toLowerCase() === 'se.advisinglog@gmail.com' || u.code === 'ADM-SUPER')) {
+          u.role = 'super_admin'
+          if (u.name === 'System Admin' || u.name === 'System Super Admin' || u.name === 'System Super Admin (SE AdvisingLog)') {
+            u.name = 'Super Admin'
+          }
+          localStorage.setItem('advising_log_auth_user', JSON.stringify(u))
+        }
+        return u
       } catch {}
     }
     return null
@@ -149,7 +157,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } : {
           id: isAuthorizedAdmin ? 'ADM_SE_GOOGLE' : `${role === 'student' ? 'STU' : role === 'super_admin' ? 'ADM' : role === 'admin' ? 'ADM' : role === 'qa_chair' ? 'QA' : 'ADV'}_${googleId.substring(0, 6)}`,
           code: userCode,
-          name: isAuthorizedAdmin ? 'System Super Admin (SE AdvisingLog)' : name,
+          name: isAuthorizedAdmin ? 'Super Admin' : name,
           email,
           role,
           department: isAuthorizedAdmin ? 'Academic & System Affairs' : 'School of Applied Digital Technology (ADT)',
