@@ -9,7 +9,7 @@ import { useStore } from '@/data/mock-store'
 import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { PageHeader, Button, Card, Modal } from '@/components/ui'
-import { ADVISING_CATEGORIES, EXIT_REASON_CODES } from '@/types'
+import { EXIT_REASON_CODES } from '@/types'
 import type { AdvisingCategory, ExitType, ExitReasonCode } from '@/types'
 import {
   Paperclip,

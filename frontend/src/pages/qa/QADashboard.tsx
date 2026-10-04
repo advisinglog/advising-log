@@ -9,7 +9,7 @@ import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useTheme } from '@/contexts/ThemeContext'
 import { PageHeader, Card, StatCard, Button } from '@/components/ui'
-import { ADVISING_CATEGORIES, EXIT_REASON_CODES, STUDENT_VOICE_FACTORS } from '@/types'
+import { EXIT_REASON_CODES, STUDENT_VOICE_FACTORS } from '@/types'
 import { exportAunQaExcelReport } from '@/utils/exportUtils'
 import {
   BarChart3,
