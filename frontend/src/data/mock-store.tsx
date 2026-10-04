@@ -258,6 +258,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         api.getCategories(),
         api.getDocumentTypes(),
       ])
+      if (!isMounted) return
       if (uRes && Array.isArray(uRes.users)) {
         const superAdminEmail = ((import.meta.env.VITE_SUPER_ADMIN_EMAIL as string) || 'se.advisinglog@gmail.com').toLowerCase().trim()
         const normalizedUsers = uRes.users.map(u => {
