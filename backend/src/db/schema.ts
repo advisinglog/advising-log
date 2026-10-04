@@ -6,7 +6,7 @@ export const users = sqliteTable('users', {
   code: text('code').notNull().unique(), // Student ID or Employee Code
   name: text('name').notNull(),
   email: text('email').notNull().unique(),
-  role: text('role', { enum: ['student', 'advisor', 'qa_chair', 'admin'] }).notNull(),
+  role: text('role', { enum: ['student', 'advisor', 'qa_chair', 'admin', 'sub_admin'] }).notNull(),
   department: text('department').notNull().default('School of Applied Digital Technology (ADT)'),
   phone: text('phone'),
   isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),

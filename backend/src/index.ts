@@ -132,7 +132,7 @@ app.post('/api/auth/google', async (c) => {
         }, 403)
       }
 
-      let role: 'student' | 'advisor' | 'qa_chair' | 'admin' = 'advisor'
+      let role: 'student' | 'advisor' | 'qa_chair' | 'admin' | 'sub_admin' = 'advisor'
       if (/^\d/.test(codePrefix) || lowerEmail.includes('student') || lowerEmail.includes('lamduan')) {
         role = 'student'
       }

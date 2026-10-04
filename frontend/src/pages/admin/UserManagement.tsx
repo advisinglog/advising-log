@@ -1,15 +1,17 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '@/data/mock-store'
+import { useAuth } from '@/contexts/AuthContext'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useToast } from '@/contexts/ToastContext'
 import { PageHeader, DataTable, StatusBadge, Button, SearchInput, Modal } from '@/components/ui'
 import type { User, UserRole } from '@/types'
-import { ChevronDown, Bot, ExternalLink, UserPlus, ShieldCheck, User as UserIcon, Users, Info, Trash2, AlertTriangle } from 'lucide-react'
+import { ChevronDown, Bot, ExternalLink, UserPlus, ShieldCheck, User as UserIcon, Users, Info, Trash2, AlertTriangle, ShieldAlert } from 'lucide-react'
 import { getLocalDateString } from '@/utils/dateUtils'
 
 export default function UserManagement() {
   const store = useStore()
+  const { currentUser } = useAuth()
   const navigate = useNavigate()
   const { t } = useLanguage()
   const { addToast } = useToast()
@@ -74,6 +76,16 @@ export default function UserManagement() {
         .filter(n => n > 0)
       const maxNum = numbers.length > 0 ? Math.max(...numbers) : 0
       return `QA${String(maxNum + 1).padStart(3, '0')}`
+    }
+    if (role === 'sub_admin') {
+      const numbers = store.users
+        .map(u => {
+          const match = u.code.match(/^STAFF(\d+)$/i) || u.code.match(/^SUBADM(\d+)$/i)
+          return match ? parseInt(match[1], 10) : 0
+        })
+        .filter(n => n > 0)
+      const maxNum = numbers.length > 0 ? Math.max(...numbers) : 0
+      return `STAFF${String(maxNum + 1).padStart(3, '0')}`
     }
     if (role === 'admin') {
       const numbers = store.users
@@ -241,6 +253,7 @@ export default function UserManagement() {
     { value: 'student', labelTh: 'นักศึกษา (Student)', labelEn: 'Student' },
     { value: 'advisor', labelTh: 'อาจารย์ที่ปรึกษา (Advisor)', labelEn: 'Advisor' },
     { value: 'qa_chair', labelTh: 'ประกันคุณภาพ/ประธาน (QA)', labelEn: 'QA Chair' },
+    { value: 'sub_admin', labelTh: 'เจ้าหน้าที่สำนักวิชา (Sub-Admin)', labelEn: 'Department Staff (Sub-Admin)' },
     { value: 'admin', labelTh: 'ผู้ดูแลระบบ (Admin)', labelEn: 'Admin' },
   ]
 
@@ -271,10 +284,10 @@ export default function UserManagement() {
     },
     {
       key: 'code',
-      header: t('รหัสนักศึกษา', 'Student ID'),
+      header: t('รหัสนักศึกษา / รหัสประจำตัว', 'ID / Code'),
       render: (u: User) => (
         <span className="text-xs font-mono text-slate-600 dark:text-slate-300 font-medium">
-          {u.role === 'student' ? u.code : '—'}
+          {u.code || '—'}
         </span>
       ),
     },
@@ -286,11 +299,18 @@ export default function UserManagement() {
           student: { th: 'นักศึกษา', en: 'Student' },
           advisor: { th: 'อาจารย์ที่ปรึกษา', en: 'Faculty Advisor' },
           qa_chair: { th: 'ประกันคุณภาพ/ประธานหลักสูตร', en: 'QA / Program Chair' },
+          sub_admin: { th: 'เจ้าหน้าที่สำนักวิชา (Sub-Admin)', en: 'Staff (Sub-Admin)' },
           admin: { th: 'ผู้ดูแลระบบ', en: 'Admin' },
         }
         const r = roleLabels[u.role] || { th: u.role, en: u.role }
         return (
-          <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700 text-slate-700 dark:text-slate-200">
+          <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-md border ${
+            u.role === 'sub_admin'
+              ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border-indigo-200/70 dark:border-indigo-800'
+              : u.role === 'admin'
+              ? 'bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border-sky-200/70 dark:border-sky-800'
+              : 'bg-slate-100 dark:bg-slate-800 border-slate-200/60 dark:border-slate-700 text-slate-700 dark:text-slate-200'
+          }`}>
             {t(r.th, r.en)}
           </span>
         )
@@ -314,6 +334,10 @@ export default function UserManagement() {
       render: (u: User) => {
         const superAdminEmail = ((import.meta.env.VITE_SUPER_ADMIN_EMAIL as string) || 'se.advisinglog@gmail.com').toLowerCase().trim()
         const isSuperAdmin = u.email?.toLowerCase().trim() === superAdminEmail || u.code === 'ADM-SUPER' || u.id === 'ADM_SE_GOOGLE'
+        const isSelf = currentUser?.id === u.id || currentUser?.email?.toLowerCase() === u.email?.toLowerCase()
+        const isSubAdminCaller = currentUser?.role === 'sub_admin'
+        const isProtectedFromSubAdmin = isSubAdminCaller && (u.role === 'admin' || u.role === 'sub_admin')
+
         if (isSuperAdmin) {
           return (
             <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-400 dark:text-slate-400 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700">
@@ -322,6 +346,24 @@ export default function UserManagement() {
             </span>
           )
         }
+
+        if (isProtectedFromSubAdmin) {
+          return (
+            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-400 dark:text-slate-500 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 border border-slate-200/50 dark:border-slate-700/50">
+              <ShieldAlert className="h-3 w-3 text-slate-400" />
+              {t('สงวนสิทธิ์ Admin', 'Admin Only')}
+            </span>
+          )
+        }
+
+        if (isSelf) {
+          return (
+            <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500 italic">
+              {t('บัญชีปัจจุบันของคุณ', 'Current user')}
+            </span>
+          )
+        }
+
         return (
           <div className="flex items-center gap-1.5">
             <Button
@@ -527,6 +569,10 @@ export default function UserManagement() {
                     >
                       <option value="advisor">{t('อาจารย์ที่ปรึกษา (Advisor)', 'Faculty Advisor')}</option>
                       <option value="qa_chair">{t('ประกันคุณภาพ/ประธานหลักสูตร (QA Chair)', 'QA Chair / Program Chair')}</option>
+                      <option value="sub_admin">{t('เจ้าหน้าที่สำนักวิชา (Sub-Admin / Staff)', 'Department Staff (Sub-Admin)')}</option>
+                      {currentUser?.role === 'admin' && (
+                        <option value="admin">{t('ผู้ดูแลระบบ (Admin)', 'Administrator')}</option>
+                      )}
                     </select>
                   </div>
 
@@ -669,6 +715,7 @@ export default function UserManagement() {
                       >
                         <option value="advisor">{t('อาจารย์ที่ปรึกษา (Advisor)', 'Faculty Advisor')}</option>
                         <option value="qa_chair">{t('ประกันคุณภาพ/ประธานหลักสูตร (QA Chair)', 'QA Chair / Program Chair')}</option>
+                        <option value="sub_admin">{t('เจ้าหน้าที่สำนักวิชา (Sub-Admin / Staff)', 'Department Staff (Sub-Admin)')}</option>
                       </select>
                     </div>
                   )}
@@ -700,13 +747,17 @@ export default function UserManagement() {
                                 }))
                               }}
                               className={`px-2 py-0.5 rounded-md text-[10px] font-bold border cursor-pointer focus:outline-none focus:ring-1 focus:ring-sky-500 ${
-                                u.role === 'qa_chair'
+                                u.role === 'sub_admin'
+                                  ? 'bg-indigo-50 text-indigo-800 border-indigo-300 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800'
+                                  : u.role === 'qa_chair'
                                   ? 'bg-emerald-50 text-emerald-800 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800'
                                   : 'bg-amber-50 text-amber-800 border-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800'
                               }`}
                             >
                               <option value="advisor">Advisor</option>
                               <option value="qa_chair">QA Chair</option>
+                              <option value="sub_admin">Sub-Admin (Staff)</option>
+                              {currentUser?.role === 'admin' && <option value="admin">Admin</option>}
                             </select>
                           )}
                           {u.isDuplicate && (

@@ -4,7 +4,7 @@
 
 // --- Enums / Literal Unions ---
 
-export type UserRole = 'student' | 'advisor' | 'qa_chair' | 'admin'
+export type UserRole = 'student' | 'advisor' | 'qa_chair' | 'admin' | 'sub_admin'
 
 export type AdvisingCategory =
   | 'scholarship_document'

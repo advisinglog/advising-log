@@ -68,6 +68,15 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
           { to: '/admin/document-types', label: t('ประเภทเอกสาร', 'Document Types'), icon: <FileCog className="h-4 w-4" /> },
           { to: '/admin/audit-logs', label: t('ประวัติการทำงานระบบ', 'Audit Logs'), icon: <ScrollText className="h-4 w-4" /> },
         ]
+      case 'sub_admin':
+        return [
+          { to: '/admin', label: t('แดชบอร์ดเจ้าหน้าที่', 'Staff Dashboard'), icon: <LayoutDashboard className="h-4 w-4" /> },
+          { to: '/admin/users', label: t('จัดการผู้ใช้งาน', 'User Management'), icon: <Users className="h-4 w-4" /> },
+          { to: '/admin/roster', label: t('จัดสรรอาจารย์ที่ปรึกษา', 'Student-Advisor Roster'), icon: <BookOpen className="h-4 w-4" /> },
+          { to: '/admin/categories', label: t('หมวดหมู่คำปรึกษา', 'Categories'), icon: <FolderCog className="h-4 w-4" /> },
+          { to: '/admin/document-types', label: t('ประเภทเอกสาร', 'Document Types'), icon: <FileCog className="h-4 w-4" /> },
+          { to: '/admin/audit-logs', label: t('ประวัติการทำงานระบบ', 'Audit Logs'), icon: <ScrollText className="h-4 w-4" /> },
+        ]
       default:
         return []
     }

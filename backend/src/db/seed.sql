@@ -16,6 +16,7 @@ INSERT OR IGNORE INTO users (id, code, name, email, role, department, phone, is_
 ('ADV002', 'EMP-1002', 'Dr. Wipawan Buathong', 'wipawan.b@mfu.ac.th', 'advisor', 'School of Applied Digital Technology (ADT)', '053-916-002', 1, 0, '2019-08-01'),
 ('ADV003', 'EMP-1003', 'Dr. Chaiwat Namsai', 'chaiwat.n@mfu.ac.th', 'advisor', 'School of Applied Digital Technology (ADT)', '053-916-003', 1, 0, '2021-01-10'),
 ('QA001', 'EMP-2001', 'Assoc. Prof. Rattana Pongsakorn', 'rattana.p@mfu.ac.th', 'qa_chair', 'School of Applied Digital Technology (ADT)', '053-916-010', 1, 1, '2018-01-01'),
+('STAFF001', 'STAFF-1001', 'Natthawut Saelim', 'natthawut.s@mfu.ac.th', 'sub_admin', 'School of Applied Digital Technology (ADT)', '053-916-015', 1, 0, '2022-04-01'),
 ('ADM001', 'EMP-3001', 'Supattra Kaewmanee', 'supattra.k@mfu.ac.th', 'admin', 'Academic Affairs', '053-916-020', 1, 1, '2019-03-01');
 
 -- 2. Student-Advisor Assignments
