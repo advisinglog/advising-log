@@ -178,11 +178,15 @@ export default function AdvisingHistory() {
           onChange={(e) => setCategoryFilter(e.target.value)}
         >
           <option value="all">{t('ทุกหมวดหมู่', 'All Categories')}</option>
-          {ADVISING_CATEGORIES.map(cat => (
-            <option key={cat.value} value={cat.value}>
-              {t(cat.labelTh, cat.labelEn)}
-            </option>
-          ))}
+          {(store.categoryConfigs.length > 0 ? store.categoryConfigs.filter(c => c.isActive !== false) : ADVISING_CATEGORIES).map(cat => {
+            const val = cat.value
+            const label = getCategoryLabel(val) !== val ? getCategoryLabel(val) : ('label' in cat && cat.label ? cat.label : val)
+            return (
+              <option key={val} value={val}>
+                {label}
+              </option>
+            )
+          })}
         </select>
       </div>
       <DataTable

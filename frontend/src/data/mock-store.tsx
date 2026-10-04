@@ -217,8 +217,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [studentVoiceResponses, setStudentVoiceResponses] = useState<StudentVoiceResponse[]>(isTestEnv ? [...mockStudentVoiceResponses] : [])
   const [completedVoiceStudents, setCompletedVoiceStudents] = useState<string[]>([])
   const [documents, setDocuments] = useState<StudentDocument[]>(isTestEnv ? [...mockStudentDocuments] : [])
-  const [categoryConfigs, setCategoryConfigs] = useState<AdvisingCategoryConfig[]>(isTestEnv ? [...mockCategoryConfigs] : [])
-  const [documentTypes, setDocumentTypes] = useState<DocumentType[]>(isTestEnv ? [...mockDocumentTypes] : [])
+  const [categoryConfigs, setCategoryConfigs] = useState<AdvisingCategoryConfig[]>([...mockCategoryConfigs])
+  const [documentTypes, setDocumentTypes] = useState<DocumentType[]>([...mockDocumentTypes])
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>(isTestEnv ? [...mockAuditLogs] : [])
   const [aiKeys, setAiKeys] = useState<AiApiKey[]>([])
   const [systemApiConfig, setSystemApiConfig] = useState<SystemApiConfig>({

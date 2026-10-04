@@ -108,10 +108,22 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       : 'Semester 1 / Academic Year 2026'
   }
 
+  const PRESET_CATEGORY_LABELS: Record<string, { labelTh: string; labelEn: string }> = {
+    academic_advising: { labelTh: 'การวางแผนการเรียนและคำแนะนำทางวิชาการ', labelEn: 'Academic Advising & Course Planning' },
+    career_internship: { labelTh: 'การแนะแนวอาชีพและการฝึกงาน', labelEn: 'Career & Internship Guidance' },
+    mental_health: { labelTh: 'การดูแลสุขภาวะและสุขภาพจิต', labelEn: 'Mental Health & Well-being Support' },
+    scholarship_aid: { labelTh: 'ทุนการศึกษาและความช่วยเหลือทางการเงิน', labelEn: 'Scholarship & Financial Aid' },
+    study_abroad: { labelTh: 'การศึกษาต่อต่างประเทศและนักศึกษาแลกเปลี่ยน', labelEn: 'Study Abroad & Student Exchange' },
+    research_project: { labelTh: 'โครงงานปริญญานิพนธ์และการวิจัย', labelEn: 'Senior Project & Research Mentorship' },
+  }
+
   function getCategoryLabel(value: string): string {
+    if (!value) return ''
     const item = ADVISING_CATEGORIES.find(c => c.value === value)
-    if (!item) return value
-    return language === 'th' ? item.labelTh : item.labelEn
+    if (item) return language === 'th' ? item.labelTh : item.labelEn
+    const preset = PRESET_CATEGORY_LABELS[value]
+    if (preset) return language === 'th' ? preset.labelTh : preset.labelEn
+    return value
   }
 
   function getSubCategoryLabel(value: string): string {

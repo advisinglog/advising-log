@@ -531,8 +531,9 @@ export default function RequestAdvising() {
                 aria-label={t('หมวดหมู่คำปรึกษา', 'Advising Category')}
                 className="grid grid-cols-1 sm:grid-cols-2 gap-2.5"
               >
-                {ADVISING_CATEGORIES.map(c => {
+                {(store.categoryConfigs.length > 0 ? store.categoryConfigs.filter(c => c.isActive !== false) : ADVISING_CATEGORIES).map(c => {
                   const isSelected = category === c.value
+                  const catLabel = getCategoryLabel(c.value) !== c.value ? getCategoryLabel(c.value) : (('label' in c && c.label) ? c.label : c.value)
                   return (
                     <div
                       key={c.value}
@@ -540,13 +541,13 @@ export default function RequestAdvising() {
                       aria-checked={isSelected}
                       tabIndex={0}
                       onClick={() => {
-                        setCategory(c.value)
+                        setCategory(c.value as AdvisingCategory)
                         setSubCategory('')
                       }}
                       onKeyDown={e => {
                         if (e.key === 'Enter' || e.key === ' ') {
                           e.preventDefault()
-                          setCategory(c.value)
+                          setCategory(c.value as AdvisingCategory)
                           setSubCategory('')
                         }
                       }}
@@ -563,7 +564,7 @@ export default function RequestAdvising() {
                       </div>
                       <div className="min-w-0 flex-1 pr-2">
                         <p className={`text-xs sm:text-sm font-semibold ${isSelected ? 'text-sky-900 dark:text-sky-200' : 'text-slate-800 dark:text-slate-200'}`}>
-                          {getCategoryLabel(c.value)}
+                          {catLabel}
                         </p>
                         <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5">
                           {c.value === 'withdrawal_leave'
@@ -595,9 +596,12 @@ export default function RequestAdvising() {
                 className="sr-only"
               >
                 <option value="">{t('-- กรุณาเลือกหมวดหมู่ --', 'Select a category')}</option>
-                {ADVISING_CATEGORIES.map(c => (
-                  <option key={c.value} value={c.value}>{getCategoryLabel(c.value)}</option>
-                ))}
+                {(store.categoryConfigs.length > 0 ? store.categoryConfigs.filter(c => c.isActive !== false) : ADVISING_CATEGORIES).map(c => {
+                  const catLabel = getCategoryLabel(c.value) !== c.value ? getCategoryLabel(c.value) : (('label' in c && c.label) ? c.label : c.value)
+                  return (
+                    <option key={c.value} value={c.value}>{catLabel}</option>
+                  )
+                })}
               </select>
 
               {/* Sub-category for regular categories */}

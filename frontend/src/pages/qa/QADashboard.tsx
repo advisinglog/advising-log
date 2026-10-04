@@ -90,7 +90,7 @@ export default function QADashboard() {
   const { currentUser } = useAuth()
   const store = useStore()
   const { addToast } = useToast()
-  const { t, language } = useLanguage()
+  const { t, language, getCategoryLabel } = useLanguage()
   const { isDark } = useTheme()
   const [activeTab, setActiveTab] = useState<'overview' | 'exit_qualitative' | 'student_voice'>('overview')
 
@@ -109,11 +109,16 @@ export default function QADashboard() {
   const totalWarnings = store.earlyWarnings.length
   const totalVoiceResponses = store.studentVoiceResponses.length
 
-  // Category distribution
-  const categoryData = ADVISING_CATEGORIES.map(c => {
-    const count = store.requests.filter(r => r.category === c.value).length
+  // Dynamic Category distribution across all existing requests and configured categories
+  const activeCategoryKeys = Array.from(new Set([
+    ...(store.categoryConfigs.length > 0 ? store.categoryConfigs.map(c => c.value) : ADVISING_CATEGORIES.map(c => c.value)),
+    ...store.requests.map(r => r.category).filter(Boolean),
+  ]))
+
+  const categoryData = activeCategoryKeys.map(key => {
+    const count = store.requests.filter(r => r.category === key).length
     return {
-      name: language === 'th' ? c.labelTh : c.labelEn,
+      name: getCategoryLabel(key),
       count,
       percentage: totalRequests > 0 ? Math.round((count / totalRequests) * 100) : 0,
     }
