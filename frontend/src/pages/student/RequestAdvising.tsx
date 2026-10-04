@@ -531,57 +531,65 @@ export default function RequestAdvising() {
                 aria-label={t('หมวดหมู่คำปรึกษา', 'Advising Category')}
                 className="grid grid-cols-1 sm:grid-cols-2 gap-2.5"
               >
-                {(store.categoryConfigs.length > 0 ? store.categoryConfigs.filter(c => c.isActive !== false) : ADVISING_CATEGORIES).map(c => {
-                  const isSelected = category === c.value
-                  const catLabel = getCategoryLabel(c.value) !== c.value ? getCategoryLabel(c.value) : (('label' in c && c.label) ? c.label : c.value)
-                  return (
-                    <div
-                      key={c.value}
-                      role="radio"
-                      aria-checked={isSelected}
-                      tabIndex={0}
-                      onClick={() => {
-                        setCategory(c.value as AdvisingCategory)
-                        setSubCategory('')
-                      }}
-                      onKeyDown={e => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault()
+                {store.categoryConfigs.filter(c => c.isActive !== false).length > 0 ? (
+                  store.categoryConfigs.filter(c => c.isActive !== false).map(c => {
+                    const isSelected = category === c.value
+                    const catLabel = getCategoryLabel(c.value) !== c.value ? getCategoryLabel(c.value) : (('label' in c && c.label) ? c.label : c.value)
+                    return (
+                      <div
+                        key={c.value}
+                        role="radio"
+                        aria-checked={isSelected}
+                        tabIndex={0}
+                        onClick={() => {
                           setCategory(c.value as AdvisingCategory)
                           setSubCategory('')
-                        }
-                      }}
-                      className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex items-start gap-3 relative select-none ${
-                        isSelected
-                          ? 'border-sky-500 bg-sky-50/70 dark:bg-sky-950/40 shadow-xs ring-2 ring-sky-500/20'
-                          : 'border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-sky-300 dark:hover:border-slate-700 hover:bg-slate-50/50'
-                      }`}
-                    >
-                      <div className={`h-9 w-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${
-                        isSelected ? 'bg-sky-500 text-white shadow-2xs' : 'bg-slate-100 dark:bg-slate-800'
-                      }`}>
-                        {getCategoryIcon(c.value)}
-                      </div>
-                      <div className="min-w-0 flex-1 pr-2">
-                        <p className={`text-xs sm:text-sm font-semibold ${isSelected ? 'text-sky-900 dark:text-sky-200' : 'text-slate-800 dark:text-slate-200'}`}>
-                          {catLabel}
-                        </p>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5">
-                          {c.value === 'withdrawal_leave'
-                            ? t('แบบคำร้องขอพ้นสภาพหรือพักการศึกษา', 'Exit, leave or major transfer form')
-                            : c.value === 'scholarship_document'
-                            ? t('ลงนามรับรองทุนและเอกสารราชการ', 'Scholarship & Petitions')
-                            : t('ปรึกษาและขอคำแนะนำทางวิชาการ', 'Advising & Guidance')}
-                        </p>
-                      </div>
-                      {isSelected && (
-                        <div className="h-5 w-5 rounded-full bg-sky-500 text-white flex items-center justify-center flex-shrink-0">
-                          <Check className="h-3 w-3" />
+                        }}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault()
+                            setCategory(c.value as AdvisingCategory)
+                            setSubCategory('')
+                          }
+                        }}
+                        className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex items-start gap-3 relative select-none ${
+                          isSelected
+                            ? 'border-sky-500 bg-sky-50/70 dark:bg-sky-950/40 shadow-xs ring-2 ring-sky-500/20'
+                            : 'border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-sky-300 dark:hover:border-slate-700 hover:bg-slate-50/50'
+                        }`}
+                      >
+                        <div className={`h-9 w-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${
+                          isSelected ? 'bg-sky-500 text-white shadow-2xs' : 'bg-slate-100 dark:bg-slate-800'
+                        }`}>
+                          {getCategoryIcon(c.value)}
                         </div>
-                      )}
-                    </div>
-                  )
-                })}
+                        <div className="min-w-0 flex-1 pr-2">
+                          <p className={`text-xs sm:text-sm font-semibold ${isSelected ? 'text-sky-900 dark:text-sky-200' : 'text-slate-800 dark:text-slate-200'}`}>
+                            {catLabel}
+                          </p>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5">
+                            {c.value === 'withdrawal_leave'
+                              ? t('แบบคำร้องขอพ้นสภาพหรือพักการศึกษา', 'Exit, leave or major transfer form')
+                              : c.value === 'scholarship_document'
+                              ? t('ลงนามรับรองทุนและเอกสารราชการ', 'Scholarship & Petitions')
+                              : t('ปรึกษาและขอคำแนะนำทางวิชาการ', 'Advising & Guidance')}
+                          </p>
+                        </div>
+                        {isSelected && (
+                          <div className="h-5 w-5 rounded-full bg-sky-500 text-white flex items-center justify-center flex-shrink-0">
+                            <Check className="h-3 w-3" />
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })
+                ) : (
+                  <div className="col-span-full py-8 text-center border border-dashed border-slate-200 dark:border-slate-800 rounded-xl p-4">
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      {t('ยังไม่มีการตั้งค่าหมวดหมู่ในฐานข้อมูล โปรดติดต่อผู้ดูแลระบบ', 'No advising categories configured in the database yet. Please contact an administrator.')}
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Native select for test automation & accessibility */}
@@ -596,7 +604,7 @@ export default function RequestAdvising() {
                 className="sr-only"
               >
                 <option value="">{t('-- กรุณาเลือกหมวดหมู่ --', 'Select a category')}</option>
-                {(store.categoryConfigs.length > 0 ? store.categoryConfigs.filter(c => c.isActive !== false) : ADVISING_CATEGORIES).map(c => {
+                {store.categoryConfigs.filter(c => c.isActive !== false).map(c => {
                   const catLabel = getCategoryLabel(c.value) !== c.value ? getCategoryLabel(c.value) : (('label' in c && c.label) ? c.label : c.value)
                   return (
                     <option key={c.value} value={c.value}>{catLabel}</option>

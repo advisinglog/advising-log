@@ -111,7 +111,7 @@ export default function QADashboard() {
 
   // Dynamic Category distribution across all existing requests and configured categories
   const activeCategoryKeys = Array.from(new Set([
-    ...(store.categoryConfigs.length > 0 ? store.categoryConfigs.map(c => c.value) : ADVISING_CATEGORIES.map(c => c.value)),
+    ...store.categoryConfigs.map(c => c.value),
     ...store.requests.map(r => r.category).filter(Boolean),
   ]))
 
