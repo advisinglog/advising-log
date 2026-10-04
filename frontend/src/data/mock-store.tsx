@@ -258,8 +258,21 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         api.getCategories(),
         api.getDocumentTypes(),
       ])
-      if (!isMounted) return
-      if (uRes && Array.isArray(uRes.users)) setUsers(uRes.users)
+      if (uRes && Array.isArray(uRes.users)) {
+        const superAdminEmail = ((import.meta.env.VITE_SUPER_ADMIN_EMAIL as string) || 'se.advisinglog@gmail.com').toLowerCase().trim()
+        const normalizedUsers = uRes.users.map(u => {
+          if (u.email?.toLowerCase().trim() === superAdminEmail || u.code === 'ADM-SUPER') {
+            const isOldName = !u.name || u.name.includes('System Admin') || u.name.includes('SE AdvisingLog') || u.name.includes('System Super Admin')
+            return {
+              ...u,
+              name: isOldName ? 'Super Admin' : u.name,
+              role: 'super_admin' as const,
+            }
+          }
+          return u
+        })
+        setUsers(normalizedUsers)
+      }
       if (rosRes && Array.isArray(rosRes.roster)) {
         const seen = new Set<string>()
         const dedupedRoster: StudentAdvisorAssignment[] = []

@@ -296,13 +296,25 @@ app.get('/api/users', async (c) => {
   const database = db(c)
   if (!database) return c.json({ users: [] })
   
+  const superAdminEmail = (c.env?.SUPER_ADMIN_EMAIL || 'se.advisinglog@gmail.com').toLowerCase().trim()
   const role = c.req.query('role')
-  if (role) {
-    const list = await database.select().from(schema.users).where(eq(schema.users.role, role as any))
-    return c.json({ users: list })
-  }
-  const allUsers = await database.select().from(schema.users)
-  return c.json({ users: allUsers })
+  const list = role
+    ? await database.select().from(schema.users).where(eq(schema.users.role, role as any))
+    : await database.select().from(schema.users)
+
+  const normalized = list.map((u) => {
+    if (u.email?.toLowerCase().trim() === superAdminEmail || u.code === 'ADM-SUPER') {
+      const isOldName = !u.name || u.name.includes('System Admin') || u.name.includes('SE AdvisingLog') || u.name.includes('System Super Admin')
+      return {
+        ...u,
+        name: isOldName ? 'Super Admin' : u.name,
+        role: 'super_admin' as const,
+      }
+    }
+    return u
+  })
+
+  return c.json({ users: normalized })
 })
 
 app.get('/api/users/:id', async (c) => {
@@ -344,7 +356,7 @@ app.post('/api/users', async (c) => {
   const isStudent = /^\d/.test(emailPrefix) || cleanEmail.includes('@student.') || cleanEmail.includes('@lamduan.')
   const assignedRole = isStudent
     ? 'student'
-    : (body.role === 'admin' && cleanEmail !== superAdminEmail ? 'advisor' : body.role || 'advisor')
+    : (cleanEmail === superAdminEmail ? 'super_admin' : (body.role || 'advisor'))
   const autoCode = body.code ? String(body.code).trim() : (isStudent ? emailPrefix : `STAFF_${Date.now().toString().slice(-4)}`)
   const derivedName = body.name?.trim() || deriveNameFromEmail(body.email)
 
