@@ -219,15 +219,44 @@ export function EmptyState({ icon, title, description, action }: { icon?: ReactN
 // --- Modal / Dialog ---
 
 export function Modal({ isOpen, onClose, title, children, size = 'md' }: { isOpen: boolean; onClose: () => void; title: string; children: ReactNode; size?: 'sm' | 'md' | 'lg' | 'xl' }) {
+  useEffect(() => {
+    if (!isOpen) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, onClose])
+
   if (!isOpen) return null
   const sizeClass = { sm: 'max-w-sm', md: 'max-w-lg', lg: 'max-w-2xl', xl: 'max-w-4xl' }[size]
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
-      <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs transition-opacity" onClick={onClose} />
-      <div className={cn('relative bg-white dark:bg-slate-900 rounded-2xl sm:rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-2xl w-full h-full sm:h-auto sm:max-h-[90vh] flex flex-col z-10 animate-[slideIn_0.15s_ease-out] text-slate-900 dark:text-slate-100', sizeClass)}>
+      <div
+        className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs transition-opacity cursor-pointer"
+        onClick={(e) => {
+          e.stopPropagation()
+          onClose()
+        }}
+        aria-hidden="true"
+      />
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className={cn('relative bg-white dark:bg-slate-900 rounded-2xl sm:rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-2xl w-full h-full sm:h-auto sm:max-h-[90vh] flex flex-col z-10 animate-[slideIn_0.15s_ease-out] text-slate-900 dark:text-slate-100', sizeClass)}
+      >
         <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-100 dark:border-slate-800">
           <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100">{title}</h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              onClose()
+            }}
+            aria-label="Close modal"
+            className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+          >
             <X className="h-4 w-4" />
           </button>
         </div>

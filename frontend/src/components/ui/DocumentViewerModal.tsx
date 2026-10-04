@@ -2,7 +2,7 @@
 // In-App Document Viewer & Downloader Modal
 // ============================================================
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   X,
   Download,
@@ -56,6 +56,17 @@ export function DocumentViewerModal({
   const [isDownloading, setIsDownloading] = useState(false)
   const [downloadError, setDownloadError] = useState<string | null>(null)
   const [isFullscreen, setIsFullscreen] = useState(false)
+
+  useEffect(() => {
+    if (!isOpen) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, onClose])
 
   if (!isOpen || !document) return null
 
@@ -135,12 +146,17 @@ export function DocumentViewerModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 animate-[fadeIn_0.15s_ease-out]">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm transition-opacity"
-        onClick={onClose}
+        className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm transition-opacity cursor-pointer"
+        onClick={(e) => {
+          e.stopPropagation()
+          onClose()
+        }}
+        aria-hidden="true"
       />
 
       {/* Modal Container */}
       <div
+        onClick={(e) => e.stopPropagation()}
         className={`relative bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-2xl w-full flex flex-col z-10 transition-all duration-200 text-slate-900 dark:text-slate-100 overflow-hidden ${
           isFullscreen ? 'h-full max-h-[98vh] max-w-[98vw]' : 'h-[90vh] max-h-[880px] max-w-5xl'
         }`}
@@ -200,8 +216,9 @@ export function DocumentViewerModal({
 
             {/* Fullscreen Toggle */}
             <button
+              type="button"
               onClick={() => setIsFullscreen(prev => !prev)}
-              className="hidden sm:flex p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              className="hidden sm:flex p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
               title={isFullscreen ? t('ย่อหน้าต่าง', 'Exit Fullscreen') : t('ขยายเต็มจอ', 'Fullscreen')}
             >
               {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
@@ -209,9 +226,14 @@ export function DocumentViewerModal({
 
             {/* Close Button */}
             <button
-              onClick={onClose}
-              className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                onClose()
+              }}
+              className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
               title={t('ปิด', 'Close')}
+              aria-label="Close"
             >
               <X className="h-4 w-4" />
             </button>
