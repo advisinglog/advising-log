@@ -335,6 +335,18 @@ export default function RequestAdvising() {
     navigate('/student/history')
   }
 
+  // Active pending follow-ups from earlier sessions for this student
+  const effectiveStudent = store.users.find(
+    u => u.id === currentUser?.id ||
+         (currentUser?.code && u.code?.toUpperCase() === currentUser.code.toUpperCase()) ||
+         (currentUser?.email && u.email?.toLowerCase() === currentUser.email.toLowerCase())
+  ) || currentUser
+
+  const pendingTasks = (store.followUps || []).filter(
+    f => (f.studentId === effectiveStudent?.id || (currentUser?.code && f.studentId?.toUpperCase() === currentUser.code.toUpperCase())) &&
+         f.status !== 'completed'
+  )
+
   return (
     <div className="max-w-3xl mx-auto pb-16">
       <PageHeader
@@ -388,6 +400,44 @@ export default function RequestAdvising() {
         {/* ============================================================ */}
         {currentStep === 1 && (
           <div className="space-y-5 animate-[fadeIn_0.15s_ease-out]">
+            {/* Gentle Reminder for Open Tasks from Previous Sessions */}
+            {pendingTasks.length > 0 && (
+              <div className="bg-amber-50/90 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 rounded-2xl p-4 text-xs sm:text-sm text-amber-900 dark:text-amber-200 shadow-2xs">
+                <div className="flex items-start gap-3">
+                  <div className="h-7 w-7 rounded-xl bg-amber-100 dark:bg-amber-900/60 text-amber-600 dark:text-amber-400 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Sparkles className="h-4 w-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-amber-900 dark:text-amber-100">
+                      {t(
+                        `คุณมี ${pendingTasks.length} สิ่งที่ต้องทำจากการเข้าพบครั้งก่อน`,
+                        `You have ${pendingTasks.length} pending task${pendingTasks.length > 1 ? 's' : ''} from previous advising`
+                      )}
+                    </p>
+                    <p className="text-[11px] text-amber-700/90 dark:text-amber-300/80 mt-0.5 leading-relaxed">
+                      {t(
+                        'หากติดปัญหาหรือไม่แน่ใจในการทำภารกิจเดิม คุณสามารถนำมาพูดคุยหรือปรึกษาอาจารย์ในการนัดหมายครั้งนี้ได้โดยตรง',
+                        'If you encountered roadblocks with your previous action items, you can discuss them with your advisor during this session.'
+                      )}
+                    </p>
+                    <div className="mt-2.5 space-y-1.5">
+                      {pendingTasks.slice(0, 3).map(fu => (
+                        <div key={fu.id} className="flex items-center gap-2 text-[11px] text-amber-900 dark:text-amber-100 bg-amber-100/60 dark:bg-amber-900/40 px-3 py-1.5 rounded-lg border border-amber-200/60 dark:border-amber-800/40">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 flex-shrink-0" />
+                          <span className="truncate font-medium">{fu.task}</span>
+                          {fu.dueDate && (
+                            <span className="text-amber-700 dark:text-amber-300 font-mono text-[10px] ml-auto flex-shrink-0">
+                              {t('ครบกำหนด:', 'Due:')} {fu.dueDate}
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Advisor Card */}
             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 p-4 sm:p-5 shadow-xs space-y-3">
               <label htmlFor="advisor-select" className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">

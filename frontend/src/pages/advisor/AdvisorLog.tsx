@@ -250,6 +250,31 @@ export default function AdvisorLog() {
                   {selectedReq.details}
                 </p>
 
+                {/* Open Tasks from Previous Sessions */}
+                {(() => {
+                  const studentPendingFollowUps = store.followUps.filter(
+                    f => (f.studentId === selectedReq.studentId || (student?.code && f.studentId?.toUpperCase() === student.code.toUpperCase())) &&
+                         f.status !== 'completed'
+                  )
+                  if (studentPendingFollowUps.length === 0) return null
+                  return (
+                    <div className="pt-2 border-t border-sky-100 dark:border-sky-900/60 space-y-1.5">
+                      <span className="text-[11px] font-bold text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
+                        <Sparkles className="h-3.5 w-3.5 text-amber-600" />
+                        {t(`งานติดตามผลที่ค้างอยู่ (${studentPendingFollowUps.length} รายการ)`, `Previous Pending Tasks (${studentPendingFollowUps.length})`)}
+                      </span>
+                      <div className="space-y-1">
+                        {studentPendingFollowUps.map(fu => (
+                          <div key={fu.id} className="flex items-center justify-between gap-2 bg-amber-50/80 dark:bg-amber-950/40 p-2 rounded-lg border border-amber-200/70 dark:border-amber-900/50 text-[11px] text-amber-900 dark:text-amber-200">
+                            <span className="truncate font-medium">{fu.task}</span>
+                            {fu.dueDate && <span className="font-mono text-[10px] text-amber-700 dark:text-amber-400 shrink-0">{t('กำหนด:', 'Due:')} {fu.dueDate}</span>}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                })()}
+
                 {/* Attached Documents Preview Box */}
                 {(getAttachments(selectedReq).length > 0 || store.documents.some(d => (d.studentId === selectedReq.studentId || (student?.code && d.studentId.toUpperCase() === student.code.toUpperCase())) && d.status === 'pending')) && (
                   <div className="pt-2 border-t border-sky-100 dark:border-sky-900/60 space-y-2">

@@ -335,6 +335,32 @@ export default function AdvisingSessions() {
               </p>
             </div>
 
+            {/* Pending Tasks for this student from earlier sessions */}
+            {(() => {
+              const reqStudent = store.users.find(u => u.id === detailReq.studentId)
+              const studentPendingTasks = store.followUps.filter(
+                f => (f.studentId === detailReq.studentId || (reqStudent?.code && f.studentId?.toUpperCase() === reqStudent.code.toUpperCase())) &&
+                     f.status !== 'completed'
+              )
+              if (studentPendingTasks.length === 0) return null
+              return (
+                <div className="p-3 bg-amber-50/80 dark:bg-amber-950/30 rounded-xl border border-amber-200/80 dark:border-amber-800/60 text-xs">
+                  <div className="flex items-center gap-2 font-bold text-amber-900 dark:text-amber-200 mb-1">
+                    <Sparkles className="h-3.5 w-3.5 text-amber-600" />
+                    <span>{t(`มีงานติดตามผลค้างอยู่ ${studentPendingTasks.length} รายการ`, `${studentPendingTasks.length} Pending Follow-up Task${studentPendingTasks.length > 1 ? 's' : ''}`)}</span>
+                  </div>
+                  <div className="space-y-1 mt-1.5">
+                    {studentPendingTasks.map(fu => (
+                      <div key={fu.id} className="flex items-center justify-between gap-2 text-[11px] text-amber-800 dark:text-amber-300 bg-amber-100/50 dark:bg-amber-900/40 px-2.5 py-1 rounded-lg">
+                        <span className="truncate">{fu.task}</span>
+                        {fu.dueDate && <span className="font-mono text-[10px] text-amber-600 dark:text-amber-400 shrink-0">{fu.dueDate}</span>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )
+            })()}
+
             {/* Topic & Details (What is not in the table) */}
             <div>
               <h4 className="text-xs font-bold text-slate-700 dark:text-slate-200 mb-1.5">{t('รายละเอียดที่นักศึกษาต้องการปรึกษา', 'Consultation Details')}</h4>
