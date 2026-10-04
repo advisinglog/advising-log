@@ -11,7 +11,6 @@ import {
   CalendarClock,
   ClipboardList,
   AlertTriangle,
-  Share2,
   UserX,
   BarChart3,
   Users,
@@ -52,7 +51,6 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
           { to: '/advisor/sessions', label: t('ตารางนัดหมาย', 'Appointments'), icon: <CalendarClock className="h-4 w-4" /> },
           { to: '/advisor/log', label: t('บันทึกการเข้าพบ', 'Meeting Notes'), icon: <ClipboardList className="h-4 w-4" /> },
           { to: '/advisor/warnings', label: t('นักศึกษาที่ต้องดูแลพิเศษ', 'Students Needing Support'), icon: <AlertTriangle className="h-4 w-4" /> },
-          { to: '/advisor/referrals', label: t('ส่งต่อความช่วยเหลือ', 'Support Referrals'), icon: <Share2 className="h-4 w-4" /> },
           { to: '/advisor/exit-cases', label: t('เคสลาออก/ลาพัก', 'Leave & Withdrawal Cases'), icon: <UserX className="h-4 w-4" /> },
         ]
       case 'qa_chair':
