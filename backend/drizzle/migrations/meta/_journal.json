@@ -15,6 +15,13 @@
       "when": 1789919181222,
       "tag": "0001_loving_thanos",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1791105342862,
+      "tag": "0002_conscious_anita_blake",
+      "breakpoints": true
     }
   ]
 }

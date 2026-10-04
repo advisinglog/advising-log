@@ -51,7 +51,7 @@ import {
   mockCategoryConfigs,
   mockDocumentTypes,
   mockAuditLogs,
-} from '@/data/mock-data'
+} from '@/test/fixtures'
 
 import { getLocalDateString } from '@/utils/dateUtils'
 
@@ -177,10 +177,12 @@ interface StoreActions {
   // Categories
   addCategory: (cat: Omit<AdvisingCategoryConfig, 'id'>) => void
   updateCategory: (id: string, updates: Partial<AdvisingCategoryConfig>) => void
+  deleteCategory: (id: string) => void
 
   // Document Types
   addDocumentType: (dt: Omit<DocumentType, 'id'>) => void
   updateDocumentType: (id: string, updates: Partial<DocumentType>) => void
+  deleteDocumentType: (id: string) => void
 
   // Audit
   addAuditLog: (log: Omit<AuditLog, 'id' | 'createdAt'>) => void
@@ -215,8 +217,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [studentVoiceResponses, setStudentVoiceResponses] = useState<StudentVoiceResponse[]>(isTestEnv ? [...mockStudentVoiceResponses] : [])
   const [completedVoiceStudents, setCompletedVoiceStudents] = useState<string[]>([])
   const [documents, setDocuments] = useState<StudentDocument[]>(isTestEnv ? [...mockStudentDocuments] : [])
-  const [categoryConfigs, setCategoryConfigs] = useState<AdvisingCategoryConfig[]>([...mockCategoryConfigs])
-  const [documentTypes, setDocumentTypes] = useState<DocumentType[]>([...mockDocumentTypes])
+  const [categoryConfigs, setCategoryConfigs] = useState<AdvisingCategoryConfig[]>(isTestEnv ? [...mockCategoryConfigs] : [])
+  const [documentTypes, setDocumentTypes] = useState<DocumentType[]>(isTestEnv ? [...mockDocumentTypes] : [])
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>(isTestEnv ? [...mockAuditLogs] : [])
   const [aiKeys, setAiKeys] = useState<AiApiKey[]>([])
   const [systemApiConfig, setSystemApiConfig] = useState<SystemApiConfig>({
@@ -240,7 +242,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     let isMounted = true
     if (isTestEnv) return // In test mode, keep test fixtures intact
     async function syncFromBackend() {
-      const [uRes, rosRes, rRes, aptRes, fRes, sRes, eRes, vRes, aRes, kRes, ewRes, docRes] = await Promise.all([
+      const [uRes, rosRes, rRes, aptRes, fRes, sRes, eRes, vRes, aRes, kRes, ewRes, docRes, catRes, dtRes] = await Promise.all([
         api.getUsers(),
         api.getRoster(),
         api.getRequests(),
@@ -253,6 +255,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         api.getAiKeys(),
         api.getEarlyWarnings(),
         api.getDocuments(),
+        api.getCategories(),
+        api.getDocumentTypes(),
       ])
       if (!isMounted) return
       if (uRes && Array.isArray(uRes.users)) setUsers(uRes.users)
@@ -320,6 +324,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       if (kRes && Array.isArray(kRes.keys)) setAiKeys(kRes.keys)
       if (ewRes && Array.isArray(ewRes.earlyWarnings)) setEarlyWarnings(ewRes.earlyWarnings)
       if (docRes && Array.isArray(docRes.documents)) setDocuments(docRes.documents)
+      if (catRes && Array.isArray(catRes.categories)) setCategoryConfigs(catRes.categories)
+      if (dtRes && Array.isArray(dtRes.documentTypes)) setDocumentTypes(dtRes.documentTypes)
     }
     syncFromBackend()
     return () => { isMounted = false }
@@ -641,19 +647,35 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const addCategory = useCallback((cat: Omit<AdvisingCategoryConfig, 'id'>) => {
-    setCategoryConfigs(prev => [...prev, { ...cat, id: nextId('CAT') }])
+    const newCat: AdvisingCategoryConfig = { ...cat, id: nextId('CAT') }
+    setCategoryConfigs(prev => [...prev, newCat])
+    api.saveCategory(newCat).catch(() => {})
   }, [])
 
   const updateCategory = useCallback((id: string, updates: Partial<AdvisingCategoryConfig>) => {
     setCategoryConfigs(prev => prev.map(c => c.id === id ? { ...c, ...updates } : c))
+    api.updateCategory(id, updates).catch(() => {})
+  }, [])
+
+  const deleteCategory = useCallback((id: string) => {
+    setCategoryConfigs(prev => prev.filter(c => c.id !== id))
+    api.deleteCategory(id).catch(() => {})
   }, [])
 
   const addDocumentType = useCallback((dt: Omit<DocumentType, 'id'>) => {
-    setDocumentTypes(prev => [...prev, { ...dt, id: nextId('DT') }])
+    const newDt: DocumentType = { ...dt, id: nextId('DT') }
+    setDocumentTypes(prev => [...prev, newDt])
+    api.saveDocumentType(newDt).catch(() => {})
   }, [])
 
   const updateDocumentType = useCallback((id: string, updates: Partial<DocumentType>) => {
     setDocumentTypes(prev => prev.map(d => d.id === id ? { ...d, ...updates } : d))
+    api.updateDocumentType(id, updates).catch(() => {})
+  }, [])
+
+  const deleteDocumentType = useCallback((id: string) => {
+    setDocumentTypes(prev => prev.filter(d => d.id !== id))
+    api.deleteDocumentType(id).catch(() => {})
   }, [])
 
   const addAuditLog = useCallback((log: Omit<AuditLog, 'id' | 'createdAt'>) => {
@@ -972,8 +994,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     addRosterEntry, updateRosterEntry, batchImportRoster,
     toggleAiApi, toggleUserAiAccess,
     addAiKey, setDefaultAiKey, deleteAiKey, refreshAiKeys,
-    addCategory, updateCategory,
-    addDocumentType, updateDocumentType,
+    addCategory, updateCategory, deleteCategory,
+    addDocumentType, updateDocumentType, deleteDocumentType,
     addAuditLog,
   }
 

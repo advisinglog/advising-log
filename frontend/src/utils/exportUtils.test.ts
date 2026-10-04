@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import * as XLSX from 'xlsx'
 import { exportAunQaExcelReport, exportQualitativeExcelReport } from './exportUtils'
-import { mockUsers, mockExitCases, mockStudentVoiceResponses, mockAdvisorAssessments } from '@/data/mock-data'
+import { mockUsers, mockExitCases, mockStudentVoiceResponses, mockAdvisorAssessments } from '@/test/fixtures'
 
 vi.mock('xlsx', async (importOriginal) => {
   const actual = await importOriginal<typeof import('xlsx')>()

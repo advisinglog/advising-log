@@ -198,3 +198,29 @@ export const aiApiKeys = sqliteTable('ai_api_keys', {
   lastTestedAt: text('last_tested_at'),
 })
 
+// 15. Advising Category Configuration (Cloudflare D1)
+export const advisingCategoryConfigs = sqliteTable('advising_category_configs', {
+  id: text('id').primaryKey(),
+  value: text('value').notNull().unique(),
+  labelTh: text('label_th').notNull(),
+  labelEn: text('label_en').notNull(),
+  subCategories: text('sub_categories').notNull().default('[]'), // JSON array of subcategories
+  isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+})
+
+// 16. Document Type Configuration (Cloudflare D1)
+export const documentTypeConfigs = sqliteTable('document_type_configs', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull().unique(),
+  labelTh: text('label_th').notNull(),
+  labelEn: text('label_en').notNull(),
+  allowedFormats: text('allowed_formats').notNull().default('["PDF","JPG","PNG"]'), // JSON array
+  maxSizeMb: integer('max_size_mb').notNull().default(10),
+  isRequired: integer('is_required', { mode: 'boolean' }).notNull().default(false),
+  isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+})
+

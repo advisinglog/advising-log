@@ -188,4 +188,36 @@ describe('Backend Hono API', () => {
     // Either 400 (superadmin protected), 404 (not found), or 503 (detached unit test db)
     expect([400, 404, 503]).toContain(res.status)
   })
+
+  it('GET /api/categories returns category configs array', async () => {
+    const res = await app.request('/api/categories')
+    expect(res.status).toBe(200)
+    const data = await res.json() as { categories: any[] }
+    expect(Array.isArray(data.categories)).toBe(true)
+  })
+
+  it('POST /api/categories validates required fields', async () => {
+    const res = await app.request('/api/categories', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ label: 'Test Category' }),
+    })
+    expect([400, 503]).toContain(res.status)
+  })
+
+  it('GET /api/document-types returns document types array', async () => {
+    const res = await app.request('/api/document-types')
+    expect(res.status).toBe(200)
+    const data = await res.json() as { documentTypes: any[] }
+    expect(Array.isArray(data.documentTypes)).toBe(true)
+  })
+
+  it('POST /api/document-types validates required fields', async () => {
+    const res = await app.request('/api/document-types', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: '' }),
+    })
+    expect([400, 503]).toContain(res.status)
+  })
 })

@@ -79,3 +79,24 @@ INSERT OR IGNORE INTO exit_cases (id, student_id, advisor_id, exit_type, reason_
 -- 9. Audit Logs
 INSERT OR IGNORE INTO audit_logs (id, user_id, user_name, user_role, action, description, target_id, timestamp, ip_address) VALUES
 ('LOG001', 'ADM001', 'Supattra Kaewmanee', 'admin', 'system_initialized', 'Database tables and initial system seed loaded successfully', 'SYSTEM', '2026-09-20 08:00:00', '127.0.0.1');
+
+-- 10. Advising Categories
+INSERT OR IGNORE INTO advising_category_configs (id, value, label_th, label_en, sub_categories, is_active, created_at, updated_at) VALUES
+('CAT001', 'academic_performance', 'ผลการเรียนและพัฒนาการทางการศึกษา', 'Academic Performance & Progress', '["gpa_improvement","study_plan","probation_support","honors_guidance"]', 1, '2024-06-01', '2024-06-01'),
+('CAT002', 'course_enrollment', 'การลงทะเบียนเรียนและแผนการเรียน', 'Course Enrollment & Study Plan', '["course_prerequisites","overload_request","schedule_conflict","general_education"]', 1, '2024-06-01', '2024-06-01'),
+('CAT003', 'scholarship_financial', 'ทุนการศึกษาและภาระค่าใช้จ่าย', 'Scholarships & Financial Support', '["scholarship_renewal","emergency_fund","student_loan","tuition_installment"]', 1, '2024-06-01', '2024-06-01'),
+('CAT004', 'career_internship', 'การฝึกงานและการเตรียมพร้อมสู่อาชีพ', 'Internship & Career Readiness', '["summer_internship","coop_program","portfolio_review","industry_mentorship"]', 1, '2024-06-01', '2024-06-01'),
+('CAT005', 'wellbeing_adjustment', 'การปรับตัวและสุขภาวะในการใช้ชีวิต', 'Adjustment & Student Well-being', '["university_life","stress_management","living_support","peer_relations"]', 1, '2024-06-01', '2024-06-01'),
+('CAT006', 'withdrawal_leave', 'การลาพักการศึกษาหรือลาออก', 'Leave of Absence / Withdrawal', '["temporary_leave","major_transfer","university_withdrawal","academic_restart"]', 1, '2024-06-01', '2024-06-01'),
+('CAT007', 'other', 'เรื่องอื่นๆ', 'Other Inquiries', '["general_inquiry","special_request"]', 1, '2024-06-01', '2024-06-01');
+
+-- 11. Document Types
+INSERT OR IGNORE INTO document_type_configs (id, name, label_th, label_en, allowed_formats, max_size_mb, is_required, is_active, created_at, updated_at) VALUES
+('DT001', 'transcript', 'ใบรายงานผลการศึกษา (Transcript)', 'Official / Unofficial Transcript', '["PDF","PNG","JPG"]', 10, 0, 1, '2024-06-01', '2024-06-01'),
+('DT002', 'scholarship_form', 'แบบฟอร์มขอรับ/ต่ออายุทุนการศึกษา', 'Scholarship Application/Renewal Form', '["PDF","DOCX"]', 15, 0, 1, '2024-06-01', '2024-06-01'),
+('DT003', 'leave_request', 'คำร้องขอลาพักการศึกษา (Leave Form)', 'Leave of Absence Petition', '["PDF"]', 10, 1, 1, '2024-06-01', '2024-06-01'),
+('DT004', 'drop_form', 'คำร้องขอถอนรายวิชา (Drop Form)', 'Course Withdrawal Petition', '["PDF"]', 10, 1, 1, '2024-06-01', '2024-06-01'),
+('DT005', 'medical_certificate', 'ใบรับรองแพทย์ (Medical Certificate)', 'Medical Certificate / Health Proof', '["PDF","JPG","PNG"]', 10, 0, 1, '2024-06-01', '2024-06-01'),
+('DT006', 'resume_cv', 'ประวัติย่อ / เรซูเม่ (Resume/CV)', 'Resume / Curriculum Vitae', '["PDF"]', 10, 0, 1, '2024-06-01', '2024-06-01'),
+('DT007', 'other_document', 'เอกสารอื่นๆ', 'Other Supporting Documents', '["PDF","JPG","PNG","DOCX"]', 20, 0, 1, '2024-06-01', '2024-06-01');
+

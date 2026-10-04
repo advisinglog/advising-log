@@ -1,5 +1,6 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
+import { z } from 'zod'
 import { getDb } from './db'
 import * as schema from './db/schema'
 import { eq, desc, and, or } from 'drizzle-orm'
@@ -1654,4 +1655,191 @@ Based on ${cases.length} qualitative departure records (Withdrawals vs. Leaves o
   }
 })
 
+// ============================================================
+// 15. Advising Category Configuration (Cloudflare D1)
+// ============================================================
+
+const categorySchema = z.object({
+  value: z.string().min(1),
+  labelTh: z.string().min(1),
+  labelEn: z.string().min(1),
+  subCategories: z.array(z.string()).default([]),
+  isActive: z.boolean().default(true),
+})
+
+const defaultCategories = [
+  { id: 'CAT001', value: 'academic_performance', labelTh: 'ผลการเรียนและพัฒนาการทางการศึกษา', labelEn: 'Academic Performance & Progress', subCategories: JSON.stringify(['gpa_improvement','study_plan','probation_support','honors_guidance']), isActive: true, createdAt: '2024-06-01', updatedAt: '2024-06-01' },
+  { id: 'CAT002', value: 'course_enrollment', labelTh: 'การลงทะเบียนเรียนและแผนการเรียน', labelEn: 'Course Enrollment & Study Plan', subCategories: JSON.stringify(['course_prerequisites','overload_request','schedule_conflict','general_education']), isActive: true, createdAt: '2024-06-01', updatedAt: '2024-06-01' },
+  { id: 'CAT003', value: 'scholarship_financial', labelTh: 'ทุนการศึกษาและภาระค่าใช้จ่าย', labelEn: 'Scholarships & Financial Support', subCategories: JSON.stringify(['scholarship_renewal','emergency_fund','student_loan','tuition_installment']), isActive: true, createdAt: '2024-06-01', updatedAt: '2024-06-01' },
+  { id: 'CAT004', value: 'career_internship', labelTh: 'การฝึกงานและการเตรียมพร้อมสู่อาชีพ', labelEn: 'Internship & Career Readiness', subCategories: JSON.stringify(['summer_internship','coop_program','portfolio_review','industry_mentorship']), isActive: true, createdAt: '2024-06-01', updatedAt: '2024-06-01' },
+  { id: 'CAT005', value: 'wellbeing_adjustment', labelTh: 'การปรับตัวและสุขภาวะในการใช้ชีวิต', labelEn: 'Adjustment & Student Well-being', subCategories: JSON.stringify(['university_life','stress_management','living_support','peer_relations']), isActive: true, createdAt: '2024-06-01', updatedAt: '2024-06-01' },
+  { id: 'CAT006', value: 'withdrawal_leave', labelTh: 'การลาพักการศึกษาหรือลาออก', labelEn: 'Leave of Absence / Withdrawal', subCategories: JSON.stringify(['temporary_leave','major_transfer','university_withdrawal','academic_restart']), isActive: true, createdAt: '2024-06-01', updatedAt: '2024-06-01' },
+  { id: 'CAT007', value: 'other', labelTh: 'เรื่องอื่นๆ', labelEn: 'Other Inquiries', subCategories: JSON.stringify(['general_inquiry','special_request']), isActive: true, createdAt: '2024-06-01', updatedAt: '2024-06-01' },
+]
+
+const defaultDocumentTypes = [
+  { id: 'DT001', name: 'transcript', labelTh: 'ใบรายงานผลการศึกษา (Transcript)', labelEn: 'Official / Unofficial Transcript', allowedFormats: JSON.stringify(['PDF','PNG','JPG']), maxSizeMb: 10, isRequired: false, isActive: true, createdAt: '2024-06-01', updatedAt: '2024-06-01' },
+  { id: 'DT002', name: 'scholarship_form', labelTh: 'แบบฟอร์มขอรับ/ต่ออายุทุนการศึกษา', labelEn: 'Scholarship Application/Renewal Form', allowedFormats: JSON.stringify(['PDF','DOCX']), maxSizeMb: 15, isRequired: false, isActive: true, createdAt: '2024-06-01', updatedAt: '2024-06-01' },
+  { id: 'DT003', name: 'leave_request', labelTh: 'คำร้องขอลาพักการศึกษา (Leave Form)', labelEn: 'Leave of Absence Petition', allowedFormats: JSON.stringify(['PDF']), maxSizeMb: 10, isRequired: true, isActive: true, createdAt: '2024-06-01', updatedAt: '2024-06-01' },
+  { id: 'DT004', name: 'drop_form', labelTh: 'คำร้องขอถอนรายวิชา (Drop Form)', labelEn: 'Course Withdrawal Petition', allowedFormats: JSON.stringify(['PDF']), maxSizeMb: 10, isRequired: true, isActive: true, createdAt: '2024-06-01', updatedAt: '2024-06-01' },
+  { id: 'DT005', name: 'medical_certificate', labelTh: 'ใบรับรองแพทย์ (Medical Certificate)', labelEn: 'Medical Certificate / Health Proof', allowedFormats: JSON.stringify(['PDF','JPG','PNG']), maxSizeMb: 10, isRequired: false, isActive: true, createdAt: '2024-06-01', updatedAt: '2024-06-01' },
+  { id: 'DT006', name: 'resume_cv', labelTh: 'ประวัติย่อ / เรซูเม่ (Resume/CV)', labelEn: 'Resume / Curriculum Vitae', allowedFormats: JSON.stringify(['PDF']), maxSizeMb: 10, isRequired: false, isActive: true, createdAt: '2024-06-01', updatedAt: '2024-06-01' },
+  { id: 'DT007', name: 'other_document', labelTh: 'เอกสารอื่นๆ', labelEn: 'Other Supporting Documents', allowedFormats: JSON.stringify(['PDF','JPG','PNG','DOCX']), maxSizeMb: 20, isRequired: false, isActive: true, createdAt: '2024-06-01', updatedAt: '2024-06-01' },
+]
+
+app.get('/api/categories', async (c) => {
+  const database = db(c)
+  if (!database) {
+    return c.json({ success: true, categories: defaultCategories.map(cat => ({ ...cat, subCategories: JSON.parse(cat.subCategories) })) })
+  }
+  let cats = await database.select().from(schema.advisingCategoryConfigs).all()
+  if (cats.length === 0) {
+    for (const cat of defaultCategories) {
+      await database.insert(schema.advisingCategoryConfigs).values(cat).onConflictDoNothing()
+    }
+    cats = await database.select().from(schema.advisingCategoryConfigs).all()
+  }
+  const formatted = cats.map(cat => ({
+    ...cat,
+    subCategories: typeof cat.subCategories === 'string' ? JSON.parse(cat.subCategories || '[]') : (cat.subCategories || []),
+  }))
+  return c.json({ success: true, categories: formatted })
+})
+
+app.post('/api/categories', async (c) => {
+  const database = db(c)
+  const body = await c.req.json()
+  const parsed = categorySchema.safeParse(body)
+  if (!parsed.success) {
+    return c.json({ success: false, error: 'Invalid category data', details: parsed.error.format() }, 400)
+  }
+  const newCat = {
+    id: body.id || `CAT${Date.now()}`,
+    value: parsed.data.value,
+    labelTh: parsed.data.labelTh,
+    labelEn: parsed.data.labelEn,
+    subCategories: JSON.stringify(parsed.data.subCategories),
+    isActive: parsed.data.isActive,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  }
+  if (database) {
+    await database.insert(schema.advisingCategoryConfigs).values(newCat)
+  }
+  return c.json({ success: true, category: { ...newCat, subCategories: parsed.data.subCategories } }, 201)
+})
+
+app.put('/api/categories/:id', async (c) => {
+  const database = db(c)
+  const id = c.req.param('id')
+  const body = await c.req.json()
+  const updates: any = { updatedAt: new Date().toISOString() }
+  if (body.value !== undefined) updates.value = body.value
+  if (body.labelTh !== undefined) updates.labelTh = body.labelTh
+  if (body.labelEn !== undefined) updates.labelEn = body.labelEn
+  if (body.subCategories !== undefined) updates.subCategories = JSON.stringify(body.subCategories)
+  if (body.isActive !== undefined) updates.isActive = body.isActive
+
+  if (database) {
+    await database.update(schema.advisingCategoryConfigs).set(updates).where(eq(schema.advisingCategoryConfigs.id, id))
+  }
+  return c.json({ success: true, message: 'Category updated' })
+})
+
+app.delete('/api/categories/:id', async (c) => {
+  const database = db(c)
+  const id = c.req.param('id')
+  if (database) {
+    await database.delete(schema.advisingCategoryConfigs).where(eq(schema.advisingCategoryConfigs.id, id))
+  }
+  return c.json({ success: true, message: 'Category deleted' })
+})
+
+// ============================================================
+// 16. Document Type Configuration (Cloudflare D1)
+// ============================================================
+
+const documentTypeSchema = z.object({
+  name: z.string().min(1),
+  labelTh: z.string().min(1),
+  labelEn: z.string().min(1),
+  allowedFormats: z.array(z.string()).default(['PDF', 'JPG', 'PNG']),
+  maxSizeMb: z.number().default(10),
+  isRequired: z.boolean().default(false),
+  isActive: z.boolean().default(true),
+})
+
+app.get('/api/document-types', async (c) => {
+  const database = db(c)
+  if (!database) {
+    return c.json({ success: true, documentTypes: defaultDocumentTypes.map(d => ({ ...d, allowedFormats: JSON.parse(d.allowedFormats) })) })
+  }
+  let dts = await database.select().from(schema.documentTypeConfigs).all()
+  if (dts.length === 0) {
+    for (const dt of defaultDocumentTypes) {
+      await database.insert(schema.documentTypeConfigs).values(dt).onConflictDoNothing()
+    }
+    dts = await database.select().from(schema.documentTypeConfigs).all()
+  }
+  const formatted = dts.map(d => ({
+    ...d,
+    allowedFormats: typeof d.allowedFormats === 'string' ? JSON.parse(d.allowedFormats || '[]') : (d.allowedFormats || []),
+  }))
+  return c.json({ success: true, documentTypes: formatted })
+})
+
+app.post('/api/document-types', async (c) => {
+  const database = db(c)
+  const body = await c.req.json()
+  const parsed = documentTypeSchema.safeParse(body)
+  if (!parsed.success) {
+    return c.json({ success: false, error: 'Invalid document type data', details: parsed.error.format() }, 400)
+  }
+  const newDt = {
+    id: body.id || `DT${Date.now()}`,
+    name: parsed.data.name,
+    labelTh: parsed.data.labelTh,
+    labelEn: parsed.data.labelEn,
+    allowedFormats: JSON.stringify(parsed.data.allowedFormats),
+    maxSizeMb: parsed.data.maxSizeMb,
+    isRequired: parsed.data.isRequired,
+    isActive: parsed.data.isActive,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  }
+  if (database) {
+    await database.insert(schema.documentTypeConfigs).values(newDt)
+  }
+  return c.json({ success: true, documentType: { ...newDt, allowedFormats: parsed.data.allowedFormats } }, 201)
+})
+
+app.put('/api/document-types/:id', async (c) => {
+  const database = db(c)
+  const id = c.req.param('id')
+  const body = await c.req.json()
+  const updates: any = { updatedAt: new Date().toISOString() }
+  if (body.name !== undefined) updates.name = body.name
+  if (body.labelTh !== undefined) updates.labelTh = body.labelTh
+  if (body.labelEn !== undefined) updates.labelEn = body.labelEn
+  if (body.allowedFormats !== undefined) updates.allowedFormats = JSON.stringify(body.allowedFormats)
+  if (body.maxSizeMb !== undefined) updates.maxSizeMb = body.maxSizeMb
+  if (body.isRequired !== undefined) updates.isRequired = body.isRequired
+  if (body.isActive !== undefined) updates.isActive = body.isActive
+
+  if (database) {
+    await database.update(schema.documentTypeConfigs).set(updates).where(eq(schema.documentTypeConfigs.id, id))
+  }
+  return c.json({ success: true, message: 'Document type updated' })
+})
+
+app.delete('/api/document-types/:id', async (c) => {
+  const database = db(c)
+  const id = c.req.param('id')
+  if (database) {
+    await database.delete(schema.documentTypeConfigs).where(eq(schema.documentTypeConfigs.id, id))
+  }
+  return c.json({ success: true, message: 'Document type deleted' })
+})
+
 export default app
+

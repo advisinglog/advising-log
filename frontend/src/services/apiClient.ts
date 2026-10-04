@@ -17,6 +17,8 @@ import type {
   AuditLog,
   AiApiKey,
   StudentDocument,
+  AdvisingCategoryConfig,
+  DocumentType,
 } from '@/types'
 
 const API_BASE = (import.meta.env.VITE_API_URL as string) || 'http://localhost:8787'
@@ -277,7 +279,58 @@ class ApiClient {
       method: 'DELETE',
     })
   }
+
+  // --- Categories (Cloudflare D1) ---
+  async getCategories() {
+    return this.request<{ categories: AdvisingCategoryConfig[] }>('/api/categories')
+  }
+
+  async saveCategory(cat: Partial<AdvisingCategoryConfig>) {
+    return this.request<{ success: boolean; category: AdvisingCategoryConfig }>('/api/categories', {
+      method: 'POST',
+      body: JSON.stringify(cat),
+    })
+  }
+
+  async updateCategory(id: string, updates: Partial<AdvisingCategoryConfig>) {
+    return this.request<{ success: boolean; message: string }>(`/api/categories/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(updates),
+    })
+  }
+
+  async deleteCategory(id: string) {
+    return this.request<{ success: boolean; message: string }>(`/api/categories/${id}`, {
+      method: 'DELETE',
+    })
+  }
+
+  // --- Document Types (Cloudflare D1) ---
+  async getDocumentTypes() {
+    return this.request<{ documentTypes: DocumentType[] }>('/api/document-types')
+  }
+
+  async saveDocumentType(dt: Partial<DocumentType>) {
+    return this.request<{ success: boolean; documentType: DocumentType }>('/api/document-types', {
+      method: 'POST',
+      body: JSON.stringify(dt),
+    })
+  }
+
+  async updateDocumentType(id: string, updates: Partial<DocumentType>) {
+    return this.request<{ success: boolean; message: string }>(`/api/document-types/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(updates),
+    })
+  }
+
+  async deleteDocumentType(id: string) {
+    return this.request<{ success: boolean; message: string }>(`/api/document-types/${id}`, {
+      method: 'DELETE',
+    })
+  }
 }
 
 export const api = new ApiClient(API_BASE)
 export default api
+

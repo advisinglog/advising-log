@@ -4,7 +4,7 @@
 
 import { createContext, useContext, useState, useCallback, type ReactNode } from 'react'
 import type { User } from '@/types'
-import { mockUsers, mockRoster } from '@/data/mock-data'
+import { mockUsers, mockRoster } from '@/test/fixtures'
 import { getLocalDateString } from '@/utils/dateUtils'
 
 export interface GoogleLoginResult {
