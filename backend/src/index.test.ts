@@ -48,11 +48,11 @@ describe('Backend Hono API', () => {
     expect(data.user.role).toBe('student')
   })
 
-  it('POST /api/auth/google allows se.advisinglog@gmail.com as Admin', async () => {
+  it('POST /api/auth/google allows se.advisinglog@gmail.com as Super Admin', async () => {
     const header = btoa(JSON.stringify({ alg: 'RS256', typ: 'JWT' }))
     const payload = btoa(JSON.stringify({
       email: 'se.advisinglog@gmail.com',
-      name: 'SE AdvisingLog Admin',
+      name: 'SE AdvisingLog Super Admin',
       sub: 'google_999999',
     }))
     const dummyJwt = `${header}.${payload}.signature`
@@ -67,7 +67,7 @@ describe('Backend Hono API', () => {
     const data = await res.json() as any
     expect(data.success).toBe(true)
     expect(data.user.email).toBe('se.advisinglog@gmail.com')
-    expect(data.user.role).toBe('admin')
+    expect(data.user.role).toBe('super_admin')
     expect(data.user.code).toBe('ADM-SUPER')
   })
 

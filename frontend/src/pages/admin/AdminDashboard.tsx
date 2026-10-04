@@ -57,11 +57,11 @@ export default function AdminDashboard() {
 
   function handleToggleAiApi() {
     const nextState = !isAiEnabled
-    store.toggleAiApi(nextState, currentUser?.name || 'Admin')
+    store.toggleAiApi(nextState, currentUser?.name || (currentUser?.role === 'super_admin' ? 'Super Admin' : 'Admin'))
     store.addAuditLog({
       userId: currentUser?.id || 'ADM001',
-      userName: currentUser?.name || 'System Admin',
-      userRole: 'admin',
+      userName: currentUser?.name || (currentUser?.role === 'super_admin' ? 'Super Admin' : 'Admin'),
+      userRole: currentUser?.role || 'admin',
       action: 'api_toggled',
       description: `Administrator ${nextState ? 'ENABLED' : 'DISABLED'} AI/LLM API service platform-wide`,
     })
@@ -172,6 +172,20 @@ export default function AdminDashboard() {
       borderColor: 'hover:border-sky-300 dark:hover:border-sky-500/50',
       to: '/admin/users',
     },
+    ...(currentUser.role === 'super_admin'
+      ? [
+          {
+            title: t('จัดการระบบ AI', 'AI Governance'),
+            desc: t('กำหนดค่าโมเดล จัดการ API Keys และควบคุมการเข้าถึง AI รายบุคคล', 'Manage Gemini/OpenAI API keys, LLM quotas, and user AI access.'),
+            count: `${store.aiKeys.length} ${t('คีย์ในระบบ', store.aiKeys.length === 1 ? 'Key' : 'Keys')}`,
+            icon: <Bot className="h-5 w-5 text-purple-600 dark:text-purple-400" />,
+            topGradient: 'from-purple-500 via-indigo-400 to-purple-600',
+            tagColor: 'text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-500/12 border-purple-200/60 dark:border-purple-500/30',
+            borderColor: 'hover:border-purple-300 dark:hover:border-purple-500/50',
+            to: '/admin/ai-governance',
+          },
+        ]
+      : []),
     {
       title: t('จัดสรรอาจารย์ที่ปรึกษา', 'Student-Advisor Roster'),
       desc: t('จับคู่อาจารย์ที่ปรึกษากับนักศึกษา และดูแลความครอบคลุม', 'Pair advisors with advisees and track caseload distribution.'),
@@ -218,7 +232,11 @@ export default function AdminDashboard() {
     <div className="space-y-6">
       {/* Top Header */}
       <PageHeader
-        title={t('ระบบบริหารจัดการผู้ดูแลระบบ', 'System Administration')}
+        title={
+          currentUser.role === 'super_admin'
+            ? t('ศูนย์บริหารจัดการ Super Admin', 'Super Admin Dashboard')
+            : t('ศูนย์บริหารจัดการ Admin', 'Admin Dashboard')
+        }
         description={t(
           'จัดการสิทธิ์ผู้ใช้งาน จัดสรรคู่ที่ปรึกษา ตรวจสอบหมวดหมู่ และติดตามความปลอดภัยของระบบ',
           'Manage user permissions, student-advisor roster mapping, system configuration, and infrastructure telemetry.'

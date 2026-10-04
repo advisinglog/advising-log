@@ -102,9 +102,9 @@ app.post('/api/auth/google', async (c) => {
         const adminUser = {
           id: 'ADM_SE_GOOGLE',
           code: 'ADM-SUPER',
-          name: 'System Admin (SE AdvisingLog)',
+          name: 'Super Admin',
           email: lowerEmail,
-          role: 'admin' as const,
+          role: 'super_admin' as const,
           department: 'Academic & System Affairs',
           isActive: true,
           hasAiAccess: true,
@@ -140,7 +140,7 @@ app.post('/api/auth/google', async (c) => {
       const fallbackUser = {
         id: `GOOGLE_${googleId.substring(0, 8)}`,
         code: codePrefix,
-        name: isAuthorizedSuperAdmin ? 'System Super Admin (SE AdvisingLog)' : (name || 'Google User'),
+        name: isAuthorizedSuperAdmin ? 'Super Admin' : (name || 'Google User'),
         email: lowerEmail,
         role,
         department: 'School of Applied Digital Technology (ADT)',
@@ -180,7 +180,7 @@ app.post('/api/auth/google', async (c) => {
       const newAdmin = {
         id: 'ADM_SE_GOOGLE',
         code: 'ADM-SUPER',
-        name: 'System Super Admin (SE AdvisingLog)',
+        name: 'Super Admin',
         email: lowerEmail,
         role: 'super_admin' as const,
         department: 'Academic & System Affairs',

@@ -48,8 +48,8 @@ export const mockUsers: User[] = [
   { id: 'QA001', code: 'EMP-2001', name: 'Assoc. Prof. Rattana Pongsakorn', email: 'rattana.p@mfu.ac.th', role: 'qa_chair', department: 'School of Applied Digital Technology (ADT)', phone: '053-916-010', isActive: true, hasAiAccess: true, createdAt: '2018-01-01' },
   // Admin
   { id: 'ADM001', code: 'EMP-3001', name: 'Supattra Kaewmanee', email: 'supattra.k@mfu.ac.th', role: 'admin', department: 'Academic Affairs', phone: '053-916-020', isActive: true, hasAiAccess: true, createdAt: '2019-03-01' },
-  // Super Admin (Root System Admin)
-  { id: 'ADM_SUPER', code: 'ADM-SUPER', name: 'System Super Admin', email: 'se.advisinglog@gmail.com', role: 'super_admin', department: 'Academic & System Affairs', phone: '053-916-000', isActive: true, hasAiAccess: true, createdAt: '2018-01-01' },
+  // Super Admin
+  { id: 'ADM_SUPER', code: 'ADM-SUPER', name: 'Super Admin', email: 'se.advisinglog@gmail.com', role: 'super_admin', department: 'Academic & System Affairs', phone: '053-916-000', isActive: true, hasAiAccess: true, createdAt: '2018-01-01' },
 ]
 
 

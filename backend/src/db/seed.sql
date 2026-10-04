@@ -17,7 +17,7 @@ INSERT OR IGNORE INTO users (id, code, name, email, role, department, phone, is_
 ('ADV003', 'EMP-1003', 'Dr. Chaiwat Namsai', 'chaiwat.n@mfu.ac.th', 'advisor', 'School of Applied Digital Technology (ADT)', '053-916-003', 1, 0, '2021-01-10'),
 ('QA001', 'EMP-2001', 'Assoc. Prof. Rattana Pongsakorn', 'rattana.p@mfu.ac.th', 'qa_chair', 'School of Applied Digital Technology (ADT)', '053-916-010', 1, 1, '2018-01-01'),
 ('ADM001', 'EMP-3001', 'Supattra Kaewmanee', 'supattra.k@mfu.ac.th', 'admin', 'Academic Affairs', '053-916-020', 1, 1, '2019-03-01'),
-('ADM_SUPER', 'ADM-SUPER', 'System Super Admin', 'se.advisinglog@gmail.com', 'super_admin', 'Academic & System Affairs', '053-916-000', 1, 1, '2018-01-01');
+('ADM_SUPER', 'ADM-SUPER', 'Super Admin', 'se.advisinglog@gmail.com', 'super_admin', 'Academic & System Affairs', '053-916-000', 1, 1, '2018-01-01');
 
 -- 2. Student-Advisor Assignments
 INSERT OR IGNORE INTO student_advisor_assignments (id, student_id, advisor_id, assigned_at, is_active) VALUES
