@@ -42,20 +42,19 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
       case 'student':
         return [
           { to: '/student', label: t('หน้าหลัก', 'Dashboard'), icon: <LayoutDashboard className="h-4 w-4" /> },
-          { to: '/student/request', label: t('ยื่นคำร้องขอเข้าพบ', 'Request Advising'), icon: <FileEdit className="h-4 w-4" /> },
-          { to: '/student/history', label: t('ประวัติการขอคำปรึกษา', 'Advising History'), icon: <History className="h-4 w-4" /> },
-          { to: '/student/documents', label: t('เอกสารที่เกี่ยวข้อง', 'Documents'), icon: <FileText className="h-4 w-4" /> },
-          { to: '/student/followups', label: t('งานที่ต้องดำเนินการ', 'Follow-ups'), icon: <ListChecks className="h-4 w-4" /> },
-          { to: '/student/voice', label: t('เสียงของนักศึกษา', 'Student Voice'), icon: <MessageSquareHeart className="h-4 w-4" /> },
+          { to: '/student/request', label: t('นัดพบอาจารย์', 'Meet Advisor'), icon: <FileEdit className="h-4 w-4" /> },
+          { to: '/student/history', label: t('ประวัติการเข้าพบ', 'Past Meetings & Notes'), icon: <History className="h-4 w-4" /> },
+          { to: '/student/followups', label: t('สิ่งที่ต้องทำต่อ', 'Tasks & Next Steps'), icon: <ListChecks className="h-4 w-4" /> },
+          { to: '/student/voice', label: t('เสียงสะท้อนนักศึกษา', 'Student Feedback'), icon: <MessageSquareHeart className="h-4 w-4" /> },
         ]
       case 'advisor':
         return [
-          { to: '/advisor', label: t('แดชบอร์ดอาจารย์', 'Dashboard'), icon: <LayoutDashboard className="h-4 w-4" /> },
-          { to: '/advisor/sessions', label: t('การให้คำปรึกษา', 'Advising Sessions'), icon: <CalendarClock className="h-4 w-4" /> },
-          { to: '/advisor/log', label: t('บันทึกผลการเข้าพบ', 'Advisor Log'), icon: <ClipboardList className="h-4 w-4" /> },
-          { to: '/advisor/warnings', label: t('ระบบเตือนภัยวิชาการ', 'Early Warning'), icon: <AlertTriangle className="h-4 w-4" /> },
-          { to: '/advisor/referrals', label: t('การส่งต่อหน่วยงาน', 'Referrals'), icon: <Share2 className="h-4 w-4" /> },
-          { to: '/advisor/exit-cases', label: t('คำร้องขอลาพัก/ลาออก', 'Exit Cases'), icon: <UserX className="h-4 w-4" /> },
+          { to: '/advisor', label: t('หน้าหลักอาจารย์', 'Advisor Dashboard'), icon: <LayoutDashboard className="h-4 w-4" /> },
+          { to: '/advisor/sessions', label: t('ตารางนัดหมาย', 'Appointments'), icon: <CalendarClock className="h-4 w-4" /> },
+          { to: '/advisor/log', label: t('บันทึกการเข้าพบ', 'Meeting Notes'), icon: <ClipboardList className="h-4 w-4" /> },
+          { to: '/advisor/warnings', label: t('นักศึกษาที่ต้องดูแลพิเศษ', 'Students Needing Support'), icon: <AlertTriangle className="h-4 w-4" /> },
+          { to: '/advisor/referrals', label: t('ส่งต่อความช่วยเหลือ', 'Support Referrals'), icon: <Share2 className="h-4 w-4" /> },
+          { to: '/advisor/exit-cases', label: t('เคสลาออก/ลาพัก', 'Leave & Withdrawal Cases'), icon: <UserX className="h-4 w-4" /> },
         ]
       case 'qa_chair':
         return [

@@ -7,8 +7,8 @@ import { useStore } from '@/data/mock-store'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/contexts/ToastContext'
-import { PageHeader, Card, StatusBadge, EmptyState, Button, Modal, GoogleCalendarButton } from '@/components/ui'
-import { ArrowLeft, Calendar, Paperclip, FileText, CheckCircle, X } from 'lucide-react'
+import { PageHeader, Card, StatusBadge, EmptyState, Button, Modal, GoogleCalendarButton, DocumentViewerModal, type DocumentViewerTarget } from '@/components/ui'
+import { ArrowLeft, Calendar, Paperclip, FileText, CheckCircle, X, Eye } from 'lucide-react'
 import { useState } from 'react'
 
 export default function AdvisingDetail() {
@@ -20,6 +20,7 @@ export default function AdvisingDetail() {
   const { addToast } = useToast()
   const [showDeclineModal, setShowDeclineModal] = useState(false)
   const [declineReason, setDeclineReason] = useState('')
+  const [previewDoc, setPreviewDoc] = useState<DocumentViewerTarget | null>(null)
 
   const request = store.requests.find(r => r.id === id)
   if (!request) return <EmptyState title={t('ไม่พบข้อมูลคำร้อง', 'Request not found')} description={t('ไม่พบข้อมูลคำร้องขอรับคำปรึกษาที่ต้องการ', 'The requested advising record could not be located.')} />
@@ -115,9 +116,21 @@ export default function AdvisingDetail() {
               <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-2">{t('เอกสารแนบ', 'Attached Files')}</span>
               <div className="flex flex-wrap gap-2">
                 {request.attachments.map((f, i) => (
-                  <span key={i} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-sky-50 dark:bg-sky-950/60 border border-sky-100 dark:border-sky-800 rounded-lg text-xs font-medium text-sky-800 dark:text-sky-300 shadow-xs">
-                    <Paperclip className="h-3 w-3" /> {f}
-                  </span>
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => setPreviewDoc({
+                      id: `${request.id}-attachment-${i}`,
+                      title: f,
+                      fileName: f,
+                      fileUrl: `/uploads/${f}`,
+                    })}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-sky-50 dark:bg-sky-950/60 hover:bg-sky-100 dark:hover:bg-sky-900 border border-sky-200/80 dark:border-sky-800 rounded-lg text-xs font-medium text-sky-800 dark:text-sky-300 shadow-xs transition-colors cursor-pointer"
+                  >
+                    <Paperclip className="h-3 w-3" />
+                    <span>{f}</span>
+                    <Eye className="h-3 w-3 ml-1 text-sky-500" />
+                  </button>
                 ))}
               </div>
             </div>
@@ -274,6 +287,13 @@ export default function AdvisingDetail() {
           </div>
         </div>
       </Modal>
+
+      {/* Document Viewer Modal */}
+      <DocumentViewerModal
+        isOpen={Boolean(previewDoc)}
+        onClose={() => setPreviewDoc(null)}
+        document={previewDoc}
+      />
     </div>
   )
 }

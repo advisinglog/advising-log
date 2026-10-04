@@ -58,7 +58,7 @@ describe('Advisor Pages Audit & Resilience Tests', () => {
 
   it('renders AdvisingSessions and renders requests table safely', () => {
     renderWithProviders(<AdvisingSessions />)
-    expect(screen.getByText(/รายการการให้คำปรึกษาทางวิชาการ|Advising Sessions/i)).toBeInTheDocument()
+    expect(screen.getByText(/ตารางนัดหมายและการเข้าพบ|รายการการให้คำปรึกษาทางวิชาการ|Appointments & Advising Sessions|Advising Sessions/i)).toBeInTheDocument()
 
     // Table should render student requests
     expect(screen.getByText(/หมวดหมู่|Category/i)).toBeInTheDocument()

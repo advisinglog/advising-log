@@ -3,13 +3,14 @@
 // ============================================================
 
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { useStore } from '@/data/mock-store'
 import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { PageHeader, Tabs, DataTable, Button, Modal, DocumentViewerModal, SearchInput, type DocumentViewerTarget } from '@/components/ui'
 import type { AdvisingRequest } from '@/types'
-import { Calendar, Eye, FileText, Sparkles, Building2, Video, CheckCircle2, MapPin, Link2 } from 'lucide-react'
+import { Calendar, Eye, FileText, Sparkles, Building2, Video, CheckCircle2, MapPin, Link2, ClipboardList } from 'lucide-react'
 import { isAdvisorMatch } from '@/utils/advisorUtils'
 import { openGoogleCalendarEvent } from '@/utils/calendarUtils'
 
@@ -18,6 +19,7 @@ export default function AdvisingSessions() {
   const store = useStore()
   const { addToast } = useToast()
   const { t, getCategoryLabel, getSubCategoryLabel } = useLanguage()
+  const navigate = useNavigate()
 
   const [tab, setTab] = useState('pending')
   const [search, setSearch] = useState('')
@@ -107,8 +109,8 @@ export default function AdvisingSessions() {
   }
 
   const tabs = [
-    { value: 'pending', label: t('คำร้องรอการตอบรับ', 'Pending Requests'), count: myRequests.filter(r => ['requested', 'pending'].includes(r.status)).length },
-    { value: 'upcoming', label: t('นัดหมายที่ยืนยันแล้ว', 'Upcoming Sessions'), count: myRequests.filter(r => r.status === 'scheduled').length },
+    { value: 'pending', label: t('คำขอนัดหมายใหม่', 'Pending Requests'), count: myRequests.filter(r => ['requested', 'pending'].includes(r.status)).length },
+    { value: 'upcoming', label: t('นัดหมายที่ยืนยันแล้ว', 'Upcoming Appointments'), count: myRequests.filter(r => r.status === 'scheduled').length },
     { value: 'completed', label: t('เสร็จสิ้นแล้ว', 'Completed'), count: myRequests.filter(r => ['completed', 'closed'].includes(r.status)).length },
     { value: 'cancelled', label: t('ยกเลิก', 'Cancelled'), count: myRequests.filter(r => r.status === 'cancelled').length },
   ]
@@ -259,7 +261,20 @@ export default function AdvisingSessions() {
                         setShowSchedule(true)
                       }}
                     >
-                      <CheckCircle2 className="h-3 w-3 mr-1" /> {t('ตอบรับ', 'Confirm')}
+                      <CheckCircle2 className="h-3 w-3 mr-1" /> {t('ตอบรับการนัด', 'Accept')}
+                    </Button>
+                  )}
+
+                  {r.status === 'scheduled' && (
+                    <Button
+                      size="sm"
+                      variant="primary"
+                      onClick={() => {
+                        markRequestViewed(r.id)
+                        navigate('/advisor/log', { state: { requestId: r.id } })
+                      }}
+                    >
+                      <ClipboardList className="h-3 w-3 mr-1" /> {t('บันทึกการเข้าพบ', 'Log Notes')}
                     </Button>
                   )}
 
@@ -284,8 +299,8 @@ export default function AdvisingSessions() {
   return (
     <div>
       <PageHeader
-        title={t('รายการการให้คำปรึกษาทางวิชาการ', 'Advising Sessions')}
-        description={t('ตรวจสอบคำร้องของนักศึกษา กำหนดเวลานัดหมายเข้าพบ และบันทึกผลการให้คำปรึกษา', 'Review student advising requests, schedule appointments, and mark sessions complete.')}
+        title={t('ตารางนัดหมายและการเข้าพบ', 'Appointments & Advising Sessions')}
+        description={t('ตรวจสอบคำขอนัดหมาย ยืนยันเวลาเข้าพบ และบันทึกผลการพูดคุยกับนักศึกษา', 'Review meeting requests, confirm appointment slots, and record session notes.')}
       />
 
       <Tabs tabs={tabs} active={tab} onChange={setTab} />

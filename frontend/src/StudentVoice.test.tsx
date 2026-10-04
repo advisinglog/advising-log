@@ -279,7 +279,7 @@ describe('Student Voice Feature', () => {
 
     // Check Student Voice survey notice
     expect(screen.getByText(/แบบสำรวจเสียงของนักศึกษา/i)).toBeInTheDocument()
-    const submitBtn = screen.getByRole('button', { name: /ยืนยันส่งคำร้อง/i })
+    const submitBtn = screen.getByRole('button', { name: /ถัดไป|ยืนยันส่งคำร้อง|Next/i })
     expect(submitBtn).toBeDisabled()
 
     // Button to navigate to the official Student Voice page exists
@@ -305,7 +305,7 @@ describe('Student Voice Feature', () => {
 
     // Check status shows completed
     expect(screen.getByText(/ทำแบบสำรวจเรียบร้อยแล้ว/i)).toBeInTheDocument()
-    const submitBtn = screen.getByRole('button', { name: /ยืนยันส่งคำร้อง/i })
+    const submitBtn = screen.getByRole('button', { name: /ถัดไป|ยืนยันส่งคำร้อง|Next/i })
     expect(submitBtn).not.toBeDisabled()
   })
 
@@ -319,7 +319,7 @@ describe('Student Voice Feature', () => {
     // Check status shows completed even though response payload was anonymous
     expect(screen.getByText(/บันทึกข้อมูลเสียงของนักศึกษาเรียบร้อยแล้ว/i)).toBeInTheDocument()
     expect(screen.getByText(/ทำแบบสำรวจเรียบร้อยแล้ว/i)).toBeInTheDocument()
-    const submitBtn = screen.getByRole('button', { name: /ยืนยันส่งคำร้อง/i })
+    const submitBtn = screen.getByRole('button', { name: /ถัดไป|ยืนยันส่งคำร้อง|Next/i })
     expect(submitBtn).not.toBeDisabled()
     sessionStorage.clear()
   })
@@ -358,7 +358,7 @@ describe('Student Voice Feature', () => {
     // Student Voice card and advisory warning should NOT be present
     expect(screen.queryByText(/จำเป็นต้องทำก่อนส่งคำร้อง/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/คำแนะนำก่อนยื่นขอลาพัก \/ ขอลาออก \/ ย้ายสาขาวิชา/i)).not.toBeInTheDocument()
-    const submitBtn = screen.getByRole('button', { name: /ยืนยันส่งคำร้อง/i })
+    const submitBtn = screen.getByRole('button', { name: /ถัดไป|ยืนยันส่งคำร้อง|Next/i })
     expect(submitBtn).not.toBeDisabled()
   })
 })

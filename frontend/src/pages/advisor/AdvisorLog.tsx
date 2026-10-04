@@ -4,11 +4,12 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useStore } from '@/data/mock-store'
 import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { PageHeader, Card, Button, EmptyState, ConfirmDialog } from '@/components/ui'
-import { ClipboardCheck, User, PlusCircle, Lightbulb, Sparkles, Check } from 'lucide-react'
+import { PageHeader, Card, Button, EmptyState, ConfirmDialog, DocumentViewerModal, type DocumentViewerTarget } from '@/components/ui'
+import { ClipboardCheck, User, PlusCircle, Lightbulb, Sparkles, Check, FileText, Eye, CheckCircle2 } from 'lucide-react'
 
 import { isAdvisorMatch } from '@/utils/advisorUtils'
 import { getLocalDateString } from '@/utils/dateUtils'
+import type { AdvisingRequest } from '@/types'
 
 export default function AdvisorLog() {
   const { currentUser } = useAuth()
@@ -25,6 +26,8 @@ export default function AdvisorLog() {
   const [followUpDate, setFollowUpDate] = useState('')
   const [activeTemplateIdx, setActiveTemplateIdx] = useState<number | null>(null)
   const [pendingTemplate, setPendingTemplate] = useState<{ text: string; idx: number } | null>(null)
+  const [previewDoc, setPreviewDoc] = useState<DocumentViewerTarget | null>(null)
+  const [autoApproveDocs, setAutoApproveDocs] = useState(true)
 
   useEffect(() => {
     const navRequestId = (location.state as { requestId?: string } | undefined)?.requestId
@@ -32,6 +35,26 @@ export default function AdvisorLog() {
       setSelectedRequestId(navRequestId)
     }
   }, [location.state])
+
+  function getAttachments(request: AdvisingRequest): DocumentViewerTarget[] {
+    return (Array.isArray(request.attachments) ? request.attachments : []).map((attachment, index) => {
+      const value = attachment as unknown
+      if (typeof value === 'string') {
+        return { id: `${request.id}-attachment-${index}`, fileName: value, title: value }
+      }
+
+      const file = value as Record<string, unknown>
+      const fileName = String(file.fileName || file.name || file.originalFilename || `attachment-${index + 1}`)
+      return {
+        id: `${request.id}-attachment-${index}`,
+        fileName,
+        title: fileName,
+        fileUrl: typeof file.fileUrl === 'string' ? file.fileUrl : typeof file.url === 'string' ? file.url : typeof file.secureUrl === 'string' ? file.secureUrl : undefined,
+        cloudinaryPublicId: typeof file.cloudinaryPublicId === 'string' ? file.cloudinaryPublicId : typeof file.publicId === 'string' ? file.publicId : undefined,
+        fileType: typeof file.fileType === 'string' ? file.fileType : undefined,
+      }
+    })
+  }
 
   if (!currentUser) return null
 
@@ -211,7 +234,7 @@ export default function AdvisorLog() {
 
             {/* Selected Student & Request Summary Preview */}
             {selectedReq && (
-              <div className="p-4 bg-sky-50/50 dark:bg-sky-950/40 border border-sky-100 dark:border-sky-800/80 rounded-xl text-xs space-y-1.5 shadow-2xs">
+              <div className="p-4 bg-sky-50/50 dark:bg-sky-950/40 border border-sky-100 dark:border-sky-800/80 rounded-xl text-xs space-y-3 shadow-2xs">
                 <div className="flex items-center justify-between gap-2 flex-wrap">
                   <p className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
                     <User className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400" />
@@ -226,6 +249,63 @@ export default function AdvisorLog() {
                   <span className="text-slate-400 font-medium">{t('ประเด็นที่นักศึกษาขอคำปรึกษา:', 'Student Request Details:')}</span>{' '}
                   {selectedReq.details}
                 </p>
+
+                {/* Attached Documents Preview Box */}
+                {(getAttachments(selectedReq).length > 0 || store.documents.some(d => (d.studentId === selectedReq.studentId || (student?.code && d.studentId.toUpperCase() === student.code.toUpperCase())) && d.status === 'pending')) && (
+                  <div className="pt-2 border-t border-sky-100 dark:border-sky-900/60 space-y-2">
+                    <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
+                      <FileText className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400" />
+                      {t('เอกสารประกอบคำร้องและแบบฟอร์มแนบ', 'Attached Documents & Submitted Forms')}
+                    </span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {getAttachments(selectedReq).map(att => (
+                        <div key={att.id} className="flex items-center justify-between gap-2 bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs">
+                          <span className="truncate font-medium text-slate-700 dark:text-slate-300">{att.fileName}</span>
+                          <Button size="sm" variant="secondary" type="button" onClick={() => setPreviewDoc(att)} className="h-7 text-[11px] px-2">
+                            <Eye className="h-3 w-3 mr-1" /> {t('เปิดดู', 'View')}
+                          </Button>
+                        </div>
+                      ))}
+                      {store.documents
+                        .filter(d => (d.studentId === selectedReq.studentId || (student?.code && d.studentId.toUpperCase() === student.code.toUpperCase())) && d.status === 'pending')
+                        .map(doc => (
+                          <div key={doc.id} className="flex items-center justify-between gap-2 bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs">
+                            <span className="truncate font-medium text-slate-700 dark:text-slate-300">{doc.title}</span>
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              type="button"
+                              onClick={() => setPreviewDoc({
+                                id: doc.id,
+                                title: doc.title,
+                                fileName: doc.title,
+                                fileUrl: doc.url,
+                                cloudinaryPublicId: doc.publicId,
+                                fileType: doc.type,
+                              })}
+                              className="h-7 text-[11px] px-2"
+                            >
+                              <Eye className="h-3 w-3 mr-1" /> {t('เปิดดู', 'View')}
+                            </Button>
+                          </div>
+                        ))}
+                    </div>
+
+                    {/* Auto-endorse checkbox */}
+                    <label className="flex items-center gap-2 cursor-pointer pt-1 select-none">
+                      <input
+                        type="checkbox"
+                        checked={autoApproveDocs}
+                        onChange={e => setAutoApproveDocs(e.target.checked)}
+                        className="rounded border-slate-300 text-sky-600 focus:ring-sky-500 h-3.5 w-3.5"
+                      />
+                      <span className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
+                        <CheckCircle2 className="h-3.5 w-3.5" />
+                        {t('รับรองและลงนามเอกสารแนบพร้อมบันทึกการให้คำปรึกษานี้', 'Endorse & approve attached documents with this advising log')}
+                      </span>
+                    </label>
+                  </div>
+                )}
               </div>
             )}
 
@@ -365,6 +445,13 @@ export default function AdvisorLog() {
           </form>
         </Card>
       )}
+
+      {/* Document Preview Modal */}
+      <DocumentViewerModal
+        isOpen={Boolean(previewDoc)}
+        onClose={() => setPreviewDoc(null)}
+        document={previewDoc}
+      />
 
       {/* Template Replace Confirmation Dialog */}
       <ConfirmDialog

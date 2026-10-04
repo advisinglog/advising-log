@@ -2,7 +2,7 @@
 // Student — Request Advising Form (3-Step Interactive Wizard)
 // ============================================================
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { useStore } from '@/data/mock-store'
@@ -35,9 +35,14 @@ import {
   ArrowLeft,
   Sparkles,
   Edit3,
+  Upload,
+  FileText,
+  Loader2,
+  FileCheck2,
 } from 'lucide-react'
 import { buildAdvisorCalendarUrl, openAdvisorCalendar } from '@/utils/calendarUtils'
 import { getLocalDateString } from '@/utils/dateUtils'
+import { uploadFileToCloudinary } from '@/services/cloudinaryService'
 
 export default function RequestAdvising() {
   const { currentUser } = useAuth()
@@ -66,6 +71,29 @@ export default function RequestAdvising() {
   const [calendarTab, setCalendarTab] = useState<'google' | 'system'>('google')
   const [selectedAdvisorId, setSelectedAdvisorId] = useState<string>('')
   const [showExitReasonDropdown, setShowExitReasonDropdown] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [isUploadingFile, setIsUploadingFile] = useState(false)
+
+  async function handleRealFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setIsUploadingFile(true)
+    try {
+      const res = await uploadFileToCloudinary(file, {
+        studentCode: currentUser?.code,
+        folder: 'advising_attachments',
+      })
+      const savedName = res.originalFilename || file.name
+      setAttachments(prev => [...prev, savedName])
+      addToast('success', t('แนบไฟล์สำเร็จ', 'File Attached'), savedName)
+    } catch (err: unknown) {
+      const error = err as Error
+      addToast('error', t('ไม่สามารถอัปโหลดไฟล์ได้', 'Upload Failed'), error.message || 'Error uploading file')
+    } finally {
+      setIsUploadingFile(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
 
   function getCategoryIcon(cat: AdvisingCategory | '') {
     switch (cat) {
@@ -237,6 +265,22 @@ export default function RequestAdvising() {
       pdpaConsent,
       status: 'requested',
     })
+
+    // Sync attached documents into store.documents for unified document tracking
+    if (attachments.length > 0) {
+      attachments.forEach(fileName => {
+        store.addDocument({
+          studentId: effectiveStudentId,
+          title: fileName,
+          type: category === 'scholarship_document' ? 'Scholarship Form' : category === 'withdrawal_leave' ? 'Exit Form' : 'Advising Attachment',
+          status: 'pending',
+          publicId: `advising_docs/${currentUser?.code || 'std'}_${fileName.replace(/[^a-zA-Z0-9._-]/g, '_')}`,
+          url: `/uploads/${fileName}`,
+          uploadedAt: getLocalDateString(),
+          fileSize: '1.2 MB',
+        })
+      })
+    }
 
     // 2. If withdrawal/leave/transfer, also record ExitCase
     if (category === 'withdrawal_leave') {
@@ -700,7 +744,7 @@ export default function RequestAdvising() {
                   }}
                   className="gap-1.5 font-bold"
                 >
-                  <span>{t('ยืนยันส่งคำร้อง', 'Submit Request')} / {t('ขั้นตอนถัดไป', 'Next')}</span>
+                  <span>{t('ถัดไป', 'Next')}</span>
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               </div>
@@ -799,28 +843,98 @@ export default function RequestAdvising() {
               </div>
 
               {/* Attachments */}
-              <div>
-                <label className="block text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 mb-1.5">
-                  {t('เอกสารประกอบ (ถ้ามี)', 'Supporting Documents')}
-                </label>
-                <div className="flex flex-wrap gap-2 mb-2.5">
-                  {attachments.map((f, i) => (
-                    <span key={i} className="inline-flex items-center gap-1.5 px-3 py-1 bg-sky-50 dark:bg-sky-950/60 border border-sky-100 dark:border-sky-800 rounded-lg text-xs font-medium text-sky-800 dark:text-sky-300">
-                      <Paperclip className="h-3 w-3" />
-                      {f}
-                      <button
-                        type="button"
-                        onClick={() => setAttachments(prev => prev.filter((_, idx) => idx !== i))}
-                        className="text-sky-400 hover:text-sky-700 dark:hover:text-sky-200 ml-0.5 cursor-pointer"
-                      >
-                        &times;
-                      </button>
-                    </span>
-                  ))}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200">
+                    {t('เอกสารประกอบและแบบคำร้อง (ถ้ามี)', 'Supporting Documents & Forms')}
+                  </label>
+                  <span className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">
+                    {t('รองรับ PDF, รูปภาพ, Word (ไม่เกิน 10MB)', 'Supports PDF, Image, Word up to 10MB')}
+                  </span>
                 </div>
-                <Button type="button" variant="secondary" size="sm" onClick={handleFileSimulate}>
-                  <Paperclip className="h-3.5 w-3.5 mr-1" /> {t('แนบไฟล์เอกสาร', 'Attach File')}
-                </Button>
+
+                {/* Contextual guidance banner for special categories */}
+                {(category === 'scholarship_document' || category === 'withdrawal_leave' || category === 'registration') && (
+                  <div className="p-3 bg-sky-50/80 dark:bg-sky-950/50 border border-sky-200/80 dark:border-sky-800/80 rounded-xl text-xs space-y-1">
+                    <p className="font-bold text-sky-900 dark:text-sky-200 flex items-center gap-1.5">
+                      <FileCheck2 className="h-4 w-4 text-sky-600 dark:text-sky-400" />
+                      {category === 'scholarship_document'
+                        ? t('การรับรองเอกสารทุนการศึกษา', 'Scholarship Document Endorsement')
+                        : category === 'withdrawal_leave'
+                        ? t('เอกสารประกอบคำร้องขอลาพัก / ลาออก', 'Exit Petition Supporting Files')
+                        : t('เอกสารการลงทะเบียน / เพิ่ม-ถอน', 'Registration & Petition Documents')}
+                    </p>
+                    <p className="text-slate-600 dark:text-slate-300 text-[11px] leading-relaxed">
+                      {t(
+                        'แนบไฟล์แบบฟอร์มหรือเอกสารหลักฐานที่นี่ อาจารย์ที่ปรึกษาจะสามารถเปิดดูและลงนามรับรองเอกสารได้โดยตรงเมื่อบันทึกผลการเข้าพบ',
+                        'Attach your completed form or evidence here. Your advisor will be able to preview and endorse the document directly when logging your session.'
+                      )}
+                    </p>
+                  </div>
+                )}
+
+                {/* Attached files list */}
+                {attachments.length > 0 && (
+                  <div className="flex flex-wrap gap-2 pt-1 pb-1">
+                    {attachments.map((f, i) => (
+                      <span key={i} className="inline-flex items-center gap-2 px-3 py-1.5 bg-sky-50 dark:bg-sky-950/60 border border-sky-200/80 dark:border-sky-800 rounded-xl text-xs font-medium text-sky-800 dark:text-sky-200 shadow-2xs">
+                        <FileText className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400" />
+                        <span className="truncate max-w-[200px]">{f}</span>
+                        <button
+                          type="button"
+                          onClick={() => setAttachments(prev => prev.filter((_, idx) => idx !== i))}
+                          className="text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 ml-1 cursor-pointer font-bold text-sm"
+                          title={t('ลบไฟล์', 'Remove file')}
+                        >
+                          &times;
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* Upload Buttons & Hidden File Input */}
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleRealFileUpload}
+                  accept=".pdf,.png,.jpg,.jpeg,.webp,.doc,.docx"
+                  className="hidden"
+                />
+
+                <div className="flex items-center gap-2 flex-wrap pt-1">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    disabled={isUploadingFile}
+                    onClick={() => fileInputRef.current?.click()}
+                    className="gap-1.5"
+                  >
+                    {isUploadingFile ? (
+                      <>
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        <span>{t('กำลังอัปโหลด...', 'Uploading...')}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="h-3.5 w-3.5" />
+                        <span>{t('เลือกไฟล์จากเครื่อง', 'Upload File')}</span>
+                      </>
+                    )}
+                  </Button>
+
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleFileSimulate}
+                    className="text-xs text-slate-500 hover:text-slate-700 dark:text-slate-400"
+                  >
+                    <Paperclip className="h-3 w-3 mr-1" />
+                    {t('สุ่มตัวอย่างเอกสาร (Simulation)', 'Use Sample Document')}
+                  </Button>
+                </div>
               </div>
             </Card>
 
@@ -841,7 +955,7 @@ export default function RequestAdvising() {
                 }}
                 className="gap-1.5 font-bold"
               >
-                <span>{t('ขั้นตอนถัดไป: ตรวจสอบและยืนยัน', 'Next: Review & Confirm')}</span>
+                <span>{t('ถัดไป', 'Next')}</span>
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </div>
@@ -963,7 +1077,7 @@ export default function RequestAdvising() {
             <div className="flex items-center justify-between pt-2">
               <Button variant="secondary" onClick={() => setCurrentStep(2)} type="button" className="gap-1.5">
                 <ArrowLeft className="h-4 w-4" />
-                <span>{t('ย้อนกลับไปแก้ไข', 'Back to Edit')}</span>
+                <span>{t('ย้อนกลับ', 'Back')}</span>
               </Button>
               <Button
                 type="submit"
@@ -972,7 +1086,7 @@ export default function RequestAdvising() {
                 className="gap-2 font-bold px-6 py-2.5 shadow-sm"
               >
                 <Check className="h-4 w-4" />
-                <span>{t('ยืนยันส่งคำร้อง', 'Submit Request')}</span>
+                <span>{t('ยืนยันนัดพบอาจารย์', 'Confirm Meeting')}</span>
               </Button>
             </div>
           </div>

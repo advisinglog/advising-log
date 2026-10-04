@@ -1,21 +1,18 @@
-import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useStore } from '@/data/mock-store'
 import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { PageHeader, DataTable, StatusBadge, Button, Modal, Card, GoogleCalendarButton } from '@/components/ui'
-import type { FollowUp, FollowUpProgress } from '@/types'
-import { CheckCircle2, ListChecks, TrendingUp, Clock } from 'lucide-react'
+import { PageHeader, StatusBadge, Button, GoogleCalendarButton } from '@/components/ui'
+import type { FollowUp } from '@/types'
+import { CheckCircle2, ListChecks, Calendar, User, ArrowRight, Check } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 
 export default function FollowUps() {
   const { currentUser } = useAuth()
   const store = useStore()
   const { addToast } = useToast()
   const { t } = useLanguage()
-  const [showProgressModal, setShowProgressModal] = useState(false)
-  const [selectedFollowUp, setSelectedFollowUp] = useState<FollowUp | null>(null)
-  const [progressValue, setProgressValue] = useState(0)
-  const [progressNotes, setProgressNotes] = useState('')
+  const navigate = useNavigate()
 
   if (!currentUser) return null
 
@@ -41,236 +38,127 @@ export default function FollowUps() {
   }
 
   const myFollowUps = store.followUps.filter(f => isCurrentStudent(f.studentId))
-  const myProgress = store.followUpProgress.filter(fp => isCurrentStudent(fp.studentId))
+  const pendingTasks = myFollowUps.filter(f => f.status !== 'completed')
 
-  function getProgressForFollowUp(followUpId: string): FollowUpProgress | undefined {
-    return myProgress.find(fp => fp.followUpId === followUpId)
-  }
-
-  function handleOpenProgressModal(f: FollowUp) {
-    setSelectedFollowUp(f)
-    const fp = getProgressForFollowUp(f.id)
-    setProgressValue(fp?.progress ?? 0)
-    setProgressNotes(fp?.notes ?? '')
-    setShowProgressModal(true)
-  }
-
-  function handleUpdateProgress() {
-    if (!selectedFollowUp || !currentUser) return
-    const existing = getProgressForFollowUp(selectedFollowUp.id)
-    if (existing) {
-      store.updateFollowUpProgress(existing.id, progressValue, progressNotes)
-    } else {
-      store.addFollowUpProgress({
-        followUpId: selectedFollowUp.id,
-        studentId: currentUser.id,
-        progress: progressValue,
-        notes: progressNotes,
-        status: progressValue >= 100 ? 'submitted' : 'in_progress',
-      })
-    }
-    if (progressValue >= 100 && selectedFollowUp.status !== 'completed') {
-      store.updateFollowUpStatus(selectedFollowUp.id, 'completed')
-    }
+  function handleCompleteTask(f: FollowUp) {
+    store.updateFollowUpStatus(f.id, 'completed')
     store.addAuditLog({
-      userId: currentUser.id,
-      userName: currentUser.name,
+      userId: currentUser!.id,
+      userName: currentUser!.name,
       userRole: 'student',
       action: 'followup_completed' as any,
-      description: `Updated progress for ${selectedFollowUp.task}: ${progressValue}%`,
-      targetId: selectedFollowUp.id,
+      description: `Completed task: ${f.task}`,
+      targetId: f.id,
     })
-    addToast('success', t('อัปเดตความคืบหน้าแล้ว', 'Progress Updated'), t('บันทึกความคืบหน้างานเรียบร้อยแล้ว', 'Progress has been recorded successfully.'))
-    setShowProgressModal(false)
-    setSelectedFollowUp(null)
-    setProgressValue(0)
-    setProgressNotes('')
+    addToast('success', t('ดำเนินการเสร็จสิ้นแล้ว', 'Task Completed'), f.task)
   }
 
-  const columns = [
-    {
-      key: 'task',
-      header: t('งานที่ได้รับมอบหมาย', 'Assigned Task'),
-      render: (f: FollowUp) => (
-        <div className="flex items-center gap-2.5">
-          <div className="h-8 w-8 rounded-lg bg-sky-50 dark:bg-sky-950/60 border border-sky-100 dark:border-sky-800 text-sky-600 dark:text-sky-400 flex items-center justify-center flex-shrink-0">
-            <ListChecks className="h-4 w-4" />
-          </div>
-          <span className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100">{f.task}</span>
-        </div>
-      ),
-    },
-    { key: 'session', header: t('รหัสคำร้องอ้างอิง', 'Request Reference'), render: (f: FollowUp) => <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">{f.requestId}</span> },
-    {
-      key: 'advisor',
-      header: t('อาจารย์ที่ปรึกษา', 'Advisor'),
-      render: (f: FollowUp) => {
-        const advisor = store.users.find(u => u.id === f.advisorId)
-        return <span className="text-xs text-slate-600 dark:text-slate-300">{advisor?.name || '-'}</span>
-      },
-    },
-    { key: 'due', header: t('กำหนดส่ง', 'Due Date'), render: (f: FollowUp) => <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">{f.dueDate}</span> },
-    {
-      key: 'progress',
-      header: t('ความคืบหน้า', 'Progress'),
-      render: (f: FollowUp) => {
-        const fp = getProgressForFollowUp(f.id)
-        if (!fp) return <span className="text-xs text-slate-400 dark:text-slate-500">—</span>
-        return (
-          <div className="flex items-center gap-2">
-            <div className="w-16 h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-sky-500 rounded-full transition-all"
-                style={{ width: `${fp.progress}%` }}
-              />
-            </div>
-            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">{fp.progress}%</span>
-          </div>
-        )
-      },
-    },
-    { key: 'status', header: t('สถานะ', 'Status'), render: (f: FollowUp) => <StatusBadge status={f.status} /> },
-    {
-      key: 'actions',
-      header: '',
-      render: (f: FollowUp) => (
-        <div className="flex items-center gap-1.5 flex-wrap">
-          {f.dueDate && (
-            <GoogleCalendarButton
-              event={{
-                title: `Follow-up Due: ${f.task}`,
-                description: `Advising Action Item: ${f.task}\nDue Date: ${f.dueDate}`,
-                date: f.dueDate,
-                time: '09:00',
-                attendeeEmails: [currentUser.email],
-              }}
-              label={t('เตือนความจำ', 'Set Reminder')}
-              size="sm"
-              variant="outline"
-            />
-          )}
-          {f.status !== 'completed' && (
-            <>
-              <Button
-                size="sm"
-                variant="secondary"
-                onClick={() => handleOpenProgressModal(f)}
-              >
-                <TrendingUp className="h-3.5 w-3.5 mr-1" /> {t('อัปเดต', 'Update')}
-              </Button>
-              <Button
-                size="sm"
-                variant="primary"
-                onClick={() => {
-                  store.updateFollowUpStatus(f.id, 'completed')
-                  store.addAuditLog({ userId: currentUser.id, userName: currentUser.name, userRole: 'student', action: 'followup_completed', description: `Completed follow-up: ${f.task}`, targetId: f.id })
-                  addToast('success', t('ดำเนินการเสร็จสิ้น', 'Follow-up Completed'), f.task)
-                }}
-              >
-                <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> {t('เสร็จแล้ว', 'Complete')}
-              </Button>
-            </>
-          )}
-        </div>
-      ),
-    },
-  ]
-
   return (
-    <div>
+    <div className="max-w-4xl mx-auto space-y-6">
       <PageHeader
-        title={t('งานที่ต้องดำเนินการ / ติดตามผล', 'Assigned Follow-ups')}
-        description={t('ติดตามและจัดการงานมอบหมายที่อาจารย์ที่ปรึกษาให้คำแนะนำไว้', 'Track, manage, and complete action items assigned by your academic advisor.')}
+        title={t('สิ่งที่ต้องทำต่อ', 'Tasks & Next Steps')}
+        description={t('รายการสิ่งที่อาจารย์ที่ปรึกษาแนะนำให้ดำเนินการต่อหลังการเข้าพบ', 'Action items and next steps recommended by your advisor from your advising sessions.')}
       />
-      {myFollowUps.length === 0 ? (
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-8 sm:p-12 text-center">
-          <div className="h-16 w-16 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-100 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto mb-4">
-            <CheckCircle2 className="h-8 w-8" />
-          </div>
-          <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 mb-2">{t('ไม่มีงานค้างที่ต้องทำ', 'All Tasks Completed')}</h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">{t('คุณได้ปฏิบัติตามคำแนะนำครบถ้วนแล้ว', 'You have completed all assigned follow-up tasks.')}</p>
-        </div>
-      ) : (
-        <DataTable columns={columns} data={myFollowUps} emptyMessage={t('ไม่มีงานติดตามผลที่ค้างอยู่', 'No pending follow-ups assigned to your profile.')} />
-      )}
 
-      {/* Progress History Section */}
-      {myProgress.length > 0 && (
-        <div className="mt-6 space-y-4">
-          <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-            <Clock className="h-4 w-4 text-sky-600 dark:text-sky-400" /> {t('ประวัติความคืบหน้า', 'Progress History')}
+      {/* Active Pending Tasks Section */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+            <ListChecks className="h-4 w-4 text-sky-600 dark:text-sky-400" />
+            {t('งานที่ต้องทำ', 'Pending Tasks')}
+            <span className="ml-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 dark:bg-sky-950 text-sky-700 dark:text-sky-300">
+              {pendingTasks.length}
+            </span>
           </h3>
-          {myProgress.map(fp => {
-            const followUp = myFollowUps.find(f => f.id === fp.followUpId)
-            if (!followUp) return null
-            return (
-              <Card key={fp.id} className="p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <div>
-                    <p className="text-xs font-semibold text-slate-900 dark:text-slate-100">{followUp.task}</p>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400">{fp.createdAt}</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-20 h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-sky-500 rounded-full"
-                        style={{ width: `${fp.progress}%` }}
-                      />
+        </div>
+
+        {pendingTasks.length === 0 ? (
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-8 text-center shadow-2xs">
+            <div className="h-12 w-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-100 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto mb-3">
+              <CheckCircle2 className="h-6 w-6" />
+            </div>
+            <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 mb-1">
+              {t('ไม่มีงานค้างที่ต้องทำ', 'All Tasks Completed')}
+            </h4>
+            <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
+              {t('คุณได้ปฏิบัติตามคำแนะนำของอาจารย์ครบถ้วนแล้ว', 'You have no pending action items right now.')}
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-2.5">
+            {pendingTasks.map(f => {
+              const advisor = store.users.find(u => u.id === f.advisorId)
+              return (
+                <div
+                  key={f.id}
+                  className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-2xs hover:border-sky-300 dark:hover:border-sky-700 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                >
+                  <div className="min-w-0 flex-1 space-y-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100">
+                        {f.task}
+                      </span>
+                      <StatusBadge status={f.status} />
                     </div>
-                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{fp.progress}%</span>
+
+                    <div className="flex items-center gap-3 flex-wrap text-[11px] text-slate-500 dark:text-slate-400 pt-0.5">
+                      {f.dueDate && (
+                        <span className="flex items-center gap-1 font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 px-2 py-0.5 rounded-md border border-rose-200/50 dark:border-rose-900/40">
+                          <Calendar className="h-3 w-3" />
+                          {t('กำหนดส่ง:', 'Due:')} {f.dueDate}
+                        </span>
+                      )}
+                      {advisor && (
+                        <span className="flex items-center gap-1 text-slate-600 dark:text-slate-400">
+                          <User className="h-3 w-3 text-slate-400" />
+                          {advisor.name}
+                        </span>
+                      )}
+                      {f.requestId && (
+                        <button
+                          type="button"
+                          onClick={() => navigate(`/student/history/${f.requestId}`)}
+                          className="text-sky-600 dark:text-sky-400 hover:underline flex items-center gap-0.5 font-medium cursor-pointer"
+                        >
+                          <span>{t('ดูบันทึกการคุย', 'View Session')}</span>
+                          <ArrowRight className="h-2.5 w-2.5" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-2 flex-wrap sm:flex-shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-slate-800">
+                    {f.dueDate && (
+                      <GoogleCalendarButton
+                        event={{
+                          title: `Task Due: ${f.task}`,
+                          description: `Action item assigned by ${advisor?.name || 'Advisor'}\nTask: ${f.task}`,
+                          date: f.dueDate,
+                          time: '09:00',
+                          attendeeEmails: [currentUser.email],
+                        }}
+                        label={t('เตือนใน Calendar', 'Remind Me')}
+                        size="sm"
+                        variant="secondary"
+                      />
+                    )}
+                    <Button
+                      size="sm"
+                      variant="primary"
+                      onClick={() => handleCompleteTask(f)}
+                      className="gap-1.5 font-bold"
+                    >
+                      <Check className="h-3.5 w-3.5" />
+                      <span>{t('ทำเสร็จแล้ว', 'Mark Done')}</span>
+                    </Button>
                   </div>
                 </div>
-                {fp.notes && (
-                  <p className="text-xs text-slate-600 dark:text-slate-400 italic">{fp.notes}</p>
-                )}
-              </Card>
-            )
-          })}
-        </div>
-      )}
-
-      {/* Progress Update Modal */}
-      <Modal isOpen={showProgressModal} onClose={() => { setShowProgressModal(false); setSelectedFollowUp(null) }} title={t('อัปเดตความคืบหน้า', 'Update Progress')} size="md">
-        <div className="space-y-4">
-          <div className="p-3 bg-sky-50/70 dark:bg-sky-950/40 rounded-xl border border-sky-100 dark:border-sky-800">
-            <p className="text-xs font-semibold text-sky-900 dark:text-sky-200 mb-1">{t('งาน', 'Task')}</p>
-            <p className="text-xs text-slate-700 dark:text-slate-300">{selectedFollowUp?.task}</p>
+              )
+            })}
           </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">{t('ความคืบหน้า (%)', 'Progress (%)')}</label>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={progressValue}
-              onChange={e => setProgressValue(Number(e.target.value))}
-              className="w-full"
-            />
-            <div className="flex justify-between mt-1">
-              <span className="text-[11px] text-slate-500 dark:text-slate-400">0%</span>
-              <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{progressValue}%</span>
-              <span className="text-[11px] text-slate-500 dark:text-slate-400">100%</span>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">{t('บันทึกเพิ่มเติม', 'Notes')}</label>
-            <textarea
-              value={progressNotes}
-              onChange={e => setProgressNotes(e.target.value)}
-              rows={3}
-              placeholder={t('บันทึกสิ่งที่ทำไป หรือปัญหาที่พบ...', 'Record what you have done or any issues encountered...')}
-              className="w-full px-3.5 py-2 text-xs sm:text-sm border border-slate-200/90 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 resize-none"
-            />
-          </div>
-
-          <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
-            <Button variant="secondary" onClick={() => { setShowProgressModal(false); setSelectedFollowUp(null) }}>{t('ยกเลิก', 'Cancel')}</Button>
-            <Button variant="primary" onClick={handleUpdateProgress}>{t('บันทึก', 'Save')}</Button>
-          </div>
-        </div>
-      </Modal>
+        )}
+      </div>
     </div>
   )
 }
