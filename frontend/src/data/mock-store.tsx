@@ -344,7 +344,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const addAppointment = useCallback((apt: Omit<Appointment, 'id' | 'createdAt'>): Appointment => {
-    const newApt: Appointment = { ...apt, id: nextId('APT'), createdAt: now() }
+    const newApt: Appointment = { studentConfirmed: true, ...apt, id: nextId('APT'), createdAt: now() }
     setAppointments(prev => [newApt, ...prev])
     api.createAppointment(newApt).catch(() => {})
     return newApt

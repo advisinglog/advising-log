@@ -31,6 +31,7 @@ const statusLabelsTh: Record<string, string> = {
   signed: 'ลงนามเรียบร้อย',
   approved: 'อนุมัติแล้ว',
   accepted: 'ตอบรับแล้ว',
+  confirmed: 'ยืนยันแล้ว',
   reviewed: 'ตรวจสอบแล้ว',
   pending: 'รอดำเนินการ',
   under_review: 'อยู่ระหว่างตรวจสอบ',
@@ -63,6 +64,7 @@ const statusLabelsEn: Record<string, string> = {
   signed: 'Signed',
   approved: 'Approved',
   accepted: 'Accepted',
+  confirmed: 'Confirmed',
   reviewed: 'Reviewed',
   pending: 'Pending',
   under_review: 'Under Review',
@@ -96,6 +98,7 @@ const statusConfig: Record<string, { bg: string; text: string; border: string; d
   signed: { bg: 'bg-emerald-50/80 dark:bg-emerald-500/12', text: 'text-emerald-700 dark:text-emerald-300', border: 'border-emerald-200/60 dark:border-emerald-500/25', dot: 'bg-emerald-500 dark:bg-emerald-400' },
   approved: { bg: 'bg-emerald-50/80 dark:bg-emerald-500/12', text: 'text-emerald-700 dark:text-emerald-300', border: 'border-emerald-200/60 dark:border-emerald-500/25', dot: 'bg-emerald-500 dark:bg-emerald-400' },
   accepted: { bg: 'bg-emerald-50/80 dark:bg-emerald-500/12', text: 'text-emerald-700 dark:text-emerald-300', border: 'border-emerald-200/60 dark:border-emerald-500/25', dot: 'bg-emerald-500 dark:bg-emerald-400' },
+  confirmed: { bg: 'bg-emerald-50/80 dark:bg-emerald-500/12', text: 'text-emerald-700 dark:text-emerald-300', border: 'border-emerald-200/60 dark:border-emerald-500/25', dot: 'bg-emerald-500 dark:bg-emerald-400' },
   reviewed: { bg: 'bg-emerald-50/80 dark:bg-emerald-500/12', text: 'text-emerald-700 dark:text-emerald-300', border: 'border-emerald-200/60 dark:border-emerald-500/25', dot: 'bg-emerald-500 dark:bg-emerald-400' },
   chair_approved: { bg: 'bg-emerald-50/80 dark:bg-emerald-500/12', text: 'text-emerald-700 dark:text-emerald-300', border: 'border-emerald-200/60 dark:border-emerald-500/25', dot: 'bg-emerald-500 dark:bg-emerald-400' },
 

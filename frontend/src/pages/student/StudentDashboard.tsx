@@ -17,8 +17,7 @@ export default function StudentDashboard() {
   const { t, language, getCategoryLabel, getSubCategoryLabel } = useLanguage()
   const store = useStore()
   const navigate = useNavigate()
-  const [timeTab, setTimeTab] = useState<'present' | 'future'>('present')
-  const [statusTab, setStatusTab] = useState<'confirmed' | 'awaiting'>('confirmed')
+  const [timeTab, setTimeTab] = useState<'today' | 'upcoming' | 'all'>('today')
 
   if (!currentUser) return null
 
@@ -79,11 +78,12 @@ export default function StudentDashboard() {
   // 2. Upcoming (Future) Appointments
   const futureAppointments = myAppointments.filter(a => a.scheduledDate > todayStr)
 
-  // 3. Confirmed Appointments
-  const confirmedAppointments = myAppointments.filter(a => a.studentConfirmed === true)
-
-  // 4. Awaiting Confirmation Appointments
-  const awaitingAppointments = myAppointments.filter(a => !a.studentConfirmed)
+  const displayedAppointments =
+    timeTab === 'today'
+      ? todayAppointments
+      : timeTab === 'upcoming'
+      ? futureAppointments
+      : myAppointments
 
   const renderAppointmentCard = (apt: typeof myAppointments[0], highlightTone?: 'emerald' | 'amber' | 'sky') => {
     const req = store.requests.find(r => r.id === apt.requestId)
@@ -101,7 +101,7 @@ export default function StudentDashboard() {
       <div key={apt.id} className={`p-4 border rounded-2xl ${containerStyle}`}>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-start gap-3.5">
-            <div className={`h-11 w-11 rounded-xl text-white flex items-center justify-center flex-shrink-0 shadow-xs ${highlightTone === 'emerald' ? 'bg-emerald-600' : highlightTone === 'amber' ? 'bg-amber-600' : 'bg-sky-600'}`}>
+            <div className={`h-11 w-11 rounded-xl text-white flex items-center justify-center flex-shrink-0 shadow-xs ${isToday ? 'bg-rose-600' : 'bg-sky-600'}`}>
               <Calendar className="h-5 w-5" />
             </div>
             <div>
@@ -110,16 +110,6 @@ export default function StudentDashboard() {
                 {isToday && (
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-rose-100 dark:bg-rose-950/80 border border-rose-300 dark:border-rose-800 rounded-full text-[10px] font-bold text-rose-700 dark:text-rose-300 animate-pulse">
                     {t('วันนี้ (Today)', 'Today')}
-                  </span>
-                )}
-                <StatusBadge status={apt.status} />
-                {apt.studentConfirmed ? (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 rounded-full text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">
-                    <CheckCircle2 className="h-3 w-3" /> {t('ยืนยันแล้ว', 'Confirmed')}
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 rounded-full text-[10px] font-semibold text-amber-700 dark:text-amber-300">
-                    <Clock className="h-3 w-3" /> {t('รอยืนยันการนัดพบ', 'Awaiting Confirmation')}
                   </span>
                 )}
               </div>
@@ -192,15 +182,15 @@ export default function StudentDashboard() {
       {/* Stats row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <StatCard label={t('คำร้องทั้งหมด', 'Total Requests')} value={myRequests.length} icon={<FileEdit className="h-5 w-5" />} color="sky" />
-        <StatCard label={t('นัดหมายยืนยันแล้ว', 'Confirmed Sessions')} value={confirmedAppointments.length} icon={<CheckCircle2 className="h-5 w-5" />} color="emerald" />
-        <StatCard label={t('นัดหมายรอยืนยัน', 'Awaiting Confirmation')} value={awaitingAppointments.length} icon={<Clock className="h-5 w-5" />} color="amber" />
-        <StatCard label={t('นัดหมายวันนี้ / อนาคต', 'Today / Future Sessions')} value={`${todayAppointments.length} / ${futureAppointments.length}`} icon={<Calendar className="h-5 w-5" />} color="sky" />
+        <StatCard label={t('นัดหมายที่ยืนยันแล้ว', 'Confirmed Sessions')} value={myAppointments.length} icon={<CheckCircle2 className="h-5 w-5" />} color="emerald" />
+        <StatCard label={t('นัดหมายวันนี้ / ล่วงหน้า', 'Today / Upcoming')} value={`${todayAppointments.length} / ${futureAppointments.length}`} icon={<Calendar className="h-5 w-5" />} color="sky" />
+        <StatCard label={t('งานที่ต้องดำเนินการ', 'Pending Tasks')} value={myFollowUps.length} icon={<ListChecks className="h-5 w-5" />} color="amber" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Left column (2 cols) */}
         <div className="lg:col-span-2 space-y-6">
-          {/* 1. Appointment Schedule — Present / Future Toggle */}
+          {/* 1. Appointment Schedule */}
           <Card>
             <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-100 dark:border-slate-800">
               <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
@@ -208,96 +198,44 @@ export default function StudentDashboard() {
               </h3>
               <div className="flex rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden text-[11px] font-semibold">
                 <button
-                  onClick={() => setTimeTab('present')}
-                  className={`px-3 py-1 transition-colors ${timeTab === 'present' ? 'bg-rose-600 text-white' : 'bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
+                  onClick={() => setTimeTab('today')}
+                  className={`px-3 py-1 transition-colors ${timeTab === 'today' ? 'bg-rose-600 text-white' : 'bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
                 >
                   {t('วันนี้', 'Today')} ({todayAppointments.length})
                 </button>
                 <button
-                  onClick={() => setTimeTab('future')}
-                  className={`px-3 py-1 transition-colors ${timeTab === 'future' ? 'bg-sky-600 text-white' : 'bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
+                  onClick={() => setTimeTab('upcoming')}
+                  className={`px-3 py-1 transition-colors ${timeTab === 'upcoming' ? 'bg-sky-600 text-white' : 'bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
                 >
-                  {t('อนาคต', 'Future')} ({futureAppointments.length})
+                  {t('ล่วงหน้า', 'Upcoming')} ({futureAppointments.length})
+                </button>
+                <button
+                  onClick={() => setTimeTab('all')}
+                  className={`px-3 py-1 transition-colors ${timeTab === 'all' ? 'bg-slate-800 text-white dark:bg-slate-200 dark:text-slate-900' : 'bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
+                >
+                  {t('ทั้งหมด', 'All')} ({myAppointments.length})
                 </button>
               </div>
             </div>
 
-            {timeTab === 'present' ? (
-              todayAppointments.length > 0 ? (
-                <div className="space-y-3">
-                  {todayAppointments.map(apt => renderAppointmentCard(apt, 'sky'))}
-                </div>
-              ) : (
-                <EmptyState
-                  title={t('ไม่มีนัดหมายในวันนี้', 'No Appointments Today')}
-                  description={t('คุณไม่มีตารางเข้าพบอาจารย์ที่ปรึกษาในวันนี้', 'You have no advising sessions scheduled for today.')}
-                />
-              )
-            ) : (
-              futureAppointments.length > 0 ? (
-                <div className="space-y-3">
-                  {futureAppointments.map(apt => renderAppointmentCard(apt, 'sky'))}
-                </div>
-              ) : (
-                <EmptyState
-                  title={t('ไม่มีนัดหมายในอนาคต', 'No Future Appointments')}
-                  description={t('คุณยังไม่มีตารางนัดหมายล่วงหน้า สามารถยื่นคำร้องเพื่อเลือกวันเวลาที่ต้องการได้ตลอดเวลา', 'No upcoming future appointments scheduled yet.')}
-                  action={
-                    <Button size="sm" onClick={() => navigate('/student/request')}>
-                      {t('ยื่นคำร้องขอนัดหมาย', 'Request Advising Session')}
-                    </Button>
-                  }
-                />
-              )
-            )}
-          </Card>
-
-          {/* 2. Confirmation Status — Confirmed / Awaiting Toggle */}
-          <Card>
-            <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-100 dark:border-slate-800">
-              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" /> {t('สถานะการยืนยัน', 'Confirmation Status')}
-              </h3>
-              <div className="flex rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden text-[11px] font-semibold">
-                <button
-                  onClick={() => setStatusTab('confirmed')}
-                  className={`px-3 py-1 transition-colors ${statusTab === 'confirmed' ? 'bg-emerald-600 text-white' : 'bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
-                >
-                  {t('ยืนยันแล้ว', 'Confirmed')} ({confirmedAppointments.length})
-                </button>
-                <button
-                  onClick={() => setStatusTab('awaiting')}
-                  className={`px-3 py-1 transition-colors ${statusTab === 'awaiting' ? 'bg-amber-600 text-white' : 'bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
-                >
-                  {t('รอยืนยัน', 'Awaiting')} ({awaitingAppointments.length})
-                </button>
+            {displayedAppointments.length > 0 ? (
+              <div className="space-y-3">
+                {displayedAppointments.map(apt => renderAppointmentCard(apt, apt.scheduledDate === todayStr ? 'amber' : 'sky'))}
               </div>
-            </div>
-
-            {statusTab === 'confirmed' ? (
-              confirmedAppointments.length > 0 ? (
-                <div className="space-y-3">
-                  {confirmedAppointments.map(apt => renderAppointmentCard(apt, 'emerald'))}
-                </div>
-              ) : (
-                <EmptyState
-                  title={t('ไม่มีนัดหมายที่ยืนยันแล้ว', 'No Confirmed Appointments')}
-                  description={t('ยังไม่มีรายการนัดหมายที่ได้รับการยืนยันสมบูรณ์ในขณะนี้', 'There are currently no confirmed advising appointments.')}
-                />
-              )
             ) : (
-              awaitingAppointments.length > 0 ? (
-                <div className="space-y-3">
-                  {awaitingAppointments.map(apt => renderAppointmentCard(apt, 'amber'))}
-                </div>
-              ) : (
-                <EmptyState
-                  title={t('ไม่มีนัดหมายที่รอยืนยัน', 'No Appointments Awaiting Confirmation')}
-                  description={t('ไม่มีรายการนัดหมายค้างรอการตอบรับในขณะนี้', 'All scheduled appointments have been responded to.')}
-                />
-              )
+              <EmptyState
+                title={timeTab === 'today' ? t('ไม่มีนัดหมายในวันนี้', 'No Appointments Today') : t('ไม่มีนัดหมายในช่วงเวลานี้', 'No Appointments Found')}
+                description={timeTab === 'today' ? t('คุณไม่มีตารางเข้าพบอาจารย์ที่ปรึกษาในวันนี้', 'You have no advising sessions scheduled for today.') : t('คุณยังไม่มีตารางนัดหมาย สามารถยื่นคำร้องเพื่อเลือกวันเวลาที่ต้องการได้ตลอดเวลา', 'No upcoming appointments scheduled yet.')}
+                action={
+                  <Button size="sm" onClick={() => navigate('/student/request')}>
+                    {t('ยื่นคำร้องขอนัดหมาย', 'Request Advising Session')}
+                  </Button>
+                }
+              />
             )}
           </Card>
+
+
 
           {/* Recent Advising Requests Table (REG MFU Academic Table Style) */}
           <Card>

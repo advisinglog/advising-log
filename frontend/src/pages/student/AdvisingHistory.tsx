@@ -11,7 +11,7 @@ import { ADVISING_CATEGORIES } from '@/types'
 import type { AdvisingRequest } from '@/types'
 import { getLocalDateString } from '@/utils/dateUtils'
 import { useState } from 'react'
-import { FileEdit, Clock, X, CheckCircle, Sparkles } from 'lucide-react'
+import { FileEdit, Sparkles } from 'lucide-react'
 
 export default function AdvisingHistory() {
   const { currentUser } = useAuth()
@@ -89,7 +89,7 @@ export default function AdvisingHistory() {
         const apt = store.appointments.find(a => a.requestId === r.id)
         
         // Some timeframe filters require an appointment
-        if (['present', 'future', 'past', 'confirmed', 'unconfirmed'].includes(timeframeFilter) && !apt) {
+        if (['present', 'future', 'past'].includes(timeframeFilter) && !apt) {
           return false
         }
 
@@ -102,8 +102,6 @@ export default function AdvisingHistory() {
           if (timeframeFilter === 'future' && !isFuture) return false
           if (timeframeFilter === 'past' && !isPast) return false
           if (timeframeFilter === 'present' && !isToday) return false
-          if (timeframeFilter === 'confirmed' && !apt.studentConfirmed) return false
-          if (timeframeFilter === 'unconfirmed' && (apt.studentConfirmed || apt.studentDeclined)) return false
         }
       }
 
@@ -135,49 +133,13 @@ export default function AdvisingHistory() {
     { key: 'advisor', header: t('อาจารย์ที่ปรึกษา', 'Faculty Advisor'), render: (r: AdvisingRequest) => <span className="text-xs text-slate-600 dark:text-slate-300">{store.users.find(u => u.id === r.advisorId)?.name || '-'}</span> },
     { key: 'appointment', header: t('เวลานัดหมาย', 'Appointment'), render: (r: AdvisingRequest) => {
       const apt = store.appointments.find(a => a.requestId === r.id)
-      if (!apt) {
-        if (r.preferredDate || r.preferredTime) {
-          return (
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                {r.preferredDate}{r.preferredTime ? ` · ${r.preferredTime}` : ''}
-              </span>
-              <span className="inline-flex items-center px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 text-[10px] font-medium text-slate-500 dark:text-slate-400 rounded border border-slate-200/80 dark:border-slate-700">
-                {t('เวลาที่ขอ', 'Requested')}
-              </span>
-            </div>
-          )
-        }
-        return <span className="text-xs text-slate-400 dark:text-slate-500">—</span>
+      if (apt) {
+        return <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">{apt.scheduledDate} · {apt.scheduledTime}</span>
       }
-
-      let statusIndicator = null
-      if (apt.status === 'scheduled' && !apt.studentConfirmed && !apt.studentDeclined) {
-        statusIndicator = (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 rounded-full text-[10px] font-medium text-amber-700 dark:text-amber-300">
-            <Clock className="h-3 w-3" /> {t('รอยืนยัน', 'Confirm')}
-          </span>
-        )
-      } else if (apt.studentDeclined) {
-        statusIndicator = (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 rounded-full text-[10px] font-medium text-rose-700 dark:text-rose-300">
-            <X className="h-3 w-3" /> {t('ไม่สะดวก', 'Declined')}
-          </span>
-        )
-      } else if (apt.studentConfirmed) {
-        statusIndicator = (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 rounded-full text-[10px] font-medium text-emerald-700 dark:text-emerald-300">
-            <CheckCircle className="h-3 w-3" /> {t('ยืนยันแล้ว', 'Confirmed')}
-          </span>
-        )
+      if (r.preferredDate || r.preferredTime) {
+        return <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">{r.preferredDate}{r.preferredTime ? ` · ${r.preferredTime}` : ''}</span>
       }
-
-      return (
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-500 dark:text-slate-400">{apt.scheduledDate} · {apt.scheduledTime}</span>
-          {statusIndicator}
-        </div>
-      )
+      return <span className="text-xs text-slate-400 dark:text-slate-500">—</span>
     }},
     { key: 'status', header: t('สถานะ', 'Status'), render: (r: AdvisingRequest) => <StatusBadge status={r.status} /> },
   ]
@@ -208,8 +170,6 @@ export default function AdvisingHistory() {
           <option value="present">{t('วันนี้', 'Present (Today)')}</option>
           <option value="future">{t('อนาคต', 'Future')}</option>
           <option value="past">{t('อดีต', 'Past')}</option>
-          <option value="confirmed">{t('ยืนยันแล้ว', 'Confirmed')}</option>
-          <option value="unconfirmed">{t('รอยืนยัน', 'Unconfirmed')}</option>
         </select>
 
         <select 

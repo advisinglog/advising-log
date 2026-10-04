@@ -6,9 +6,8 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useStore } from '@/data/mock-store'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useAuth } from '@/contexts/AuthContext'
-import { useToast } from '@/contexts/ToastContext'
-import { PageHeader, Card, StatusBadge, EmptyState, Button, Modal, GoogleCalendarButton, DocumentViewerModal, type DocumentViewerTarget } from '@/components/ui'
-import { ArrowLeft, Calendar, Paperclip, FileText, CheckCircle, X, Eye } from 'lucide-react'
+import { PageHeader, Card, StatusBadge, EmptyState, GoogleCalendarButton, DocumentViewerModal, type DocumentViewerTarget } from '@/components/ui'
+import { ArrowLeft, Calendar, Paperclip, FileText, CheckCircle, Eye } from 'lucide-react'
 import { useState } from 'react'
 
 export default function AdvisingDetail() {
@@ -17,9 +16,6 @@ export default function AdvisingDetail() {
   const { t, getCategoryLabel, getSubCategoryLabel } = useLanguage()
   const navigate = useNavigate()
   const { currentUser } = useAuth()
-  const { addToast } = useToast()
-  const [showDeclineModal, setShowDeclineModal] = useState(false)
-  const [declineReason, setDeclineReason] = useState('')
   const [previewDoc, setPreviewDoc] = useState<DocumentViewerTarget | null>(null)
 
   const request = store.requests.find(r => r.id === id)
@@ -30,38 +26,6 @@ export default function AdvisingDetail() {
   const session = store.sessions.find(s => s.requestId === request.id)
   const followUps = store.followUps.filter(f => f.requestId === request.id)
   const catLabel = getCategoryLabel(request.category)
-
-  const canConfirmAppointment = appointment && appointment.status === 'scheduled' && !appointment.studentConfirmed && !appointment.studentDeclined
-
-  function handleConfirmAppointment() {
-    if (!appointment || !currentUser || !request) return
-    store.confirmAppointment(appointment.id)
-    store.addNotification({
-      userId: request.advisorId,
-      type: 'info',
-      title: t('นักศึกษายืนยันการนัดหมาย', 'Student Confirmed Appointment'),
-      message: `${currentUser.name} ${t('ยืนยันการนัดหมาย', 'confirmed the appointment')} ${appointment.scheduledDate} ${appointment.scheduledTime}`,
-      relatedId: appointment.id,
-      isRead: false,
-    })
-    addToast('success', t('ยืนยันการนัดหมายแล้ว', 'Appointment Confirmed'), t('อาจารย์ที่ปรึกษาจะได้รับการแจ้งเตือน', 'Your advisor has been notified.'))
-  }
-
-  function handleDeclineAppointment() {
-    if (!appointment || !currentUser || !request) return
-    store.declineAppointment(appointment.id, declineReason)
-    store.addNotification({
-      userId: request.advisorId,
-      type: 'warning',
-      title: t('นักศึกษาไม่สะดวกนัดหมาย', 'Student Declined Appointment'),
-      message: `${currentUser.name} ${t('ไม่สะดวกนัดหมาย', 'declined the appointment')} ${appointment.scheduledDate} ${appointment.scheduledTime}${declineReason ? ` (${t('เหตุผล:', 'Reason:')} ${declineReason})` : ''}`,
-      relatedId: appointment.id,
-      isRead: false,
-    })
-    addToast('info', t('แจ้งอาจารย์ที่ปรึกษาแล้ว', 'Advisor Notified'), t('อาจารย์ที่ปรึกษาจะได้รับการแจ้งเตือน กรุณารอการนัดหมายใหม่', 'Your advisor has been notified. Please wait for a new appointment time.'))
-    setShowDeclineModal(false)
-    setDeclineReason('')
-  }
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -144,16 +108,6 @@ export default function AdvisingDetail() {
               <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-sky-600 dark:text-sky-400" /> {t('การนัดหมาย', 'Appointment')}
               </h3>
-              {appointment.studentConfirmed && (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 rounded-full text-xs font-semibold text-emerald-700 dark:text-emerald-300">
-                  <CheckCircle className="h-3.5 w-3.5" /> {t('ยืนยันการนัดหมายแล้ว', 'Appointment Confirmed')}
-                </span>
-              )}
-              {appointment.studentDeclined && (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 rounded-full text-xs font-semibold text-rose-700 dark:text-rose-300">
-                  <X className="h-3.5 w-3.5" /> {t('ไม่สะดวกตามวันเวลานี้', 'Appointment Declined')}
-                </span>
-              )}
             </div>
 
             <div className="p-4 bg-sky-50/80 dark:bg-sky-950/40 border border-sky-100 dark:border-sky-800 rounded-xl mb-4">
@@ -171,12 +125,6 @@ export default function AdvisingDetail() {
                   <p className="font-semibold text-slate-900 dark:text-slate-100 mt-0.5">{appointment.location}</p>
                 </div>
               </div>
-
-              {appointment.studentDeclined && appointment.studentDeclineReason && (
-                <div className="mt-3 pt-3 border-t border-sky-200/50 dark:border-sky-800/50 text-xs text-rose-700 dark:text-rose-300">
-                  <span className="font-semibold">{t('เหตุผลที่ไม่สะดวก:', 'Decline Reason:')}</span> {appointment.studentDeclineReason}
-                </div>
-              )}
             </div>
 
             <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5">
@@ -192,16 +140,6 @@ export default function AdvisingDetail() {
                 size="sm"
                 variant="secondary"
               />
-              {canConfirmAppointment && (
-                <div className="flex items-center gap-2">
-                  <Button variant="secondary" onClick={() => setShowDeclineModal(true)}>
-                    <X className="h-4 w-4 mr-1.5" /> {t('ไม่สะดวก', 'Decline')}
-                  </Button>
-                  <Button onClick={handleConfirmAppointment}>
-                    <CheckCircle className="h-4 w-4 mr-1.5" /> {t('ยืนยันการนัดหมาย', 'Confirm Appointment')}
-                  </Button>
-                </div>
-              )}
             </div>
           </Card>
         )}
@@ -253,40 +191,6 @@ export default function AdvisingDetail() {
           </Card>
         )}
       </div>
-
-      {/* Decline appointment modal */}
-      <Modal
-        isOpen={showDeclineModal}
-        onClose={() => { setShowDeclineModal(false); setDeclineReason('') }}
-        title={t('แจ้งว่าไม่สะดวกนัดหมาย', 'Decline Appointment')}
-        size="sm"
-      >
-        <div className="space-y-4">
-          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-            {t('กรุณาระบุเหตุผลที่ไม่สะดวกนัดหมาย เพื่อให้อาจารย์ที่ปรึกษาสามารถนัดหมายใหม่ได้เหมาะสมกว่า', 'Please provide a reason for declining the appointment so your advisor can reschedule accordingly.')}
-          </p>
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-              {t('เหตุผล (ถ้ามี)', 'Reason (optional)')}
-            </label>
-            <textarea
-              value={declineReason}
-              onChange={e => setDeclineReason(e.target.value)}
-              rows={3}
-              placeholder={t('ระบุเหตุผลที่ไม่สะดวกนัดหมาย...', 'State your reason for declining the appointment...')}
-              className="w-full px-3.5 py-2 text-xs sm:text-sm border border-slate-200/90 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-xs resize-none leading-relaxed"
-            />
-          </div>
-          <div className="flex items-center justify-end gap-2.5 pt-2">
-            <Button variant="secondary" onClick={() => { setShowDeclineModal(false); setDeclineReason('') }}>
-              {t('ยกเลิก', 'Cancel')}
-            </Button>
-            <Button onClick={handleDeclineAppointment}>
-              <X className="h-4 w-4 mr-1.5" /> {t('ยืนยันไม่สะดวก', 'Confirm Decline')}
-            </Button>
-          </div>
-        </div>
-      </Modal>
 
       {/* Document Viewer Modal */}
       <DocumentViewerModal

@@ -107,10 +107,10 @@ export const mockRequestProgress: RequestProgress[] = [
 // --- Appointments ---
 
 export const mockAppointments: Appointment[] = [
-  { id: 'APT001', requestId: 'REQ001', studentId: 'STU001', advisorId: 'ADV001', scheduledDate: '2026-09-10', scheduledTime: '10:00', location: 'Room S2-301', status: 'scheduled', studentConfirmed: false, studentDeclined: false, studentDeclineReason: undefined, createdAt: '2026-08-30' },
+  { id: 'APT001', requestId: 'REQ001', studentId: 'STU001', advisorId: 'ADV001', scheduledDate: '2026-09-10', scheduledTime: '10:00', location: 'Room S2-301', status: 'scheduled', studentConfirmed: true, studentDeclined: false, studentDeclineReason: undefined, createdAt: '2026-08-30' },
   { id: 'APT002', requestId: 'REQ002', studentId: 'STU002', advisorId: 'ADV001', scheduledDate: '2026-09-01', scheduledTime: '14:00', location: 'Room S2-301', status: 'completed', studentConfirmed: true, studentDeclined: false, studentDeclineReason: undefined, createdAt: '2026-08-25' },
   { id: 'APT003', requestId: 'REQ005', studentId: 'STU005', advisorId: 'ADV002', scheduledDate: '2026-08-28', scheduledTime: '09:30', location: 'Room S2-205', status: 'completed', studentConfirmed: true, studentDeclined: false, studentDeclineReason: undefined, createdAt: '2026-08-20' },
-  { id: 'APT004', requestId: 'REQ006', studentId: 'STU006', advisorId: 'ADV002', scheduledDate: '2026-09-15', scheduledTime: '10:00', location: 'Room S2-205', status: 'scheduled', studentConfirmed: false, studentDeclined: false, studentDeclineReason: undefined, createdAt: '2026-09-03' },
+  { id: 'APT004', requestId: 'REQ006', studentId: 'STU006', advisorId: 'ADV002', scheduledDate: '2026-09-15', scheduledTime: '10:00', location: 'Room S2-205', status: 'scheduled', studentConfirmed: true, studentDeclined: false, studentDeclineReason: undefined, createdAt: '2026-09-03' },
   { id: 'APT005', requestId: 'REQ007', studentId: 'STU007', advisorId: 'ADV003', scheduledDate: '2026-09-01', scheduledTime: '14:00', location: 'Room S2-108', status: 'completed', studentConfirmed: true, studentDeclined: false, studentDeclineReason: undefined, createdAt: '2026-08-25' },
 ]
 
