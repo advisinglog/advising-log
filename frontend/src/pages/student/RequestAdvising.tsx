@@ -23,10 +23,8 @@ import {
   AlertTriangle,
   ChevronDown,
   Check,
-  GraduationCap,
   Coins,
   BookOpen,
-  TrendingUp,
   Briefcase,
   HeartHandshake,
   LogOut,
@@ -39,6 +37,7 @@ import {
   FileText,
   Loader2,
   FileCheck2,
+  Globe,
 } from 'lucide-react'
 import { buildAdvisorCalendarUrl, openAdvisorCalendar } from '@/utils/calendarUtils'
 import { getLocalDateString } from '@/utils/dateUtils'
@@ -95,17 +94,32 @@ export default function RequestAdvising() {
     }
   }
 
-  function getCategoryIcon(cat: AdvisingCategory | '') {
+  function getCategoryIcon(cat: AdvisingCategory | string | '', isSelected: boolean = false) {
+    const iconClass = `h-5 w-5 transition-colors ${isSelected ? 'text-white' : ''}`
     switch (cat) {
-      case 'scholarship_document': return <GraduationCap className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-      case 'financial': return <Coins className="h-5 w-5 text-amber-600 dark:text-amber-400" />
-      case 'registration': return <BookOpen className="h-5 w-5 text-sky-600 dark:text-sky-400" />
-      case 'student_status': return <ShieldCheck className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-      case 'academic_performance': return <TrendingUp className="h-5 w-5 text-rose-600 dark:text-rose-400" />
-      case 'internship_career': return <Briefcase className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
-      case 'personal': return <HeartHandshake className="h-5 w-5 text-pink-600 dark:text-pink-400" />
-      case 'withdrawal_leave': return <LogOut className="h-5 w-5 text-orange-600 dark:text-orange-400" />
-      default: return <Tag className="h-5 w-5 text-slate-400" />
+      case 'scholarship_document':
+      case 'scholarship_aid':
+      case 'financial':
+        return <Coins className={`${iconClass} ${isSelected ? '' : 'text-emerald-600 dark:text-emerald-400'}`} />
+      case 'registration':
+      case 'academic_advising':
+      case 'academic_performance':
+        return <BookOpen className={`${iconClass} ${isSelected ? '' : 'text-sky-600 dark:text-sky-400'}`} />
+      case 'student_status':
+        return <ShieldCheck className={`${iconClass} ${isSelected ? '' : 'text-indigo-600 dark:text-indigo-400'}`} />
+      case 'internship_career':
+      case 'career_internship':
+        return <Briefcase className={`${iconClass} ${isSelected ? '' : 'text-amber-600 dark:text-amber-400'}`} />
+      case 'personal':
+      case 'mental_health':
+        return <HeartHandshake className={`${iconClass} ${isSelected ? '' : 'text-rose-600 dark:text-rose-400'}`} />
+      case 'study_abroad':
+        return <Globe className={`${iconClass} ${isSelected ? '' : 'text-purple-600 dark:text-purple-400'}`} />
+      case 'withdrawal_leave':
+      case 'graduation_exit':
+        return <LogOut className={`${iconClass} ${isSelected ? '' : 'text-orange-600 dark:text-orange-400'}`} />
+      default:
+        return <Tag className={`${iconClass} ${isSelected ? '' : 'text-sky-600 dark:text-sky-400'}`} />
     }
   }
 
@@ -552,16 +566,18 @@ export default function RequestAdvising() {
                             setSubCategory('')
                           }
                         }}
-                        className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex items-start gap-3 relative select-none ${
+                        className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex items-center gap-3 relative select-none group ${
                           isSelected
-                            ? 'border-sky-500 bg-sky-50/70 dark:bg-sky-950/40 shadow-xs ring-2 ring-sky-500/20'
-                            : 'border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-sky-300 dark:hover:border-slate-700 hover:bg-slate-50/50'
+                            ? 'border-sky-500 bg-sky-50/80 dark:bg-sky-950/50 shadow-xs ring-2 ring-sky-500/20'
+                            : 'border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-sky-400 dark:hover:border-sky-500/50 hover:bg-slate-50/80 dark:hover:bg-slate-800/80 shadow-2xs hover:shadow-xs'
                         }`}
                       >
-                        <div className={`h-9 w-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${
-                          isSelected ? 'bg-sky-500 text-white shadow-2xs' : 'bg-slate-100 dark:bg-slate-800'
+                        <div className={`h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all ${
+                          isSelected
+                            ? 'bg-sky-500 text-white shadow-xs'
+                            : 'bg-slate-100 dark:bg-slate-800 group-hover:bg-sky-100/90 dark:group-hover:bg-slate-700/90 shadow-2xs'
                         }`}>
-                          {getCategoryIcon(c.value)}
+                          {getCategoryIcon(c.value, isSelected)}
                         </div>
                         <div className="min-w-0 flex-1 pr-2">
                           <p className={`text-xs sm:text-sm font-semibold ${isSelected ? 'text-sky-900 dark:text-sky-200' : 'text-slate-800 dark:text-slate-200'}`}>
@@ -576,7 +592,7 @@ export default function RequestAdvising() {
                           </p>
                         </div>
                         {isSelected && (
-                          <div className="h-5 w-5 rounded-full bg-sky-500 text-white flex items-center justify-center flex-shrink-0">
+                          <div className="h-5 w-5 rounded-full bg-sky-500 text-white flex items-center justify-center flex-shrink-0 self-center">
                             <Check className="h-3 w-3" />
                           </div>
                         )}
