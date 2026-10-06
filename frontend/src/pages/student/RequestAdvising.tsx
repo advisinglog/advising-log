@@ -2,7 +2,7 @@
 // Student — Request Advising Form (3-Step Interactive Wizard)
 // ============================================================
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { useStore } from '@/data/mock-store'
@@ -38,6 +38,7 @@ import {
   Loader2,
   FileCheck2,
   Globe,
+  Search,
 } from 'lucide-react'
 import { buildAdvisorCalendarUrl, openAdvisorCalendar } from '@/utils/calendarUtils'
 import { getLocalDateString } from '@/utils/dateUtils'
@@ -78,9 +79,23 @@ export default function RequestAdvising() {
   const [showCalendarModal, setShowCalendarModal] = useState(false)
   const [calendarTab, setCalendarTab] = useState<'google' | 'system'>('google')
   const [selectedAdvisorId, setSelectedAdvisorId] = useState<string>('')
+  const [isAdvisorDropdownOpen, setIsAdvisorDropdownOpen] = useState(false)
+  const [advisorSearch, setAdvisorSearch] = useState('')
+  const advisorDropdownRef = useRef<HTMLDivElement>(null)
   const [showExitReasonDropdown, setShowExitReasonDropdown] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  useEffect(() => {
+    if (!isAdvisorDropdownOpen) return
+    const handleClickOutside = (e: MouseEvent) => {
+      if (advisorDropdownRef.current && !advisorDropdownRef.current.contains(e.target as Node)) {
+        setIsAdvisorDropdownOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [isAdvisorDropdownOpen])
 
   function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -500,57 +515,195 @@ export default function RequestAdvising() {
               </div>
             )}
 
-            {/* Advisor Card */}
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 p-4 sm:p-5 shadow-xs space-y-3">
-              <label htmlFor="advisor-select" className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                <User className="h-4 w-4 text-sky-600 dark:text-sky-400" />
-                {t('อาจารย์ที่ปรึกษาผู้รับคำร้อง', 'Assigned Faculty Advisor')} <span className="text-rose-500">*</span>
-              </label>
+            {/* Custom Interactive Advisor Selection Card */}
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 p-4 sm:p-5 shadow-xs space-y-3.5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <label className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                  <User className="h-4 w-4 text-sky-600 dark:text-sky-400" />
+                  <span>{t('อาจารย์ที่ปรึกษาผู้รับคำร้อง', 'Faculty Advisor')}</span>
+                  <span className="text-rose-500">*</span>
+                </label>
+                {selectedAdvisorId && assignedAdvisor && selectedAdvisorId !== assignedAdvisor.id && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedAdvisorId('')
+                      setIsAdvisorDropdownOpen(false)
+                    }}
+                    className="text-xs text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 font-semibold cursor-pointer underline decoration-dotted self-start sm:self-auto"
+                  >
+                    {t('↩ คืนค่าเป็นอาจารย์ที่ปรึกษาประจำตัว', '↩ Reset to Assigned')}
+                  </button>
+                )}
+              </div>
 
-              {advisor ? (
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-xl border border-slate-200/90 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/60">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-xl bg-sky-100 dark:bg-sky-950 text-sky-600 dark:text-sky-400 flex items-center justify-center font-bold flex-shrink-0">
-                      <User className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                        <span>{advisor.name}</span>
-                        {isAssignedAdvisor && (
-                          <span className="text-[10px] font-normal text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.2 rounded border border-emerald-200/80 dark:border-emerald-800">
-                            {t('อาจารย์ที่ปรึกษาประจำตัว', 'Assigned Advisor')}
-                          </span>
+              {/* Main Interactive Custom Advisor Card / Selector */}
+              <div ref={advisorDropdownRef} className="relative">
+                {advisor ? (
+                  <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/60 p-3.5 transition-all hover:border-sky-300 dark:hover:border-sky-700/60 shadow-2xs">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      {/* Left: Advisor Profile Info */}
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-sky-500 to-sky-700 text-white flex items-center justify-center font-bold text-sm shadow-xs flex-shrink-0">
+                          {advisor.name.split(' ').map(n => n[0]).slice(0, 2).join('') || <User className="h-5 w-5" />}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate">
+                              {advisor.name}
+                            </p>
+                            {isAssignedAdvisor ? (
+                              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800/60">
+                                <CheckCircle2 className="h-3 w-3 text-emerald-500" />
+                                {t('อาจารย์ที่ปรึกษาประจำตัว', 'Assigned Advisor')}
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/80 px-2 py-0.5 rounded-full border border-sky-200 dark:border-sky-800/60">
+                                {t('อาจารย์ประจำสาขา', 'Faculty Advisor')}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+                            {advisor.email || advisor.department || 'School of Applied Digital Technology (ADT)'}
+                            {advisor.code ? ` · ${advisor.code}` : ''}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Right: Actions (Change Advisor + Calendar) */}
+                      <div className="flex items-center gap-2 flex-shrink-0 self-start sm:self-auto">
+                        <button
+                          type="button"
+                          onClick={() => setIsAdvisorDropdownOpen(prev => !prev)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold transition-all cursor-pointer shadow-2xs"
+                        >
+                          <span>{t('สลับอาจารย์', 'Switch Advisor')}</span>
+                          <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${isAdvisorDropdownOpen ? 'rotate-180 text-sky-500' : 'text-slate-400'}`} />
+                        </button>
+
+                        {advisor.email && (
+                          <button
+                            type="button"
+                            onClick={() => setShowCalendarModal(true)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-sky-200/90 dark:border-sky-800/80 bg-sky-50 dark:bg-sky-950/60 hover:bg-sky-100 dark:hover:bg-sky-900/80 text-sky-700 dark:text-sky-300 text-xs font-semibold transition-all shadow-2xs cursor-pointer active:scale-[0.98]"
+                            title={t('เปิดดูตารางเวลาว่างและคิวนัดหมาย', 'View schedule and busy slots')}
+                          >
+                            <Calendar className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400" />
+                            <span>{t('ดูตารางว่าง', 'Calendar')}</span>
+                          </button>
                         )}
-                      </p>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                        {advisor.department || 'School of Applied Digital Technology (ADT)'}
-                        {advisor.code ? ` · ${advisor.code}` : ''}
-                      </p>
+                      </div>
                     </div>
                   </div>
-
-                  {advisor.email && (
+                ) : (
+                  <div className="p-4 rounded-xl border border-amber-200 dark:border-amber-900/60 bg-amber-50/60 dark:bg-amber-950/30 text-xs text-amber-800 dark:text-amber-200 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4 text-amber-600 flex-shrink-0" />
+                      <span>{t('ยังไม่ได้เลือกอาจารย์ที่ปรึกษา', 'No advisor currently selected.')}</span>
+                    </div>
                     <button
                       type="button"
-                      onClick={() => setShowCalendarModal(true)}
-                      className="inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl border border-sky-200/90 dark:border-sky-800/80 bg-white dark:bg-slate-900 hover:bg-sky-50 dark:hover:bg-sky-950 text-sky-700 dark:text-sky-300 text-xs font-semibold transition-all shadow-2xs whitespace-nowrap cursor-pointer hover:border-sky-300 dark:hover:border-sky-700 active:scale-[0.98] flex-shrink-0"
+                      onClick={() => setIsAdvisorDropdownOpen(prev => !prev)}
+                      className="px-3 py-1 rounded-lg bg-amber-600 text-white font-semibold text-xs cursor-pointer"
                     >
-                      <Calendar className="h-4 w-4 text-sky-600 dark:text-sky-400" />
-                      <span>{t('ดูตารางเวลาว่างอาจารย์', 'View Advisor Calendar')}</span>
+                      {t('เลือกอาจารย์', 'Select Advisor')}
                     </button>
-                  )}
-                </div>
-              ) : (
-                <div className="p-3.5 rounded-xl border border-amber-200 dark:border-amber-900/60 bg-amber-50/60 dark:bg-amber-950/30 text-xs text-amber-800 dark:text-amber-200 flex items-center gap-2">
-                  <AlertTriangle className="h-4 w-4 text-amber-600 flex-shrink-0" />
-                  <span>
-                    {t(
-                      'ยังไม่มีการจัดสรรอาจารย์ที่ปรึกษาในระบบ กรุณาติดต่อสำนักวิชาเพื่อดำเนินการจัดสรรอาจารย์ที่ปรึกษา',
-                      'No assigned advisor found in system roster. Please contact the department coordinator.'
-                    )}
-                  </span>
-                </div>
-              )}
+                  </div>
+                )}
+
+                {/* Floating Custom Dropdown Menu */}
+                {isAdvisorDropdownOpen && (
+                  <div className="absolute top-full left-0 right-0 mt-2 z-30 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden animate-[fadeIn_0.15s_ease-out]">
+                    <div className="p-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/90">
+                      <div className="relative">
+                        <Search className="h-3.5 w-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                        <input
+                          type="text"
+                          value={advisorSearch}
+                          onChange={e => setAdvisorSearch(e.target.value)}
+                          placeholder={t('ค้นหาชื่อหรือสาขาวิชาอาจารย์...', 'Search advisor by name or department...')}
+                          className="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/30"
+                          autoFocus
+                        />
+                      </div>
+                    </div>
+
+                    <div className="max-h-64 overflow-y-auto p-1.5 space-y-1 divide-y divide-slate-100 dark:divide-slate-800/60">
+                      {/* Assigned Advisor Pin Item */}
+                      {assignedAdvisor && (!advisorSearch || assignedAdvisor.name.toLowerCase().includes(advisorSearch.toLowerCase())) && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedAdvisorId(assignedAdvisor.id)
+                            setIsAdvisorDropdownOpen(false)
+                            setAdvisorSearch('')
+                          }}
+                          className={`w-full flex items-center justify-between p-2.5 rounded-xl text-left text-xs transition-all cursor-pointer ${
+                            advisor?.id === assignedAdvisor.id
+                              ? 'bg-sky-50/80 dark:bg-sky-950/60 text-sky-900 dark:text-sky-100 border border-sky-200/80 dark:border-sky-800/60'
+                              : 'hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="h-8 w-8 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 flex items-center justify-center font-bold text-xs flex-shrink-0">
+                              <User className="h-4 w-4" />
+                            </div>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="font-bold text-slate-900 dark:text-slate-100 truncate">{assignedAdvisor.name}</span>
+                                <span className="text-[9px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950 px-1.5 py-0.2 rounded border border-emerald-200 dark:border-emerald-800">
+                                  {t('อาจารย์ที่ปรึกษาประจำตัว', 'Assigned Advisor')}
+                                </span>
+                              </div>
+                              <p className="text-[11px] text-slate-400 truncate mt-0.5">{assignedAdvisor.department || assignedAdvisor.email}</p>
+                            </div>
+                          </div>
+                          {advisor?.id === assignedAdvisor.id && <Check className="h-4 w-4 text-sky-600 dark:text-sky-400 flex-shrink-0 ml-2" />}
+                        </button>
+                      )}
+
+                      {/* Other Faculty Advisors */}
+                      {availableAdvisors
+                        .filter(u => u.id !== assignedAdvisor?.id)
+                        .filter(u => {
+                          if (!advisorSearch.trim()) return true
+                          const q = advisorSearch.toLowerCase()
+                          return u.name.toLowerCase().includes(q) || (u.department && u.department.toLowerCase().includes(q)) || (u.email && u.email.toLowerCase().includes(q))
+                        })
+                        .map(u => {
+                          const isSelected = advisor?.id === u.id
+                          return (
+                            <button
+                              key={u.id}
+                              type="button"
+                              onClick={() => {
+                                setSelectedAdvisorId(u.id)
+                                setIsAdvisorDropdownOpen(false)
+                                setAdvisorSearch('')
+                              }}
+                              className={`w-full flex items-center justify-between p-2.5 rounded-xl text-left text-xs transition-all cursor-pointer ${
+                                isSelected
+                                  ? 'bg-sky-50/80 dark:bg-sky-950/60 text-sky-900 dark:text-sky-100 border border-sky-200/80 dark:border-sky-800/60'
+                                  : 'hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                <div className="h-8 w-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center font-bold text-xs flex-shrink-0">
+                                  <User className="h-4 w-4" />
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="font-bold text-slate-900 dark:text-slate-100 truncate">{u.name}</p>
+                                  <p className="text-[11px] text-slate-400 truncate mt-0.5">{u.department || u.email}</p>
+                                </div>
+                              </div>
+                              {isSelected && <Check className="h-4 w-4 text-sky-600 dark:text-sky-400 flex-shrink-0 ml-2" />}
+                            </button>
+                          )
+                        })}
+                    </div>
+                  </div>
+                )}
+              </div>
 
               {/* Hidden native select for accessibility & automation testing */}
               <select

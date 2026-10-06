@@ -1684,21 +1684,26 @@ const categorySchema = z.object({
 })
 
 app.get('/api/categories', async (c) => {
-  const database = db(c)
-  if (!database) {
+  try {
+    const database = db(c)
+    if (!database) {
+      return c.json({ success: true, categories: [] })
+    }
+    const cats = await database.select().from(schema.advisingCategoryConfigs).all()
+    const formatted = cats.map(cat => ({
+      id: cat.id,
+      value: cat.value,
+      label: cat.labelEn || cat.labelTh || cat.value,
+      labelTh: cat.labelTh,
+      labelEn: cat.labelEn,
+      subCategories: typeof cat.subCategories === 'string' ? JSON.parse(cat.subCategories || '[]') : (cat.subCategories || []),
+      isActive: cat.isActive,
+    }))
+    return c.json({ success: true, categories: formatted })
+  } catch (err) {
+    console.error('Failed to get categories from D1:', err)
     return c.json({ success: true, categories: [] })
   }
-  const cats = await database.select().from(schema.advisingCategoryConfigs).all()
-  const formatted = cats.map(cat => ({
-    id: cat.id,
-    value: cat.value,
-    label: cat.labelEn || cat.labelTh || cat.value,
-    labelTh: cat.labelTh,
-    labelEn: cat.labelEn,
-    subCategories: typeof cat.subCategories === 'string' ? JSON.parse(cat.subCategories || '[]') : (cat.subCategories || []),
-    isActive: cat.isActive,
-  }))
-  return c.json({ success: true, categories: formatted })
 })
 
 app.post('/api/categories', async (c) => {

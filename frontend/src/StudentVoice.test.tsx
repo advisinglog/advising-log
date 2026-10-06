@@ -350,7 +350,7 @@ describe('Student Voice Feature', () => {
     renderWithProviders(<RequestAdvising />, { route: '/student/request' })
 
     // Select general category e.g. Academic Performance
-    const categorySelect = screen.getByRole('combobox')
+    const categorySelect = screen.getByRole('combobox', { name: /หมวดหมู่คำปรึกษา|advising category/i })
     act(() => {
       fireEvent.change(categorySelect, { target: { value: 'academic_performance' } })
     })
