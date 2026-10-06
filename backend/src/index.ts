@@ -759,6 +759,23 @@ app.post('/api/appointments', async (c) => {
   if (!database) return c.json({ error: 'Database unavailable' }, 503)
 
   const body = await c.req.json()
+
+  // Time Slot Collision Check: prevent scheduling duplicate appointments for the same advisor at the same date and time
+  if (body.advisorId && body.scheduledDate && body.scheduledTime) {
+    const existing = await database.select().from(schema.appointments).where(
+      and(
+        eq(schema.appointments.advisorId, body.advisorId),
+        eq(schema.appointments.scheduledDate, body.scheduledDate),
+        eq(schema.appointments.scheduledTime, body.scheduledTime),
+        eq(schema.appointments.status, 'scheduled'),
+      )
+    ).get()
+
+    if (existing && (!body.id || existing.id !== body.id)) {
+      return c.json({ error: 'Time slot collision: The advisor already has an appointment scheduled at this time.', collision: true }, 409)
+    }
+  }
+
   const newApt = {
     id: body.id || `APT${Date.now()}`,
     requestId: body.requestId,

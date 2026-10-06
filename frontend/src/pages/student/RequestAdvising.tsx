@@ -194,6 +194,10 @@ export default function RequestAdvising() {
     ? advisorAppointments.filter(a => a.scheduledDate === preferredDate)
     : []
 
+  const isCurrentTimeSlotTaken = Boolean(
+    preferredDate && preferredTime && sameDateAppointments.some(a => a.scheduledTime === preferredTime && a.status === 'scheduled')
+  )
+
   const selectedCategoryConfig = store.categoryConfigs.find(c => c.value === category)
   const subCategories = selectedCategoryConfig?.subCategories || []
 
@@ -243,6 +247,25 @@ export default function RequestAdvising() {
       addToast('error', t('กรุณาเลือกเวลา', 'Time Required'), t('กรุณาระบุเวลาที่ต้องการเข้าพบ', 'Please specify a preferred meeting time.'))
       return false
     }
+    if (preferredDate === todayStr) {
+      const now = new Date()
+      const currentHours = String(now.getHours()).padStart(2, '0')
+      const currentMinutes = String(now.getMinutes()).padStart(2, '0')
+      const currentTimeStr = `${currentHours}:${currentMinutes}`
+      if (preferredTime < currentTimeStr) {
+        addToast('error', t('เวลาไม่ถูกต้อง', 'Invalid Time'), t('ไม่สามารถเลือกเวลาที่ผ่านมาแล้วในวันนี้ได้', 'Cannot select a past time for today.'))
+        return false
+      }
+    }
+    const isSlotTaken = sameDateAppointments.some(a => a.scheduledTime === preferredTime && a.status === 'scheduled')
+    if (isSlotTaken) {
+      addToast(
+        'error',
+        t('ช่วงเวลานี้มีนัดหมายแล้ว', 'Time Slot Collision'),
+        t(`อาจารย์มีนัดหมายในเวลา ${preferredTime} วันที่ ${preferredDate} แล้ว กรุณาเลือกช่วงเวลาอื่น`, `Advisor already has an appointment scheduled at ${preferredTime} on ${preferredDate}. Please select another time.`)
+      )
+      return false
+    }
     return true
   }
 
@@ -260,6 +283,31 @@ export default function RequestAdvising() {
         'error',
         t('วันที่ไม่ถูกต้อง', 'Invalid Date'),
         t('ไม่สามารถเลือกวันที่ในอดีตได้ กรุณาเลือกวันปัจจุบันหรือวันถัดไป', 'Cannot select a past date. Please choose today or a future date.')
+      )
+      return
+    }
+
+    if (preferredDate === todayStr) {
+      const now = new Date()
+      const currentHours = String(now.getHours()).padStart(2, '0')
+      const currentMinutes = String(now.getMinutes()).padStart(2, '0')
+      const currentTimeStr = `${currentHours}:${currentMinutes}`
+      if (preferredTime < currentTimeStr) {
+        addToast(
+          'error',
+          t('เวลาไม่ถูกต้อง', 'Invalid Time'),
+          t('ไม่สามารถเลือกเวลาที่ผ่านมาแล้วในวันนี้ได้', 'Cannot select a past time for today.')
+        )
+        return
+      }
+    }
+
+    const isSlotTaken = sameDateAppointments.some(a => a.scheduledTime === preferredTime && a.status === 'scheduled')
+    if (isSlotTaken) {
+      addToast(
+        'error',
+        t('ช่วงเวลานี้มีนัดหมายแล้ว', 'Time Slot Collision'),
+        t(`อาจารย์มีนัดหมายในเวลา ${preferredTime} วันที่ ${preferredDate} แล้ว กรุณาเลือกช่วงเวลาอื่น`, `Advisor already has an appointment scheduled at ${preferredTime} on ${preferredDate}. Please select another time.`)
       )
       return
     }
@@ -1081,8 +1129,18 @@ export default function RequestAdvising() {
                       type="time"
                       value={preferredTime}
                       onChange={e => setPreferredTime(e.target.value)}
-                      className="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200/90 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-colors shadow-xs"
+                      className={`w-full px-3.5 py-2.5 text-xs sm:text-sm border rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 transition-colors shadow-xs ${
+                        isCurrentTimeSlotTaken
+                          ? 'border-rose-400 dark:border-rose-600 focus:ring-rose-500/20 focus:border-rose-500'
+                          : 'border-slate-200/90 dark:border-slate-800 focus:ring-sky-500/20 focus:border-sky-500'
+                      }`}
                     />
+                    {isCurrentTimeSlotTaken && (
+                      <p className="text-[11px] text-rose-500 dark:text-rose-400 mt-1 font-semibold flex items-center gap-1">
+                        <AlertTriangle className="h-3 w-3" />
+                        {t('ช่วงเวลานี้มีนัดหมายแล้ว กรุณาเลือกเวลาอื่น', 'This slot is already booked. Please choose another time.')}
+                      </p>
+                    )}
                   </div>
                 </div>
 

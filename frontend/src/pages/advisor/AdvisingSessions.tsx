@@ -10,7 +10,7 @@ import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { PageHeader, Tabs, DataTable, Button, Modal, DocumentViewerModal, SearchInput, type DocumentViewerTarget } from '@/components/ui'
 import type { AdvisingRequest } from '@/types'
-import { Calendar, Eye, FileText, Sparkles, Building2, Video, CheckCircle2, MapPin, Link2, ClipboardList } from 'lucide-react'
+import { Calendar, Eye, FileText, Sparkles, Building2, Video, CheckCircle2, MapPin, Link2, ClipboardList, AlertTriangle } from 'lucide-react'
 import { isAdvisorMatch } from '@/utils/advisorUtils'
 import { openGoogleCalendarEvent } from '@/utils/calendarUtils'
 
@@ -88,6 +88,17 @@ export default function AdvisingSessions() {
     })
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
 
+  const isAdvisorSlotCollided = Boolean(
+    currentUser && schedDate && schedTime &&
+    store.appointments.some(
+      a => isAdvisorMatch(a.advisorId, currentUser, store.users) &&
+           a.scheduledDate === schedDate &&
+           a.scheduledTime === schedTime &&
+           a.status === 'scheduled' &&
+           a.requestId !== selectedReq?.id
+    )
+  )
+
   function getAttachments(request: AdvisingRequest): DocumentViewerTarget[] {
     const student = store.users.find(u => u.id === request.studentId)
     return (Array.isArray(request.attachments) ? request.attachments : []).map((attachment, index) => {
@@ -150,6 +161,40 @@ export default function AdvisingSessions() {
         meetingMode === 'in_person'
           ? t('กรุณาระบุห้องพักอาจารย์หรือสถานที่เข้าพบ', 'Please specify the room number or meeting location.')
           : t('กรุณาระบุลิงก์ห้องประชุมออนไลน์ เช่น Google Meet หรือ Zoom', 'Please specify the virtual meeting link (e.g. Google Meet or Zoom).')
+      )
+      return
+    }
+
+    const todayStr = new Date().toISOString().split('T')[0]
+    if (schedDate < todayStr) {
+      addToast('error', t('วันที่ไม่ถูกต้อง', 'Invalid Date'), t('ไม่สามารถเลือกวันที่ในอดีตได้', 'Cannot select a past date.'))
+      return
+    }
+
+    if (schedDate === todayStr) {
+      const now = new Date()
+      const currentHours = String(now.getHours()).padStart(2, '0')
+      const currentMinutes = String(now.getMinutes()).padStart(2, '0')
+      const currentTimeStr = `${currentHours}:${currentMinutes}`
+      if (schedTime < currentTimeStr) {
+        addToast('error', t('เวลาไม่ถูกต้อง', 'Invalid Time'), t('ไม่สามารถเลือกเวลาที่ผ่านมาแล้วในวันนี้ได้', 'Cannot select a past time for today.'))
+        return
+      }
+    }
+
+    const isAdvisorSlotCollided = store.appointments.some(
+      a => isAdvisorMatch(a.advisorId, currentUser, store.users) &&
+           a.scheduledDate === schedDate &&
+           a.scheduledTime === schedTime &&
+           a.status === 'scheduled' &&
+           a.requestId !== selectedReq.id
+    )
+
+    if (isAdvisorSlotCollided) {
+      addToast(
+        'error',
+        t('ช่วงเวลานี้มีนัดหมายแล้ว', 'Time Slot Collision'),
+        t('ท่านมีนัดหมายอื่นในช่วงเวลาและวันดังกล่าวแล้ว กรุณาปรับเปลี่ยนวันหรือเวลา', 'You already have another appointment scheduled at this time. Please choose a different slot.')
       )
       return
     }
@@ -445,9 +490,50 @@ export default function AdvisingSessions() {
               <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400 bg-white/80 dark:bg-slate-900/80 px-2.5 py-1.5 rounded-lg border border-emerald-200/60 dark:border-emerald-900/40">
                 <Calendar className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
                 <span>{t('วัน-เวลาที่นักศึกษาขอเข้าพบ:', 'Requested Slot:')}</span>
-                <span className="font-bold">{schedDate} · {schedTime}</span>
+                <span className="font-bold">{selectedReq.preferredDate} · {selectedReq.preferredTime}</span>
               </div>
             </div>
+
+            {/* Scheduled Date & Time Pickers */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">
+                  {t('วันที่นัดหมาย', 'Scheduled Date')} *
+                </label>
+                <input
+                  type="date"
+                  value={schedDate}
+                  min={new Date().toISOString().split('T')[0]}
+                  onChange={e => setSchedDate(e.target.value)}
+                  className="w-full px-3 py-2 text-xs sm:text-sm border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">
+                  {t('เวลานัดหมาย', 'Scheduled Time')} *
+                </label>
+                <input
+                  type="time"
+                  value={schedTime}
+                  onChange={e => setSchedTime(e.target.value)}
+                  className={`w-full px-3 py-2 text-xs sm:text-sm border rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 ${
+                    isAdvisorSlotCollided
+                      ? 'border-rose-400 dark:border-rose-600 focus:ring-rose-500/20 focus:border-rose-500'
+                      : 'border-slate-200 dark:border-slate-700 focus:ring-sky-500/20 focus:border-sky-500'
+                  }`}
+                />
+              </div>
+            </div>
+
+            {isAdvisorSlotCollided && (
+              <div className="p-3 rounded-xl text-xs flex items-start gap-2 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 text-rose-800 dark:text-rose-300">
+                <AlertTriangle className="h-4 w-4 text-rose-600 dark:text-rose-400 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-bold">{t('ช่วงเวลานี้มีนัดหมายอื่นแล้ว', 'Time Slot Collision')}</p>
+                  <p className="text-[11px] mt-0.5">{t('ท่านมีนัดหมายอื่นที่ยืนยันแล้วในวันและเวลานี้ กรุณาปรับเปลี่ยนเวลาเข้าพบ', 'You already have another confirmed appointment at this time. Please adjust the slot.')}</p>
+                </div>
+              </div>
+            )}
 
             {/* Meeting Mode Selector (In-person vs Online) */}
             <div>
