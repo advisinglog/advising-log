@@ -595,7 +595,7 @@ export default function RequestAdvising() {
                 {store.categoryConfigs.filter(c => c.isActive !== false).length > 0 ? (
                   store.categoryConfigs.filter(c => c.isActive !== false).map(c => {
                     const isSelected = category === c.value
-                    const catLabel = getCategoryLabel(c.value) !== c.value ? getCategoryLabel(c.value) : (('label' in c && c.label) ? c.label : c.value)
+                    const catLabel = getCategoryLabel(c.value)
                     return (
                       <div
                         key={c.value}
@@ -668,7 +668,7 @@ export default function RequestAdvising() {
               >
                 <option value="">{t('-- กรุณาเลือกหมวดหมู่ --', 'Select a category')}</option>
                 {store.categoryConfigs.filter(c => c.isActive !== false).map(c => {
-                  const catLabel = getCategoryLabel(c.value) !== c.value ? getCategoryLabel(c.value) : (('label' in c && c.label) ? c.label : c.value)
+                  const catLabel = getCategoryLabel(c.value)
                   return (
                     <option key={c.value} value={c.value}>{catLabel}</option>
                   )

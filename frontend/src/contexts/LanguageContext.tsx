@@ -8,6 +8,27 @@ import { ADVISING_CATEGORIES, REFERRAL_DESTINATIONS, EXIT_REASON_CODES, EARLY_WA
 
 export type Language = 'th' | 'en'
 
+const CATEGORY_LABELS: Record<string, { labelTh: string; labelEn: string }> = {
+  academic_advising: { labelTh: 'การวางแผนการเรียนและคำแนะนำทางวิชาการ', labelEn: 'Academic Advising & Course Planning' },
+  academic_performance: { labelTh: 'ผลการเรียน / GPA / ภาวะวิทยาทัณฑ์', labelEn: 'Academic Performance / GPA / Probation' },
+  career_internship: { labelTh: 'การแนะแนวอาชีพและการฝึกงาน', labelEn: 'Career & Internship Guidance' },
+  internship_career: { labelTh: 'ฝึกงาน / สหกิจศึกษา / อาชีพ', labelEn: 'Internship / Co-op / Career' },
+  mental_health: { labelTh: 'การดูแลสุขภาวะและสุขภาพจิต', labelEn: 'Mental Health & Well-being Support' },
+  scholarship_aid: { labelTh: 'ทุนการศึกษาและความช่วยเหลือทางการเงิน', labelEn: 'Scholarship & Financial Aid' },
+  scholarship_document: { labelTh: 'ทุนการศึกษา / ลงนามเอกสาร', labelEn: 'Scholarship / Document Signing' },
+  study_abroad: { labelTh: 'การศึกษาต่อต่างประเทศและนักศึกษาแลกเปลี่ยน', labelEn: 'Study Abroad & Student Exchange' },
+  research_project: { labelTh: 'โครงงานปริญญานิพนธ์และการวิจัย', labelEn: 'Senior Project & Research Mentorship' },
+  registration: { labelTh: 'การลงทะเบียนเรียนและแผนการเรียน', labelEn: 'Course Registration & Enrollment' },
+  course_enrollment: { labelTh: 'การลงทะเบียนเรียนและแผนการเรียน', labelEn: 'Course Enrollment & Study Plan' },
+  student_status: { labelTh: 'สถานภาพนักศึกษา', labelEn: 'Student Status' },
+  financial: { labelTh: 'ปัญหาทางการเงิน / ค่าธรรมเนียม', labelEn: 'Financial Issues' },
+  scholarship_financial: { labelTh: 'ทุนการศึกษาและภาระค่าใช้จ่าย', labelEn: 'Scholarships & Financial Support' },
+  personal: { labelTh: 'ปัญหาส่วนตัว / การปรับตัว', labelEn: 'Personal Issues' },
+  wellbeing_adjustment: { labelTh: 'การปรับตัวและสุขภาวะในการใช้ชีวิต', labelEn: 'Adjustment & Student Well-being' },
+  withdrawal_leave: { labelTh: 'การลาพักการศึกษาหรือลาออก', labelEn: 'Withdrawal & Leave of Absence' },
+  other: { labelTh: 'เรื่องอื่น ๆ', labelEn: 'Other Inquiries' },
+}
+
 export const ADVISING_SUBCATEGORIES: Record<string, { labelTh: string; labelEn: string }> = {
   // Database category configuration keys
   'gpa_improvement': { labelTh: 'การพัฒนาผลการเรียน', labelEn: 'GPA Improvement' },
@@ -48,6 +69,28 @@ export const ADVISING_SUBCATEGORIES: Record<string, { labelTh: string; labelEn: 
   'การส่งต่อผู้เชี่ยวชาญด้านจิตวิทยา': { labelTh: 'การส่งต่อผู้เชี่ยวชาญด้านจิตวิทยา', labelEn: 'Mental Health Referral' },
   'ความกังวลด้านการเรียน': { labelTh: 'ความกังวลด้านการเรียน', labelEn: 'Academic Anxiety' },
   'การสนับสนุนจากเพื่อน': { labelTh: 'การสนับสนุนจากเพื่อน', labelEn: 'Peer Support' },
+  'Resume & Portfolio Review': { labelTh: 'ตรวจเรซูเม่และพอร์ตโฟลิโอ', labelEn: 'Resume & Portfolio Review' },
+  'Internship Placement': { labelTh: 'การจัดหาสถานที่ฝึกงาน', labelEn: 'Internship Placement' },
+  'Job Search Strategy': { labelTh: 'กลยุทธ์การหางาน', labelEn: 'Job Search Strategy' },
+  'Personal Counseling Referral': { labelTh: 'การส่งต่อผู้เชี่ยวชาญด้านจิตวิทยา', labelEn: 'Personal Counseling Referral' },
+  'Tuition Fee Waiver': { labelTh: 'ทุนยกเว้นค่าเล่าเรียน', labelEn: 'Tuition Fee Waiver' },
+  'Emergency Financial Grant': { labelTh: 'ทุนช่วยเหลือฉุกเฉิน', labelEn: 'Emergency Financial Grant' },
+  'External Foundation Scholarship': { labelTh: 'ทุนมูลนิธิภายนอก', labelEn: 'External Foundation Scholarship' },
+  'Work-Study Program': { labelTh: 'โครงการทำงานพิเศษในมหาวิทยาลัย', labelEn: 'Work-Study Program' },
+  'Partner University Exchange': { labelTh: 'โครงการแลกเปลี่ยนมหาวิทยาลัยคู่สัญญา', labelEn: 'Partner University Exchange' },
+  'Credit Transfer Inquiry': { labelTh: 'การเทียบโอนหน่วยกิต', labelEn: 'Credit Transfer Inquiry' },
+  'Scholarship for Exchange': { labelTh: 'ทุนโครงการแลกเปลี่ยน', labelEn: 'Scholarship for Exchange' },
+  'Visa & Documentation': { labelTh: 'วีซ่าและเอกสารเดินทาง', labelEn: 'Visa & Documentation' },
+  'Thesis Topic Selection': { labelTh: 'การเลือกหัวข้อปริญญานิพนธ์', labelEn: 'Thesis Topic Selection' },
+  'Advisor Matching': { labelTh: 'การจับคู่อาจารย์ที่ปรึกษาวิจัย', labelEn: 'Advisor Matching' },
+  'Lab Equipment Access': { labelTh: 'การเข้าใช้ห้องปฏิบัติการ', labelEn: 'Lab Equipment Access' },
+  'Research Publication': { labelTh: 'การตีพิมพ์เผยแพร่ผลงานวิจัย', labelEn: 'Research Publication' },
+  'Temporary Leave of Absence': { labelTh: 'การลาพักการศึกษาชั่วคราว', labelEn: 'Temporary Leave of Absence' },
+  'Academic Restart': { labelTh: 'การขอเริ่มแผนการเรียนใหม่', labelEn: 'Academic Restart' },
+  'Add/Drop Course Petition': { labelTh: 'คำร้องขอเพิ่ม/ถอนรายวิชา', labelEn: 'Add/Drop Course Petition' },
+  'Section Change Request': { labelTh: 'คำร้องขอย้ายกลุ่มเรียน', labelEn: 'Section Change Request' },
+  'Registration Hold Resolution': { labelTh: 'การปลดล็อกเงื่อนไขการลงทะเบียน', labelEn: 'Registration Hold Resolution' },
+  'Credit Overload Permit': { labelTh: 'การขออนุมัติลงทะเบียนเกินหน่วยกิต', labelEn: 'Credit Overload Permit' },
 
   // ทุนการศึกษา / ลงนามเอกสาร (Scholarship / Document Signing)
   'Scholarship Renewal': { labelTh: 'ต่อสัญญา / รายงานตัวรับทุนการศึกษา', labelEn: 'Scholarship Renewal' },
@@ -148,22 +191,13 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       : 'Semester 1 / Academic Year 2026'
   }
 
-  const PRESET_CATEGORY_LABELS: Record<string, { labelTh: string; labelEn: string }> = {
-    academic_advising: { labelTh: 'การวางแผนการเรียนและคำแนะนำทางวิชาการ', labelEn: 'Academic Advising & Course Planning' },
-    career_internship: { labelTh: 'การแนะแนวอาชีพและการฝึกงาน', labelEn: 'Career & Internship Guidance' },
-    mental_health: { labelTh: 'การดูแลสุขภาวะและสุขภาพจิต', labelEn: 'Mental Health & Well-being Support' },
-    scholarship_aid: { labelTh: 'ทุนการศึกษาและความช่วยเหลือทางการเงิน', labelEn: 'Scholarship & Financial Aid' },
-    study_abroad: { labelTh: 'การศึกษาต่อต่างประเทศและนักศึกษาแลกเปลี่ยน', labelEn: 'Study Abroad & Student Exchange' },
-    research_project: { labelTh: 'โครงงานปริญญานิพนธ์และการวิจัย', labelEn: 'Senior Project & Research Mentorship' },
-  }
-
   function getCategoryLabel(value: string): string {
     if (!value) return ''
+    const canonical = CATEGORY_LABELS[value]
+    if (canonical) return language === 'th' ? canonical.labelTh : canonical.labelEn
     const item = ADVISING_CATEGORIES.find(c => c.value === value)
     if (item) return language === 'th' ? item.labelTh : item.labelEn
-    const preset = PRESET_CATEGORY_LABELS[value]
-    if (preset) return language === 'th' ? preset.labelTh : preset.labelEn
-    return value
+    return value.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
   }
 
   function getSubCategoryLabel(value: string): string {
@@ -185,7 +219,12 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       return language === 'th' ? item.labelTh : item.labelEn
     }
     // Also support finding by labelTh if value was already stored in Thai
-    const foundByTh = Object.values(ADVISING_SUBCATEGORIES).find(entry => entry.labelTh === value || entry.labelTh === displayValue)
+    const normalizedValue = displayValue.trim().toLowerCase()
+    const foundByTh = Object.values(ADVISING_SUBCATEGORIES).find(entry =>
+      entry.labelTh === value ||
+      entry.labelTh === displayValue ||
+      entry.labelEn.toLowerCase() === normalizedValue
+    )
     if (foundByTh) {
       return language === 'th' ? foundByTh.labelTh : foundByTh.labelEn
     }
