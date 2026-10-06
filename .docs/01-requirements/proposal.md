@@ -16,6 +16,6 @@ Based on interviews with our target users, we identified the following core pain
 ## 3. Proposed Solution & Core Value
 We propose **AdvisingLog**, a web application with a clean and minimal UI to reduce cognitive load, featuring:
 * **SSO Login:** Secure authentication strictly via MFU Mail to verify identity.
-* **Smart Form & Tagging:** A concise advising record form designed to capture only brief topics and advice. It includes a category tagging system and Google Drive integration for file attachments to minimize server load.
+* **Smart Form & Tagging:** A concise advising record form designed to capture only brief topics and advice. It includes a category tagging system and Cloudinary integration for secure file attachments (authenticated/private URLs) to minimize server load.
 * **Auto Follow-up & Smart Routing:** Automated date reminders for case outcome updates, alongside auto-suggested "Additional Support" contact points (e.g., Student Affairs, Counselling) based on the specific problem tags selected.
 * **AUN-QA Ready Dashboard:** Automatically transforms consultation logs into statistical reports, featuring strict role-based access control (RBAC) that protects sensitive case details based on the user's role.
