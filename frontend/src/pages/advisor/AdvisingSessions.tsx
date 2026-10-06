@@ -89,10 +89,31 @@ export default function AdvisingSessions() {
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
 
   function getAttachments(request: AdvisingRequest): DocumentViewerTarget[] {
+    const student = store.users.find(u => u.id === request.studentId)
     return (Array.isArray(request.attachments) ? request.attachments : []).map((attachment, index) => {
-      const value = attachment as unknown
+      let value = attachment as unknown
+      if (typeof value === 'string' && value.startsWith('{')) {
+        try {
+          value = JSON.parse(value)
+        } catch {}
+      }
+
       if (typeof value === 'string') {
-        return { id: `${request.id}-attachment-${index}`, fileName: value, title: value }
+        const matchedDoc = store.documents.find(
+          d => (d.studentId === request.studentId || (student?.code && d.studentId.toUpperCase() === student.code.toUpperCase())) &&
+               (d.fileName === value || d.documentName === value)
+        )
+        return {
+          id: matchedDoc?.id || `${request.id}-attachment-${index}`,
+          fileName: matchedDoc?.fileName || value,
+          title: matchedDoc?.documentName || value,
+          fileUrl: matchedDoc?.fileUrl,
+          cloudinaryPublicId: matchedDoc?.cloudinaryPublicId,
+          signatureMethod: matchedDoc?.signatureMethod,
+          studentName: student?.name,
+          studentCode: student?.code,
+          uploadedAt: matchedDoc?.uploadedAt,
+        }
       }
 
       const file = value as Record<string, unknown>
@@ -104,6 +125,10 @@ export default function AdvisingSessions() {
         fileUrl: typeof file.fileUrl === 'string' ? file.fileUrl : typeof file.url === 'string' ? file.url : typeof file.secureUrl === 'string' ? file.secureUrl : undefined,
         cloudinaryPublicId: typeof file.cloudinaryPublicId === 'string' ? file.cloudinaryPublicId : typeof file.publicId === 'string' ? file.publicId : undefined,
         fileType: typeof file.fileType === 'string' ? file.fileType : undefined,
+        signatureMethod: file.signatureMethod as any,
+        studentName: student?.name,
+        studentCode: student?.code,
+        uploadedAt: typeof file.uploadedAt === 'string' ? file.uploadedAt : undefined,
       }
     })
   }

@@ -4,7 +4,8 @@ import { useLanguage } from '@/contexts/LanguageContext'
 import { useToast } from '@/contexts/ToastContext'
 import { PageHeader, DataTable, StatusBadge, Button, SearchInput, Modal } from '@/components/ui'
 import type { DocumentType } from '@/types'
-import { FileText, PenTool, Fingerprint, Plus, Edit2, Trash2, CheckCircle2, Sparkles, FileCheck, ArrowRightLeft, Clock, GraduationCap, AlertCircle } from 'lucide-react'
+import { FileText, PenTool, Fingerprint, Plus, Edit2, Trash2, CheckCircle2, Sparkles, FileCheck, ArrowRightLeft, Clock, GraduationCap, AlertCircle, Upload, Loader2, X, FileDown } from 'lucide-react'
+import { uploadFileToCloudinary } from '@/services/cloudinaryService'
 
 // Pre-built University Document Templates with clean separate Thai & English
 const PRESET_DOCUMENTS = [
@@ -72,6 +73,14 @@ const PRESET_DOCUMENTS = [
     descEn: 'Transfer request between majors or academic schools.',
     descTh: 'คำร้องขอย้ายหลักสูตรหรือสำนักวิชา',
   },
+  {
+    nameEn: 'Supporting Evidence / Medical Note',
+    nameTh: 'เอกสารหลักฐานประกอบทั่วไป / ใบรับรองแพทย์',
+    signatureMethod: 'none' as const,
+    icon: <FileText className="h-4 w-4 text-slate-500" />,
+    descEn: 'General attachments or medical certificates requiring no formal signature.',
+    descTh: 'เอกสารแนบประกอบทั่วไป เช่น ใบรับรองแพทย์ หรือสลิปชำระเงินที่ไม่ต้องลงนาม',
+  },
 ]
 
 export default function DocumentTypes() {
@@ -84,7 +93,11 @@ export default function DocumentTypes() {
   const [showModal, setShowModal] = useState(false)
   const [editingDocType, setEditingDocType] = useState<DocumentType | null>(null)
   const [formName, setFormName] = useState('')
-  const [formSignatureMethod, setFormSignatureMethod] = useState<'wet_signature' | 'e_signature'>('e_signature')
+  const [formSignatureMethod, setFormSignatureMethod] = useState<'wet_signature' | 'e_signature' | 'none'>('e_signature')
+  const [formTemplateFileUrl, setFormTemplateFileUrl] = useState('')
+  const [formTemplateFileName, setFormTemplateFileName] = useState('')
+  const [formTemplatePublicId, setFormTemplatePublicId] = useState('')
+  const [isUploadingTemplate, setIsUploadingTemplate] = useState(false)
   const [formIsActive, setFormIsActive] = useState(true)
 
   // Delete State
@@ -139,6 +152,9 @@ export default function DocumentTypes() {
     setEditingDocType(null)
     setFormName('')
     setFormSignatureMethod('e_signature')
+    setFormTemplateFileUrl('')
+    setFormTemplateFileName('')
+    setFormTemplatePublicId('')
     setFormIsActive(true)
     setShowModal(true)
   }
@@ -146,9 +162,29 @@ export default function DocumentTypes() {
   function openEditModal(d: DocumentType) {
     setEditingDocType(d)
     setFormName(getLocalizedDocName(d.name))
-    setFormSignatureMethod(d.signatureMethod)
+    setFormSignatureMethod(d.signatureMethod || 'wet_signature')
+    setFormTemplateFileUrl(d.templateFileUrl || '')
+    setFormTemplateFileName(d.templateFileName || '')
+    setFormTemplatePublicId(d.templatePublicId || '')
     setFormIsActive(d.isActive)
     setShowModal(true)
+  }
+
+  async function handleTemplateFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setIsUploadingTemplate(true)
+    try {
+      const res = await uploadFileToCloudinary(file, { folder: 'blank_templates' })
+      setFormTemplateFileUrl(res.secureUrl || '')
+      setFormTemplateFileName(res.originalFilename || file.name)
+      setFormTemplatePublicId(res.publicId || '')
+      addToast('success', t('อัปโหลดแบบฟอร์มสำเร็จ', 'Template Uploaded'), file.name)
+    } catch (err: any) {
+      addToast('error', t('อัปโหลดแบบฟอร์มไม่สำเร็จ', 'Upload Failed'), err.message || 'Error uploading template')
+    } finally {
+      setIsUploadingTemplate(false)
+    }
   }
 
   function handleSave() {
@@ -162,6 +198,9 @@ export default function DocumentTypes() {
       store.updateDocumentType(editingDocType.id, {
         name: cleanName,
         signatureMethod: formSignatureMethod,
+        templateFileUrl: formTemplateFileUrl || undefined,
+        templateFileName: formTemplateFileName || undefined,
+        templatePublicId: formTemplatePublicId || undefined,
         isActive: formIsActive,
       })
       addToast('success', t('บันทึกสำเร็จ', 'Updated Successfully'), t('แก้ไขประเภทเอกสารเรียบร้อยแล้ว', 'Document type has been updated.'))
@@ -169,6 +208,9 @@ export default function DocumentTypes() {
       store.addDocumentType({
         name: cleanName,
         signatureMethod: formSignatureMethod,
+        templateFileUrl: formTemplateFileUrl || undefined,
+        templateFileName: formTemplateFileName || undefined,
+        templatePublicId: formTemplatePublicId || undefined,
         isActive: formIsActive,
       })
       addToast('success', t('เพิ่มเอกสารสำเร็จ', 'Document Type Added'), t('สร้างประเภทเอกสารใหม่เรียบร้อยแล้ว', 'New document type has been created.'))
@@ -205,26 +247,41 @@ export default function DocumentTypes() {
           <button
             type="button"
             onClick={() => store.updateDocumentType(d.id, { signatureMethod: 'wet_signature' })}
-            className={`px-3 py-1.5 transition-colors cursor-pointer flex items-center gap-1.5 ${
+            className={`px-2.5 py-1.5 transition-colors cursor-pointer flex items-center gap-1 ${
               d.signatureMethod === 'wet_signature'
                 ? 'bg-amber-500 text-white'
                 : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-amber-50 dark:hover:bg-amber-950/30 hover:text-amber-700 dark:hover:text-amber-400'
             }`}
+            title={t('ลายเซ็นจริงบนกระดาษ', 'Physical Signature')}
           >
             <PenTool className="h-3 w-3" />
-            <span>{t('ลายมือจริง', 'Wet Signature')}</span>
+            <span>{t('ลายเซ็นจริง', 'Physical')}</span>
           </button>
           <button
             type="button"
             onClick={() => store.updateDocumentType(d.id, { signatureMethod: 'e_signature' })}
-            className={`px-3 py-1.5 border-l border-slate-200 dark:border-slate-700 transition-colors cursor-pointer flex items-center gap-1.5 ${
+            className={`px-2.5 py-1.5 border-l border-slate-200 dark:border-slate-700 transition-colors cursor-pointer flex items-center gap-1 ${
               d.signatureMethod === 'e_signature'
                 ? 'bg-sky-600 text-white'
                 : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-sky-50 dark:hover:bg-sky-950/30 hover:text-sky-700 dark:hover:text-sky-400'
             }`}
+            title={t('ลายเซ็นอิเล็กทรอนิกส์', 'E-Signature')}
           >
             <Fingerprint className="h-3 w-3" />
-            <span>{t('ลายเซ็นดิจิทัล', 'E-Signature')}</span>
+            <span>{t('ดิจิทัล', 'E-Sign')}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => store.updateDocumentType(d.id, { signatureMethod: 'none' })}
+            className={`px-2.5 py-1.5 border-l border-slate-200 dark:border-slate-700 transition-colors cursor-pointer flex items-center gap-1 ${
+              d.signatureMethod === 'none'
+                ? 'bg-slate-600 text-white'
+                : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-slate-200'
+            }`}
+            title={t('ไม่ต้องลงลายมือชื่อ', 'No Signature Required')}
+          >
+            <FileText className="h-3 w-3" />
+            <span>{t('ไม่ต้องลงนาม', 'None')}</span>
           </button>
         </div>
       ),
@@ -400,25 +457,7 @@ export default function DocumentTypes() {
             <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-2">
               {t('รูปแบบการลงนามที่ต้องการ', 'Required Validation / Signature Method')}
             </label>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => setFormSignatureMethod('e_signature')}
-                className={`p-3 rounded-xl border text-left flex flex-col gap-1 transition-all cursor-pointer ${
-                  formSignatureMethod === 'e_signature'
-                    ? 'border-sky-500 bg-sky-50 dark:bg-sky-950/50 text-sky-900 dark:text-sky-100 ring-2 ring-sky-500/20'
-                    : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-300'
-                }`}
-              >
-                <div className="flex items-center gap-1.5 font-bold text-xs">
-                  <Fingerprint className="h-4 w-4 text-sky-600 dark:text-sky-400" />
-                  <span>{t('ลายเซ็นดิจิทัล', 'E-Signature')}</span>
-                </div>
-                <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-normal">
-                  {t('ลงชื่อออนไลน์ผ่านระบบ AdvisingLog', 'Direct in-app cryptographic signature')}
-                </p>
-              </button>
-
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
               <button
                 type="button"
                 onClick={() => setFormSignatureMethod('wet_signature')}
@@ -430,13 +469,119 @@ export default function DocumentTypes() {
               >
                 <div className="flex items-center gap-1.5 font-bold text-xs">
                   <PenTool className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                  <span>{t('ลายมือจริง', 'Wet Signature')}</span>
+                  <span>{t('ลายเซ็นจริงบนกระดาษ', 'Physical Signature')}</span>
                 </div>
                 <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-normal">
-                  {t('พิมพ์เอกสารออกมาเซ็นด้วยปากกา', 'Physical printout and signed with pen')}
+                  {t('พิมพ์และเซ็นด้วยปากกา', 'Print out and sign with a pen')}
+                </p>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setFormSignatureMethod('e_signature')}
+                className={`p-3 rounded-xl border text-left flex flex-col gap-1 transition-all cursor-pointer ${
+                  formSignatureMethod === 'e_signature'
+                    ? 'border-sky-500 bg-sky-50 dark:bg-sky-950/50 text-sky-900 dark:text-sky-100 ring-2 ring-sky-500/20'
+                    : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-300'
+                }`}
+              >
+                <div className="flex items-center gap-1.5 font-bold text-xs">
+                  <Fingerprint className="h-4 w-4 text-sky-600 dark:text-sky-400" />
+                  <span>{t('ลายเซ็นอิเล็กทรอนิกส์', 'E-Signature')}</span>
+                </div>
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-normal">
+                  {t('ลงชื่อออนไลน์ / ดิจิทัล', 'Sign online or digital PDF')}
+                </p>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setFormSignatureMethod('none')}
+                className={`p-3 rounded-xl border text-left flex flex-col gap-1 transition-all cursor-pointer ${
+                  formSignatureMethod === 'none'
+                    ? 'border-slate-600 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 ring-2 ring-slate-500/20'
+                    : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-300'
+                }`}
+              >
+                <div className="flex items-center gap-1.5 font-bold text-xs">
+                  <FileText className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+                  <span>{t('ไม่ต้องลงลายมือชื่อ', 'No Signature')}</span>
+                </div>
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-normal">
+                  {t('เอกสารแนบประกอบทั่วไป', 'General attachment only')}
                 </p>
               </button>
             </div>
+          </div>
+
+          {/* Official Blank Form Upload for Students */}
+          <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-200">
+                {t('ไฟล์แบบฟอร์มเปล่าทางการ (PDF/DOC) (ไม่บังคับ)', 'Official Blank Form Template (PDF/DOC) (Optional)')}
+              </label>
+              <span className="text-[10px] text-slate-400 font-normal">
+                {t('ไม่บังคับ', 'Optional')}
+              </span>
+            </div>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">
+              {t(
+                'หากอัปโหลดไฟล์ต้นฉบับ นักศึกษาจะสามารถดาวน์โหลดไฟล์นี้ได้โดยตรงในหน้านัดพบอาจารย์ หากไม่อัปโหลด ระบบจะสร้างแบบฟอร์มมาตรฐานให้อัตโนมัติ',
+                'If attached, students will download this official file in the Meet Advisor page. If left blank, the system auto-generates a standard template.'
+              )}
+            </p>
+
+            <input
+              type="file"
+              id="templateFileInput"
+              onChange={handleTemplateFileUpload}
+              accept=".pdf,.doc,.docx,.png,.jpg"
+              className="hidden"
+            />
+
+            {formTemplateFileName ? (
+              <div className="flex items-center justify-between p-2.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                <div className="flex items-center gap-2 min-w-0 pr-2">
+                  <FileDown className="h-4 w-4 text-sky-600 dark:text-sky-400 flex-shrink-0" />
+                  <span className="text-xs font-medium text-slate-800 dark:text-slate-200 truncate">
+                    {formTemplateFileName}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFormTemplateFileUrl('')
+                    setFormTemplateFileName('')
+                    setFormTemplatePublicId('')
+                  }}
+                  className="text-slate-400 hover:text-rose-500 transition-colors p-1 cursor-pointer"
+                  title={t('ลบไฟล์แบบฟอร์ม', 'Remove template file')}
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            ) : (
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                disabled={isUploadingTemplate}
+                onClick={() => document.getElementById('templateFileInput')?.click()}
+                className="gap-1.5"
+              >
+                {isUploadingTemplate ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    <span>{t('กำลังอัปโหลด...', 'Uploading...')}</span>
+                  </>
+                ) : (
+                  <>
+                    <Upload className="h-3.5 w-3.5" />
+                    <span>{t('อัปโหลดไฟล์แบบฟอร์มต้นฉบับ', 'Upload Official Template File')}</span>
+                  </>
+                )}
+              </Button>
+            )}
           </div>
 
           <div className="flex items-center gap-2 pt-1">

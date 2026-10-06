@@ -6,7 +6,7 @@ import { useLanguage } from '@/contexts/LanguageContext'
 import { PageHeader, DataTable, StatusBadge, Button, Modal, ConfirmDialog, DocumentViewerModal, type DocumentViewerTarget } from '@/components/ui'
 import type { StudentDocument } from '@/types'
 import { FileText, Upload, AlertCircle, FileUp, X, ShieldCheck, Trash2, PenTool, Fingerprint, FileCheck, Eye, Download, Loader2, ChevronDown, Check } from 'lucide-react'
-import { uploadFileToCloudinary, getCloudinaryViewUrl } from '@/services/cloudinaryService'
+import { uploadFileToCloudinary, getCloudinaryViewUrl, getCloudinaryDownloadUrl } from '@/services/cloudinaryService'
 import { getLocalDateString } from '@/utils/dateUtils'
 
 export default function Documents() {
@@ -239,27 +239,29 @@ export default function Documents() {
 
     setDownloadingDocId(doc.id)
     try {
-      const response = await fetch(url)
-      if (!response.ok) throw new Error('Fetch failed')
-      const blob = await response.blob()
-      const blobUrl = window.URL.createObjectURL(blob)
-      const link = window.document.createElement('a')
-      link.href = blobUrl
-      link.download = doc.fileName || `${doc.documentName}.pdf`
-      window.document.body.appendChild(link)
-      link.click()
-      window.document.body.removeChild(link)
-      window.URL.revokeObjectURL(blobUrl)
-      addToast('success', t('ดาวน์โหลดสำเร็จ', 'Download Complete'), `${doc.fileName || doc.documentName}`)
+      if (url.includes('res.cloudinary.com')) {
+        // Let Cloudinary handle the download with proper Content-Disposition headers
+        const downloadUrl = getCloudinaryDownloadUrl(url)
+        window.open(downloadUrl, '_blank')
+        addToast('success', t('ดาวน์โหลดสำเร็จ', 'Download Started'), `${doc.fileName || doc.documentName}`)
+      } else {
+        // Non-Cloudinary: use blob download
+        const response = await fetch(url)
+        if (!response.ok) throw new Error('Fetch failed')
+        const blob = await response.blob()
+        const blobUrl = window.URL.createObjectURL(blob)
+        const link = window.document.createElement('a')
+        link.href = blobUrl
+        link.download = doc.fileName || `${doc.documentName}.pdf`
+        window.document.body.appendChild(link)
+        link.click()
+        window.document.body.removeChild(link)
+        window.URL.revokeObjectURL(blobUrl)
+        addToast('success', t('ดาวน์โหลดสำเร็จ', 'Download Complete'), `${doc.fileName || doc.documentName}`)
+      }
     } catch (_err) {
-      // Fallback direct link
-      const link = window.document.createElement('a')
-      link.href = url
-      link.target = '_blank'
-      link.download = doc.fileName || doc.documentName
-      window.document.body.appendChild(link)
-      link.click()
-      window.document.body.removeChild(link)
+      // Fallback: open directly
+      window.open(url, '_blank')
     } finally {
       setDownloadingDocId(null)
     }
@@ -296,7 +298,7 @@ export default function Documents() {
           {d.signatureMethod === 'wet_signature' ? (
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/60">
               <PenTool className="h-3 w-3 text-amber-600 dark:text-amber-400" />
-              <span>{t('ลายมือจริง (Wet Signature)', 'Wet Signature')}</span>
+              <span>{t('ลายเซ็นจริงบนกระดาษ (Physical Signature)', 'Physical Signature')}</span>
             </span>
           ) : (
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border border-sky-200/80 dark:border-sky-800/60">
@@ -515,7 +517,7 @@ export default function Documents() {
                               ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300'
                               : 'bg-sky-100 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300'
                           }`}>
-                            {dt.signatureMethod === 'wet_signature' ? t('ลายมือจริง', 'Wet') : t('ดิจิทัล', 'E-Sign')}
+                            {dt.signatureMethod === 'wet_signature' ? t('ลายเซ็นจริง', 'Physical') : t('ดิจิทัล', 'E-Sign')}
                           </span>
                         </div>
                         {selectedTypeId === dt.id && (
@@ -559,12 +561,12 @@ export default function Documents() {
                 {selectedDocType.signatureMethod === 'wet_signature' ? (
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-500 text-white shadow-2xs">
                     <PenTool className="h-3 w-3" />
-                    <span>{t('ลายมือจริง (Wet Signature)', 'Wet Signature')}</span>
+                    <span>{t('ลายเซ็นจริงบนกระดาษ', 'Physical Signature')}</span>
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold bg-sky-600 text-white shadow-2xs">
                     <Fingerprint className="h-3 w-3" />
-                    <span>{t('ลายเซ็นดิจิทัล (E-Signature)', 'E-Signature')}</span>
+                    <span>{t('ลายเซ็นอิเล็กทรอนิกส์', 'E-Signature')}</span>
                   </span>
                 )}
               </div>

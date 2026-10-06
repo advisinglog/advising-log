@@ -8,6 +8,7 @@ import {
   FileEdit,
   History,
   ListChecks,
+  FileDown,
   CalendarClock,
   ClipboardList,
   AlertTriangle,
@@ -43,6 +44,7 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
           { to: '/student/request', label: t('นัดพบอาจารย์', 'Meet Advisor'), icon: <FileEdit className="h-4 w-4" /> },
           { to: '/student/history', label: t('ประวัติและนัดหมาย', 'Meetings & History'), icon: <History className="h-4 w-4" /> },
           { to: '/student/followups', label: t('สิ่งที่ต้องทำต่อ', 'Tasks & Next Steps'), icon: <ListChecks className="h-4 w-4" /> },
+          { to: '/student/forms', label: t('ดาวน์โหลดแบบฟอร์ม', 'Download Forms'), icon: <FileDown className="h-4 w-4" /> },
           { to: '/student/voice', label: t('เสียงสะท้อนนักศึกษา', 'Student Feedback'), icon: <MessageSquareHeart className="h-4 w-4" /> },
         ]
       case 'advisor':

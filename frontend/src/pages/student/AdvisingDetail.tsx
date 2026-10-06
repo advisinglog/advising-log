@@ -79,23 +79,43 @@ export default function AdvisingDetail() {
             <div className="mt-4">
               <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-2">{t('เอกสารแนบ', 'Attached Files')}</span>
               <div className="flex flex-wrap gap-2">
-                {request.attachments.map((f, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={() => setPreviewDoc({
-                      id: `${request.id}-attachment-${i}`,
-                      title: f,
-                      fileName: f,
-                      fileUrl: `/uploads/${f}`,
-                    })}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-sky-50 dark:bg-sky-950/60 hover:bg-sky-100 dark:hover:bg-sky-900 border border-sky-200/80 dark:border-sky-800 rounded-lg text-xs font-medium text-sky-800 dark:text-sky-300 shadow-xs transition-colors cursor-pointer"
-                  >
-                    <Paperclip className="h-3 w-3" />
-                    <span>{f}</span>
-                    <Eye className="h-3 w-3 ml-1 text-sky-500" />
-                  </button>
-                ))}
+                {request.attachments.map((item, i) => {
+                  let fileObj: any = {}
+                  let fileName = typeof item === 'string' ? item : ''
+                  if (typeof item === 'string' && item.startsWith('{')) {
+                    try {
+                      fileObj = JSON.parse(item)
+                      fileName = fileObj.fileName || fileName
+                    } catch {}
+                  }
+
+                  const matchedDoc = store.documents.find(
+                    d => (d.fileName === fileName || d.documentName === fileName)
+                  )
+
+                  const previewTarget: DocumentViewerTarget = {
+                    id: matchedDoc?.id || `${request.id}-attachment-${i}`,
+                    title: matchedDoc?.documentName || fileName,
+                    fileName: matchedDoc?.fileName || fileName,
+                    fileUrl: matchedDoc?.fileUrl || fileObj.fileUrl,
+                    cloudinaryPublicId: matchedDoc?.cloudinaryPublicId || fileObj.cloudinaryPublicId,
+                    signatureMethod: matchedDoc?.signatureMethod || fileObj.signatureMethod,
+                    uploadedAt: matchedDoc?.uploadedAt,
+                  }
+
+                  return (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => setPreviewDoc(previewTarget)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-sky-50 dark:bg-sky-950/60 hover:bg-sky-100 dark:hover:bg-sky-900 border border-sky-200/80 dark:border-sky-800 rounded-lg text-xs font-medium text-sky-800 dark:text-sky-300 shadow-xs transition-colors cursor-pointer"
+                    >
+                      <Paperclip className="h-3 w-3" />
+                      <span>{fileName}</span>
+                      <Eye className="h-3 w-3 ml-1 text-sky-500" />
+                    </button>
+                  )
+                })}
               </div>
             </div>
           )}

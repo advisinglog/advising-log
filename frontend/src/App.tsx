@@ -16,7 +16,7 @@ import StudentDashboard from '@/pages/student/StudentDashboard'
 import RequestAdvising from '@/pages/student/RequestAdvising'
 import AdvisingHistory from '@/pages/student/AdvisingHistory'
 import AdvisingDetail from '@/pages/student/AdvisingDetail'
-import Documents from '@/pages/student/Documents'
+import StudentForms from '@/pages/student/StudentForms'
 import FollowUps from '@/pages/student/FollowUps'
 import StudentVoiceSurvey from '@/pages/student/StudentVoiceSurvey'
 
@@ -90,7 +90,8 @@ export default function App() {
                       <Route path="student/request" element={<RequireRole allowedRoles={['student']}><RequestAdvising /></RequireRole>} />
                       <Route path="student/history" element={<RequireRole allowedRoles={['student']}><AdvisingHistory /></RequireRole>} />
                       <Route path="student/history/:id" element={<RequireRole allowedRoles={['student']}><AdvisingDetail /></RequireRole>} />
-                      <Route path="student/documents" element={<RequireRole allowedRoles={['student']}><Documents /></RequireRole>} />
+                      <Route path="student/forms" element={<RequireRole allowedRoles={['student']}><StudentForms /></RequireRole>} />
+                      <Route path="student/documents" element={<Navigate to="/student/forms" replace />} />
                       <Route path="student/followups" element={<RequireRole allowedRoles={['student']}><FollowUps /></RequireRole>} />
                       <Route path="student/exit" element={<Navigate to="/student/request?category=withdrawal_leave" replace />} />
                       <Route path="student/voice" element={<RequireRole allowedRoles={['student']}><StudentVoiceSurvey /></RequireRole>} />

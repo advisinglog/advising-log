@@ -43,6 +43,15 @@ import { buildAdvisorCalendarUrl, openAdvisorCalendar } from '@/utils/calendarUt
 import { getLocalDateString } from '@/utils/dateUtils'
 import { uploadFileToCloudinary } from '@/services/cloudinaryService'
 
+interface UploadedAttachment {
+  file?: File
+  fileName: string
+  fileUrl?: string
+  cloudinaryPublicId?: string
+  format?: string
+  size?: number
+}
+
 export default function RequestAdvising() {
   const { currentUser } = useAuth()
   const store = useStore()
@@ -64,34 +73,42 @@ export default function RequestAdvising() {
   const [details, setDetails] = useState('')
   const [preferredDate, setPreferredDate] = useState('')
   const [preferredTime, setPreferredTime] = useState('')
-  const [attachments, setAttachments] = useState<string[]>([])
+  const [attachments, setAttachments] = useState<UploadedAttachment[]>([])
   const [pdpaConsent, setPdpaConsent] = useState(false)
   const [showCalendarModal, setShowCalendarModal] = useState(false)
   const [calendarTab, setCalendarTab] = useState<'google' | 'system'>('google')
   const [selectedAdvisorId, setSelectedAdvisorId] = useState<string>('')
   const [showExitReasonDropdown, setShowExitReasonDropdown] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [isUploadingFile, setIsUploadingFile] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  async function handleRealFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-    setIsUploadingFile(true)
-    try {
-      const res = await uploadFileToCloudinary(file, {
-        studentCode: currentUser?.code,
-        folder: 'advising_attachments',
-      })
-      const savedName = res.originalFilename || file.name
-      setAttachments(prev => [...prev, savedName])
-      addToast('success', t('แนบไฟล์สำเร็จ', 'File Attached'), savedName)
-    } catch (err: unknown) {
-      const error = err as Error
-      addToast('error', t('ไม่สามารถอัปโหลดไฟล์ได้', 'Upload Failed'), error.message || 'Error uploading file')
-    } finally {
-      setIsUploadingFile(false)
+
+    // 10MB limit check
+    if (file.size > 10 * 1024 * 1024) {
+      addToast('error', t('ขนาดไฟล์เกินกำหนด', 'File Too Large'), t('ไฟล์ต้องมีขนาดไม่เกิน 10MB', 'File size must not exceed 10MB.'))
       if (fileInputRef.current) fileInputRef.current.value = ''
+      return
     }
+
+    // Duplicate check
+    if (attachments.some(a => a.fileName === file.name)) {
+      addToast('warning', t('ไฟล์นี้ถูกแนบแล้ว', 'File Already Selected'), file.name)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      return
+    }
+
+    const newAtt: UploadedAttachment = {
+      file,
+      fileName: file.name,
+      format: file.name.split('.').pop()?.toLowerCase(),
+      size: file.size,
+    }
+    setAttachments(prev => [...prev, newAtt])
+    addToast('info', t('แนบไฟล์แล้ว (จะอัปโหลดเมื่อยืนยันคำร้อง)', 'File Selected'), file.name)
+    if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
   function getCategoryIcon(cat: AdvisingCategory | string | '', isSelected: boolean = false) {
@@ -176,13 +193,6 @@ export default function RequestAdvising() {
       localStorage.getItem(`student_voice_completed_${currentUser.id}`) === 'true'
     ))
 
-  function handleFileSimulate() {
-    const fakeFiles = ['study_plan.pdf', 'grade_transcript.pdf', 'petition_form.pdf']
-    const random = fakeFiles[Math.floor(Math.random() * fakeFiles.length)]
-    setAttachments(prev => [...prev, random])
-    addToast('info', t('แนบไฟล์แล้ว', 'File attached'), `${random}`)
-  }
-
   function validateStep1(): boolean {
     if (!advisor) {
       addToast('error', t('กรุณาเลือกอาจารย์', 'Advisor Required'), t('กรุณาเลือกอาจารย์ที่ปรึกษาเพื่อรับคำร้อง', 'Please select a faculty advisor.'))
@@ -221,7 +231,7 @@ export default function RequestAdvising() {
     return true
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
 
     if (!category || !details || !preferredDate || !preferredTime || !pdpaConsent) {
@@ -266,88 +276,125 @@ export default function RequestAdvising() {
     )
     const effectiveStudentId = studentUser?.id || currentUser!.id
 
-    // 1. Create AdvisingRequest
-    const newRequest = store.addRequest({
-      studentId: effectiveStudentId,
-      advisorId: advisor.id,
-      category: category as AdvisingCategory,
-      subCategory: category === 'withdrawal_leave' ? exitType : (subCategory || undefined),
-      details,
-      preferredDate,
-      preferredTime,
-      attachments,
-      pdpaConsent,
-      status: 'requested',
-    })
+    setIsSubmitting(true)
+    try {
+      // Upload pending local files to Cloudinary on final submit only
+      const processedAttachments: UploadedAttachment[] = []
+      for (const att of attachments) {
+        if (att.file) {
+          try {
+            const res = await uploadFileToCloudinary(att.file, {
+              studentCode: currentUser?.code,
+              folder: 'advising_attachments',
+            })
+            processedAttachments.push({
+              fileName: res.originalFilename || att.fileName,
+              fileUrl: res.secureUrl,
+              cloudinaryPublicId: res.publicId,
+              format: res.format,
+              size: res.bytes,
+            })
+          } catch (err: unknown) {
+            const error = err as Error
+            console.error('Failed to upload file to Cloudinary:', error)
+            processedAttachments.push({
+              fileName: att.fileName,
+              fileUrl: '',
+            })
+          }
+        } else {
+          processedAttachments.push(att)
+        }
+      }
 
-    // Sync attached documents into store.documents for unified document tracking
-    if (attachments.length > 0) {
-      attachments.forEach(fileName => {
-        store.addDocument({
-          studentId: effectiveStudentId,
-          documentName: fileName,
-          fileName,
-          documentTypeId: category === 'scholarship_document' ? 'doc-scholarship' : category === 'withdrawal_leave' ? 'doc-exit' : 'doc-general',
-          status: 'uploaded',
-          signatureMethod: 'e_signature',
-          cloudinaryPublicId: `advising_docs/${currentUser?.code || 'std'}_${fileName.replace(/[^a-zA-Z0-9._-]/g, '_')}`,
-          fileUrl: `/uploads/${fileName}`,
-          uploadedAt: getLocalDateString(),
-        })
-      })
-    }
-
-    // 2. If withdrawal/leave/transfer, also record ExitCase
-    if (category === 'withdrawal_leave') {
-      const newExitCase = store.addExitCase({
+      // 1. Create AdvisingRequest
+      const newRequest = store.addRequest({
         studentId: effectiveStudentId,
         advisorId: advisor.id,
-        exitType,
-        reasonCode: exitReasonCode,
+        category: category as AdvisingCategory,
+        subCategory: category === 'withdrawal_leave' ? exitType : (subCategory || undefined),
         details,
-        dataAnalysisConsent: true,
-        preferredEffectiveDate: preferredDate,
-        status: 'open',
+        preferredDate,
+        preferredTime,
+        attachments: processedAttachments.map(a => JSON.stringify(a)),
+        pdpaConsent,
+        status: 'requested',
+      })
+
+      // Sync attached documents into store.documents for unified document tracking
+      if (processedAttachments.length > 0) {
+        processedAttachments.forEach(att => {
+          store.addDocument({
+            studentId: effectiveStudentId,
+            documentName: att.fileName,
+            fileName: att.fileName,
+            documentTypeId: category === 'scholarship_document' ? 'doc-scholarship' : category === 'withdrawal_leave' ? 'doc-exit' : 'doc-general',
+            status: 'uploaded',
+            signatureMethod: 'e_signature',
+            cloudinaryPublicId: att.cloudinaryPublicId,
+            fileUrl: att.fileUrl,
+            uploadedAt: getLocalDateString(),
+          })
+        })
+      }
+
+      // 2. If withdrawal/leave/transfer, also record ExitCase
+      if (category === 'withdrawal_leave') {
+        const newExitCase = store.addExitCase({
+          studentId: effectiveStudentId,
+          advisorId: advisor.id,
+          exitType,
+          reasonCode: exitReasonCode,
+          details,
+          dataAnalysisConsent: true,
+          preferredEffectiveDate: preferredDate,
+          status: 'open',
+        })
+
+        store.addAuditLog({
+          userId: effectiveStudentId,
+          userName: currentUser!.name,
+          userRole: 'student',
+          action: 'exit_case_created',
+          description: `Created exit case (${exitType}) via advising request`,
+          targetId: newExitCase.id,
+        })
+      }
+
+      const exitTypeLabel = exitType === 'withdrawal'
+        ? t('ขอลาออก', 'Withdrawal')
+        : exitType === 'leave_of_absence'
+        ? t('ลาพักการศึกษา', 'Leave of Absence')
+        : t('ย้ายสาขาวิชา', 'Transfer')
+
+      store.addNotification({
+        userId: advisor.id,
+        type: 'action_required',
+        title: category === 'withdrawal_leave'
+          ? t(`คำร้องขอนัดพบ: ${exitTypeLabel}`, `Meeting Request: ${exitTypeLabel}`)
+          : t('คำร้องขอรับคำปรึกษาใหม่', 'New Advising Request'),
+        message: `${currentUser!.name} (${currentUser!.code}) ${t('ยื่นคำร้อง:', 'submitted a request:')} ${category === 'withdrawal_leave' ? exitTypeLabel : getCategoryLabel(category)}`,
+        relatedId: newRequest.id,
+        isRead: false,
       })
 
       store.addAuditLog({
-        userId: effectiveStudentId,
+        userId: currentUser!.id,
         userName: currentUser!.name,
         userRole: 'student',
-        action: 'exit_case_created',
-        description: `Created exit case (${exitType}) via advising request`,
-        targetId: newExitCase.id,
+        action: 'request_created',
+        description: `Created advising request for ${getCategoryLabel(category)}`,
+        targetId: newRequest.id,
       })
+
+      addToast('success', t('ยื่นคำร้องสำเร็จ', 'Request Submitted'), isAssignedAdvisor ? t('คำร้องของคุณถูกส่งไปยังอาจารย์ที่ปรึกษาเรียบร้อยแล้ว', 'Your advising request has been sent to your advisor.') : t(`คำร้องของคุณถูกส่งไปยัง ${advisor.name} เรียบร้อยแล้ว`, `Your advising request has been sent to ${advisor.name}.`))
+      navigate('/student/history')
+    } catch (err) {
+      console.error(err)
+      addToast('error', t('เกิดข้อผิดพลาด', 'Submission Error'), t('ไม่สามารถส่งคำร้องได้ กรุณาลองใหม่อีกครั้ง', 'Could not submit request. Please try again.'))
+    } finally {
+      setIsSubmitting(false)
     }
-
-    const exitTypeLabel = exitType === 'withdrawal'
-      ? t('ขอลาออก', 'Withdrawal')
-      : exitType === 'leave_of_absence'
-      ? t('ลาพักการศึกษา', 'Leave of Absence')
-      : t('ย้ายสาขาวิชา', 'Transfer')
-
-    store.addNotification({
-      userId: advisor.id,
-      type: 'action_required',
-      title: category === 'withdrawal_leave'
-        ? t(`คำร้องขอนัดพบ: ${exitTypeLabel}`, `Meeting Request: ${exitTypeLabel}`)
-        : t('คำร้องขอรับคำปรึกษาใหม่', 'New Advising Request'),
-      message: `${currentUser!.name} (${currentUser!.code}) ${t('ยื่นคำร้อง:', 'submitted a request:')} ${category === 'withdrawal_leave' ? exitTypeLabel : getCategoryLabel(category)}`,
-      relatedId: newRequest.id,
-      isRead: false,
-    })
-
-    store.addAuditLog({
-      userId: currentUser!.id,
-      userName: currentUser!.name,
-      userRole: 'student',
-      action: 'request_created',
-      description: `Created advising request for ${getCategoryLabel(category)}`,
-      targetId: newRequest.id,
-    })
-
-    addToast('success', t('ยื่นคำร้องสำเร็จ', 'Request Submitted'), isAssignedAdvisor ? t('คำร้องของคุณถูกส่งไปยังอาจารย์ที่ปรึกษาเรียบร้อยแล้ว', 'Your advising request has been sent to your advisor.') : t(`คำร้องของคุณถูกส่งไปยัง ${advisor.name} เรียบร้อยแล้ว`, `Your advising request has been sent to ${advisor.name}.`))
-    navigate('/student/history')
   }
 
   // Active pending follow-ups from earlier sessions for this student
@@ -952,13 +999,37 @@ export default function RequestAdvising() {
                   </div>
                 )}
 
+                {/* Link to Dedicated Forms Download Catalog */}
+                <div className="p-3.5 bg-slate-50/90 dark:bg-slate-900/60 border border-slate-200/90 dark:border-slate-800 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs shadow-2xs">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-sky-600 dark:text-sky-400 flex-shrink-0" />
+                    <span className="text-slate-700 dark:text-slate-300">
+                      {t('ยังไม่มีแบบฟอร์มคำร้อง? ดาวน์โหลดเอกสารฉบับเปล่าได้ที่นี่', 'Need a blank form? Download official university templates here')}
+                    </span>
+                  </div>
+                  <a
+                    href="/student/forms"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 font-semibold text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 hover:underline flex-shrink-0 whitespace-nowrap"
+                  >
+                    <span>{t('ดูแบบฟอร์มทั้งหมด', 'Browse Forms')}</span>
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </a>
+                </div>
+
                 {/* Attached files list */}
                 {attachments.length > 0 && (
                   <div className="flex flex-wrap gap-2 pt-1 pb-1">
                     {attachments.map((f, i) => (
                       <span key={i} className="inline-flex items-center gap-2 px-3 py-1.5 bg-sky-50 dark:bg-sky-950/60 border border-sky-200/80 dark:border-sky-800 rounded-xl text-xs font-medium text-sky-800 dark:text-sky-200 shadow-2xs">
                         <FileText className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400" />
-                        <span className="truncate max-w-[200px]">{f}</span>
+                        <span className="truncate max-w-[200px] font-semibold">{f.fileName}</span>
+                        {f.size && (
+                          <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
+                            ({f.size > 1024 * 1024 ? `${(f.size / (1024 * 1024)).toFixed(1)} MB` : `${Math.round(f.size / 1024)} KB`})
+                          </span>
+                        )}
                         <button
                           type="button"
                           onClick={() => setAttachments(prev => prev.filter((_, idx) => idx !== i))}
@@ -976,7 +1047,7 @@ export default function RequestAdvising() {
                 <input
                   type="file"
                   ref={fileInputRef}
-                  onChange={handleRealFileUpload}
+                  onChange={handleFileSelect}
                   accept=".pdf,.png,.jpg,.jpeg,.webp,.doc,.docx"
                   className="hidden"
                 />
@@ -986,32 +1057,11 @@ export default function RequestAdvising() {
                     type="button"
                     variant="secondary"
                     size="sm"
-                    disabled={isUploadingFile}
                     onClick={() => fileInputRef.current?.click()}
                     className="gap-1.5"
                   >
-                    {isUploadingFile ? (
-                      <>
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        <span>{t('กำลังอัปโหลด...', 'Uploading...')}</span>
-                      </>
-                    ) : (
-                      <>
-                        <Upload className="h-3.5 w-3.5" />
-                        <span>{t('เลือกไฟล์จากเครื่อง', 'Upload File')}</span>
-                      </>
-                    )}
-                  </Button>
-
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleFileSimulate}
-                    className="text-xs text-slate-500 hover:text-slate-700 dark:text-slate-400"
-                  >
-                    <Paperclip className="h-3 w-3 mr-1" />
-                    {t('สุ่มตัวอย่างเอกสาร (Simulation)', 'Use Sample Document')}
+                    <Upload className="h-3.5 w-3.5" />
+                    <span>{t('เลือกไฟล์จากเครื่อง', 'Select File from Device')}</span>
                   </Button>
                 </div>
               </div>
@@ -1117,7 +1167,7 @@ export default function RequestAdvising() {
                     <span>{attachments.length > 0 ? `${attachments.length} ${t('ไฟล์', 'file(s)')}` : t('ไม่มีเอกสารแนบ', 'None')}</span>
                   </p>
                   {attachments.length > 0 && (
-                    <p className="text-[11px] text-slate-500 truncate mt-0.5">{attachments.join(', ')}</p>
+                    <p className="text-[11px] text-slate-500 truncate mt-0.5">{attachments.map(a => a.fileName).join(', ')}</p>
                   )}
                 </div>
               </div>
@@ -1161,11 +1211,20 @@ export default function RequestAdvising() {
               <Button
                 type="submit"
                 variant="primary"
-                disabled={!pdpaConsent || (category === 'withdrawal_leave' && !hasVoiceResponse)}
+                disabled={isSubmitting || !pdpaConsent || (category === 'withdrawal_leave' && !hasVoiceResponse)}
                 className="gap-2 font-bold px-6 py-2.5 shadow-sm"
               >
-                <Check className="h-4 w-4" />
-                <span>{t('ยืนยันนัดพบอาจารย์', 'Confirm Meeting')}</span>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>{t('กำลังส่งคำร้องและอัปโหลดไฟล์...', 'Submitting & Uploading...')}</span>
+                  </>
+                ) : (
+                  <>
+                    <Check className="h-4 w-4" />
+                    <span>{t('ยืนยันนัดพบอาจารย์', 'Confirm Meeting')}</span>
+                  </>
+                )}
               </Button>
             </div>
           </div>

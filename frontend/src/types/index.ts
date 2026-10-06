@@ -137,7 +137,7 @@ export const EARLY_WARNING_TYPES: { value: EarlyWarningType; label: string; labe
 
 export type EarlyWarningSeverity = 'low' | 'medium' | 'high' | 'critical'
 
-export type SignatureMethod = 'wet_signature' | 'e_signature'
+export type SignatureMethod = 'wet_signature' | 'e_signature' | 'none'
 
 export type DocumentStatus = 'required' | 'uploaded' | 'signed' | 'approved' | 'rejected'
 
@@ -298,6 +298,9 @@ export interface DocumentType {
   name: string
   signatureMethod: SignatureMethod
   isActive: boolean
+  templateFileUrl?: string
+  templateFileName?: string
+  templatePublicId?: string
 }
 
 export interface StudentDocument {

@@ -99,7 +99,7 @@ export async function uploadFileToCloudinary(
 }
 
 /**
- * Helper to get a secure view/download URL for a Cloudinary public_id
+ * Helper to get a secure view URL for a Cloudinary public_id
  */
 export function getCloudinaryViewUrl(publicId: string, cloudName?: string): string {
   const cName = cloudName || import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || ''
@@ -108,3 +108,30 @@ export function getCloudinaryViewUrl(publicId: string, cloudName?: string): stri
   }
   return `https://res.cloudinary.com/${cName}/image/upload/${publicId}`
 }
+
+/**
+ * Helper to get a direct attachment download URL for a Cloudinary URL or public_id.
+ * Attaches the fl_attachment transformation so Cloudinary sends the proper
+ * Content-Disposition: attachment; filename="..." header with the original extension.
+ */
+export function getCloudinaryDownloadUrl(urlOrPublicId: string, cloudName?: string): string {
+  if (!urlOrPublicId) return ''
+  let fullUrl = urlOrPublicId
+  if (!fullUrl.startsWith('http') && !fullUrl.startsWith('blob:')) {
+    fullUrl = getCloudinaryViewUrl(urlOrPublicId, cloudName)
+  }
+  if (!fullUrl.includes('res.cloudinary.com')) return fullUrl
+  if (fullUrl.includes('/fl_attachment/')) return fullUrl
+
+  if (fullUrl.includes('/image/upload/')) {
+    return fullUrl.replace('/image/upload/', '/image/upload/fl_attachment/')
+  }
+  if (fullUrl.includes('/raw/upload/')) {
+    return fullUrl.replace('/raw/upload/', '/raw/upload/fl_attachment/')
+  }
+  if (fullUrl.includes('/auto/upload/')) {
+    return fullUrl.replace('/auto/upload/', '/auto/upload/fl_attachment/')
+  }
+  return fullUrl
+}
+

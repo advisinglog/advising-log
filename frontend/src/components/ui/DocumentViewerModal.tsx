@@ -21,6 +21,8 @@ import {
 } from 'lucide-react'
 import { Button } from './index'
 import { useLanguage } from '@/contexts/LanguageContext'
+import type { SignatureMethod } from '@/types'
+import { getCloudinaryDownloadUrl } from '@/services/cloudinaryService'
 
 export interface DocumentViewerTarget {
   id?: string
@@ -32,7 +34,7 @@ export interface DocumentViewerTarget {
   uploadedAt?: string
   studentName?: string
   studentCode?: string
-  signatureMethod?: 'wet_signature' | 'e_signature'
+  signatureMethod?: SignatureMethod
   status?: string
   description?: string
 }
@@ -85,41 +87,58 @@ export function DocumentViewerModal({
   // Detect extension
   const fileName = document.fileName || document.title || 'document'
   const extension = fileName.split('.').pop()?.toLowerCase() || ''
-  const isImage = ['png', 'jpg', 'jpeg', 'webp', 'gif', 'svg'].includes(extension) || resolvedUrl.includes('/image/upload/') && !resolvedUrl.endsWith('.pdf')
+  const isCloudinary = resolvedUrl.includes('res.cloudinary.com')
   const isPdf = extension === 'pdf' || resolvedUrl.endsWith('.pdf') || resolvedUrl.includes('.pdf')
+  const isImage = ['png', 'jpg', 'jpeg', 'webp', 'gif', 'svg'].includes(extension) || (resolvedUrl.includes('/image/upload/') && !isPdf)
+
+  // Cloudinary delivers high-res converted page images with HTTP 200 bypassing raw PDF restrictions
+  const previewImageUrl = isCloudinary && isPdf ? resolvedUrl.replace(/\.pdf$/i, '.jpg') : (isImage ? resolvedUrl : '')
+  const canZoomRotate = Boolean(previewImageUrl || isImage)
 
   // In-app file downloader
   async function handleInAppDownload() {
-    if (!resolvedUrl) return
+    const targetUrl = resolvedUrl || previewImageUrl
+    if (!targetUrl) return
     setIsDownloading(true)
     setDownloadError(null)
 
     try {
-      const response = await fetch(resolvedUrl)
-      if (!response.ok) throw new Error('Failed to fetch file for download')
-      const blob = await response.blob()
-      
-      const blobUrl = window.URL.createObjectURL(blob)
-      const link = window.document.createElement('a')
-      link.href = blobUrl
-      link.download = fileName.includes('.') ? fileName : `${fileName}.${extension || 'pdf'}`
-      window.document.body.appendChild(link)
-      link.click()
-      window.document.body.removeChild(link)
-      window.URL.revokeObjectURL(blobUrl)
-    } catch (_err) {
-      // Fallback for CORS or direct links
-      try {
+      if (isCloudinary) {
+        // ── Cloudinary files: let the CDN handle the download ──
+        // Open the fl_attachment URL directly in a new tab.
+        // Cloudinary sets the correct Content-Disposition: attachment header
+        // with the original filename and extension, so the browser saves it
+        // with the right name and type — no blob MIME-sniffing issues.
+        const downloadUrl = getCloudinaryDownloadUrl(targetUrl)
+        window.open(downloadUrl, '_blank')
+      } else {
+        // ── Non-Cloudinary (local/blob) files: use blob download ──
+        let cleanExt = extension
+        if (!cleanExt || (cleanExt === 'doc' && isPdf)) {
+          cleanExt = isPdf ? 'pdf' : (isImage ? 'jpg' : 'pdf')
+        }
+        let downloadName = fileName
+        if (!downloadName.toLowerCase().endsWith(`.${cleanExt}`)) {
+          downloadName = downloadName.replace(/\.[^/.]+$/, '') + `.${cleanExt}`
+        }
+
+        const response = await fetch(targetUrl)
+        if (!response.ok) throw new Error('Failed to fetch file')
+        const rawBlob = await response.blob()
+        const mimeType = isPdf ? 'application/pdf' : (rawBlob.type || 'application/octet-stream')
+        const typedBlob = new Blob([rawBlob], { type: mimeType })
+        const blobUrl = window.URL.createObjectURL(typedBlob)
         const link = window.document.createElement('a')
-        link.href = resolvedUrl
-        link.target = '_blank'
-        link.download = fileName
+        link.href = blobUrl
+        link.download = downloadName
         window.document.body.appendChild(link)
         link.click()
         window.document.body.removeChild(link)
-      } catch (fallbackErr: any) {
-        setDownloadError(fallbackErr.message || 'Download failed')
+        window.URL.revokeObjectURL(blobUrl)
       }
+    } catch (err) {
+      console.error('Download failed:', err)
+      setDownloadError('Download failed. Please try again.')
     } finally {
       setIsDownloading(false)
     }
@@ -180,7 +199,18 @@ export function DocumentViewerModal({
                 {document.signatureMethod === 'e_signature' && (
                   <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-sky-100 dark:bg-sky-950/80 text-sky-700 dark:text-sky-300">
                     <CheckCircle2 className="h-3 w-3" />
-                    <span>{t('E-Signature', 'E-Signature')}</span>
+                    <span>{t('ลายเซ็นดิจิทัล (E-Sign)', 'E-Signature')}</span>
+                  </span>
+                )}
+                {document.signatureMethod === 'wet_signature' && (
+                  <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300">
+                    <FileCheck className="h-3 w-3" />
+                    <span>{t('ลายเซ็นจริงบนกระดาษ', 'Physical Signature')}</span>
+                  </span>
+                )}
+                {document.signatureMethod === 'none' && (
+                  <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300">
+                    <span>{t('ไม่ต้องลงลายมือชื่อ', 'No Signature Required')}</span>
                   </span>
                 )}
               </div>
@@ -198,7 +228,7 @@ export function DocumentViewerModal({
               size="sm"
               variant="primary"
               onClick={handleInAppDownload}
-              disabled={isDownloading || !resolvedUrl}
+              disabled={isDownloading || (!resolvedUrl && !previewImageUrl)}
               className="flex items-center gap-1.5 text-xs font-semibold shadow-xs"
             >
               {isDownloading ? (
@@ -240,8 +270,8 @@ export function DocumentViewerModal({
           </div>
         </div>
 
-        {/* Sub-toolbar for Image Controls */}
-        {isImage && (
+        {/* Sub-toolbar for Zoom/Rotate Controls */}
+        {canZoomRotate && (
           <div className="flex items-center justify-between px-4 sm:px-6 py-2 bg-slate-100/70 dark:bg-slate-800/60 border-b border-slate-200/60 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-300">
             <div className="flex items-center gap-2">
               <span className="font-medium text-[11px] text-slate-500 dark:text-slate-400">
@@ -252,7 +282,7 @@ export function DocumentViewerModal({
               <button
                 onClick={handleZoomOut}
                 disabled={zoom <= 50}
-                className="p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 disabled:opacity-40 transition-colors"
+                className="p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 disabled:opacity-40 transition-colors cursor-pointer"
                 title={t('ซูมออก', 'Zoom Out')}
               >
                 <ZoomOut className="h-3.5 w-3.5" />
@@ -260,14 +290,14 @@ export function DocumentViewerModal({
               <button
                 onClick={handleZoomIn}
                 disabled={zoom >= 250}
-                className="p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 disabled:opacity-40 transition-colors"
+                className="p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 disabled:opacity-40 transition-colors cursor-pointer"
                 title={t('ซูมเข้า', 'Zoom In')}
               >
                 <ZoomIn className="h-3.5 w-3.5" />
               </button>
               <button
                 onClick={handleRotate}
-                className="p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors"
+                className="p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
                 title={t('หมุนภาพ 90°', 'Rotate 90°')}
               >
                 <RotateCw className="h-3.5 w-3.5" />
@@ -275,7 +305,7 @@ export function DocumentViewerModal({
               {(zoom !== 100 || rotation !== 0) && (
                 <button
                   onClick={handleResetView}
-                  className="text-[10px] font-semibold px-2 py-1 rounded-md bg-white dark:bg-slate-700 hover:bg-slate-200 text-slate-600 dark:text-slate-200 ml-1 transition-colors"
+                  className="text-[10px] font-semibold px-2 py-1 rounded-md bg-white dark:bg-slate-700 hover:bg-slate-200 text-slate-600 dark:text-slate-200 ml-1 transition-colors cursor-pointer"
                 >
                   {t('รีเซ็ต', 'Reset')}
                 </button>
@@ -293,7 +323,7 @@ export function DocumentViewerModal({
             </div>
           )}
 
-          {!resolvedUrl ? (
+          {!resolvedUrl && !previewImageUrl ? (
             <div className="text-center py-12">
               <div className="h-12 w-12 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-600 flex items-center justify-center mx-auto mb-3">
                 <AlertCircle className="h-6 w-6" />
@@ -305,32 +335,32 @@ export function DocumentViewerModal({
                 {t('เอกสารนี้ยังไม่ได้อัปโหลดไฟล์จริง หรือไฟล์ยังไม่ถูกจัดเก็บ', 'No document file has been stored for this entry.')}
               </p>
             </div>
-          ) : isPdf ? (
-            /* PDF Embedded In-App Viewport */
-            <div className="w-full h-full min-h-[500px] rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-inner">
-              <iframe
-                src={`${resolvedUrl}#toolbar=1&navpanes=0`}
-                className="w-full h-full min-h-[500px] border-none"
-                title={document.title || 'PDF Document Viewer'}
-              />
-            </div>
-          ) : isImage ? (
-            /* Image In-App Viewport with Zoom & Rotation */
+          ) : previewImageUrl ? (
+            /* High-Res Image Viewport (Supports Images and Cloudinary PDFs) */
             <div className="w-full h-full flex items-center justify-center overflow-auto p-4 select-none">
               <div
                 style={{
                   transform: `scale(${zoom / 100}) rotate(${rotation}deg)`,
                   transition: 'transform 0.2s cubic-bezier(0.2, 0, 0, 1)',
                 }}
-                className="inline-block shadow-2xl rounded-xl overflow-hidden max-w-full bg-white dark:bg-slate-900"
+                className="inline-block shadow-2xl rounded-xl overflow-hidden max-w-full bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800"
               >
                 <img
-                  src={resolvedUrl}
+                  src={previewImageUrl}
                   alt={fileName}
-                  className="max-h-[70vh] w-auto object-contain rounded-xl"
+                  className="max-h-[72vh] w-auto object-contain rounded-xl"
                   draggable={false}
                 />
               </div>
+            </div>
+          ) : isPdf ? (
+            /* Local/Direct PDF Embedded In-App Viewport */
+            <div className="w-full h-full min-h-[500px] rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-inner">
+              <iframe
+                src={`${resolvedUrl}#toolbar=1&navpanes=0`}
+                className="w-full h-full min-h-[500px] border-none"
+                title={document.title || 'PDF Document Viewer'}
+              />
             </div>
           ) : (
             /* Generic / Office Documents Fallback */

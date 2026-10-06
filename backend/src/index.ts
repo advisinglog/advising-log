@@ -1763,10 +1763,13 @@ app.delete('/api/categories/:id', async (c) => {
 const documentTypeSchema = z.object({
   id: z.string().optional(),
   name: z.string().min(1),
-  signatureMethod: z.enum(['wet_signature', 'e_signature']).optional(),
+  signatureMethod: z.enum(['wet_signature', 'e_signature', 'none']).optional(),
   label: z.string().optional(),
   labelTh: z.string().optional(),
   labelEn: z.string().optional(),
+  templateFileUrl: z.string().optional(),
+  templateFileName: z.string().optional(),
+  templatePublicId: z.string().optional(),
   allowedFormats: z.array(z.string()).default(['PDF', 'JPG', 'PNG']),
   maxSizeMb: z.number().default(10),
   isRequired: z.boolean().default(false),
@@ -1780,21 +1783,30 @@ app.get('/api/document-types', async (c) => {
   }
   const dts = await database.select().from(schema.documentTypeConfigs).all()
   const formatted = dts.map(d => {
-    let sig: 'wet_signature' | 'e_signature' = 'wet_signature'
+    let sig: 'wet_signature' | 'e_signature' | 'none' = 'wet_signature'
+    let templateFileUrl: string | undefined
+    let templateFileName: string | undefined
+    let templatePublicId: string | undefined
     try {
       const parsed = JSON.parse(d.allowedFormats || '[]')
       if (Array.isArray(parsed)) {
         const foundSig = parsed.find((item: string) => typeof item === 'string' && item.startsWith('sig:'))
         if (foundSig) sig = foundSig.replace('sig:', '') as any
+        const foundUrl = parsed.find((item: string) => typeof item === 'string' && item.startsWith('tplUrl:'))
+        if (foundUrl) templateFileUrl = foundUrl.replace('tplUrl:', '')
+        const foundName = parsed.find((item: string) => typeof item === 'string' && item.startsWith('tplName:'))
+        if (foundName) templateFileName = foundName.replace('tplName:', '')
+        const foundPid = parsed.find((item: string) => typeof item === 'string' && item.startsWith('tplPid:'))
+        if (foundPid) templatePublicId = foundPid.replace('tplPid:', '')
       }
     } catch {}
-    if (!sig) {
-      sig = (d.name.toLowerCase().includes('internship') || d.name.toLowerCase().includes('drop') || d.name.toLowerCase().includes('recommendation')) ? 'e_signature' : 'wet_signature'
-    }
     return {
       id: d.id,
       name: d.name,
       signatureMethod: sig,
+      templateFileUrl,
+      templateFileName,
+      templatePublicId,
       labelTh: d.labelTh,
       labelEn: d.labelEn,
       allowedFormats: typeof d.allowedFormats === 'string' ? JSON.parse(d.allowedFormats || '[]') : (d.allowedFormats || []),
@@ -1813,12 +1825,16 @@ app.post('/api/document-types', async (c) => {
     return c.json({ success: false, error: 'Invalid document type data', details: parsed.error.format() }, 400)
   }
   const sig = parsed.data.signatureMethod || 'wet_signature'
+  const extraTags = [`sig:${sig}`]
+  if (body.templateFileUrl) extraTags.push(`tplUrl:${body.templateFileUrl}`)
+  if (body.templateFileName) extraTags.push(`tplName:${body.templateFileName}`)
+  if (body.templatePublicId) extraTags.push(`tplPid:${body.templatePublicId}`)
   const newDt = {
     id: body.id || `DT${Date.now()}`,
     name: parsed.data.name,
     labelTh: parsed.data.labelTh || parsed.data.label || parsed.data.name,
     labelEn: parsed.data.labelEn || parsed.data.label || parsed.data.name,
-    allowedFormats: JSON.stringify(['PDF', `sig:${sig}`]),
+    allowedFormats: JSON.stringify(['PDF', ...extraTags]),
     maxSizeMb: parsed.data.maxSizeMb,
     isRequired: parsed.data.isRequired,
     isActive: parsed.data.isActive,
@@ -1837,6 +1853,9 @@ app.post('/api/document-types', async (c) => {
       id: newDt.id, 
       name: newDt.name, 
       signatureMethod: sig, 
+      templateFileUrl: body.templateFileUrl,
+      templateFileName: body.templateFileName,
+      templatePublicId: body.templatePublicId,
       isActive: newDt.isActive 
     } 
   }, 201)
@@ -1850,8 +1869,13 @@ app.put('/api/document-types/:id', async (c) => {
   if (body.name !== undefined) updates.name = body.name
   if (body.labelTh !== undefined) updates.labelTh = body.labelTh
   if (body.labelEn !== undefined) updates.labelEn = body.labelEn
-  if (body.signatureMethod !== undefined) {
-    updates.allowedFormats = JSON.stringify(['PDF', `sig:${body.signatureMethod}`])
+  if (body.signatureMethod !== undefined || body.templateFileUrl !== undefined) {
+    const sig = body.signatureMethod || 'wet_signature'
+    const extraTags = [`sig:${sig}`]
+    if (body.templateFileUrl) extraTags.push(`tplUrl:${body.templateFileUrl}`)
+    if (body.templateFileName) extraTags.push(`tplName:${body.templateFileName}`)
+    if (body.templatePublicId) extraTags.push(`tplPid:${body.templatePublicId}`)
+    updates.allowedFormats = JSON.stringify(['PDF', ...extraTags])
   }
   if (body.isActive !== undefined) updates.isActive = body.isActive
 
