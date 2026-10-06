@@ -9,6 +9,46 @@ import { ADVISING_CATEGORIES, REFERRAL_DESTINATIONS, EXIT_REASON_CODES, EARLY_WA
 export type Language = 'th' | 'en'
 
 export const ADVISING_SUBCATEGORIES: Record<string, { labelTh: string; labelEn: string }> = {
+  // Database category configuration keys
+  'gpa_improvement': { labelTh: 'การพัฒนาผลการเรียน', labelEn: 'GPA Improvement' },
+  'study_plan': { labelTh: 'การวางแผนการเรียน', labelEn: 'Study Plan' },
+  'probation_support': { labelTh: 'การช่วยเหลือด้านวิทยาทัณฑ์', labelEn: 'Probation Support' },
+  'honors_guidance': { labelTh: 'คำแนะนำเพื่อเกียรตินิยม', labelEn: 'Honors Guidance' },
+  'course_prerequisites': { labelTh: 'วิชาบังคับก่อน', labelEn: 'Course Prerequisites' },
+  'overload_request': { labelTh: 'คำร้องลงทะเบียนเกินหน่วยกิต', labelEn: 'Overload Request' },
+  'schedule_conflict': { labelTh: 'ตารางเรียนทับซ้อน', labelEn: 'Schedule Conflict' },
+  'general_education': { labelTh: 'วิชาศึกษาทั่วไป', labelEn: 'General Education' },
+  'scholarship_renewal': { labelTh: 'การต่ออายุทุนการศึกษา', labelEn: 'Scholarship Renewal' },
+  'emergency_fund': { labelTh: 'ทุนฉุกเฉิน', labelEn: 'Emergency Fund' },
+  'student_loan': { labelTh: 'กองทุนกู้ยืมเพื่อการศึกษา', labelEn: 'Student Loan' },
+  'tuition_installment': { labelTh: 'การผ่อนชำระค่าธรรมเนียมการศึกษา', labelEn: 'Tuition Installment' },
+  'summer_internship': { labelTh: 'การฝึกงานภาคฤดูร้อน', labelEn: 'Summer Internship' },
+  'coop_program': { labelTh: 'โครงการสหกิจศึกษา', labelEn: 'Co-op Program' },
+  'portfolio_review': { labelTh: 'การตรวจสอบแฟ้มสะสมผลงาน', labelEn: 'Portfolio Review' },
+  'industry_mentorship': { labelTh: 'การให้คำปรึกษาจากภาคอุตสาหกรรม', labelEn: 'Industry Mentorship' },
+  'university_life': { labelTh: 'การใช้ชีวิตในมหาวิทยาลัย', labelEn: 'University Life' },
+  'stress_management': { labelTh: 'การจัดการความเครียด', labelEn: 'Stress Management' },
+  'living_support': { labelTh: 'ความช่วยเหลือด้านการใช้ชีวิต', labelEn: 'Living Support' },
+  'peer_relations': { labelTh: 'ความสัมพันธ์กับเพื่อน', labelEn: 'Peer Relations' },
+  'temporary_leave': { labelTh: 'การลาพักการศึกษาชั่วคราว', labelEn: 'Temporary Leave' },
+  'major_transfer': { labelTh: 'การย้ายสาขาวิชา', labelEn: 'Major Transfer' },
+  'university_withdrawal': { labelTh: 'การลาออกจากมหาวิทยาลัย', labelEn: 'University Withdrawal' },
+  'academic_restart': { labelTh: 'การเริ่มต้นการเรียนใหม่', labelEn: 'Academic Restart' },
+  'general_inquiry': { labelTh: 'ข้อสอบถามทั่วไป', labelEn: 'General Inquiry' },
+  'special_request': { labelTh: 'คำร้องพิเศษ', labelEn: 'Special Request' },
+  'การลงทะเบียนรายวิชา': { labelTh: 'การลงทะเบียนรายวิชา', labelEn: 'Course Registration' },
+  'แผนพัฒนาผลการเรียน (GPA)': { labelTh: 'แผนพัฒนาผลการเรียน (GPA)', labelEn: 'GPA Improvement Plan' },
+  'ตรวจสอบการสำเร็จการศึกษา': { labelTh: 'ตรวจสอบการสำเร็จการศึกษา', labelEn: 'Graduation Verification' },
+  'การขอปลดล็อกวิชาบังคับก่อน': { labelTh: 'การขอปลดล็อกวิชาบังคับก่อน', labelEn: 'Prerequisite Override' },
+  'ตรวจเรซูเม่และพอร์ตโฟลิโอ': { labelTh: 'ตรวจเรซูเม่และพอร์ตโฟลิโอ', labelEn: 'Resume & Portfolio Review' },
+  'การจัดหาสถานที่ฝึกงาน': { labelTh: 'การจัดหาสถานที่ฝึกงาน', labelEn: 'Internship Placement' },
+  'กลยุทธ์การหางาน': { labelTh: 'กลยุทธ์การหางาน', labelEn: 'Job Search Strategy' },
+  'การปรึกษาผู้เชี่ยวชาญในสายงาน': { labelTh: 'การปรึกษาผู้เชี่ยวชาญในสายงาน', labelEn: 'Industry Mentorship' },
+  'ความเครียดและหมดไฟ': { labelTh: 'ความเครียดและหมดไฟ', labelEn: 'Stress & Burnout' },
+  'การส่งต่อผู้เชี่ยวชาญด้านจิตวิทยา': { labelTh: 'การส่งต่อผู้เชี่ยวชาญด้านจิตวิทยา', labelEn: 'Mental Health Referral' },
+  'ความกังวลด้านการเรียน': { labelTh: 'ความกังวลด้านการเรียน', labelEn: 'Academic Anxiety' },
+  'การสนับสนุนจากเพื่อน': { labelTh: 'การสนับสนุนจากเพื่อน', labelEn: 'Peer Support' },
+
   // ทุนการศึกษา / ลงนามเอกสาร (Scholarship / Document Signing)
   'Scholarship Renewal': { labelTh: 'ต่อสัญญา / รายงานตัวรับทุนการศึกษา', labelEn: 'Scholarship Renewal' },
   'Recommendation Letter': { labelTh: 'ขอหนังสือรับรอง / จดหมายรับรองจากอาจารย์', labelEn: 'Recommendation Letter' },
@@ -128,12 +168,24 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   function getSubCategoryLabel(value: string): string {
     if (!value) return ''
-    const item = ADVISING_SUBCATEGORIES[value]
+    // Some older local records were decoded as UTF-8 text interpreted as
+    // Latin-1. Repair that display-only value before looking up translations.
+    let displayValue = value
+    if (/[ÃÂà-ÿ]/.test(value)) {
+      try {
+        const repaired = decodeURIComponent(escape(value))
+        if (repaired && repaired !== value) displayValue = repaired
+      } catch {
+        // Keep the original value when it is not valid legacy text.
+      }
+    }
+
+    const item = ADVISING_SUBCATEGORIES[value] || ADVISING_SUBCATEGORIES[displayValue]
     if (item) {
       return language === 'th' ? item.labelTh : item.labelEn
     }
     // Also support finding by labelTh if value was already stored in Thai
-    const foundByTh = Object.values(ADVISING_SUBCATEGORIES).find(entry => entry.labelTh === value)
+    const foundByTh = Object.values(ADVISING_SUBCATEGORIES).find(entry => entry.labelTh === value || entry.labelTh === displayValue)
     if (foundByTh) {
       return language === 'th' ? foundByTh.labelTh : foundByTh.labelEn
     }
@@ -142,7 +194,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     if (exitItem) {
       return language === 'th' ? exitItem.labelTh : exitItem.labelEn
     }
-    return value
+    return displayValue
   }
 
   function getReferralLabel(value: string): string {
