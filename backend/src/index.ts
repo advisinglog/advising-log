@@ -729,8 +729,24 @@ app.patch('/api/requests/:id/status', async (c) => {
 
   const id = c.req.param('id')
   const body = await c.req.json()
+  if (body.status === 'cancelled') {
+    if (typeof body.cancellationReason !== 'string' || !body.cancellationReason.trim()) {
+      return c.json({ error: 'A cancellation reason is required.' }, 400)
+    }
+  }
+  const updates: Record<string, any> = {
+    status: body.status,
+    updatedAt: new Date().toISOString().split('T')[0],
+  }
+  if (body.cancellationReason !== undefined) {
+    updates.cancellationReason = body.cancellationReason
+  }
+  if (body.cancelledBy !== undefined) {
+    updates.cancelledBy = body.cancelledBy
+    updates.cancelledAt = new Date().toISOString().split('T')[0]
+  }
   await database.update(schema.advisingRequests)
-    .set({ status: body.status, updatedAt: new Date().toISOString().split('T')[0] })
+    .set(updates)
     .where(eq(schema.advisingRequests.id, id))
   return c.json({ success: true })
 })
@@ -793,6 +809,23 @@ app.post('/api/appointments', async (c) => {
 
   await database.insert(schema.appointments).values(newApt)
   return c.json({ success: true, appointment: newApt }, 201)
+})
+
+app.patch('/api/appointments/:id/status', async (c) => {
+  const database = db(c)
+  if (!database) return c.json({ error: 'Database unavailable' }, 503)
+
+  const id = c.req.param('id')
+  const body = await c.req.json()
+  const allowedStatuses = ['scheduled', 'completed', 'cancelled']
+  if (!allowedStatuses.includes(body.status)) {
+    return c.json({ error: 'Invalid appointment status.' }, 400)
+  }
+
+  await database.update(schema.appointments)
+    .set({ status: body.status })
+    .where(eq(schema.appointments.id, id))
+  return c.json({ success: true })
 })
 
 app.get('/api/sessions', async (c) => {
@@ -2000,4 +2033,3 @@ app.delete('/api/document-types/:id', async (c) => {
 })
 
 export default app
-

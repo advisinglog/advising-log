@@ -230,15 +230,15 @@ const statusConfig: Record<string, { bg: string; text: string; border: string; d
   required: { bg: 'bg-amber-50/80 dark:bg-amber-500/12', text: 'text-amber-700 dark:text-amber-300', border: 'border-amber-200/60 dark:border-amber-500/25', dot: 'bg-amber-500 dark:bg-amber-400' },
   medium: { bg: 'bg-amber-50/80 dark:bg-amber-500/12', text: 'text-amber-700 dark:text-amber-300', border: 'border-amber-200/60 dark:border-amber-500/25', dot: 'bg-amber-500 dark:bg-amber-400' },
 
-  // Rose/Red for high, critical, overdue, rejected
+  // Rose/Red for high, critical, overdue, rejected, cancelled
   overdue: { bg: 'bg-rose-50/80 dark:bg-rose-500/12', text: 'text-rose-700 dark:text-rose-300', border: 'border-rose-200/60 dark:border-rose-500/25', dot: 'bg-rose-500 dark:bg-rose-400' },
   high: { bg: 'bg-rose-50/80 dark:bg-rose-500/12', text: 'text-rose-700 dark:text-rose-300', border: 'border-rose-200/60 dark:border-rose-500/25', dot: 'bg-rose-500 dark:bg-rose-400' },
   critical: { bg: 'bg-rose-50/80 dark:bg-rose-500/12', text: 'text-rose-700 dark:text-rose-300', border: 'border-rose-200/60 dark:border-rose-500/25', dot: 'bg-rose-500 dark:bg-rose-400' },
   rejected: { bg: 'bg-rose-50/80 dark:bg-rose-500/12', text: 'text-rose-700 dark:text-rose-300', border: 'border-rose-200/60 dark:border-rose-500/25', dot: 'bg-rose-500 dark:bg-rose-400' },
+  cancelled: { bg: 'bg-rose-50/80 dark:bg-rose-500/12', text: 'text-rose-700 dark:text-rose-300', border: 'border-rose-200/60 dark:border-rose-500/25', dot: 'bg-rose-500 dark:bg-rose-400' },
 
-  // Slate for closed, cancelled, low
-  cancelled: { bg: 'bg-slate-50 dark:bg-slate-800/60', text: 'text-slate-600 dark:text-slate-300', border: 'border-slate-200 dark:border-slate-700/60', dot: 'bg-slate-400' },
-  closed: { bg: 'bg-slate-50 dark:bg-slate-800/60', text: 'text-slate-600 dark:text-slate-300', border: 'border-slate-200 dark:border-slate-700/60', dot: 'bg-slate-400' },
+  // Amber for pending, closed, under_review, advisor_reviewed, monitoring, required
+  closed: { bg: 'bg-amber-50/80 dark:bg-amber-500/12', text: 'text-amber-700 dark:text-amber-300', border: 'border-amber-200/60 dark:border-amber-500/25', dot: 'bg-amber-500 dark:bg-amber-400' },
   low: { bg: 'bg-slate-50 dark:bg-slate-800/60', text: 'text-slate-600 dark:text-slate-300', border: 'border-slate-200 dark:border-slate-700/60', dot: 'bg-slate-400' },
   referred: { bg: 'bg-purple-50/80 dark:bg-purple-500/12', text: 'text-purple-700 dark:text-purple-300', border: 'border-purple-200/60 dark:border-purple-500/25', dot: 'bg-purple-500 dark:bg-purple-400' },
   inactive: { bg: 'bg-slate-100 dark:bg-slate-800/60', text: 'text-slate-500 dark:text-slate-400', border: 'border-slate-200 dark:border-slate-700/60', dot: 'bg-slate-400' },

@@ -206,6 +206,9 @@ export interface AdvisingRequest {
   attachments: string[]    // simulated file names
   pdpaConsent: boolean
   status: RequestStatus
+  cancellationReason?: string
+  cancelledBy?: string
+  cancelledAt?: string
   createdAt: string
   updatedAt: string
 }

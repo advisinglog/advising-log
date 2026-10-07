@@ -22,6 +22,13 @@
       "when": 1791105342862,
       "tag": "0002_conscious_anita_blake",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1791365041962,
+      "tag": "0003_slow_lady_deathstrike",
+      "breakpoints": true
     }
   ]
 }

@@ -117,10 +117,10 @@ class ApiClient {
     })
   }
 
-  async updateRequestStatus(id: string, status: string) {
+  async updateRequestStatus(id: string, status: string, cancellationReason?: string, cancelledBy?: string) {
     return this.request<{ success: boolean }>(`/api/requests/${id}/status`, {
       method: 'PATCH',
-      body: JSON.stringify({ status }),
+      body: JSON.stringify({ status, cancellationReason, cancelledBy }),
     })
   }
 
@@ -133,6 +133,13 @@ class ApiClient {
     return this.request<{ success: boolean; appointment: Appointment }>('/api/appointments', {
       method: 'POST',
       body: JSON.stringify(apt),
+    })
+  }
+
+  async updateAppointmentStatus(id: string, status: Appointment['status']) {
+    return this.request<{ success: boolean }>(`/api/appointments/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
     })
   }
 
@@ -333,4 +340,3 @@ class ApiClient {
 
 export const api = new ApiClient(API_BASE)
 export default api
-

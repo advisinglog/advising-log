@@ -10,7 +10,7 @@ import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { PageHeader, Tabs, DataTable, Button, Modal, DocumentViewerModal, SearchInput, type DocumentViewerTarget } from '@/components/ui'
 import type { AdvisingRequest } from '@/types'
-import { Calendar, Eye, FileText, Sparkles, Building2, Video, CheckCircle2, MapPin, Link2, ClipboardList, AlertTriangle } from 'lucide-react'
+import { Calendar, Eye, FileText, Sparkles, Building2, Video, CheckCircle2, MapPin, Link2, ClipboardList, AlertTriangle, XCircle, X } from 'lucide-react'
 import { isAdvisorMatch } from '@/utils/advisorUtils'
 import { openGoogleCalendarEvent } from '@/utils/calendarUtils'
 
@@ -33,6 +33,10 @@ export default function AdvisingSessions() {
   const [meetingMode, setMeetingMode] = useState<'in_person' | 'online'>('in_person')
   const [schedLoc, setSchedLoc] = useState('')
   const [autoOpenCalendar, setAutoOpenCalendar] = useState(true)
+
+  // Cancel reason modal state
+  const [cancelReq, setCancelReq] = useState<AdvisingRequest | null>(null)
+  const [cancelReason, setCancelReason] = useState('')
 
   const viewedRequestsKey = currentUser ? `advising_log_viewed_requests_${currentUser.id}` : ''
 
@@ -251,11 +255,49 @@ export default function AdvisingSessions() {
   }
 
   function handleCancel(req: AdvisingRequest) {
-    markRequestViewed(req.id)
-    store.updateRequestStatus(req.id, 'cancelled')
-    const apt = store.appointments.find(a => a.requestId === req.id && a.status === 'scheduled')
+    setCancelReq(req)
+    setCancelReason('')
+  }
+
+  function handleSubmitCancel() {
+    if (!cancelReq || !currentUser) return
+    const reason = cancelReason.trim()
+    if (!reason) {
+      addToast('error', t('กรุณาระบุเหตุผล', 'Reason Required'), t('กรุณาระบุเหตุผลในการยกเลิก', 'Please provide a reason for cancellation.'))
+      return
+    }
+
+    markRequestViewed(cancelReq.id)
+    store.updateRequestStatus(cancelReq.id, 'cancelled', {
+      reason,
+      cancelledBy: currentUser.id,
+    })
+    const apt = store.appointments.find(a => a.requestId === cancelReq.id && a.status === 'scheduled')
     if (apt) store.updateAppointmentStatus(apt.id, 'cancelled')
+
+    // Notify the student about the cancellation with reason
+    const student = store.users.find(u => u.id === cancelReq.studentId)
+    store.addNotification({
+      userId: cancelReq.studentId,
+      type: 'warning',
+      title: t('คำร้องขอคำปรึกษาถูกยกเลิก', 'Advising Request Cancelled'),
+      message: `${t('อาจารย์ที่ปรึกษาได้ยกเลิกคำร้องขอคำปรึกษาของคุณ', 'Your advisor has cancelled your advising request.')} ${t('เหตุผล:', 'Reason:')} ${reason}`,
+      relatedId: cancelReq.id,
+      isRead: false,
+    })
+
+    store.addAuditLog({
+      userId: currentUser.id,
+      userName: currentUser.name,
+      userRole: 'advisor',
+      action: 'request_updated',
+      description: `Cancelled request for ${student?.name || cancelReq.studentId}. Reason: ${reason}`,
+      targetId: cancelReq.id,
+    })
+
     addToast('info', t('ยกเลิกคำร้องแล้ว', 'Request Cancelled'))
+    setCancelReq(null)
+    setCancelReason('')
   }
 
   const columns = [
@@ -626,6 +668,93 @@ export default function AdvisingSessions() {
           </div>
         )}
       </Modal>
+
+      {/* Cancel Reason Modal (RED themed for warning/cancellation) */}
+      {cancelReq && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={() => { setCancelReq(null); setCancelReason('') }} />
+
+          {/* Modal Box */}
+          <div className="relative bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border-2 border-rose-500/80 dark:border-rose-600/80 w-full max-w-md mx-4 overflow-hidden animate-in fade-in zoom-in-95">
+            {/* Top Red Header Accent Bar */}
+            <div className="bg-rose-600 dark:bg-rose-700 px-6 py-4 flex items-center justify-between text-white">
+              <div className="flex items-center gap-2">
+                <XCircle className="h-5 w-5 text-white shrink-0" />
+                <h3 className="text-base font-bold tracking-tight">
+                  {t('เหตุผลในการยกเลิก', 'Reason')}
+                </h3>
+              </div>
+
+              {/* X Close Button (top right) */}
+              <button
+                type="button"
+                onClick={() => { setCancelReq(null); setCancelReason('') }}
+                className="p-1 rounded-lg text-rose-100 hover:text-white hover:bg-rose-700/60 dark:hover:bg-rose-800/60 transition-colors cursor-pointer"
+                aria-label="Close"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="p-6">
+              <p className="text-xs text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/50 p-2.5 rounded-lg border border-rose-200 dark:border-rose-900/60 mb-4 font-medium">
+                {t('กรุณาระบุเหตุผลที่ยกเลิกคำร้องขอนัดหมายเพื่อแจ้งให้นักศึกษาทราบ', 'Please provide the reason for cancelling this advising request to inform the student.')}
+              </p>
+
+              {/* Student info banner */}
+              <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200/80 dark:border-slate-800 mb-4 text-xs">
+                <span className="text-[11px] text-slate-400 block font-medium">{t('นักศึกษาผู้ยื่นคำร้อง', 'Student')}</span>
+                <p className="text-sm font-bold text-slate-900 dark:text-slate-100 mt-0.5">
+                  {store.users.find(u => u.id === cancelReq.studentId)?.name || '-'}
+                  <span className="text-xs font-mono font-normal text-slate-500 ml-2">
+                    ({store.users.find(u => u.id === cancelReq.studentId)?.code || '-'})
+                  </span>
+                </p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
+                  {getCategoryLabel(cancelReq.category)}
+                  {cancelReq.preferredDate && ` · ${cancelReq.preferredDate} ${cancelReq.preferredTime || ''}`}
+                </p>
+              </div>
+
+              {/* Reason textarea with RED accent focus */}
+              <div className="mb-5">
+                <label className="block text-xs font-bold text-rose-900 dark:text-rose-300 mb-1.5 flex items-center justify-between">
+                  <span>{t('เหตุผลการยกเลิก', 'Reason')} *</span>
+                  <span className="text-[10px] font-normal text-slate-400">{t('จำเป็นต้องระบุ', 'Required')}</span>
+                </label>
+                <textarea
+                  value={cancelReason}
+                  onChange={e => setCancelReason(e.target.value)}
+                  rows={4}
+                  placeholder={t(
+                    'กรอกเหตุผลที่นี่ เช่น อาจารย์ติดภารกิจการสอน / เวลาทับซ้อน...',
+                    'Fill in reason here e.g. Schedule conflict with lectures...'
+                  )}
+                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm border-2 border-rose-300 dark:border-rose-800/80 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-rose-500/30 focus:border-rose-600 transition-colors resize-none"
+                />
+              </div>
+
+              {/* Footer action button */}
+              <div className="flex justify-end items-center gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                <Button
+                  variant="secondary"
+                  onClick={() => { setCancelReq(null); setCancelReason('') }}
+                >
+                  {t('ยกเลิก', 'Cancel')}
+                </Button>
+                <Button
+                  variant="danger"
+                  onClick={handleSubmitCancel}
+                  className="bg-rose-600 hover:bg-rose-700 text-white font-semibold"
+                >
+                  {t('ยืนยันการยกเลิก', 'Submit Cancel')}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

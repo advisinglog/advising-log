@@ -101,7 +101,7 @@ interface StoreState {
 interface StoreActions {
   // Requests
   addRequest: (req: Omit<AdvisingRequest, 'id' | 'createdAt' | 'updatedAt'>) => AdvisingRequest
-  updateRequestStatus: (id: string, status: AdvisingRequest['status']) => void
+  updateRequestStatus: (id: string, status: AdvisingRequest['status'], cancellation?: { reason: string; cancelledBy: string }) => void
 
   // Appointments
   addAppointment: (apt: Omit<Appointment, 'id' | 'createdAt'>) => Appointment
@@ -294,6 +294,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       if (rRes && Array.isArray(rRes.requests)) {
         const normalizedRequests = rRes.requests.map((r: any) => ({
           ...r,
+          cancellationReason: r.cancellationReason || r.cancellation_reason,
+          cancelledBy: r.cancelledBy || r.cancelled_by,
+          cancelledAt: r.cancelledAt || r.cancelled_at,
           attachments: Array.isArray(r.attachments)
             ? r.attachments
             : typeof r.attachments === 'string'
@@ -358,9 +361,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return newReq
   }, [])
 
-  const updateRequestStatus = useCallback((id: string, status: AdvisingRequest['status']) => {
-    setRequests(prev => prev.map(r => r.id === id ? { ...r, status, updatedAt: now() } : r))
-    api.updateRequestStatus(id, status).catch(() => {})
+  const updateRequestStatus = useCallback((id: string, status: AdvisingRequest['status'], cancellation?: { reason: string; cancelledBy: string }) => {
+    setRequests(prev => prev.map(r => r.id === id ? {
+      ...r,
+      status,
+      updatedAt: now(),
+      ...(cancellation ? {
+        cancellationReason: cancellation.reason,
+        cancelledBy: cancellation.cancelledBy,
+        cancelledAt: now(),
+      } : {}),
+    } : r))
+    api.updateRequestStatus(id, status, cancellation?.reason, cancellation?.cancelledBy).catch(() => {})
   }, [])
 
   const addAppointment = useCallback((apt: Omit<Appointment, 'id' | 'createdAt'>): Appointment => {
@@ -372,6 +384,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const updateAppointmentStatus = useCallback((id: string, status: Appointment['status']) => {
     setAppointments(prev => prev.map(a => a.id === id ? { ...a, status } : a))
+    api.updateAppointmentStatus(id, status).catch(() => {})
   }, [])
 
   const confirmAppointment = useCallback((appointmentId: string) => {

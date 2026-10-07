@@ -7,7 +7,7 @@ import { useStore } from '@/data/mock-store'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { PageHeader, Card, StatusBadge, EmptyState, GoogleCalendarButton, DocumentViewerModal, type DocumentViewerTarget } from '@/components/ui'
-import { ArrowLeft, Calendar, Paperclip, FileText, CheckCircle, Eye } from 'lucide-react'
+import { ArrowLeft, Calendar, Paperclip, FileText, CheckCircle, Eye, XCircle } from 'lucide-react'
 import { useState } from 'react'
 
 export default function AdvisingDetail() {
@@ -44,6 +44,45 @@ export default function AdvisingDetail() {
       />
 
       <div className="space-y-5 sm:space-y-6">
+        {/* Cancellation Notice Banner (RED) */}
+        {request.status === 'cancelled' && (
+          <div className="p-4 sm:p-5 bg-rose-50/90 dark:bg-rose-950/50 border-2 border-rose-300 dark:border-rose-800 rounded-2xl shadow-xs">
+            <div className="flex items-center gap-2.5 mb-3 text-rose-800 dark:text-rose-200">
+              <XCircle className="h-5 w-5 text-rose-600 dark:text-rose-400 shrink-0" />
+              <h3 className="text-sm sm:text-base font-bold">{t('คำร้องขอคำปรึกษาถูกยกเลิก (Request Cancelled)', 'Advising Request Cancelled')}</h3>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs mb-3.5 pb-3 border-b border-rose-200/70 dark:border-rose-900/60">
+              <div>
+                <span className="text-rose-600/80 dark:text-rose-400/80 font-medium block">{t('หมวดหมู่', 'Category')}</span>
+                <p className="font-bold text-rose-950 dark:text-rose-100 mt-0.5">{catLabel}</p>
+              </div>
+              <div>
+                <span className="text-rose-600/80 dark:text-rose-400/80 font-medium block">{t('อาจารย์ที่ปรึกษาผู้ทำการยกเลิก', 'Advisor')}</span>
+                <p className="font-bold text-rose-950 dark:text-rose-100 mt-0.5">
+                  {(request.cancelledBy ? store.users.find(u => u.id === request.cancelledBy)?.name : null) || advisor?.name || '-'}
+                </p>
+              </div>
+              <div>
+                <span className="text-rose-600/80 dark:text-rose-400/80 font-medium block">{t('วันและเวลานัดหมาย', 'Date set for appointment')}</span>
+                <p className="font-bold text-rose-950 dark:text-rose-100 mt-0.5">
+                  {appointment ? `${appointment.scheduledDate} ${appointment.scheduledTime || ''}` : `${request.preferredDate || '-'} ${request.preferredTime || ''}`}
+                </p>
+              </div>
+            </div>
+
+            <div>
+              <span className="text-xs font-bold text-rose-800 dark:text-rose-300 block mb-1.5 flex items-center gap-1">
+                <XCircle className="h-3.5 w-3.5 text-rose-600" />
+                {t('เหตุผลในการยกเลิก (Reason for Cancellation):', 'Reason for Cancellation:')}
+              </span>
+              <p className="text-xs sm:text-sm text-rose-950 dark:text-rose-100 bg-white/90 dark:bg-slate-900/90 p-3.5 rounded-xl border-2 border-rose-200 dark:border-rose-900/80 leading-relaxed font-medium">
+                {request.cancellationReason || t('ไม่มีการระบุเหตุผลในการยกเลิก', 'No cancellation reason provided.')}
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Request details */}
         <Card>
           <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">

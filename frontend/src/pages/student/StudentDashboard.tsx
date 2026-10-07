@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useStore } from '@/data/mock-store'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { PageHeader, StatCard, Card, StatusBadge, EmptyState, Button, StudentProfileBanner, GoogleCalendarButton } from '@/components/ui'
-import { Calendar, Clock, ListChecks, FileEdit, ArrowRight, BookOpen, CheckCircle2 } from 'lucide-react'
+import { Calendar, Clock, ListChecks, FileEdit, ArrowRight, BookOpen, CheckCircle2, XCircle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 
@@ -325,6 +325,82 @@ export default function StudentDashboard() {
               </div>
             )}
           </Card>
+
+          {/* Cancelled Requests (in RED box) */}
+          {(() => {
+            const cancelledRequests = myRequests.filter(r => r.status === 'cancelled')
+            if (cancelledRequests.length === 0) return null
+            return (
+              <Card className="border-2 border-rose-200 dark:border-rose-900/60 bg-rose-50/40 dark:bg-rose-950/20">
+                <div className="flex items-center justify-between mb-3.5 pb-2 border-b border-rose-200/70 dark:border-rose-900/40">
+                  <h3 className="text-sm font-bold text-rose-900 dark:text-rose-200 flex items-center gap-2">
+                    <XCircle className="h-4 w-4 text-rose-600 dark:text-rose-400" /> {t('คำร้องที่ถูกยกเลิก', 'Cancelled Requests')}
+                  </h3>
+                  <span className="text-[10px] font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider bg-rose-100 dark:bg-rose-950/80 px-2 py-0.5 rounded-full border border-rose-200 dark:border-rose-900">
+                    {cancelledRequests.length} {t('รายการ', 'Items')}
+                  </span>
+                </div>
+
+                <div className="space-y-3">
+                  {cancelledRequests.slice(0, 5).map(req => {
+                    const adv = (req.cancelledBy ? store.users.find(u => u.id === req.cancelledBy) : null) || store.users.find(u => u.id === req.advisorId) || advisor
+                    const apt = store.appointments.find(a => a.requestId === req.id)
+                    const dateFormatted = apt
+                      ? `${apt.scheduledDate} ${apt.scheduledTime || ''}`
+                      : `${req.preferredDate || ''} ${req.preferredTime || ''}`.trim() || '-'
+
+                    return (
+                      <div
+                        key={req.id}
+                        onClick={() => navigate(`/student/history/${req.id}`)}
+                        className="p-3.5 bg-white/90 dark:bg-slate-900/90 border border-rose-200 dark:border-rose-900/60 rounded-xl hover:border-rose-400 transition-all cursor-pointer group shadow-2xs"
+                      >
+                        {/* Category */}
+                        <div className="flex items-center justify-between gap-2 mb-1">
+                          <span className="text-[10px] font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider">{t('หมวดหมู่', 'Category')}</span>
+                          <span className="text-[10px] font-mono text-slate-400 group-hover:text-rose-600 flex items-center gap-1">
+                            {req.id} <ArrowRight className="h-3 w-3 inline" />
+                          </span>
+                        </div>
+                        <p className="text-xs font-bold text-slate-900 dark:text-slate-100 mb-2 group-hover:text-rose-700 dark:group-hover:text-rose-300 transition-colors">
+                          {getCategoryLabel(req.category)}
+                          {req.subCategory ? ` · ${getSubCategoryLabel(req.subCategory)}` : ''}
+                        </p>
+
+                        {/* Details grid */}
+                        <div className="space-y-1.5 text-[11px]">
+                          {/* Advisor Name */}
+                          <div className="flex items-start gap-1.5">
+                            <span className="text-slate-400 dark:text-slate-500 font-medium shrink-0">{t('อาจารย์ที่ปรึกษา:', 'Advisor:')}</span>
+                            <span className="text-slate-700 dark:text-slate-200 font-semibold">{adv?.name || t('ไม่ระบุ', 'N/A')}</span>
+                          </div>
+
+                          {/* Date set for appointment */}
+                          <div className="flex items-start gap-1.5">
+                            <span className="text-slate-400 dark:text-slate-500 font-medium shrink-0">{t('วันนัดหมาย:', 'Appointment Date:')}</span>
+                            <span className="text-slate-700 dark:text-slate-200 font-semibold">
+                              {dateFormatted}
+                            </span>
+                          </div>
+
+                          {/* Cancellation Reason in RED Box */}
+                          <div className="mt-2.5 pt-2 border-t border-rose-100 dark:border-rose-900/40">
+                            <span className="text-rose-700 dark:text-rose-400 font-bold block mb-1 flex items-center gap-1 text-[11px]">
+                              <XCircle className="h-3 w-3" />
+                              {t('เหตุผลที่ยกเลิก (Reason):', 'Reason for Cancellation:')}
+                            </span>
+                            <p className="text-xs text-rose-900 dark:text-rose-200 bg-rose-50/90 dark:bg-rose-950/80 rounded-lg px-2.5 py-2 border-2 border-rose-200 dark:border-rose-900/60 leading-relaxed font-medium">
+                              {req.cancellationReason || t('ไม่มีการระบุเหตุผล', 'No reason specified')}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </Card>
+            )
+          })()}
 
         </div>
       </div>
