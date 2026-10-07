@@ -198,15 +198,52 @@ export default function AdvisingDetail() {
               <CheckCircle className="h-4 w-4 text-sky-600 dark:text-sky-400" /> {t('รายการงานที่ต้องติดตามผล', 'Assigned Follow-up Tasks')}
             </h3>
             <div className="space-y-2.5">
-              {followUps.map(fu => (
-                <div key={fu.id} className="flex items-center justify-between p-3.5 bg-slate-50/80 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 rounded-xl">
-                  <div>
-                    <p className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100">{fu.task}</p>
-                    <p className="text-[11px] text-slate-400 dark:text-slate-400 mt-0.5 font-medium">{t('กำหนดส่ง:', 'Due:')} {fu.dueDate}</p>
+              {followUps.map(fu => {
+                const evidenceDoc = store.documents.find(d => d.description?.includes(`followUpId:${fu.id}`))
+                const progressRecord = store.followUpProgress.find(fp => fp.followUpId === fu.id)
+
+                return (
+                  <div key={fu.id} className="p-3.5 bg-slate-50/80 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 rounded-xl space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <div>
+                        <p className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100">{fu.task}</p>
+                        <p className="text-[11px] text-slate-400 dark:text-slate-400 mt-0.5 font-medium">{t('กำหนดส่ง:', 'Due:')} {fu.dueDate}</p>
+                      </div>
+                      <StatusBadge status={fu.status} />
+                    </div>
+
+                    {progressRecord?.notes && (
+                      <div className="p-2.5 bg-white dark:bg-slate-900/80 rounded-lg border border-slate-200/60 dark:border-slate-800 text-xs">
+                        <span className="font-semibold text-sky-700 dark:text-sky-300 text-[11px] block mb-0.5">
+                          {t('บันทึกผลการปฏิบัติงาน:', 'Student Action & Report:')}
+                        </span>
+                        <p className="text-slate-600 dark:text-slate-300 whitespace-pre-wrap text-[11px]">
+                          {progressRecord.notes}
+                        </p>
+                      </div>
+                    )}
+
+                    {evidenceDoc && (
+                      <div className="pt-1">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setPreviewDoc({
+                              title: evidenceDoc.fileName || evidenceDoc.documentName,
+                              fileName: evidenceDoc.fileName || evidenceDoc.documentName,
+                              fileUrl: evidenceDoc.fileUrl,
+                              cloudinaryPublicId: evidenceDoc.cloudinaryPublicId,
+                            })
+                          }
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/60 border border-sky-200/70 dark:border-sky-800/60 hover:bg-sky-100 cursor-pointer"
+                        >
+                          <span>{t('ดูไฟล์หลักฐาน', 'View Evidence')}: {evidenceDoc.fileName}</span>
+                        </button>
+                      </div>
+                    )}
                   </div>
-                  <StatusBadge status={fu.status} />
-                </div>
-              ))}
+                )
+              })}
             </div>
           </Card>
         )}

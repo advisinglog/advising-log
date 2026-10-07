@@ -962,10 +962,22 @@ app.post('/api/follow-up-progress', async (c) => {
   if (!database) return c.json({ error: 'Database unavailable' }, 503)
 
   const body = await c.req.json()
+  let studentId = body.studentId
+  if (studentId) {
+    const studentUser = await database.select().from(schema.users).where(
+      or(
+        eq(schema.users.id, studentId),
+        eq(schema.users.code, studentId),
+        eq(schema.users.email, studentId),
+      )
+    ).get()
+    if (studentUser) studentId = studentUser.id
+  }
+
   const progressRecord = {
     id: body.id || `FUP${Date.now()}`,
     followUpId: body.followUpId,
-    studentId: body.studentId,
+    studentId: studentId,
     progress: body.progress || 0,
     notes: body.notes || '',
     status: body.status || 'in_progress',
