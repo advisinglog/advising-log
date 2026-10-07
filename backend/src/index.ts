@@ -807,18 +807,46 @@ app.post('/api/sessions', async (c) => {
   if (!database) return c.json({ error: 'Database unavailable' }, 503)
 
   const body = await c.req.json()
+
+  let studentId = body.studentId
+  let advisorId = body.advisorId
+
+  const studentUser = await database.select().from(schema.users).where(
+    or(
+      eq(schema.users.id, studentId),
+      eq(schema.users.code, studentId),
+      eq(schema.users.email, studentId),
+    )
+  ).get()
+  if (studentUser) studentId = studentUser.id
+
+  const advisorUser = await database.select().from(schema.users).where(
+    or(
+      eq(schema.users.id, advisorId),
+      eq(schema.users.code, advisorId),
+      eq(schema.users.email, advisorId),
+    )
+  ).get()
+  if (advisorUser) advisorId = advisorUser.id
+
+  let appointmentId = body.appointmentId && typeof body.appointmentId === 'string' && body.appointmentId.trim() !== '' ? body.appointmentId.trim() : null
+  if (appointmentId) {
+    const aptExists = await database.select({ id: schema.appointments.id }).from(schema.appointments).where(eq(schema.appointments.id, appointmentId)).get()
+    if (!aptExists) appointmentId = null
+  }
+
   const newSession = {
     id: body.id || `SES${Date.now()}`,
     requestId: body.requestId,
-    appointmentId: body.appointmentId || null,
-    studentId: body.studentId,
-    advisorId: body.advisorId,
+    appointmentId: appointmentId,
+    studentId: studentId,
+    advisorId: advisorId,
     sessionDate: body.sessionDate || new Date().toISOString().split('T')[0],
-    summary: body.summary,
-    problem: body.problem,
-    advice: body.advice,
-    actionsTaken: body.actionsTaken,
-    outcome: body.outcome,
+    summary: body.summary || '',
+    problem: body.problem || body.summary || '',
+    advice: body.advice || body.summary || '',
+    actionsTaken: body.actionsTaken || '',
+    outcome: body.outcome || '',
     createdAt: body.createdAt || new Date().toISOString().split('T')[0],
   }
 
@@ -833,8 +861,17 @@ app.get('/api/follow-ups', async (c) => {
   const database = db(c)
   if (!database) return c.json({ followUps: [] })
 
-  const studentId = c.req.query('studentId')
+  let studentId = c.req.query('studentId')
   if (studentId) {
+    const studentUser = await database.select().from(schema.users).where(
+      or(
+        eq(schema.users.id, studentId),
+        eq(schema.users.code, studentId),
+        eq(schema.users.email, studentId),
+      )
+    ).get()
+    if (studentUser) studentId = studentUser.id
+
     const list = await database.select().from(schema.followUps).where(eq(schema.followUps.studentId, studentId))
     return c.json({ followUps: list })
   }
@@ -847,12 +884,46 @@ app.post('/api/follow-ups', async (c) => {
   if (!database) return c.json({ error: 'Database unavailable' }, 503)
 
   const body = await c.req.json()
+
+  let studentId = body.studentId
+  let advisorId = body.advisorId
+
+  const studentUser = await database.select().from(schema.users).where(
+    or(
+      eq(schema.users.id, studentId),
+      eq(schema.users.code, studentId),
+      eq(schema.users.email, studentId),
+    )
+  ).get()
+  if (studentUser) studentId = studentUser.id
+
+  const advisorUser = await database.select().from(schema.users).where(
+    or(
+      eq(schema.users.id, advisorId),
+      eq(schema.users.code, advisorId),
+      eq(schema.users.email, advisorId),
+    )
+  ).get()
+  if (advisorUser) advisorId = advisorUser.id
+
+  let sessionId = body.sessionId && typeof body.sessionId === 'string' && body.sessionId.trim() !== '' ? body.sessionId.trim() : null
+  if (sessionId) {
+    const sesExists = await database.select({ id: schema.advisingSessions.id }).from(schema.advisingSessions).where(eq(schema.advisingSessions.id, sessionId)).get()
+    if (!sesExists) sessionId = null
+  }
+
+  let requestId = body.requestId && typeof body.requestId === 'string' && body.requestId.trim() !== '' ? body.requestId.trim() : null
+  if (requestId) {
+    const reqExists = await database.select({ id: schema.advisingRequests.id }).from(schema.advisingRequests).where(eq(schema.advisingRequests.id, requestId)).get()
+    if (!reqExists) requestId = null
+  }
+
   const newFollowUp = {
     id: body.id || `FOL${Date.now()}`,
-    sessionId: body.sessionId || null,
-    requestId: body.requestId || null,
-    studentId: body.studentId,
-    advisorId: body.advisorId,
+    sessionId: sessionId,
+    requestId: requestId,
+    studentId: studentId,
+    advisorId: advisorId,
     task: body.task,
     dueDate: body.dueDate,
     status: body.status || 'pending',

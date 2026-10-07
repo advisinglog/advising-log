@@ -156,7 +156,7 @@ export default function AdvisorLog() {
     const cleanSummary = summary.trim()
     const session = store.addSession({
       requestId: selectedRequestId,
-      appointmentId: appointment?.id || '',
+      appointmentId: appointment?.id || undefined,
       studentId: selectedReq!.studentId,
       advisorId: currentUser!.id,
       sessionDate: getLocalDateString(),

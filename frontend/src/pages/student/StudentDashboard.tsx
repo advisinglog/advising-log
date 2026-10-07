@@ -61,7 +61,9 @@ export default function StudentDashboard() {
 
   // My requests & follow-ups
   const myRequests = store.requests.filter(r => isCurrentStudent(r.studentId))
-  const myFollowUps = store.followUps.filter(f => isCurrentStudent(f.studentId) && f.status !== 'completed')
+  const myRequestIds = new Set(myRequests.map(r => r.id))
+  const mySessionIds = new Set(store.sessions.filter(s => isCurrentStudent(s.studentId) || (s.requestId && myRequestIds.has(s.requestId))).map(s => s.id))
+  const myFollowUps = store.followUps.filter(f => (isCurrentStudent(f.studentId) || (f.requestId && myRequestIds.has(f.requestId)) || (f.sessionId && mySessionIds.has(f.sessionId))) && f.status !== 'completed')
 
   // All student appointments (scheduled)
   const myAppointments = store.appointments

@@ -37,7 +37,17 @@ export default function FollowUps() {
       (currentUser.email && id.toLowerCase() === currentUser.email.toLowerCase())
   }
 
-  const myFollowUps = store.followUps.filter(f => isCurrentStudent(f.studentId))
+  const myRequestIds = new Set(store.requests.filter(r => isCurrentStudent(r.studentId)).map(r => r.id))
+  const mySessionIds = new Set(store.sessions.filter(s => isCurrentStudent(s.studentId) || (s.requestId && myRequestIds.has(s.requestId))).map(s => s.id))
+
+  const isMyFollowUp = (f: FollowUp) => {
+    if (isCurrentStudent(f.studentId)) return true
+    if (f.requestId && myRequestIds.has(f.requestId)) return true
+    if (f.sessionId && mySessionIds.has(f.sessionId)) return true
+    return false
+  }
+
+  const myFollowUps = store.followUps.filter(isMyFollowUp)
   const pendingTasks = myFollowUps.filter(f => f.status !== 'completed')
 
   function handleCompleteTask(f: FollowUp) {

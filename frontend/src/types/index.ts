@@ -237,8 +237,8 @@ export interface Appointment {
 
 export interface AdvisingSession {
   id: string
-  requestId: string
-  appointmentId: string
+  requestId?: string
+  appointmentId?: string
   studentId: string
   advisorId: string
   sessionDate: string
@@ -252,8 +252,8 @@ export interface AdvisingSession {
 
 export interface FollowUp {
   id: string
-  sessionId: string
-  requestId: string
+  sessionId?: string
+  requestId?: string
   studentId: string
   advisorId: string
   task: string
