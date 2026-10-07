@@ -105,6 +105,9 @@ describe('Student Voice Feature', () => {
   it('renders Student Voice tab and metrics in QA Dashboard', () => {
     renderWithProviders(<QADashboard />)
 
+    const completionRateLabel = screen.getByText(/อัตราสำเร็จของงาน/i)
+    expect(completionRateLabel.parentElement).toHaveTextContent(/\d+%/)
+
     // Check tab button exists
     const tabBtn = screen.getByRole('button', { name: /เสียงของนักศึกษา/i })
     expect(tabBtn).toBeInTheDocument()
@@ -362,4 +365,3 @@ describe('Student Voice Feature', () => {
     expect(submitBtn).not.toBeDisabled()
   })
 })
-

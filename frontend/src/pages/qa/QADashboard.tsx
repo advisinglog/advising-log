@@ -140,9 +140,10 @@ export default function QADashboard() {
     students: store.roster.filter(r => r.advisorId === a.id && r.isActive).length,
   }))
 
-  // Follow-up completion rate
-  const completedFU = store.followUps.filter(f => f.status === 'completed').length
-  const fuRate = totalFollowUps > 0 ? Math.round((completedFU / totalFollowUps) * 100) : 0
+  // Keep the dashboard metric consistent with the AUN-QA export:
+  // completed advising requests divided by all advising requests.
+  const completedRequests = store.requests.filter(r => r.status === 'completed' || r.status === 'closed').length
+  const completionRate = totalRequests > 0 ? Math.round((completedRequests / totalRequests) * 100) : 100
 
   // Student Voice Statistics
   const avgCurriculum = totalVoiceResponses > 0
@@ -183,7 +184,7 @@ export default function QADashboard() {
           totalRequests,
           totalSessions,
           totalFollowUps,
-          fuRate,
+          fuRate: completionRate,
           totalExitCases,
           totalWarnings,
           totalVoiceResponses,
@@ -303,7 +304,7 @@ export default function QADashboard() {
             <StatCard label={t('คำร้องทั้งหมด', 'Total Requests')} value={totalRequests} icon={<BarChart3 className="h-5 w-5" />} color="sky" />
             <StatCard label={t('ให้คำปรึกษาสำเร็จ', 'Completed Sessions')} value={totalSessions} icon={<CalendarClock className="h-5 w-5" />} color="sky" />
             <StatCard label={t('งานติดตามผลทั้งหมด', 'Total Follow-ups')} value={totalFollowUps} icon={<ListChecks className="h-5 w-5" />} color="sky" />
-            <StatCard label={t('อัตราสำเร็จของงาน', 'Completion Rate')} value={`${fuRate}%`} icon={<TrendingUp className="h-5 w-5" />} color="sky" />
+            <StatCard label={t('อัตราสำเร็จของงาน', 'Completion Rate')} value={`${completionRate}%`} icon={<TrendingUp className="h-5 w-5" />} color="sky" />
             <StatCard label={t('เคสขอลาออก/ลาพัก', 'Exit & Leaves')} value={totalExitCases} icon={<UserX className="h-5 w-5" />} color="red" />
             <StatCard label={t('เคสเตือนภัยวิชาการ', 'Early Warnings')} value={totalWarnings} icon={<AlertTriangle className="h-5 w-5" />} color="amber" />
           </div>
