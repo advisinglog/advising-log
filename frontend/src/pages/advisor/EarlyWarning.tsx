@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useStore } from '@/data/mock-store'
 import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { PageHeader, DataTable, StatusBadge, Button, Modal, Card } from '@/components/ui'
+import { PageHeader, DataTable, StatusBadge, Button, Modal, Card, CustomSelect } from '@/components/ui'
 import { EARLY_WARNING_TYPES } from '@/types'
 import type { EarlyWarningCase, EarlyWarningType, EarlyWarningSeverity, EarlyWarningFollowUp } from '@/types'
 import { Plus, FileText, Clock, CheckCircle2 } from 'lucide-react'
@@ -36,6 +36,24 @@ export default function EarlyWarning() {
     .filter(r => isAdvisorMatch(r.advisorId, currentUser, store.users) && r.isActive)
     .map(r => store.users.find(u => u.id === r.studentId)!)
     .filter(Boolean)
+
+  const studentOptions = myStudents.map(s => ({
+    value: s.id,
+    label: s.name,
+    description: s.code ? `(${s.code})` : undefined,
+  }))
+
+  const warningTypeOptions = EARLY_WARNING_TYPES.map(wt => ({
+    value: wt.value,
+    label: t(wt.labelTh, wt.labelEn),
+  }))
+
+  const severityOptions = [
+    { value: 'low', label: t('ความเสี่ยงต่ำ', 'Low Risk') },
+    { value: 'medium', label: t('ความเสี่ยงปานกลาง', 'Medium Risk') },
+    { value: 'high', label: t('ความเสี่ยงสูง', 'High Risk') },
+    { value: 'critical', label: t('ความเสี่ยงวิกฤตเร่งด่วน', 'Critical Urgent Risk') },
+  ]
 
   function handleCreate() {
     if (!studentId || !warningType || !severity || !description) {
@@ -236,47 +254,34 @@ export default function EarlyWarning() {
       <Modal isOpen={showCreate} onClose={() => setShowCreate(false)} title={t('สร้างเคสเตือนภัยวิชาการใหม่', 'Create Early Warning Case')} size="md">
         <div className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">{t('เลือกนักศึกษาในความดูแล', 'Select Advisee Student')} *</label>
-            <select
+            <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1.5">{t('เลือกนักศึกษาในความดูแล', 'Select Advisee Student')} *</label>
+            <CustomSelect
               value={studentId}
-              onChange={e => setStudentId(e.target.value)}
-              className="w-full px-3.5 py-2 text-xs sm:text-sm border border-slate-200/90 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
-            >
-              <option value="">{t('-- เลือกนักศึกษา --', 'Select a student')}</option>
-              {myStudents.map(s => (
-                <option key={s.id} value={s.id}>{s.name} ({s.code})</option>
-              ))}
-            </select>
+              onChange={setStudentId}
+              options={studentOptions}
+              placeholder={t('-- เลือกนักศึกษา --', 'Select a student')}
+            />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">{t('ประเภทปัจจัยเสี่ยง', 'Warning Factor')} *</label>
-              <select
+              <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1.5">{t('ประเภทปัจจัยเสี่ยง', 'Warning Factor')} *</label>
+              <CustomSelect
                 value={warningType}
-                onChange={e => setWarningType(e.target.value as EarlyWarningType)}
-                className="w-full px-3.5 py-2 text-xs sm:text-sm border border-slate-200/90 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
-              >
-                <option value="">{t('-- เลือกประเภท --', 'Select type')}</option>
-                {EARLY_WARNING_TYPES.map(wt => (
-                  <option key={wt.value} value={wt.value}>{wt.label}</option>
-                ))}
-              </select>
+                onChange={val => setWarningType(val as EarlyWarningType)}
+                options={warningTypeOptions}
+                placeholder={t('-- เลือกประเภทปัจจัยเสี่ยง --', 'Select warning factor')}
+              />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">{t('ระดับความรุนแรง', 'Severity Level')} *</label>
-              <select
+              <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1.5">{t('ระดับความรุนแรง', 'Severity Level')} *</label>
+              <CustomSelect
                 value={severity}
-                onChange={e => setSeverity(e.target.value as EarlyWarningSeverity)}
-                className="w-full px-3.5 py-2 text-xs sm:text-sm border border-slate-200/90 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
-              >
-                <option value="">{t('-- เลือกระดับ --', 'Select severity')}</option>
-                <option value="low">{t('ความเสี่ยงต่ำ', 'Low Risk')}</option>
-                <option value="medium">{t('ความเสี่ยงปานกลาง', 'Medium Risk')}</option>
-                <option value="high">{t('ความเสี่ยงสูง', 'High Risk')}</option>
-                <option value="critical">{t('ความเสี่ยงวิกฤตเร่งด่วน', 'Critical Urgent Risk')}</option>
-              </select>
+                onChange={val => setSeverity(val as EarlyWarningSeverity)}
+                options={severityOptions}
+                placeholder={t('-- เลือกระดับความรุนแรง --', 'Select severity level')}
+              />
             </div>
           </div>
 
@@ -292,18 +297,18 @@ export default function EarlyWarning() {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">{t('การแทรกแซงที่แนะนำ', 'Recommended Intervention')}</label>
+            <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">{t('แนวทางการช่วยเหลือหรือประสานงานที่แนะนำ', 'Recommended Intervention')}</label>
             <textarea
               value={recommendedAction}
               onChange={e => setRecommendedAction(e.target.value)}
               rows={2}
-              placeholder={t('การดำเนินการหรือหน่วยงานที่ควรประสาน...', 'Recommended actions or support units to involve...')}
+              placeholder={t('ระบุการดำเนินการหรือหน่วยงานที่ควรประสานงานช่วยเหลือ...', 'Recommended actions or support units to involve...')}
               className="w-full px-3.5 py-2 text-xs sm:text-sm border border-slate-200/90 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 resize-none"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">{t('วันที่กำหนดติดตาม', 'Follow-up Target Date')}</label>
+            <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">{t('กำหนดวันที่ต้องติดตามผล', 'Follow-up Target Date')}</label>
             <input
               type="date"
               value={followUpDate}
@@ -314,13 +319,13 @@ export default function EarlyWarning() {
 
           <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
             <Button variant="secondary" onClick={() => setShowCreate(false)}>{t('ยกเลิก', 'Cancel')}</Button>
-            <Button variant="primary" onClick={handleCreate}>{t('สร้างเตือนภัย', 'Create Warning')}</Button>
+            <Button variant="primary" onClick={handleCreate}>{t('บันทึกเคสเตือนภัย', 'Create Warning')}</Button>
           </div>
         </div>
       </Modal>
 
       {/* Follow-up Modal */}
-      <Modal isOpen={showFollowUp} onClose={() => { setShowFollowUp(false); setSelectedWarning(null) }} title={t('บันทึกการติดตาม', 'Add Follow-up')} size="md">
+      <Modal isOpen={showFollowUp} onClose={() => { setShowFollowUp(false); setSelectedWarning(null) }} title={t('บันทึกการติดตามผลเคสเตือนภัย', 'Add Early Warning Follow-up')} size="md">
         <div className="space-y-4">
           <div className="p-3 bg-sky-50/70 dark:bg-sky-950/40 rounded-xl border border-sky-100 dark:border-sky-800">
             <p className="text-xs font-semibold text-sky-900 dark:text-sky-200 mb-1">{t('นักศึกษา', 'Student')}</p>
@@ -329,7 +334,7 @@ export default function EarlyWarning() {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">{t('บันทึกการติดตาม', 'Follow-up Notes')} *</label>
+            <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">{t('รายละเอียดการติดตามผลและข้อสังเกต', 'Follow-up Notes')} *</label>
             <textarea
               value={followUpNotes}
               onChange={e => setFollowUpNotes(e.target.value)}
@@ -340,7 +345,7 @@ export default function EarlyWarning() {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">{t('การดำเนินการ', 'Actions Taken')}</label>
+            <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">{t('การดำเนินการช่วยเหลือที่ได้ทำไป', 'Actions Taken')}</label>
             <textarea
               value={followUpActions}
               onChange={e => setFollowUpActions(e.target.value)}
@@ -351,7 +356,7 @@ export default function EarlyWarning() {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">{t('ผลลัพธ์', 'Outcome')}</label>
+            <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">{t('ผลลัพธ์และพัฒนาการของนักศึกษา', 'Outcome & Progress')}</label>
             <textarea
               value={followUpOutcome}
               onChange={e => setFollowUpOutcome(e.target.value)}

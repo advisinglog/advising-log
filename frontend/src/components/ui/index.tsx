@@ -2,15 +2,135 @@
 // Reusable UI Components — Ultra-Clean Minimal White & Sky Blue
 // ============================================================
 
-import { useState, useEffect, type ReactNode } from 'react'
+import { useState, useEffect, useRef, type ReactNode } from 'react'
 import { cn } from '@/lib/utils'
-import { X, CheckCircle2, AlertTriangle, AlertCircle, Info, ChevronLeft, ChevronRight, Search, FileText } from 'lucide-react'
+import { X, CheckCircle2, AlertTriangle, AlertCircle, Info, ChevronLeft, ChevronRight, Search, FileText, ChevronDown, Check } from 'lucide-react'
 import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
 import type { RequestStatus, FollowUpStatus, ReferralStatus, ExitCaseStatus, AppointmentStatus, EarlyWarningSeverity, DocumentStatus } from '@/types'
 
 export { ThemeToggle } from './ThemeToggle'
 export { DocumentViewerModal, type DocumentViewerTarget } from './DocumentViewerModal'
+
+// --- Custom Select Dropdown ---
+
+export interface SelectOption {
+  value: string
+  label: string
+  description?: string
+  icon?: ReactNode
+}
+
+export function CustomSelect({
+  value,
+  onChange,
+  options,
+  placeholder,
+  className,
+  disabled,
+  error,
+}: {
+  value: string
+  onChange: (value: string) => void
+  options: SelectOption[]
+  placeholder?: string
+  className?: string
+  disabled?: boolean
+  error?: boolean
+}) {
+  const [isOpen, setIsOpen] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isOpen])
+
+  const selectedOption = options.find(opt => opt.value === value)
+
+  return (
+    <div ref={containerRef} className={cn('relative w-full', className)}>
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => setIsOpen(prev => !prev)}
+        className={cn(
+          'w-full flex items-center justify-between gap-2 px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border bg-white dark:bg-slate-900 text-left transition-all cursor-pointer shadow-xs',
+          isOpen
+            ? 'border-sky-500 ring-2 ring-sky-500/20'
+            : error
+            ? 'border-rose-400 dark:border-rose-600 focus:ring-rose-500/20'
+            : 'border-slate-200/90 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700',
+          disabled && 'opacity-60 cursor-not-allowed bg-slate-50 dark:bg-slate-800/40'
+        )}
+      >
+        <div className="flex items-center gap-2 min-w-0 truncate">
+          {selectedOption ? (
+            <>
+              {selectedOption.icon && <span className="flex-shrink-0">{selectedOption.icon}</span>}
+              <span className="text-slate-900 dark:text-slate-100 font-medium truncate">{selectedOption.label}</span>
+              {selectedOption.description && (
+                <span className="text-[11px] text-slate-400 dark:text-slate-500 font-normal truncate">
+                  {selectedOption.description}
+                </span>
+              )}
+            </>
+          ) : (
+            <span className="text-slate-400 dark:text-slate-500">{placeholder || '—'}</span>
+          )}
+        </div>
+        <ChevronDown className={cn('h-4 w-4 text-slate-400 transition-transform flex-shrink-0', isOpen && 'rotate-180 text-sky-600 dark:text-sky-400')} />
+      </button>
+
+      {isOpen && (
+        <div className="absolute top-full left-0 right-0 mt-1.5 max-h-60 overflow-y-auto bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-xl shadow-xl z-50 py-1 divide-y divide-slate-100 dark:divide-slate-800/60">
+          {options.length === 0 ? (
+            <div className="px-3.5 py-2.5 text-xs text-slate-400 text-center">ไม่มีตัวเลือก</div>
+          ) : (
+            options.map(option => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => {
+                  onChange(option.value)
+                  setIsOpen(false)
+                }}
+                className={cn(
+                  'w-full text-left px-3.5 py-2.5 text-xs sm:text-sm transition-colors cursor-pointer flex items-center justify-between gap-2',
+                  value === option.value
+                    ? 'bg-sky-50/80 dark:bg-sky-950/50 text-sky-700 dark:text-sky-300 font-semibold'
+                    : 'text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/60'
+                )}
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  {option.icon && <span className="flex-shrink-0">{option.icon}</span>}
+                  <span className="truncate">{option.label}</span>
+                  {option.description && (
+                    <span className="text-[11px] text-slate-400 dark:text-slate-500 font-normal truncate">
+                      {option.description}
+                    </span>
+                  )}
+                </div>
+                {value === option.value && (
+                  <Check className="h-4 w-4 text-sky-600 dark:text-sky-400 flex-shrink-0" />
+                )}
+              </button>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
 
 // --- Status Badge ---
 

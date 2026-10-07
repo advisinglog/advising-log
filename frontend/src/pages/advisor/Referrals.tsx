@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useStore } from '@/data/mock-store'
 import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { PageHeader, DataTable, StatusBadge, Button, Modal } from '@/components/ui'
+import { PageHeader, DataTable, StatusBadge, Button, Modal, CustomSelect } from '@/components/ui'
 import { REFERRAL_DESTINATIONS } from '@/types'
 import type { Referral, ReferralDestination, ReferralDestinationGroup } from '@/types'
 import { Plus } from 'lucide-react'
@@ -29,10 +29,24 @@ export default function Referrals() {
     .map(r => store.users.find(u => u.id === r.studentId)!)
     .filter(Boolean)
 
+  const studentOptions = myStudents.map(s => ({
+    value: s.id,
+    label: s.name,
+    description: s.code ? `(${s.code})` : undefined,
+  }))
+
   // Sessions available for the currently selected student (closed sessions that have a log)
   const availableSessions = studentId
     ? store.sessions.filter(s => s.studentId === studentId && isAdvisorMatch(s.advisorId, currentUser, store.users))
     : []
+
+  const sessionOptions = [
+    { value: '', label: t('-- ไม่อ้างอิงเซสชัน --', '-- No session link --') },
+    ...availableSessions.map(s => ({
+      value: s.id,
+      label: `${s.sessionDate} — ${s.summary.slice(0, 50)}${s.summary.length > 50 ? '…' : ''}`,
+    })),
+  ]
 
   const destinationGroups: { value: ReferralDestinationGroup; label: string; labelEn: string }[] = [
     { value: 'school', label: 'หน่วยงานภายในสำนักวิชา', labelEn: 'Internal School Level' },
@@ -40,6 +54,15 @@ export default function Referrals() {
     { value: 'wellbeing', label: 'สวัสดิการและคุณภาพชีวิตนักศึกษา', labelEn: 'Student Well-being' },
     { value: 'specialized', label: 'หน่วยงานเฉพาะทางอื่นๆ', labelEn: 'Specialized Divisions' },
   ]
+
+  const destinationOptions = REFERRAL_DESTINATIONS.map(d => {
+    const group = destinationGroups.find(g => g.value === d.group)
+    return {
+      value: d.value,
+      label: getReferralLabel(d.value),
+      description: group ? t(group.label, group.labelEn) : undefined,
+    }
+  })
 
   function handleCreate() {
     if (!studentId || !reason || !destination) {
@@ -143,56 +166,38 @@ export default function Referrals() {
       <Modal isOpen={showCreate} onClose={() => setShowCreate(false)} title={t('ส่งต่อนักศึกษาไปยังหน่วยงานสนับสนุน', 'Create Student Support Referral')} size="sm">
         <div className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">{t('เลือกนักศึกษาในความดูแล', 'Select Advisee')} *</label>
-            <select
+            <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1.5">{t('เลือกนักศึกษาในความดูแล', 'Select Advisee')} *</label>
+            <CustomSelect
               value={studentId}
-              onChange={e => { setStudentId(e.target.value); setSessionId('') }}
-              className="w-full px-3.5 py-2 text-xs sm:text-sm border border-slate-200/90 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
-            >
-              <option value="">{t('-- เลือกนักศึกษา --', 'Select a student')}</option>
-              {myStudents.map(s => (
-                <option key={s.id} value={s.id}>{s.name} ({s.code})</option>
-              ))}
-            </select>
+              onChange={val => { setStudentId(val); setSessionId('') }}
+              options={studentOptions}
+              placeholder={t('-- เลือกนักศึกษา --', 'Select a student')}
+            />
           </div>
 
           {/* Optional: link to an existing session */}
           {availableSessions.length > 0 && (
             <div>
-              <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">
+              <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1.5">
                 {t('อ้างอิงบันทึกการให้คำปรึกษา (ไม่บังคับ)', 'Link to Advising Session (Optional)')}
               </label>
-              <select
+              <CustomSelect
                 value={sessionId}
-                onChange={e => setSessionId(e.target.value)}
-                className="w-full px-3.5 py-2 text-xs sm:text-sm border border-slate-200/90 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
-              >
-                <option value="">{t('-- ไม่อ้างอิงเซสชัน --', '-- No session link --')}</option>
-                {availableSessions.map(s => (
-                  <option key={s.id} value={s.id}>
-                    {s.sessionDate} — {s.summary.slice(0, 60)}{s.summary.length > 60 ? '…' : ''}
-                  </option>
-                ))}
-              </select>
+                onChange={setSessionId}
+                options={sessionOptions}
+                placeholder={t('-- ไม่อ้างอิงเซสชัน --', '-- No session link --')}
+              />
             </div>
           )}
 
           <div>
-            <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">{t('หน่วยงานปลายทาง', 'Target Department / Unit')} *</label>
-            <select
+            <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1.5">{t('หน่วยงานปลายทาง', 'Target Department / Unit')} *</label>
+            <CustomSelect
               value={destination}
-              onChange={e => setDestination(e.target.value as ReferralDestination)}
-              className="w-full px-3.5 py-2 text-xs sm:text-sm border border-slate-200/90 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
-            >
-              <option value="">{t('-- เลือกหน่วยงาน --', 'Select destination')}</option>
-              {destinationGroups.map(group => (
-                <optgroup key={group.value} label={t(group.label, group.labelEn)}>
-                  {REFERRAL_DESTINATIONS.filter(d => d.group === group.value).map(d => (
-                    <option key={d.value} value={d.value}>{getReferralLabel(d.value)}</option>
-                  ))}
-                </optgroup>
-              ))}
-            </select>
+              onChange={val => setDestination(val as ReferralDestination)}
+              options={destinationOptions}
+              placeholder={t('-- เลือกหน่วยงาน --', 'Select destination')}
+            />
           </div>
 
           <div>
