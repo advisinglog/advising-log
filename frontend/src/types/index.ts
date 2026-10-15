@@ -364,9 +364,14 @@ export interface ExitCase {
   advisorId: string
   exitType: ExitType
   reasonCode: ExitReasonCode
+  reasonCategory?: string
   details: string
-  dataAnalysisConsent: boolean
-  preferredEffectiveDate: string
+  documents?: string[]
+  advisorAssessment?: string
+  pdpaConsent?: boolean
+  voiceSurveyCompleted?: boolean
+  dataAnalysisConsent?: boolean
+  preferredEffectiveDate?: string
   status: ExitCaseStatus
   createdAt: string
   updatedAt: string

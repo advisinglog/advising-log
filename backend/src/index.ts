@@ -1047,38 +1047,87 @@ app.post('/api/exit-cases', async (c) => {
   const database = db(c)
   if (!database) return c.json({ error: 'Database unavailable' }, 503)
 
-  const body = await c.req.json()
-  const newExitCase = {
-    id: body.id || `EXT${Date.now()}`,
-    studentId: body.studentId,
-    advisorId: body.advisorId,
-    exitType: body.exitType,
-    reasonCode: body.reasonCode,
-    reasonCategory: body.reasonCategory,
-    details: body.details,
-    documents: typeof body.documents === 'string' ? body.documents : JSON.stringify(body.documents || []),
-    advisorAssessment: body.advisorAssessment || null,
-    status: body.status || 'submitted',
-    pdpaConsent: body.pdpaConsent !== undefined ? body.pdpaConsent : true,
-    voiceSurveyCompleted: body.voiceSurveyCompleted || false,
-    createdAt: body.createdAt || new Date().toISOString().split('T')[0],
-    updatedAt: new Date().toISOString().split('T')[0],
-  }
+  try {
+    const body = await c.req.json()
 
-  await database.insert(schema.exitCases).values(newExitCase)
-  return c.json({ success: true, exitCase: newExitCase }, 201)
+    let studentId = body.studentId
+    if (studentId) {
+      const studentUser = await database.select().from(schema.users).where(
+        or(
+          eq(schema.users.id, studentId),
+          eq(schema.users.code, studentId),
+          eq(schema.users.email, studentId),
+        )
+      ).get()
+      if (studentUser) studentId = studentUser.id
+    }
+
+    let advisorId = body.advisorId
+    if (advisorId) {
+      const advUser = await database.select().from(schema.users).where(
+        or(
+          eq(schema.users.id, advisorId),
+          eq(schema.users.code, advisorId),
+          eq(schema.users.email, advisorId),
+        )
+      ).get()
+      if (advUser) advisorId = advUser.id
+    }
+
+    // Map frontend statuses to schema enum if needed
+    let status = body.status || 'submitted'
+    if (status === 'open') status = 'submitted'
+    else if (status === 'under_review') status = 'advisor_reviewed'
+    else if (status === 'resolved' || status === 'closed') status = 'completed'
+
+    const newExitCase = {
+      id: body.id || `EXT${Date.now()}`,
+      studentId: studentId || body.studentId,
+      advisorId: advisorId || body.advisorId,
+      exitType: body.exitType,
+      reasonCode: body.reasonCode,
+      reasonCategory: body.reasonCategory || body.reasonCode || 'general',
+      details: body.details || '',
+      documents: typeof body.documents === 'string' ? body.documents : JSON.stringify(body.documents || []),
+      advisorAssessment: body.advisorAssessment || null,
+      status,
+      pdpaConsent: body.pdpaConsent !== undefined ? body.pdpaConsent : true,
+      voiceSurveyCompleted: body.voiceSurveyCompleted || false,
+      createdAt: body.createdAt || new Date().toISOString().split('T')[0],
+      updatedAt: new Date().toISOString().split('T')[0],
+    }
+
+    await database.insert(schema.exitCases).values(newExitCase).onConflictDoUpdate({
+      target: schema.exitCases.id,
+      set: newExitCase,
+    })
+    return c.json({ success: true, exitCase: newExitCase }, 201)
+  } catch (err: any) {
+    console.error('Failed to create exit case:', err)
+    return c.json({ error: err?.message || 'Failed to create exit case', details: String(err) }, 500)
+  }
 })
 
 app.patch('/api/exit-cases/:id', async (c) => {
   const database = db(c)
   if (!database) return c.json({ error: 'Database unavailable' }, 503)
 
-  const id = c.req.param('id')
-  const body = await c.req.json()
-  await database.update(schema.exitCases)
-    .set({ ...body, updatedAt: new Date().toISOString().split('T')[0] })
-    .where(eq(schema.exitCases.id, id))
-  return c.json({ success: true })
+  try {
+    const id = c.req.param('id')
+    const body = await c.req.json()
+    const updates: Record<string, any> = { ...body, updatedAt: new Date().toISOString().split('T')[0] }
+    if (updates.status === 'open') updates.status = 'submitted'
+    else if (updates.status === 'under_review') updates.status = 'advisor_reviewed'
+    else if (updates.status === 'resolved' || updates.status === 'closed') updates.status = 'completed'
+
+    await database.update(schema.exitCases)
+      .set(updates)
+      .where(eq(schema.exitCases.id, id))
+    return c.json({ success: true })
+  } catch (err: any) {
+    console.error('Failed to update exit case:', err)
+    return c.json({ error: err?.message || 'Failed to update exit case' }, 500)
+  }
 })
 
 app.get('/api/student-voice', async (c) => {

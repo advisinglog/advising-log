@@ -311,13 +311,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       if (eRes && Array.isArray(eRes.exitCases)) {
         const normalizedExitCases = eRes.exitCases.map((e: any) => ({
           ...e,
+          status: e.status === 'submitted' ? 'open' : e.status === 'advisor_reviewed' ? 'under_review' : e.status === 'completed' ? 'closed' : (e.status || 'open'),
           documents: Array.isArray(e.documents)
             ? e.documents
             : typeof e.documents === 'string'
               ? (() => { try { const p = JSON.parse(e.documents); return Array.isArray(p) ? p : [] } catch { return [] } })()
               : [],
         }))
-        setExitCases(normalizedExitCases)
+        if (normalizedExitCases.length > 0) {
+          const backendIds = new Set(normalizedExitCases.map((c: any) => c.id))
+          const merged = [...normalizedExitCases, ...mockExitCases.filter(m => !backendIds.has(m.id))]
+          setExitCases(merged)
+        }
       }
       if (vRes && Array.isArray(vRes.surveys)) {
         const normalized = vRes.surveys.map((s: any) => ({
@@ -335,7 +340,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             overallExperience: s.overallRating ?? 3,
           },
         }))
-        setStudentVoiceResponses(normalized)
+        if (normalized.length > 0) {
+          const backendIds = new Set(normalized.map((s: any) => s.id))
+          const merged = [...normalized, ...mockStudentVoiceResponses.filter(m => !backendIds.has(m.id))]
+          setStudentVoiceResponses(merged)
+        }
       }
       if (aRes && Array.isArray(aRes.logs) && aRes.logs.length > 0) setAuditLogs(aRes.logs)
       if (kRes && Array.isArray(kRes.keys) && kRes.keys.length > 0) setAiKeys(kRes.keys)
@@ -480,9 +489,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const addExitCase = useCallback((ec: Omit<ExitCase, 'id' | 'createdAt' | 'updatedAt'>): ExitCase => {
-    const newEc: ExitCase = { ...ec, id: nextId('EX'), createdAt: now(), updatedAt: now() }
+    const newEc: ExitCase = {
+      ...ec,
+      reasonCategory: ec.reasonCategory || ec.reasonCode,
+      id: nextId('EX'),
+      createdAt: now(),
+      updatedAt: now(),
+    }
     setExitCases(prev => [newEc, ...prev])
-    api.createExitCase(newEc).catch(() => {})
+    api.createExitCase(newEc).catch((err) => {
+      console.error('Failed to persist exit case to backend:', err)
+    })
     return newEc
   }, [])
 

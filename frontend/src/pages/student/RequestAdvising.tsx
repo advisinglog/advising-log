@@ -408,6 +408,7 @@ export default function RequestAdvising() {
           advisorId: advisor.id,
           exitType,
           reasonCode: exitReasonCode,
+          reasonCategory: exitReasonCode,
           details,
           dataAnalysisConsent: true,
           preferredEffectiveDate: preferredDate,
