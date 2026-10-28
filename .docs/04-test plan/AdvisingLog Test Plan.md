@@ -18,7 +18,7 @@ AI Disclosure: AI was used to help draft the initial structure and tables of thi
 
 # **1\. Scope**
 
-Verify that authorised users can complete the advising workflow, that the system handles records and documents correctly, and that it supports real user tasks. Compare task outcomes before and after using the proposed evaluation design in Section 5.
+Verify that authorised users can complete the advising workflow, that the system handles records and documents correctly, and that it supports real user tasks. Compare task outcomes between AdvisingLog V1 (Previous Version) and AdvisingLog V2 (Current Version) using the within-subjects evaluation design in Section 5.
 
 **In scope:** authenticated sign-in and role access; student onboarding and advisor assignment; category-based requests routed to the assigned advisor; scheduling; session notes and follow-ups; documents and form templates; Thai and English interface; QA aggregate dashboards and report exports. Check access boundaries: students see their own records; advisors see authorised advisees; QA case-level access is limited to permitted departure cases.
 
@@ -85,46 +85,52 @@ The team plans to conduct at least 10 real-user testing sessions.
 
 ### **4.2 Testing Procedure**
 
+The evaluation follows a **Within-Subjects comparative design**, where each participant (U01–U10) performs the core advising tasks on **AdvisingLog V1 (Previous Version)** and then on **AdvisingLog V2 (Current Version)** to directly measure performance improvements.
+
+**Session Steps:**
 1. Explain the testing purpose and obtain informed consent (PDPA); ask before recording audio or video.
 2. Assign a participant ID (U01–U10); use codes instead of names throughout.
-3. Provide tasks appropriate to the participant's role, ordered from easy to hard.
-4. Inform the participant: *"We are testing the system, not you."* Instruct them to **think aloud** while completing each task. The moderator observes and the note-taker records; **neither may assist, point, or hint** at any point during the tasks.
-5. Record task success/failure, completion time, errors, and notable observations per task.
-6. Immediately after tasks, collect SUS questionnaire responses, then TAM questionnaire.
-7. Conduct a short 3-question debrief: (a) what did you like, (b) where did you get stuck, (c) would you keep using it and why.
+3. Inform the participant: *"We are testing the system, not you."* Instruct them to **think aloud** while completing each task. The moderator observes and the note-taker records; **neither may assist, point, or hint** at any point during the tasks.
+4. **V1 Tasks:** Provide core tasks on **AdvisingLog V1**. Moderator times completion and note-taker records errors, struggle points, and pass/fail.
+5. **V2 Tasks:** Provide the same core tasks on **AdvisingLog V2**. Moderator times completion and records improved task metrics.
+6. **Questionnaires:** Immediately after completing V2 tasks, collect SUS questionnaire responses (10 items), then TAM questionnaire (9 items) evaluating the V2 system.
+7. **Debrief Interview:** Conduct a short 3-question debrief:
+   - (a) What did you like or find improved in V2 compared to V1?
+   - (b) Where did you get stuck or experience confusion?
+   - (c) Would you continue using AdvisingLog V2 regularly and why?
 8. Thank the participant and enter results into the tracking sheet the same day.
-9. Store anonymised testing evidence (consent form, observation notes, completed questionnaire).
+9. Store anonymised testing evidence (consent forms, observation logs, completed questionnaires).
 
-*Note: One pilot session will be conducted prior to UAT Round 1 to validate the timing, tasks, and observer sheet.*
+*Note: One pilot session will be conducted prior to November 4 to validate the timing, tasks, and observer sheet.*
 
-Each session is expected to follow this flow:
+Each individual session follows this flow:
 
 | Phase | Activity | Duration |
 | :---- | :---- | :---- |
-| Intro | Welcome, purpose explanation, consent | 3 min |
-| Baseline | Participant describes or simulates the old process (LINE / Google Form) | 5 min |
-| Tasks | Core tasks with think-aloud; moderator times, note-taker records | 10–15 min |
-| Questionnaires | SUS (10 items) then TAM (9 items) | 3–6 min |
-| Debrief | 3-question interview | 5 min |
-| **Total** | | **~26–34 min** |
+| Intro | Welcome, purpose explanation, informed consent (PDPA) | 3 min |
+| V1 Tasks | Core tasks on AdvisingLog V1 (Previous Version); think-aloud, timing, errors | 8 min |
+| V2 Tasks | Core tasks on AdvisingLog V2 (Current Version); think-aloud, timing, errors | 7 min |
+| Questionnaires | SUS (10 items) then TAM (9 items) on V2 | 5 min |
+| Debrief | 3-question comparative interview | 4 min |
+| **Total** | | **~27 min** |
 
 ---
 
 # **5\. Metrics — How You Measure**
 
-## **5.1 Required: Task Performance (Before / After)**
+## **5.1 Required: Task Performance (V1 vs V2 Comparison)**
 
-The team will compare relevant tasks completed through the existing advising process and through AdvisingLog.
+The team compares task performance between **AdvisingLog V1 (Previous Version)** and **AdvisingLog V2 (Current Version)** across all 10 participants to demonstrate measurable usability and efficiency gains.
 
-| Metric | Before (Existing Process) | After (AdvisingLog) |
-| ----- | ----- | ----- |
-| Task Completion Time | To be measured | To be measured |
-| Task Success Rate | To be measured | To be measured |
-| Number of Errors | To be measured | To be measured |
+| Metric | AdvisingLog V1 (Previous Version) | AdvisingLog V2 (Current Version) | Expected Improvement |
+| :---- | :---- | :---- | :---- |
+| Task Completion Time | To be measured | To be measured | Significant reduction in mean task duration |
+| Task Success Rate | To be measured | To be measured | Higher completion rate (Target: ≥ 70% on V2) |
+| Number of Errors | To be measured | To be measured | Reduction in user mis-clicks and workflow errors |
 
 Task Success Rate (%) \= (Successful Tasks / Attempted Tasks) × 100
 
-The team will also calculate the average time saved when comparable baseline data is available.
+The team will calculate the percentage of time saved and error reduction from V1 to V2.
 
 ## **5.2 Optional: System Usability Scale (SUS)**
 
@@ -179,11 +185,11 @@ Scoring: each construct score = mean of its three items per user. Report mean ±
 | Oct 29–31 | Run Unit & Integration Tests (Vitest); fix bugs | Tech Lead (Sai Seng) \+ AI Lead (Woranut) | To Do |
 | Nov 1–3 | Run E2E Tests (Playwright) for all critical flows | Tech Lead | To Do |
 | Nov 1–3 | Set up Staging environment \+ Seed Data (U01–U10) | Tech Lead | To Do |
-| Nov 1–3 | Contact and confirm UAT Round 1 participants (U01–U05) | Product Owner | To Do |
-| Nov 4 (AM) | ★ UAT Round 1 — U01 through U05 | Moderator \+ Note-taker | To Do |
-| Nov 4 (PM) | Collect Round 1 feedback; prioritize bug and UX fixes | QA Lead | To Do |
-| Nov 4 (PM) | ★ UAT Round 2 — U06 through U10 (after critical fixes) | Moderator \+ Note-taker | To Do |
-| Nov 5–9 | Calculate SUS scores, TAM means, Before/After comparison | QA Lead | To Do |
+| Nov 1–3 | Contact and schedule 10 UAT participants (U01–U10) | Product Owner | To Do |
+| Nov 4 (AM) | ★ UAT Sessions — U01 through U05 (V1 vs V2 testing) | Moderator \+ Note-taker | To Do |
+| Nov 4 (PM) | ★ UAT Sessions — U06 through U10 (V1 vs V2 testing) | Moderator \+ Note-taker | To Do |
+| Nov 4 (Late PM) | Consolidate day's testing logs, notes, and questionnaire submissions | QA Lead | To Do |
+| Nov 5–9 | Calculate SUS scores, TAM means, V1 vs V2 comparison | QA Lead | To Do |
 | Nov 9–10 | Prepare final test summary for report and presentation | All members | To Do |
 | Nov 11 | ★ Final Presentation | All members | To Do |
 
@@ -193,7 +199,7 @@ Scoring: each construct score = mean of its three items per user. Report mean ±
 | :---- | :---- |
 | Unit / Integration Tests passing | \>= 90% pass rate |
 | E2E core flows passing | 100% in Chromium |
-| UAT sessions completed | \>= 10 sessions (Round 1 \+ Round 2 both done) |
+| UAT sessions completed | \>= 10 sessions (All participants complete V1 & V2) |
 | Task Success Rate | \>= 70% per task |
 | SUS Score (overall) | \>= 68 (Acceptable) |
 | TAM Score (all dimensions) | \>= 3.5 / 5.0 |
@@ -203,7 +209,7 @@ Scoring: each construct score = mean of its three items per user. Report mean ±
 
 | Severity | Definition | Example | Fix SLA |
 | :---- | :---- | :---- | :---- |
-| Critical | System is unusable | Cannot log in; data loss | Fix before UAT Round 2 |
+| Critical | System is unusable | Cannot log in; data loss | Immediate fix |
 | High | Core feature fails | Cannot submit request; upload fails | Fix within 1 day |
 | Medium | Feature works but causes UX confusion | Unclear labels; confusing workflow | Fix before Final Presentation |
 | Low | Cosmetic / visual issue | Color inconsistency; typo | Fix if time permits |
