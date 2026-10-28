@@ -16,11 +16,9 @@ AI Disclosure: AI was used to help draft the initial structure and tables of thi
 | QA / Test Lead | Wilasinee Mangkorn | 6631503039 |
 | Product Owner | Pirisa Kitichai | 6631503031 |
 
-## 
-
 # **1\. Scope**
 
-Verify that authorised users can complete the advising workflow, that the system handles records and documents correctly, and that it supports real user tasks. Compare task outcomes before and after using the proposed evaluation design in Section 8\.
+Verify that authorised users can complete the advising workflow, that the system handles records and documents correctly, and that it supports real user tasks. Compare task outcomes before and after using the proposed evaluation design in Section 5.
 
 **In scope:** authenticated sign-in and role access; student onboarding and advisor assignment; category-based requests routed to the assigned advisor; scheduling; session notes and follow-ups; documents and form templates; Thai and English interface; QA aggregate dashboards and report exports. Check access boundaries: students see their own records; advisors see authorised advisees; QA case-level access is limited to permitted departure cases.
 
@@ -41,8 +39,6 @@ The team will perform four levels of testing following the Testing Pyramid.
 | End-to-End (E2E) Testing | Verify the complete workflow | Student requests advising → Advisor records session → Follow-up task is assigned |
 | User Acceptance Testing (UAT) | Evaluate system usability with real users | Students and advisors perform realistic advising activities |
 
-## 
-
 # **3\. Test Cases — Test Cases and UAT Scenarios**
 
 ### **3.1 Functional Test Cases**
@@ -62,8 +58,6 @@ The team will perform four levels of testing following the Testing Pyramid.
 
 **Note:** Pending means the test has not yet been executed. The team will record actual Pass/Fail results during testing.
 
-### 
-
 ### **3.2 UAT Scenarios**
 
 | UAT ID | User Role | Scenario | Success Criteria |
@@ -71,7 +65,7 @@ The team will perform four levels of testing following the Testing Pyramid.
 | UAT01 | Student | Request an advising session | Request successfully submitted |
 | UAT02 | Student | Check the status of an advising request | Correct status identified |
 | UAT03 | Advisor | Record a completed advising session | Session record saved |
-| Advisor | Advisor | Assign a follow-up task | Task assigned to intended student |
+| UAT04 | Advisor | Assign a follow-up task | Task assigned to intended student |
 | UAT05 | Student | Update a follow-up task | Task status saved correctly |
 
 Users will receive scenarios rather than step-by-step button instructions.
@@ -91,19 +85,32 @@ The team plans to conduct at least 10 real-user testing sessions.
 
 ### **4.2 Testing Procedure**
 
-1. Explain the testing purpose and obtain consent.  
-2. Assign a participant ID (U01–U10).  
-3. Provide tasks appropriate to the participant's role.  
-4. Allow the participant to complete tasks independently.  
-5. Record task success, completion time, errors, and issues.  
-6. Collect questionnaire responses and feedback.  
-7. Store anonymised testing evidence.
+1. Explain the testing purpose and obtain informed consent (PDPA); ask before recording audio or video.
+2. Assign a participant ID (U01–U10); use codes instead of names throughout.
+3. Provide tasks appropriate to the participant's role, ordered from easy to hard.
+4. Inform the participant: *"We are testing the system, not you."* Instruct them to **think aloud** while completing each task. The moderator observes and the note-taker records; **neither may assist, point, or hint** at any point during the tasks.
+5. Record task success/failure, completion time, errors, and notable observations per task.
+6. Immediately after tasks, collect SUS questionnaire responses, then TAM questionnaire.
+7. Conduct a short 3-question debrief: (a) what did you like, (b) where did you get stuck, (c) would you keep using it and why.
+8. Thank the participant and enter results into the tracking sheet the same day.
+9. Store anonymised testing evidence (consent form, observation notes, completed questionnaire).
 
-Each session is expected to take approximately 25–30 minutes.
+*Note: One pilot session will be conducted prior to UAT Round 1 to validate the timing, tasks, and observer sheet.*
+
+Each session is expected to follow this flow:
+
+| Phase | Activity | Duration |
+| :---- | :---- | :---- |
+| Intro | Welcome, purpose explanation, consent | 3 min |
+| Baseline | Participant describes or simulates the old process (LINE / Google Form) | 5 min |
+| Tasks | Core tasks with think-aloud; moderator times, note-taker records | 10–15 min |
+| Questionnaires | SUS (10 items) then TAM (9 items) | 3–6 min |
+| Debrief | 3-question interview | 5 min |
+| **Total** | | **~26–34 min** |
 
 ---
 
-**5\. Metrics — How You Measure**
+# **5\. Metrics — How You Measure**
 
 ## **5.1 Required: Task Performance (Before / After)**
 
@@ -121,24 +128,35 @@ The team will also calculate the average time saved when comparable baseline dat
 
 ## **5.2 Optional: System Usability Scale (SUS)**
 
-The team proposes using SUS to evaluate ease of use.
+The team evaluates usability using the standard 10-item System Usability Scale (Brooke, 1996) on a 5-point Likert scale (1 = Strongly Disagree to 5 = Strongly Agree).
 
-* 10 standardised questions  
-* Five-point Likert scale  
-* Total score from 0 to 100  
-* Compare the average score with the benchmark of 68
+**Scoring Method:**
+* Odd items (1, 3, 5, 7, 9): `Score − 1`
+* Even items (2, 4, 6, 8, 10): `5 − Score`
+* System SUS Score = `(Sum of all 10 adjusted scores) × 2.5` (normalized range: 0–100)
+* Report mean ± SD across participants. Target benchmark: **≥ 68 / 100** (Sauro & Lewis average).
 
 ## **5.3 Optional: Technology Acceptance Model (TAM)**
 
-The team proposes using TAM to evaluate:
+The team uses **TAM (Davis, 1989)** to evaluate technology acceptance. TAM is selected over UTAUT2 because AdvisingLog is an institutional system that users are expected to use as part of their academic process — not a consumer app chosen freely — making TAM the more appropriate model.
 
-* Perceived Usefulness (PU)  
-* Perceived Ease of Use (PEOU)  
-* Behavioural Intention (BI)
+Three constructs are measured, each with three items on a 5-point Likert scale (1 = Strongly Disagree, 5 = Strongly Agree):
 
-The team will report the average score and standard deviation for each construct.
+| Code | Construct | Questionnaire Item |
+| :---- | :---- | :---- |
+| **PU1** | Perceived Usefulness | Using AdvisingLog lets me request advising appointments more quickly. |
+| **PU2** | Perceived Usefulness | Using AdvisingLog makes it easier to track my advising history and follow-up tasks. |
+| **PU3** | Perceived Usefulness | I find AdvisingLog useful for my academic and advising needs. |
+| **PEOU1** | Perceived Ease of Use | Learning to use AdvisingLog is easy for me. |
+| **PEOU2** | Perceived Ease of Use | My interaction with AdvisingLog is clear and understandable. |
+| **PEOU3** | Perceived Ease of Use | I find AdvisingLog easy to use. |
+| **BI1** | Behavioural Intention | I intend to use AdvisingLog when I need advising. |
+| **BI2** | Behavioural Intention | I plan to keep using AdvisingLog throughout the semester. |
+| **BI3** | Behavioural Intention | If AdvisingLog is officially launched, I would use it regularly. |
 
-**\[TO CONFIRM\]:** Final questionnaire selection. If standard instruments are not used, the team must document an alternative evaluation method and its evidence.
+*Items adapted from Davis (1989) and Venkatesh & Davis (2000). "AdvisingLog" replaces the generic system name.*
+
+Scoring: each construct score = mean of its three items per user. Report mean ± SD across all participants. Target: **≥ 3.5 / 5.0** per construct.
 
 ---
 
@@ -147,10 +165,6 @@ The team will report the average score and standard deviation for each construct
 ### **6.1 Master Timeline**
 
 ![Testing Timeline and Milestones](<img/Master Timeline.png>)
-
-### 
-
-### 
 
 ### **6.2 Activity Table**
 
@@ -184,10 +198,6 @@ The team will report the average score and standard deviation for each construct
 | SUS Score (overall) | \>= 68 (Acceptable) |
 | TAM Score (all dimensions) | \>= 3.5 / 5.0 |
 | Open Critical bugs | \= 0 |
-
-### 
-
-### 
 
 ### **6.4 Defect Severity Classification**
 
