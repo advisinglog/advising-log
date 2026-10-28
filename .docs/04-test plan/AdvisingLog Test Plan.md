@@ -1,4 +1,4 @@
-# **Test Plan — AdvisingLog**
+# Test Plan — AdvisingLog
 
 ## Student Advising Record System (Software Engineering Program)
 
@@ -16,19 +16,23 @@ AI Disclosure: AI was used to help draft the initial structure and tables of thi
 | QA / Test Lead | Wilasinee Mangkorn | 6631503039 |
 | Product Owner | Pirisa Kitichai | 6631503031 |
 
-# **1\. Scope**
+## ---
 
-Verify that authorised users can complete the advising workflow, that the system handles records and documents correctly, and that it supports real user tasks. Compare task outcomes between AdvisingLog V1 (Previous Version) and AdvisingLog V2 (Current Version) using the within-subjects evaluation design in Section 5.
+# 1\. Scope
 
-**In scope:** authenticated sign-in and role access; student onboarding and advisor assignment; category-based requests routed to the assigned advisor; scheduling; session notes and follow-ups; documents and form templates; Thai and English interface; QA aggregate dashboards and report exports. Check access boundaries: students see their own records; advisors see authorised advisees; QA case-level access is limited to permitted departure cases.
+Verify that authorised users can complete the advising workflow, that the system handles records and documents correctly, and that it supports real user tasks. Compare task outcomes between AdvisingLog V1 (Previous Version) and AdvisingLog V2 (Current Version) using the within-subjects evaluation design in Section 5\. 
+
+In scope: authenticated sign-in and role access; student onboarding and advisor assignment; category-based requests routed to the assigned advisor; scheduling; session notes and follow-ups; documents and form templates; Thai and English interface; QA aggregate dashboards and report exports. Check access boundaries: students see their own records; advisors see authorised advisees; QA case-level access is limited to permitted departure cases.
 
 Conditional scope: departure cases, Student Voice, AI analysis, automated email/reminders and Calendar handoff. Confirm availability in the evaluated build and expand test cases before execution. The supplied proposal/specification describes intended requirements, while the backlog and user journey include prototype or unfinished behaviour; none proves current implementation.
 
-**Out of scope for this cycle:** large-scale load testing, exhaustive penetration testing and internal testing of Google or Cloudinary services. Basic access control and external-service failure handling remain in scope.
+Out of scope for this cycle: large-scale load testing, exhaustive penetration testing and internal testing of Google or Cloudinary services. Basic access control and external-service failure handling remain in scope.
 
-## **2\. Levels — Which Test Levels**
+---
 
-![Test Levels](<img/Test Level.png>)
+## 2\. Levels — Which Test Levels
+
+![][image1]
 
 The team will perform four levels of testing following the Testing Pyramid.
 
@@ -39,9 +43,11 @@ The team will perform four levels of testing following the Testing Pyramid.
 | End-to-End (E2E) Testing | Verify the complete workflow | Student requests advising → Advisor records session → Follow-up task is assigned |
 | User Acceptance Testing (UAT) | Evaluate system usability with real users | Students and advisors perform realistic advising activities |
 
-# **3\. Test Cases — Test Cases and UAT Scenarios**
+---
 
-### **3.1 Functional Test Cases**
+# 3\. Test Cases — Test Cases and UAT Scenarios
+
+### 3.1 Functional Test Cases
 
 | ID | Test Case | Test Steps | Test Data | Expected Result | Pass/Fail |
 | :---- | :---- | :---- | :---- | :---- | :---- |
@@ -56,9 +62,9 @@ The team will perform four levels of testing following the Testing Pyramid.
 | TC09 | View Advising History | Open advising history | Existing advising records | Authorised records displayed | Pending |
 | TC10 | Unauthorized Access | Attempt to access another student's record | Unauthorized record ID | Access denied | Pending |
 
-**Note:** Pending means the test has not yet been executed. The team will record actual Pass/Fail results during testing.
+Note: Pending means the test has not yet been executed. The team will record actual Pass/Fail results during testing.
 
-### **3.2 UAT Scenarios**
+### 3.2 UAT Scenarios
 
 | UAT ID | User Role | Scenario | Success Criteria |
 | :---- | :---- | :---- | :---- |
@@ -67,12 +73,15 @@ The team will perform four levels of testing following the Testing Pyramid.
 | UAT03 | Advisor | Record a completed advising session | Session record saved |
 | UAT04 | Advisor | Assign a follow-up task | Task assigned to intended student |
 | UAT05 | Student | Update a follow-up task | Task status saved correctly |
+| UAT06  | QA Coordinator / Program Staff  | View the QA dashboard and generate an advising report.  | Authorized aggregate data is displayed correctly, and the report is exported successfully.  |
 
 Users will receive scenarios rather than step-by-step button instructions.
 
-# **4\. Users — Real Users**
+---
 
-## **4.1 Target Participants**
+# 4\. Users — Real Users
+
+## 4.1 Target Participants
 
 The team plans to conduct at least 10 real-user testing sessions.
 
@@ -81,29 +90,30 @@ The team plans to conduct at least 10 real-user testing sessions.
 | Software Engineering Students | 7 | 7 |
 | Advisors / Instructors | 2 | 2 |
 | QA Coordinator / Program Staff | 1 | 1 |
-| **Total** | **10** | **10** |
+| Total | 10 | 10 |
 
-### **4.2 Testing Procedure**
+### 4.2 Testing Procedure
 
-The evaluation follows a **Within-Subjects comparative design**, where each participant (U01–U10) performs the core advising tasks on **AdvisingLog V1 (Previous Version)** and then on **AdvisingLog V2 (Current Version)** to directly measure performance improvements.
+The evaluation uses a Within-Subjects comparative design, in which each participant (U01–U10) performs the core advising tasks on AdvisingLog V1 (Previous Version) and then on AdvisingLog V2 (Current Version) to directly measure performance improvements.
 
-**Session Steps:**
-1. Explain the testing purpose and obtain informed consent (PDPA); ask before recording audio or video.
-2. Assign a participant ID (U01–U10); use codes instead of names throughout.
-3. Inform the participant: *"We are testing the system, not you."* Instruct them to **think aloud** while completing each task. The moderator observes and the note-taker records; **neither may assist, point, or hint** at any point during the tasks.
-4. **V1 Tasks:** Provide core tasks on **AdvisingLog V1**. Moderator times completion and note-taker records errors, struggle points, and pass/fail.
-5. **V2 Tasks:** Provide the same core tasks on **AdvisingLog V2**. Moderator times completion and records improved task metrics.
-6. **Questionnaires:** Immediately after completing V2 tasks, collect SUS questionnaire responses (10 items), then TAM questionnaire (9 items) evaluating the V2 system.
-7. **Debrief Interview:** Conduct a short 3-question debrief:
-   - (a) What did you like or find improved in V2 compared to V1?
-   - (b) Where did you get stuck or experience confusion?
-   - (c) Would you continue using AdvisingLog V2 regularly and why?
-8. Thank the participant and enter results into the tracking sheet the same day.
+Session Steps:
+
+1. Explain the testing purpose and obtain informed consent (PDPA); ask before recording audio or video.  
+2. Assign a participant ID (U01–U10); use codes instead of names throughout.  
+3. Inform the participant: *"We are testing the system, not you."* Instruct them to think aloud while completing each task. The moderator observes and the note-taker records; neither may assist, point, or hint at any point during the tasks.  
+4. V1 Tasks: Provide core tasks on AdvisingLog V1. The moderator times completion, and the note-taker records errors, struggle points, and pass/fail.  
+5. V2 Tasks: Provide the same core tasks on AdvisingLog V2. Moderator times completion and records improved task metrics.  
+6. Questionnaires: Immediately after completing V2 tasks, collect SUS questionnaire responses (10 items), then TAM questionnaire (9 items) evaluating the V2 system.  
+7. Debrief Interview: Conduct a short 3-question debrief:  
+   * (a) What did you like or find improved in V2 compared to V1?  
+   * (b) Where did you get stuck or experience confusion?  
+   * (c) Would you continue using AdvisingLog V2 regularly and why?  
+8. Thank the participant and enter results into the tracking sheet the same day.  
 9. Store anonymised testing evidence (consent forms, observation logs, completed questionnaires).
 
-*Note: One pilot session will be conducted prior to November 4 to validate the timing, tasks, and observer sheet.*
+*Note: One pilot session will be conducted before November 4 to validate the timing, tasks, and observer sheet.*
 
-Each individual session follows this flow:
+Each session follows this flow:
 
 | Phase | Activity | Duration |
 | :---- | :---- | :---- |
@@ -112,67 +122,65 @@ Each individual session follows this flow:
 | V2 Tasks | Core tasks on AdvisingLog V2 (Current Version); think-aloud, timing, errors | 7 min |
 | Questionnaires | SUS (10 items) then TAM (9 items) on V2 | 5 min |
 | Debrief | 3-question comparative interview | 4 min |
-| **Total** | | **~27 min** |
+| Total |  | \~27 min |
 
 ---
 
-# **5\. Metrics — How You Measure**
+5\. Metrics — How You Measure
 
-## **5.1 Required: Task Performance (V1 vs V2 Comparison)**
+## 5.1 Required: Task Performance (V1 vs V2 Comparison)
 
-The team compares task performance between **AdvisingLog V1 (Previous Version)** and **AdvisingLog V2 (Current Version)** across all 10 participants to demonstrate measurable usability and efficiency gains.
+The team compares task performance between AdvisingLog V1 (Previous Version) and AdvisingLog V2 (Current Version) across all 10 participants to demonstrate measurable usability and efficiency gains.
 
 | Metric | AdvisingLog V1 (Previous Version) | AdvisingLog V2 (Current Version) | Expected Improvement |
-| :---- | :---- | :---- | :---- |
-| Task Completion Time | To be measured | To be measured | Significant reduction in mean task duration |
-| Task Success Rate | To be measured | To be measured | Higher completion rate (Target: ≥ 70% on V2) |
-| Number of Errors | To be measured | To be measured | Reduction in user mis-clicks and workflow errors |
+| ----- | ----- | ----- | ----- |
+| Task Completion Time | To be measured | To be measured | To be measured |
+| Task Success Rate | To be measured | To be measured | To be measured |
+| Number of Errors | To be measured | To be measured | To be measured |
 
 Task Success Rate (%) \= (Successful Tasks / Attempted Tasks) × 100
 
-The team will calculate the percentage of time saved and error reduction from V1 to V2.
+The team will calculate the percentage of time saved and error reduction from V1 to V2. 
 
-## **5.2 Optional: System Usability Scale (SUS)**
+## 5.2 Optional: System Usability Scale (SUS)
 
-The team evaluates usability using the standard 10-item System Usability Scale (Brooke, 1996) on a 5-point Likert scale (1 = Strongly Disagree to 5 = Strongly Agree).
+The team proposes using SUS to evaluate ease of use.
 
-**Scoring Method:**
-* Odd items (1, 3, 5, 7, 9): `Score − 1`
-* Even items (2, 4, 6, 8, 10): `5 − Score`
-* System SUS Score = `(Sum of all 10 adjusted scores) × 2.5` (normalized range: 0–100)
-* Report mean ± SD across participants. Target benchmark: **≥ 68 / 100** (Sauro & Lewis average).
+* 10 standardised questions  
+* Five-point Likert scale  
+* Total score from 0 to 100  
+* Compare the average score with the benchmark of 68
 
-## **5.3 Optional: Technology Acceptance Model (TAM)**
+## 5.3: Technology Acceptance Model (TAM)
 
-The team uses **TAM (Davis, 1989)** to evaluate technology acceptance. TAM is selected over UTAUT2 because AdvisingLog is an institutional system that users are expected to use as part of their academic process — not a consumer app chosen freely — making TAM the more appropriate model.
-
-Three constructs are measured, each with three items on a 5-point Likert scale (1 = Strongly Disagree, 5 = Strongly Agree):
+The team uses **TAM (Davis, 1989\)** to evaluate technology acceptance. TAM is selected over UTAUT2 because AdvisingLog is an institutional system that users are expected to use as part of their academic process — not a consumer app chosen freely — making TAM the more appropriate model.  
+Three constructs are measured, each with three items on a 5-point Likert scale (1 \= Strongly Disagree, 5 \= Strongly Agree):
 
 | Code | Construct | Questionnaire Item |
 | :---- | :---- | :---- |
-| **PU1** | Perceived Usefulness | Using AdvisingLog lets me request advising appointments more quickly. |
-| **PU2** | Perceived Usefulness | Using AdvisingLog makes it easier to track my advising history and follow-up tasks. |
-| **PU3** | Perceived Usefulness | I find AdvisingLog useful for my academic and advising needs. |
-| **PEOU1** | Perceived Ease of Use | Learning to use AdvisingLog is easy for me. |
-| **PEOU2** | Perceived Ease of Use | My interaction with AdvisingLog is clear and understandable. |
-| **PEOU3** | Perceived Ease of Use | I find AdvisingLog easy to use. |
-| **BI1** | Behavioural Intention | I intend to use AdvisingLog when I need advising. |
-| **BI2** | Behavioural Intention | I plan to keep using AdvisingLog throughout the semester. |
-| **BI3** | Behavioural Intention | If AdvisingLog is officially launched, I would use it regularly. |
+| PU1 | Perceived Usefulness (PU) | Using AdvisingLog helps me complete advising tasks more quickly. |
+| PU2 | Perceived Usefulness (PU) | AdvisingLog improves the quality and accuracy of advising records. |
+| PU3 | Perceived Usefulness (PU) | Overall, I find AdvisingLog useful for my academic advising tasks. |
+| PEOU1 | Perceived Ease of Use (PEOU) | Learning to use AdvisingLog is easy for me. |
+| PEOU2 | Perceived Ease of Use (PEOU) | It is easy to navigate and find the features I need in AdvisingLog. |
+| PEOU3 | Perceived Ease of Use (PEOU) | Overall, I find AdvisingLog clear and easy to use. |
+| BI1 | Behavioural Intention to Use (BI) | I intend to use AdvisingLog for future advising activities. |
+| BI2 | Behavioural Intention to Use (BI) | I plan to continue using AdvisingLog for future advising activities.  |
+| BI3 | Behavioural Intention to Use (BI) | If AdvisingLog is available, I intend to use it regularly for advising-related tasks.  |
 
 *Items adapted from Davis (1989) and Venkatesh & Davis (2000). "AdvisingLog" replaces the generic system name.*
 
-Scoring: each construct score = mean of its three items per user. Report mean ± SD across all participants. Target: **≥ 3.5 / 5.0** per construct.
+Scoring: each construct score \= mean of its three items per user. Report mean ± SD across all participants. Target: ≥ 3.5 / 5.0 per construct.
 
 ---
 
-# **6\. Testing Schedule**
+# 6\. Testing Schedule
 
-### **6.1 Master Timeline**
+### 6.1 Master Timeline
 
-![Testing Timeline and Milestones](<img/Master Timeline.png>)
+![][image2]
 
-### **6.2 Activity Table**
+### 6.2 Activity Table
 
 | Date | Activity | Owner | Status |
 | :---- | :---- | :---- | :---- |
@@ -193,24 +201,23 @@ Scoring: each construct score = mean of its three items per user. Report mean ±
 | Nov 9–10 | Prepare final test summary for report and presentation | All members | To Do |
 | Nov 11 | ★ Final Presentation | All members | To Do |
 
-### **6.3 Exit Criteria (Testing is Complete When All Are Met)**
+### 6.3 Exit Criteria (Testing is Complete When All Are Met)
 
 | Criterion | Target |
 | :---- | :---- |
 | Unit / Integration Tests passing | \>= 90% pass rate |
 | E2E core flows passing | 100% in Chromium |
-| UAT sessions completed | \>= 10 sessions (All participants complete V1 & V2) |
+| UAT sessions completed | \>= 10 sessions (All participants complete V1 & V2)  |
 | Task Success Rate | \>= 70% per task |
 | SUS Score (overall) | \>= 68 (Acceptable) |
 | TAM Score (all dimensions) | \>= 3.5 / 5.0 |
 | Open Critical bugs | \= 0 |
 
-### **6.4 Defect Severity Classification**
+### 6.4 Defect Severity Classification
 
 | Severity | Definition | Example | Fix SLA |
 | :---- | :---- | :---- | :---- |
-| Critical | System is unusable | Cannot log in; data loss | Immediate fix |
+| Critical | System is unusable | Cannot log in; data loss | Fix before UAT Round 2 |
 | High | Core feature fails | Cannot submit request; upload fails | Fix within 1 day |
 | Medium | Feature works but causes UX confusion | Unclear labels; confusing workflow | Fix before Final Presentation |
-| Low | Cosmetic / visual issue | Color inconsistency; typo | Fix if time permits |
-
+| Low | Cosmetic/visual issue | Colour inconsistency; typo | Fix if time permits |
