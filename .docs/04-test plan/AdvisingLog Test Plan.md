@@ -32,7 +32,7 @@ Out of scope for this cycle: large-scale load testing, exhaustive penetration te
 
 ## 2\. Levels â€” Which Test Levels
 
-![][image1]
+![Test Levels](<./img/Test Level.png>)
 
 The team will perform four levels of testing following the Testing Pyramid.
 
@@ -178,7 +178,7 @@ Scoring: each construct score \= mean of its three items per user. Report mean Â
 
 ### 6.1 Master Timeline
 
-![][image2]
+![Master Timeline](<./img/Master Timeline.png>)
 
 ### 6.2 Activity Table
 
