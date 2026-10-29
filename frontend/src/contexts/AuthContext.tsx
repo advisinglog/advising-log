@@ -3,7 +3,7 @@
 // ============================================================
 
 import { createContext, useContext, useState, useCallback, type ReactNode } from 'react'
-import type { User } from '@/types'
+import type { User, UserRole } from '@/types'
 import { mockUsers, mockRoster } from '@/test/fixtures'
 import { getLocalDateString } from '@/utils/dateUtils'
 
@@ -23,6 +23,8 @@ interface AuthState {
   /** Login with Google ID Token credential */
   loginWithGoogle: (credential: string) => Promise<GoogleLoginResult>
   logout: () => void
+  /** Switch active role for users with multi-role permissions */
+  switchRole?: (role: UserRole) => boolean
 }
 
 const AuthContext = createContext<AuthState | null>(null)
@@ -40,14 +42,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const u = JSON.parse(saved)
         if (u && (u.email?.toLowerCase() === 'se.advisinglog@gmail.com' || u.code === 'ADM-SUPER')) {
-          u.role = 'super_admin'
+          if (!u.baseRole) u.baseRole = 'super_admin'
+          if (!u.role) u.role = 'super_admin'
           if (u.name === 'System Admin' || u.name === 'System Super Admin' || u.name === 'System Super Admin (SE AdvisingLog)') {
             u.name = 'Super Admin'
           }
           localStorage.setItem('advising_log_auth_user', JSON.stringify(u))
+        } else if (u && !u.baseRole) {
+          u.baseRole = u.role
+          localStorage.setItem('advising_log_auth_user', JSON.stringify(u))
         }
         return u
-      } catch {}
+      } catch { }
     }
     return null
   })
@@ -55,8 +61,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback((userId: string, _password?: string): boolean => {
     const user = mockUsers.find(u => u.id === userId.toUpperCase())
     if (user) {
-      setCurrentUser(user)
-      localStorage.setItem('advising_log_auth_user', JSON.stringify(user))
+      const userWithBase: User = {
+        ...user,
+        baseRole: user.baseRole || user.role,
+      }
+      setCurrentUser(userWithBase)
+      localStorage.setItem('advising_log_auth_user', JSON.stringify(userWithBase))
       return true
     }
     return false
@@ -74,9 +84,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const data = await res.json() as { success: boolean; user?: User; error?: string; message?: string; email?: string }
       if (res.ok && data.success && data.user) {
-        setCurrentUser(data.user)
-        localStorage.setItem('advising_log_auth_user', JSON.stringify(data.user))
-        return { success: true, user: data.user }
+        const userWithBase: User = {
+          ...data.user,
+          baseRole: data.user.baseRole || data.user.role,
+        }
+        setCurrentUser(userWithBase)
+        localStorage.setItem('advising_log_auth_user', JSON.stringify(userWithBase))
+        return { success: true, user: userWithBase }
       } else if (data.message || data.error) {
         return { success: false, error: data.error, message: data.message, email: data.email }
       }
@@ -150,6 +164,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         const newUser: User = existingUser ? {
           ...existingUser,
+          baseRole: existingUser.baseRole || existingUser.role,
           name: (existingUser.name.startsWith('Student ') || existingUser.name.includes('@') || existingUser.name === userCode) && name ? name : existingUser.name,
           code: isAuthorizedAdmin ? 'ADM-SUPER' : existingUser.code,
           role: isAuthorizedAdmin ? 'super_admin' : existingUser.role,
@@ -160,6 +175,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           name: isAuthorizedAdmin ? 'Super Admin' : name,
           email,
           role,
+          baseRole: role,
           department: isAuthorizedAdmin ? 'Academic & System Affairs' : 'School of Applied Digital Technology (ADT)',
           avatar: picture,
           isActive: true,
@@ -171,7 +187,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.setItem('advising_log_auth_user', JSON.stringify(newUser))
         return { success: true, user: newUser }
       }
-    } catch {}
+    } catch { }
 
     return { success: false, error: 'AUTH_FAILED', message: 'การเข้าสู่ระบบด้วย Google ล้มเหลว กรุณาลองใหม่อีกครั้ง' }
   }, [])
@@ -181,6 +197,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('advising_log_auth_user')
   }, [])
 
+  const switchRole = useCallback((newRole: UserRole): boolean => {
+    let updated: User | null = null
+    setCurrentUser(prev => {
+      if (!prev) return null
+      updated = {
+        ...prev,
+        baseRole: prev.baseRole || prev.role,
+        role: newRole,
+      }
+      localStorage.setItem('advising_log_auth_user', JSON.stringify(updated))
+      return updated
+    })
+    return Boolean(updated)
+  }, [])
+
   return (
     <AuthContext.Provider value={{
       currentUser,
@@ -188,6 +219,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       login,
       loginWithGoogle,
       logout,
+      switchRole,
     }}>
       {children}
     </AuthContext.Provider>

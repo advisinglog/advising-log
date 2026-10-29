@@ -1,11 +1,28 @@
 import { useAuth } from '@/contexts/AuthContext'
 import { useStore } from '@/data/mock-store'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { useToast } from '@/contexts/ToastContext'
 import { ThemeToggle, UserAvatar } from '@/components/ui'
-import { Bell, LogOut, Menu } from 'lucide-react'
+import {
+  Bell,
+  LogOut,
+  Menu,
+  ChevronDown,
+  Check,
+  ArrowLeftRight,
+  GraduationCap,
+  BarChart3,
+  ShieldCheck,
+  User as UserIcon,
+} from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import type { Notification } from '@/types'
+import type { Notification, UserRole } from '@/types'
+import {
+  ROLE_CONFIGS,
+  getAvailableRolesForUser,
+  getRoleDefaultPath,
+} from '@/utils/roleUtils'
 
 const thaiNotificationTranslations: Record<string, { title: string; message: string }> = {
   NOT001: {
@@ -42,17 +59,64 @@ const thaiNotificationTranslations: Record<string, { title: string; message: str
   },
 }
 
+function getRoleIcon(role: UserRole, className = 'h-4 w-4') {
+  switch (role) {
+    case 'advisor':
+      return <GraduationCap className={className} />
+    case 'qa_chair':
+      return <BarChart3 className={className} />
+    case 'admin':
+    case 'super_admin':
+      return <ShieldCheck className={className} />
+    case 'student':
+    default:
+      return <UserIcon className={className} />
+  }
+}
+
 export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
-  const { currentUser, logout } = useAuth()
+  const { currentUser, logout, switchRole } = useAuth()
   const { language, setLanguage, t } = useLanguage()
+  const { addToast } = useToast()
   const store = useStore()
   const navigate = useNavigate()
   const [showNotifs, setShowNotifs] = useState(false)
+  const [showProfileMenu, setShowProfileMenu] = useState(false)
 
   if (!currentUser) return null
 
+  const availableRoles = getAvailableRolesForUser(currentUser)
+  const canSwitchRole = availableRoles.length > 1
+  const currentConfig = ROLE_CONFIGS[currentUser.role] || ROLE_CONFIGS.student
+
   const myNotifs = store.notifications.filter(n => n.userId === currentUser.id)
   const unreadCount = myNotifs.filter(n => !n.isRead).length
+
+  const handleRoleSwitch = (targetRole: UserRole) => {
+    if (targetRole === currentUser.role) {
+      setShowProfileMenu(false)
+      return
+    }
+
+    if (switchRole) {
+      switchRole(targetRole)
+    }
+
+    setShowProfileMenu(false)
+    const targetConfig = ROLE_CONFIGS[targetRole]
+    const targetPath = getRoleDefaultPath(targetRole)
+
+    addToast(
+      'success',
+      t('สลับบทบาทสำเร็จ', 'Role Switched Successfully'),
+      t(
+        `เข้าสู่โหมด "${targetConfig.labelTh}" เรียบร้อยแล้ว`,
+        `Switched to "${targetConfig.labelEn}" workspace successfully.`
+      )
+    )
+
+    navigate(targetPath)
+  }
 
   const handleNotificationClick = (n: Notification) => {
     store.markNotificationRead(n.id)
@@ -156,7 +220,10 @@ export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
         {/* Notification bell */}
         <div className="relative">
           <button
-            onClick={() => setShowNotifs(!showNotifs)}
+            onClick={() => {
+              setShowNotifs(!showNotifs)
+              setShowProfileMenu(false)
+            }}
             className="relative text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100 p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
             title="Notifications"
           >
@@ -209,25 +276,178 @@ export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
           )}
         </div>
 
-        {/* User info chip with Google Avatar */}
-        <div className="flex items-center gap-3 pl-3 border-l border-slate-200/70 dark:border-slate-800">
-          <UserAvatar name={currentUser.name} avatar={currentUser.avatar} size="md" />
-          <div className="hidden sm:block">
-            <p className="text-xs font-bold text-slate-900 dark:text-slate-100 leading-tight">{currentUser.name}</p>
-            <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 font-mono mt-0.5">{currentUser.code}</p>
-          </div>
+        {/* User Profile Trigger Button & Role Switcher Dropdown */}
+        <div className="relative pl-1 sm:pl-2 border-l border-slate-200/70 dark:border-slate-800">
           <button
-            onClick={() => { logout(); navigate('/login') }}
-            className="text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 p-2 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors ml-0.5 cursor-pointer"
-            title={t('ออกจากระบบ', 'Sign out')}
+            type="button"
+            onClick={() => {
+              setShowProfileMenu(!showProfileMenu)
+              setShowNotifs(false)
+            }}
+            className={`flex items-center gap-2 p-1 sm:px-2.5 sm:py-1.5 rounded-2xl border transition-all cursor-pointer group ${
+              showProfileMenu
+                ? 'bg-sky-50/80 dark:bg-sky-500/15 border-sky-300 dark:border-sky-500/40 shadow-2xs'
+                : 'hover:bg-slate-100 dark:hover:bg-slate-800/70 border-transparent hover:border-slate-200/70 dark:hover:border-slate-700/60'
+            }`}
+            aria-expanded={showProfileMenu}
+            aria-haspopup="menu"
+            title={t('โปรไฟล์และการสลับบทบาท', 'Profile & Role Switcher')}
           >
-            <LogOut className="h-4 w-4" />
+            <div className="relative">
+              <UserAvatar name={currentUser.name} avatar={currentUser.avatar} size="md" />
+              {canSwitchRole && (
+                <span
+                  className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full bg-sky-600 text-white flex items-center justify-center ring-2 ring-white dark:ring-[#0e1424] shadow-xs"
+                  title={t('สามารถสลับบทบาทได้', 'Multi-role enabled')}
+                >
+                  <ArrowLeftRight className="h-2 w-2 stroke-[2.5]" />
+                </span>
+              )}
+            </div>
+
+            <div className="hidden sm:block text-left">
+              <p className="text-xs font-bold text-slate-900 dark:text-slate-100 leading-tight group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
+                {currentUser.name}
+              </p>
+              <div className="flex items-center gap-1 mt-0.5">
+                <span className={`inline-flex items-center gap-1 px-1.5 py-0.2 rounded-md text-[10px] font-bold border ${currentConfig.badgeClass}`}>
+                  {getRoleIcon(currentUser.role, 'h-2.5 w-2.5')}
+                  <span>{language === 'th' ? currentConfig.shortLabelTh : currentConfig.shortLabelEn}</span>
+                </span>
+              </div>
+            </div>
+
+            <ChevronDown
+              className={`h-4 w-4 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200 transition-transform duration-200 ${
+                showProfileMenu ? 'rotate-180 text-sky-600 dark:text-sky-400' : ''
+              }`}
+            />
           </button>
+
+          {/* Profile and Role Switcher Dropdown Modal Card */}
+          {showProfileMenu && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setShowProfileMenu(false)} />
+              <div className="absolute right-0 top-full mt-2.5 w-[calc(100vw-1.5rem)] max-w-88 sm:max-w-96 bg-white dark:bg-[#0e1424] border border-slate-200/90 dark:border-slate-800 rounded-2xl shadow-2xl z-50 overflow-hidden animate-[slideIn_0.15s_ease-out]">
+                {/* User Identity Header */}
+                <div className="p-4 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/60 dark:bg-slate-900/60">
+                  <div className="flex items-start gap-3">
+                    <div className="relative flex-shrink-0">
+                      <UserAvatar name={currentUser.name} avatar={currentUser.avatar} size="lg" />
+                      <span className={`absolute -bottom-1 -right-1 p-1 rounded-full bg-white dark:bg-[#0e1424] shadow-xs border ${currentConfig.badgeClass}`}>
+                        {getRoleIcon(currentUser.role, 'h-3 w-3')}
+                      </span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 truncate">
+                        {currentUser.name}
+                      </h4>
+                      <p className="text-[11px] font-mono text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+                        {currentUser.code} · {currentUser.email}
+                      </p>
+                      <div className="flex items-center gap-1.5 mt-2">
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold border ${currentConfig.badgeClass}`}>
+                          {getRoleIcon(currentUser.role, 'h-3 w-3')}
+                          <span>{language === 'th' ? currentConfig.labelTh : currentConfig.labelEn}</span>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Role Switching Section */}
+                {canSwitchRole && (
+                  <div className="p-3 border-b border-slate-100 dark:border-slate-800/80">
+                    <div className="flex items-center justify-between px-2 pb-2">
+                      <div className="flex items-center gap-1.5">
+                        <ArrowLeftRight className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400" />
+                        <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                          {t('สลับบทบาทการทำงาน', 'Switch Role Workspace')}
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-semibold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/60 border border-sky-200 dark:border-sky-800/60 px-2 py-0.5 rounded-full">
+                        {availableRoles.length} {t('บทบาท', 'roles')}
+                      </span>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      {availableRoles.map(r => {
+                        const config = ROLE_CONFIGS[r]
+                        const isActive = r === currentUser.role
+                        return (
+                          <button
+                            key={r}
+                            type="button"
+                            onClick={() => handleRoleSwitch(r)}
+                            className={`w-full text-left p-2.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-3 group ${
+                              isActive
+                                ? `${config.activeCardClass} shadow-2xs`
+                                : 'border-slate-200/80 dark:border-slate-800 hover:border-sky-300 dark:hover:border-sky-700 hover:bg-sky-50/40 dark:hover:bg-slate-800/60'
+                            }`}
+                          >
+                            <div className="flex items-start gap-2.5 min-w-0">
+                              <div
+                                className={`h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 transition-colors ${
+                                  isActive
+                                    ? 'bg-sky-600 text-white shadow-xs'
+                                    : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 group-hover:bg-sky-100 dark:group-hover:bg-sky-950/60 group-hover:text-sky-700 dark:group-hover:text-sky-300'
+                                }`}
+                              >
+                                {getRoleIcon(r, 'h-4 w-4')}
+                              </div>
+                              <div className="min-w-0">
+                                <p className={`text-xs font-bold leading-tight ${isActive ? 'text-sky-950 dark:text-sky-200' : 'text-slate-800 dark:text-slate-200 group-hover:text-sky-700 dark:group-hover:text-sky-300'}`}>
+                                  {language === 'th' ? config.labelTh : config.labelEn}
+                                </p>
+                                <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-1 leading-snug">
+                                  {language === 'th' ? config.descTh : config.descEn}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="flex-shrink-0">
+                              {isActive ? (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-sky-600 text-white shadow-xs">
+                                  <Check className="h-2.5 w-2.5 stroke-[3]" />
+                                  <span>{t('ใช้งานอยู่', 'Active')}</span>
+                                </span>
+                              ) : (
+                                <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 group-hover:text-sky-600 dark:group-hover:text-sky-400 flex items-center gap-0.5 transition-colors">
+                                  <span>{t('สลับ', 'Switch')}</span>
+                                  <span>→</span>
+                                </span>
+                              )}
+                            </div>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Footer Actions */}
+                <div className="p-2.5 bg-slate-50/50 dark:bg-slate-900/40 flex items-center justify-between gap-2 border-t border-slate-100 dark:border-slate-800/80">
+                  <div className="text-[10px] text-slate-500 dark:text-slate-400 px-2 truncate font-medium">
+                    {currentUser.department}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowProfileMenu(false)
+                      logout()
+                      navigate('/login')
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-rose-600 hover:text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+                  >
+                    <LogOut className="h-3.5 w-3.5" />
+                    <span>{t('ออกจากระบบ', 'Sign out')}</span>
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </header>
   )
 }
-
-
-
