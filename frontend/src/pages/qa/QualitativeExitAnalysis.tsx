@@ -347,6 +347,70 @@ export default function QualitativeExitAnalysis() {
   const withdrawalCount = withdrawalCases.length
   const leaveCount = leaveCases.length
 
+  // Dynamically group and rank top reasons for Withdrawals from real data
+  const topWithdrawalReasons = useMemo(() => {
+    if (withdrawalCases.length === 0) return []
+    const groups: Record<string, { count: number; cases: ExitCase[] }> = {}
+    withdrawalCases.forEach(c => {
+      let key: string = c.reasonCode || 'other'
+      if (key === 'academic_foundation') key = 'academic'
+      if (!groups[key]) groups[key] = { count: 0, cases: [] }
+      groups[key].count++
+      groups[key].cases.push(c)
+    })
+
+    return Object.entries(groups)
+      .map(([reasonKey, { count, cases }]) => {
+        const pct = Math.round((count / withdrawalCases.length) * 100)
+        const label = getExitReasonLabel(reasonKey)
+        const voice = store.studentVoiceResponses.find(v => cases.some(c => c.id === v.exitCaseId || c.studentId === v.studentId))
+        const caseWithDetails = cases.find(c => c.details && c.details.trim())
+        const quote = voice?.whatCouldUniversityDoBetter || voice?.curriculumImprovementSuggestions || caseWithDetails?.details
+        return {
+          reasonKey,
+          label,
+          count,
+          percentage: pct,
+          details: caseWithDetails?.details || label,
+          quote: quote ? (quote.length > 130 ? quote.slice(0, 130) + '...' : quote) : null,
+        }
+      })
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 3)
+  }, [withdrawalCases, getExitReasonLabel, store.studentVoiceResponses])
+
+  // Dynamically group and rank top reasons for Leaves of Absence from real data
+  const topLeaveReasons = useMemo(() => {
+    if (leaveCases.length === 0) return []
+    const groups: Record<string, { count: number; cases: ExitCase[] }> = {}
+    leaveCases.forEach(c => {
+      let key: string = c.reasonCode || 'other'
+      if (key === 'family_obligation') key = 'personal_family'
+      if (!groups[key]) groups[key] = { count: 0, cases: [] }
+      groups[key].count++
+      groups[key].cases.push(c)
+    })
+
+    return Object.entries(groups)
+      .map(([reasonKey, { count, cases }]) => {
+        const pct = Math.round((count / leaveCases.length) * 100)
+        const label = getExitReasonLabel(reasonKey)
+        const voice = store.studentVoiceResponses.find(v => cases.some(c => c.id === v.exitCaseId || c.studentId === v.studentId))
+        const caseWithDetails = cases.find(c => c.details && c.details.trim())
+        const quote = voice?.whatCouldUniversityDoBetter || voice?.curriculumImprovementSuggestions || caseWithDetails?.details
+        return {
+          reasonKey,
+          label,
+          count,
+          percentage: pct,
+          details: caseWithDetails?.details || label,
+          quote: quote ? (quote.length > 130 ? quote.slice(0, 130) + '...' : quote) : null,
+        }
+      })
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 3)
+  }, [leaveCases, getExitReasonLabel, store.studentVoiceResponses])
+
   // Comparative reasons data for chart
   const comparativeChartData = useMemo(() => {
     return EXIT_REASON_CODES.map(r => {
@@ -987,65 +1051,35 @@ export default function QualitativeExitAnalysis() {
             </div>
 
             <div className="space-y-3">
-              {/* Point 1 */}
-              <div className="p-3.5 bg-slate-50/70 dark:bg-slate-800/40 rounded-xl space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span className="font-semibold text-xs text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
-                    <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
-                    {t('อันดับ 1: ความยากของหลักสูตร / ไม่ตรงความถนัด (Foundation Gap)', 'Rank 1: Curriculum Rigor & Foundation Gap')}
-                  </span>
-                  <span className="text-[10px] font-mono font-bold bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 px-1.5 py-0.5 rounded">
-                    ~50%
-                  </span>
+              {topWithdrawalReasons.length > 0 ? (
+                topWithdrawalReasons.map((item, idx) => (
+                  <div key={item.reasonKey} className="p-3.5 bg-slate-50/70 dark:bg-slate-800/40 rounded-xl space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-xs text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                        <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
+                        {t(`อันดับ ${idx + 1}: ${item.label}`, `Rank ${idx + 1}: ${item.label}`)}
+                      </span>
+                      <span className="text-[10px] font-mono font-bold bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 px-1.5 py-0.5 rounded">
+                        {item.percentage}% ({item.count} {t('เคส', 'cases')})
+                      </span>
+                    </div>
+                    {item.details && (
+                      <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                        {item.details}
+                      </p>
+                    )}
+                    {item.quote && (
+                      <div className="text-xs text-slate-600 dark:text-slate-300 italic leading-relaxed pl-3 border-l-2 border-rose-400 py-0.5 mt-1">
+                        "{item.quote}"
+                      </div>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className="p-6 text-center text-xs text-slate-400 dark:text-slate-500 bg-slate-50/50 dark:bg-slate-800/20 rounded-xl border border-dashed border-slate-200 dark:border-slate-800">
+                  {t('ยังไม่พบข้อมูลเคสขอลาออกถาวรในระบบ', 'No permanent withdrawal cases recorded yet')}
                 </div>
-                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                  {t(
-                    'นักศึกษาปี 1 ที่ไม่มีพื้นฐานการเขียนโปรแกรม/ตรรกะคณิตศาสตร์มาก่อน เรียนตามไม่ทันในวิชาแกน ภาระงานหนักและปรับตัวกับความเร็วการสอนไม่ทัน จนเกิดความท้อแท้และตัดสินใจลาออก',
-                    'First-year students lacking prior coding background struggle with rapid lecture pacing in core programming, triggering severe demoralization and departure.'
-                  )}
-                </p>
-                <div className="text-xs text-slate-600 dark:text-slate-300 italic leading-relaxed pl-3 border-l-2 border-rose-400 py-0.5 mt-1">
-                  "{t('วิชาเขียนโปรแกรมปี 1 สอนเร็วมาก การบ้านหนักสำหรับคนไม่มีพื้นฐาน อยากให้มีวิชาปรับพื้นฐานหรือติวเสริมเข้มข้น', 'Programming pace was too fast with heavy homework for beginners without prior tech experience.')}"
-                </div>
-              </div>
-
-              {/* Point 2 */}
-              <div className="p-3.5 bg-slate-50/70 dark:bg-slate-800/40 rounded-xl space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span className="font-semibold text-xs text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
-                    <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
-                    {t('อันดับ 2: ค้นพบเป้าหมายอาชีพใหม่ / ย้ายสาขา (Career Redirection)', 'Rank 2: Career Path Redirection')}
-                  </span>
-                  <span className="text-[10px] font-mono font-bold bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 px-1.5 py-0.5 rounded">
-                    ~30%
-                  </span>
-                </div>
-                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                  {t(
-                    'ค้นพบว่าไม่ชอบงานด้านเขียนโค้ดเชิงลึก แต่สนใจงานสร้างสรรค์ เช่น Graphic Design, Animation, หรือ Digital Marketing จึงลาออกเพื่อไปศึกษาต่อสาขาอื่น',
-                    'Realization of misalignment with deep software engineering, opting to transfer toward Digital Media Arts or Design.'
-                  )}
-                </p>
-              </div>
-
-              {/* Point 3 */}
-              <div className="p-3.5 bg-slate-50/70 dark:bg-slate-800/40 rounded-xl space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span className="font-semibold text-xs text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
-                    <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
-                    {t('อันดับ 3: วิกฤตเศรษฐกิจครอบครัวระยะยาว (Financial Crisis)', 'Rank 3: Long-term Financial Hardship')}
-                  </span>
-                  <span className="text-[10px] font-mono font-bold bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 px-1.5 py-0.5 rounded">
-                    ~20%
-                  </span>
-                </div>
-                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                  {t(
-                    'ครอบครัวสูญเสียรายได้หลักกะทันหัน นักศึกษาจำเป็นต้องออกไปทำงานประจำเต็มเวลาเพื่อหารายได้จุนเจือ ไม่สามารถเรียนควบคู่ได้',
-                    'Severe household income shock compelling the student to seek full-time employment to support dependents.'
-                  )}
-                </p>
-              </div>
+              )}
             </div>
           </div>
 
@@ -1071,65 +1105,35 @@ export default function QualitativeExitAnalysis() {
             </div>
 
             <div className="space-y-3">
-              {/* Point 1 */}
-              <div className="p-3.5 bg-slate-50/70 dark:bg-slate-800/40 rounded-xl space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span className="font-semibold text-xs text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
-                    <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-                    {t('อันดับ 1: ภาระครอบครัวกะทันหัน / ดูแลผู้ป่วย (Family Caregiving)', 'Rank 1: Family Caregiving & Obligations')}
-                  </span>
-                  <span className="text-[10px] font-mono font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 px-1.5 py-0.5 rounded">
-                    ~50%
-                  </span>
+              {topLeaveReasons.length > 0 ? (
+                topLeaveReasons.map((item, idx) => (
+                  <div key={item.reasonKey} className="p-3.5 bg-slate-50/70 dark:bg-slate-800/40 rounded-xl space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-xs text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                        <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                        {t(`อันดับ ${idx + 1}: ${item.label}`, `Rank ${idx + 1}: ${item.label}`)}
+                      </span>
+                      <span className="text-[10px] font-mono font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 px-1.5 py-0.5 rounded">
+                        {item.percentage}% ({item.count} {t('เคส', 'cases')})
+                      </span>
+                    </div>
+                    {item.details && (
+                      <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                        {item.details}
+                      </p>
+                    )}
+                    {item.quote && (
+                      <div className="text-xs text-slate-600 dark:text-slate-300 italic leading-relaxed pl-3 border-l-2 border-amber-400 py-0.5 mt-1">
+                        "{item.quote}"
+                      </div>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className="p-6 text-center text-xs text-slate-400 dark:text-slate-500 bg-slate-50/50 dark:bg-slate-800/20 rounded-xl border border-dashed border-slate-200 dark:border-slate-800">
+                  {t('ยังไม่พบข้อมูลเคสขอพักการศึกษาในระบบ', 'No leave of absence cases recorded yet')}
                 </div>
-                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                  {t(
-                    'บิดามารดาหรือคนในครอบครัวเจ็บป่วยเรื้อรัง ต้องกลับไปช่วยดูแลที่ต่างจังหวัด นักศึกษามีผลการเรียนดีและมีเจตนารมณ์จะกลับมาเรียนต่ออย่างแน่นอน',
-                    'Parental acute or chronic illness necessitating hometown caregiving. Students maintain solid GPA and express firm intent to return.'
-                  )}
-                </p>
-                <div className="text-xs text-slate-600 dark:text-slate-300 italic leading-relaxed pl-3 border-l-2 border-amber-400 py-0.5 mt-1">
-                  "{t('คุณแม่ป่วยเรื้อรัง ต้องกลับไปช่วยดูแลอย่างใกล้ชิด วางแผนจะกลับมาศึกษาต่อในปีการศึกษาถัดไปแน่นอน', 'Taking leave to nurse an ill parent at hometown; planning to return next academic year without fail.')}"
-                </div>
-              </div>
-
-              {/* Point 2 */}
-              <div className="p-3.5 bg-slate-50/70 dark:bg-slate-800/40 rounded-xl space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span className="font-semibold text-xs text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
-                    <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-                    {t('อันดับ 2: สุขภาพจิต & ภาวะหมดไฟสะสม (Mental Health & Burnout)', 'Rank 2: Mental Health & Burnout Recovery')}
-                  </span>
-                  <span className="text-[10px] font-mono font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 px-1.5 py-0.5 rounded">
-                    ~30%
-                  </span>
-                </div>
-                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                  {t(
-                    'ภาวะเครียดสะสมรุนแรง วิตกกังวลต่อการสอบ และนอนไม่หลับเรื้อรัง แพทย์แนะนำให้พักฟื้นและบำบัด 1 ภาคการศึกษาก่อนกลับเข้าสู่ระบบเรียน',
-                    'Clinical burnout, insomnia, and acute exam anxiety. Psychiatrists recommend 1 semester medical recuperation leave.'
-                  )}
-                </p>
-              </div>
-
-              {/* Point 3 */}
-              <div className="p-3.5 bg-slate-50/70 dark:bg-slate-800/40 rounded-xl space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span className="font-semibold text-xs text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
-                    <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-                    {t('อันดับ 3: ปัญหาสุขภาพทางกาย / อุบัติเหตุ (Physical Health / Surgery)', 'Rank 3: Physical Health & Surgery Recovery')}
-                  </span>
-                  <span className="text-[10px] font-mono font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 px-1.5 py-0.5 rounded">
-                    ~20%
-                  </span>
-                </div>
-                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                  {t(
-                    'การผ่าตัดเอ็นข้อเข่าหรือการรักษาพยาบาลต่อเนื่อง 4-6 เดือน ไม่สามารถเดินทางมาเรียนได้สะดวก มีใบรับรองแพทย์ชัดเจน',
-                    'Orthopedic surgical recovery or prolonged medical treatment requiring temporary hiatus from on-campus attendance.'
-                  )}
-                </p>
-              </div>
+              )}
             </div>
           </div>
         </div>
