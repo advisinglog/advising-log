@@ -306,7 +306,8 @@ export default function AdvisorLog() {
                       type="button"
                       size="sm"
                       variant="secondary"
-                      onClick={() => editSavedLog(session.requestId)}
+                      onClick={() => session.requestId && editSavedLog(session.requestId)}
+                      disabled={!session.requestId}
                       className="shrink-0"
                     >
                       <Pencil className="h-3.5 w-3.5 mr-1" />

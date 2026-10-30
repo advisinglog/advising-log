@@ -13,6 +13,7 @@ import {
   verifySession,
   type Role,
 } from './auth'
+import { aliasSet, norm, scopeNeeds, scopeResponse, scopedRoute, type Viewer } from './scope'
 
 export type Bindings = {
   DB?: D1Database
@@ -30,6 +31,8 @@ export interface AuthContext {
   userId: string
   name: string
   email: string
+  /** Student/staff code, when known (records may reference people by code) */
+  code?: string
   baseRole: Role
   /** Active role for this request (multi-role staff can switch) */
   role: Role
@@ -107,16 +110,18 @@ app.use('/api/*', async (c, next) => {
   // Re-check the account on every request so deactivation and role changes apply immediately
   let baseRole = claims.role
   let name = claims.name
+  let code: string | undefined
   const database = db(c)
   if (database) {
     const user = await database.select().from(schema.users).where(eq(schema.users.id, claims.sub)).get()
     if (!user || !user.isActive) return deny(401, 'ACCOUNT_INACTIVE', { userId: claims.sub, name: claims.name })
     baseRole = user.role as Role
     name = user.name
+    code = user.code
   }
 
   const requestedRole = (c.req.header('x-active-role') || baseRole) as Role
-  const auth: AuthContext = { userId: claims.sub, name, email: claims.email, baseRole, role: requestedRole }
+  const auth: AuthContext = { userId: claims.sub, name, email: claims.email, code, baseRole, role: requestedRole }
   if (!allowedRolesFor(baseRole).includes(requestedRole)) return deny(403, 'ROLE_NOT_ALLOWED', auth)
 
   const allowedRoles = rolesForRoute(c.req.method, c.req.path)
@@ -124,6 +129,97 @@ app.use('/api/*', async (c, next) => {
 
   c.set('auth', auth)
   return next()
+})
+
+// ---------------------------------------------------------------
+// Record-level scoping (phase 2): every read returns only what the viewer may see
+// ---------------------------------------------------------------
+
+// Who-belongs-to-whom lookups are cached briefly per user, so a full page load
+// (many parallel requests) costs one lookup instead of one per request.
+const SCOPE_CACHE_TTL_MS = 30_000
+const scopeCache = new Map<string, { expires: number; value: Promise<{ linked: Set<string>; exitStudents: Set<string> }> }>()
+
+async function loadScopeSets(c: any, auth: AuthContext, needs: { linked: boolean; exitStudents: boolean }) {
+  const linked = new Set<string>()
+  const exitStudents = new Set<string>()
+  const database = db(c)
+  if (!database || (!needs.linked && !needs.exitStudents)) return { linked, exitStudents }
+
+  const me = aliasSet(auth.userId, auth.code, auth.email)
+  const people = await database.select({ id: schema.users.id, code: schema.users.code, email: schema.users.email }).from(schema.users)
+  const expand = (refs: Set<string>, into: Set<string>) => {
+    for (const r of refs) into.add(r)
+    for (const p of people) {
+      if ([p.id, p.code, p.email].some(a => refs.has(norm(a)))) [p.id, p.code, p.email].forEach(a => a && into.add(norm(a)))
+    }
+  }
+
+  if (needs.linked) {
+    const roster = await database.select().from(schema.studentAdvisorAssignments)
+    const refs = new Set<string>()
+    for (const r of roster) {
+      if (!r.isActive) continue
+      // Student -> their advisors; advisor -> their advisees
+      if (auth.role === 'student' && me.has(norm(r.studentId))) refs.add(norm(r.advisorId))
+      if (auth.role === 'advisor' && me.has(norm(r.advisorId))) refs.add(norm(r.studentId))
+    }
+    expand(refs, linked)
+  }
+
+  if (needs.exitStudents) {
+    const cases = await database.select({ studentId: schema.exitCases.studentId }).from(schema.exitCases)
+    expand(new Set(cases.map(e => norm(e.studentId)).filter(Boolean)), exitStudents)
+  }
+
+  return { linked, exitStudents }
+}
+
+async function viewerFor(c: any, auth: AuthContext, kind: Parameters<typeof scopeNeeds>[1]): Promise<Viewer> {
+  const needs = scopeNeeds(auth.role, kind)
+  const key = `${auth.userId}|${auth.role}|${needs.linked}|${needs.exitStudents}`
+  const now = Date.now()
+  let entry = scopeCache.get(key)
+  if (!entry || entry.expires < now) {
+    entry = { expires: now + SCOPE_CACHE_TTL_MS, value: loadScopeSets(c, auth, needs) }
+    scopeCache.set(key, entry)
+    entry.value.catch(() => scopeCache.delete(key))
+  }
+  const sets = await entry.value
+  return {
+    role: auth.role,
+    aliases: aliasSet(auth.userId, auth.code, auth.email),
+    linkedAliases: sets.linked,
+    exitStudentAliases: sets.exitStudents,
+  }
+}
+
+app.use('/api/*', async (c, next) => {
+  const auth = c.get('auth')
+  const route = c.req.method === 'GET' ? scopedRoute(c.req.path) : null
+  await next()
+
+  // Roster / user / exit-case changes alter who may see what: drop cached lookups
+  if (c.req.method !== 'GET' && /^\/api\/(roster|users|exit-cases)/.test(c.req.path)) scopeCache.clear()
+
+  if (!auth || !route || c.res.status !== 200) return
+  if (!(c.res.headers.get('content-type') || '').includes('application/json')) return
+
+  const body = await c.res.clone().json().catch(() => null)
+  if (body == null) return
+  const scoped = scopeResponse(c.req.path, body, await viewerFor(c, auth, route.kind))
+  c.res = scoped === null
+    ? c.json({ error: 'User not found' }, 404)
+    : c.json(scoped, 200)
+
+  // QA case-level access to exit cases / student voice is permitted but always logged (C8)
+  if (auth.role === 'qa_chair' && (route.kind === 'exit' || route.kind === 'voice')) {
+    const count = Array.isArray(scoped?.[route.key]) ? scoped[route.key].length : 0
+    await writeAudit(c, {
+      userId: auth.userId, userName: auth.name, userRole: auth.role, action: 'qa_viewed_case',
+      description: `QA viewed ${count} ${route.kind === 'exit' ? 'exit cases' : 'student voice responses'} (case-level)`,
+    })
+  }
 })
 
 /** Advisors may only create or edit student accounts (e.g. roster CSV import). */
