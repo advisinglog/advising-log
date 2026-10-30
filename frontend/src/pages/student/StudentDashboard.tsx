@@ -43,7 +43,6 @@ export default function StudentDashboard() {
       (currentUser.code && id.toUpperCase() === currentUser.code.toUpperCase()) ||
       (currentUser.email && id.toLowerCase() === currentUser.email.toLowerCase())
   }
-
   // Find active advisor from roster
   const matchingRosterEntries = store.roster
     .filter(r => r.isActive && isCurrentStudent(r.studentId))
@@ -61,13 +60,25 @@ export default function StudentDashboard() {
 
   // My requests & follow-ups
   const myRequests = store.requests.filter(r => isCurrentStudent(r.studentId))
+  const pendingRequests = myRequests.filter(r => r.status === 'requested' || r.status === 'pending')
   const myRequestIds = new Set(myRequests.map(r => r.id))
   const mySessionIds = new Set(store.sessions.filter(s => isCurrentStudent(s.studentId) || (s.requestId && myRequestIds.has(s.requestId))).map(s => s.id))
   const myFollowUps = store.followUps.filter(f => (isCurrentStudent(f.studentId) || (f.requestId && myRequestIds.has(f.requestId)) || (f.sessionId && mySessionIds.has(f.sessionId))) && f.status !== 'completed')
 
   // All student appointments (scheduled)
   const myAppointments = store.appointments
-    .filter(a => isCurrentStudent(a.studentId) && a.status === 'scheduled' && !a.studentDeclined)
+    .filter(a => {
+      const requestStatus = store.requests.find(r => r.id === a.requestId)?.status
+      return (
+        isCurrentStudent(a.studentId) &&
+        a.status !== 'completed' &&
+        a.status !== 'cancelled' &&
+        requestStatus !== 'completed' &&
+        requestStatus !== 'closed' &&
+        requestStatus !== 'cancelled' &&
+        !a.studentDeclined
+      )
+    })
     .sort((a, b) => {
       const cmpDate = a.scheduledDate.localeCompare(b.scheduledDate)
       if (cmpDate !== 0) return cmpDate
@@ -182,12 +193,19 @@ export default function StudentDashboard() {
       />
 
       {/* Stats row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
         <StatCard
           label={t('คำร้องทั้งหมด', 'Total Requests')}
           value={myRequests.length}
           icon={<FileEdit className="h-5 w-5" />}
           color="sky"
+          onClick={() => navigate('/student/history')}
+        />
+        <StatCard
+          label={t('รอการยืนยัน', 'Pending Sessions')}
+          value={pendingRequests.length}
+          icon={<Clock className="h-5 w-5" />}
+          color="amber"
           onClick={() => navigate('/student/history')}
         />
         <StatCard
@@ -431,5 +449,3 @@ export default function StudentDashboard() {
     </div>
   )
 }
-
-

@@ -210,6 +210,13 @@ class ApiClient {
     })
   }
 
+  async updateSession(id: string, updates: Partial<AdvisingSession>) {
+    return this.request<{ success: boolean; session: AdvisingSession }>(`/api/sessions/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(updates),
+    })
+  }
+
   // --- Follow-ups & Progress ---
   async getFollowUps(studentId?: string) {
     const query = studentId ? `?studentId=${studentId}` : ''

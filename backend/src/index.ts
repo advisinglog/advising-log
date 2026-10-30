@@ -721,7 +721,7 @@ app.post('/api/requests', async (c) => {
   const candidateStudentCodes = [studentId, body.studentCode, body.studentEmail].filter(Boolean) as string[]
 
   // Resilient student resolution (by id, code, or email)
-  const studentUser = await database.select().from(schema.users).where(
+  const studentUser = studentId ? await database.select().from(schema.users).where(
     or(
       eq(schema.users.id, studentId),
       eq(schema.users.code, studentId),
@@ -729,7 +729,8 @@ app.post('/api/requests', async (c) => {
       ...(body.studentCode ? [eq(schema.users.code, body.studentCode)] : []),
       ...(body.studentEmail ? [eq(schema.users.email, body.studentEmail)] : [])
     )
-  ).get()
+  ).get() : undefined
+  let resolvedStudent = studentUser
   if (studentUser) {
     studentId = studentUser.id
   } else {
@@ -742,18 +743,20 @@ app.post('/api/requests', async (c) => {
       )
     )
     if (matchedStudent) {
+      resolvedStudent = matchedStudent
       studentId = matchedStudent.id
     }
   }
 
   // Resilient advisor resolution (by id, code, or email)
-  const advisorUser = await database.select().from(schema.users).where(
+  const advisorUser = advisorId ? await database.select().from(schema.users).where(
     or(
       eq(schema.users.id, advisorId),
       eq(schema.users.code, advisorId),
       eq(schema.users.email, advisorId),
     )
-  ).get()
+  ).get() : undefined
+  let resolvedAdvisor = advisorUser
   if (advisorUser) {
     advisorId = advisorUser.id
   } else {
@@ -764,8 +767,16 @@ app.post('/api/requests', async (c) => {
            (u.email && advisorId && (u.email.toLowerCase() === advisorId.toLowerCase() || advisorId.toLowerCase().includes(u.email.toLowerCase())))
     )
     if (matchedAdvisor) {
+      resolvedAdvisor = matchedAdvisor
       advisorId = matchedAdvisor.id
     }
+  }
+
+  if (!studentId || !resolvedStudent) {
+    return c.json({ error: 'The selected student account was not found.' }, 400)
+  }
+  if (!advisorId || !resolvedAdvisor) {
+    return c.json({ error: 'The selected advisor account was not found.' }, 400)
   }
 
   let reqId = body.id || `REQ_${Date.now()}`
@@ -793,8 +804,13 @@ app.post('/api/requests', async (c) => {
     updatedAt: new Date().toISOString().split('T')[0],
   }
 
-  await database.insert(schema.advisingRequests).values(newReq)
-  return c.json({ success: true, request: newReq }, 201)
+  try {
+    await database.insert(schema.advisingRequests).values(newReq)
+    return c.json({ success: true, request: newReq }, 201)
+  } catch (error) {
+    console.error('Failed to create advising request:', error)
+    return c.json({ error: 'The advising request could not be saved.' }, 500)
+  }
 })
 
 app.patch('/api/requests/:id/status', async (c) => {
@@ -959,6 +975,24 @@ app.post('/api/sessions', async (c) => {
 
   await database.insert(schema.advisingSessions).values(newSession)
   return c.json({ success: true, session: newSession }, 201)
+})
+
+app.patch('/api/sessions/:id', async (c) => {
+  const database = db(c)
+  if (!database) return c.json({ error: 'Database unavailable' }, 503)
+
+  const id = c.req.param('id')
+  const body = await c.req.json()
+  const updates = Object.fromEntries(
+    ['sessionDate', 'summary', 'problem', 'advice', 'actionsTaken', 'outcome']
+      .filter(field => body[field] !== undefined)
+      .map(field => [field.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`), body[field]])
+  )
+
+  if (Object.keys(updates).length === 0) return c.json({ error: 'No session fields to update.' }, 400)
+  await database.update(schema.advisingSessions).set(updates).where(eq(schema.advisingSessions.id, id))
+  const session = await database.select().from(schema.advisingSessions).where(eq(schema.advisingSessions.id, id)).get()
+  return session ? c.json({ success: true, session }) : c.json({ error: 'Session not found.' }, 404)
 })
 
 // ============================================================

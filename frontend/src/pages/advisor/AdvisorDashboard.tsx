@@ -160,13 +160,19 @@ export default function AdvisorDashboard() {
   const myRequests = store.requests.filter(r => isAdvisorMatch(r.advisorId, currentUser, store.users))
   const pendingRequests = myRequests.filter(r => r.status === 'requested' || r.status === 'pending')
   const confirmedApts = store.appointments
-    .filter(a =>
-      isAdvisorMatch(a.advisorId, currentUser, store.users) &&
-      a.status === 'scheduled' &&
-      a.studentConfirmed === true &&
-      !a.studentDeclined &&
-      store.requests.find(r => r.id === a.requestId)?.status !== 'cancelled'
-    )
+    .filter(a => {
+      const requestStatus = store.requests.find(r => r.id === a.requestId)?.status
+      return (
+        isAdvisorMatch(a.advisorId, currentUser, store.users) &&
+        a.status !== 'completed' &&
+        a.status !== 'cancelled' &&
+        requestStatus !== 'completed' &&
+        requestStatus !== 'closed' &&
+        requestStatus !== 'cancelled' &&
+        a.studentConfirmed === true &&
+        !a.studentDeclined
+      )
+    })
   const upcomingApts = confirmedApts
     .filter(a => (a.scheduledDate || '') >= getLocalDateString())
     .sort((a, b) => {

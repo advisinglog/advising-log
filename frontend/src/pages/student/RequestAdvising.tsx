@@ -371,7 +371,7 @@ export default function RequestAdvising() {
       }
 
       // 1. Create AdvisingRequest
-      const newRequest = store.addRequest({
+      const newRequest = await store.addRequest({
         studentId: effectiveStudentId,
         advisorId: advisor.id,
         category: category as AdvisingCategory,

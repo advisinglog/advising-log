@@ -102,7 +102,7 @@ interface StoreState {
 
 interface StoreActions {
   // Requests
-  addRequest: (req: Omit<AdvisingRequest, 'id' | 'createdAt' | 'updatedAt'>) => AdvisingRequest
+  addRequest: (req: Omit<AdvisingRequest, 'id' | 'createdAt' | 'updatedAt'>) => Promise<AdvisingRequest>
   updateRequestStatus: (id: string, status: AdvisingRequest['status'], cancellation?: { reason: string; cancelledBy: string }) => void
 
   // Appointments
@@ -113,6 +113,7 @@ interface StoreActions {
 
   // Sessions
   addSession: (ses: Omit<AdvisingSession, 'id' | 'createdAt'>) => AdvisingSession
+  updateSession: (id: string, updates: Partial<AdvisingSession>) => void
 
   // Follow-ups
   addFollowUp: (fu: Omit<FollowUp, 'id' | 'createdAt'>) => FollowUp
@@ -403,15 +404,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   // --- Actions ---
 
-  const addRequest = useCallback((req: Omit<AdvisingRequest, 'id' | 'createdAt' | 'updatedAt'>): AdvisingRequest => {
+  const addRequest = useCallback(async (req: Omit<AdvisingRequest, 'id' | 'createdAt' | 'updatedAt'>): Promise<AdvisingRequest> => {
     const newReq: AdvisingRequest = { ...req, id: nextId('REQ'), createdAt: now(), updatedAt: now() }
-    setRequests(prev => [newReq, ...prev.filter(r => r.id !== newReq.id)])
-    api.createRequest(newReq).then(res => {
-      if (res?.request?.id && res.request.id !== newReq.id) {
-        setRequests(prev => prev.map(r => r.id === newReq.id ? { ...r, id: res.request.id } : r))
-      }
-    }).catch(() => {})
-    return newReq
+    const response = await api.createRequest(newReq)
+    if (!response?.request) {
+      throw new Error('The advising request could not be saved.')
+    }
+
+    const persistedRequest = response.request
+    setRequests(prev => [persistedRequest, ...prev.filter(r => r.id !== newReq.id && r.id !== persistedRequest.id)])
+    return persistedRequest
   }, [])
 
   const updateRequestStatus = useCallback((id: string, status: AdvisingRequest['status'], cancellation?: { reason: string; cancelledBy: string }) => {
@@ -453,6 +455,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setSessions(prev => [newSes, ...prev])
     api.createSession(newSes).catch(() => {})
     return newSes
+  }, [])
+
+  const updateSession = useCallback((id: string, updates: Partial<AdvisingSession>) => {
+    setSessions(prev => prev.map(session => session.id === id ? { ...session, ...updates } : session))
+    api.updateSession(id, updates).catch(() => {})
   }, [])
 
   const addFollowUp = useCallback((fu: Omit<FollowUp, 'id' | 'createdAt'>): FollowUp => {
@@ -1102,7 +1109,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     addRequest, updateRequestStatus,
     addAppointment, updateAppointmentStatus,
     confirmAppointment, declineAppointment,
-    addSession,
+    addSession, updateSession,
     addFollowUp, updateFollowUpStatus,
     addFollowUpProgress, updateFollowUpProgress,
     addRequestProgress, updateRequestProgress,

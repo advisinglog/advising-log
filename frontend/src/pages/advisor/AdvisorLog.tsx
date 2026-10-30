@@ -4,8 +4,8 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useStore } from '@/data/mock-store'
 import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { PageHeader, Card, Button, EmptyState, ConfirmDialog, DocumentViewerModal, type DocumentViewerTarget } from '@/components/ui'
-import { ClipboardCheck, User, PlusCircle, Lightbulb, Sparkles, Check, FileText, Eye, CheckCircle2 } from 'lucide-react'
+import { PageHeader, Card, Button, EmptyState, ConfirmDialog, DocumentViewerModal, Tabs, type DocumentViewerTarget } from '@/components/ui'
+import { ClipboardCheck, User, PlusCircle, Lightbulb, Sparkles, Check, FileText, Eye, CheckCircle2, Pencil } from 'lucide-react'
 
 import { isAdvisorMatch } from '@/utils/advisorUtils'
 import { getLocalDateString } from '@/utils/dateUtils'
@@ -21,6 +21,7 @@ export default function AdvisorLog() {
   const [selectedRequestId, setSelectedRequestId] = useState<string>(
     (location.state as { requestId?: string } | undefined)?.requestId || ''
   )
+  const [section, setSection] = useState<'entry' | 'saved'>('entry')
   const [summary, setSummary] = useState('')
   const [followUpTask, setFollowUpTask] = useState('')
   const [followUpDate, setFollowUpDate] = useState('')
@@ -33,8 +34,14 @@ export default function AdvisorLog() {
     const navRequestId = (location.state as { requestId?: string } | undefined)?.requestId
     if (navRequestId) {
       setSelectedRequestId(navRequestId)
+      setSection('entry')
     }
   }, [location.state])
+
+  useEffect(() => {
+    const existing = store.sessions.find(session => session.requestId === selectedRequestId)
+    setSummary(existing?.summary || '')
+  }, [selectedRequestId, store.sessions])
 
   function getAttachments(request: AdvisingRequest): DocumentViewerTarget[] {
     const student = store.users.find(u => u.id === request.studentId)
@@ -114,13 +121,26 @@ export default function AdvisorLog() {
   // Scheduled or Completed requests that don't have a session log yet
   const completedRequests = store.requests.filter(r =>
     isAdvisorMatch(r.advisorId, currentUser, store.users) &&
-    (r.status === 'scheduled' || r.status === 'completed') &&
-    !store.sessions.find(s => s.requestId === r.id)
+    (r.status === 'scheduled' || r.status === 'completed' || r.status === 'closed')
   )
 
   const selectedReq = store.requests.find(r => r.id === selectedRequestId)
   const student = selectedReq ? store.users.find(u => u.id === selectedReq.studentId) : null
   const appointment = selectedReq ? store.appointments.find(a => a.requestId === selectedReq.id) : null
+  const existingSession = selectedRequestId
+    ? store.sessions.find(session => session.requestId === selectedRequestId)
+    : undefined
+  const advisorSessions = store.sessions
+    .filter(session => isAdvisorMatch(session.advisorId, currentUser, store.users))
+    .sort((a, b) => {
+      const bySessionDate = b.sessionDate.localeCompare(a.sessionDate)
+      return bySessionDate || b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id)
+    })
+
+  function editSavedLog(requestId: string) {
+    setSelectedRequestId(requestId)
+    setSection('entry')
+  }
 
   function applyTemplateDirectly(templateText: string, idx: number) {
     setSummary(templateText)
@@ -154,23 +174,27 @@ export default function AdvisorLog() {
     }
 
     const cleanSummary = summary.trim()
-    const session = store.addSession({
-      requestId: selectedRequestId,
-      appointmentId: appointment?.id || undefined,
-      studentId: selectedReq!.studentId,
-      advisorId: currentUser!.id,
-      sessionDate: getLocalDateString(),
-      summary: cleanSummary,
-      problem: cleanSummary,
-      advice: cleanSummary,
-      actionsTaken: '',
-      outcome: '',
-    })
+    const existingSession = store.sessions.find(s => s.requestId === selectedRequestId)
+    const session = existingSession
+      ? (store.updateSession(existingSession.id, {
+          sessionDate: getLocalDateString(),
+          summary: cleanSummary,
+          problem: cleanSummary,
+          advice: cleanSummary,
+        }), { ...existingSession, summary: cleanSummary, problem: cleanSummary, advice: cleanSummary })
+      : store.addSession({
+          requestId: selectedRequestId,
+          appointmentId: appointment?.id || undefined,
+          studentId: selectedReq!.studentId,
+          advisorId: currentUser!.id,
+          sessionDate: getLocalDateString(),
+          summary: cleanSummary,
+          problem: cleanSummary,
+          advice: cleanSummary,
+          actionsTaken: '',
+          outcome: '',
+        })
 
-    store.updateRequestStatus(selectedRequestId, 'closed')
-    store.appointments
-      .filter(a => a.requestId === selectedRequestId && a.status === 'scheduled')
-      .forEach(a => store.updateAppointmentStatus(a.id, 'completed'))
     store.addAuditLog({
       userId: currentUser!.id,
       userName: currentUser!.name,
@@ -224,7 +248,77 @@ export default function AdvisorLog() {
         description={t('บันทึกสรุปผลการให้คำปรึกษา คำแนะนำ และกำหนดงานติดตามผลแก่นักศึกษาอย่างกระชับและรวดเร็ว', 'Document session summary, guidance provided, and assign action items.')}
       />
 
-      {completedRequests.length === 0 && !selectedRequestId ? (
+      <Tabs
+        tabs={[
+          { value: 'entry', label: t('บันทึกผลการเข้าพบ', 'Entry Log') },
+          { value: 'saved', label: t('บันทึกที่จัดเก็บแล้ว', 'Saved Log'), count: advisorSessions.length },
+        ]}
+        active={section}
+        onChange={value => setSection(value as 'entry' | 'saved')}
+      />
+
+      {section === 'saved' ? (
+        advisorSessions.length === 0 ? (
+          <Card>
+            <EmptyState
+              icon={<FileText className="h-6 w-6 text-emerald-500" />}
+              title={t('ยังไม่มีบันทึกที่จัดเก็บไว้', 'No saved logs')}
+              description={t('บันทึกผลการให้คำปรึกษาที่บันทึกแล้วจะปรากฏที่นี่', 'Saved advising session logs will appear here.')}
+            />
+          </Card>
+        ) : (
+          <div className="space-y-3">
+            {advisorSessions.map(session => {
+              const request = store.requests.find(r => r.id === session.requestId)
+              const sessionStudent = store.users.find(u => u.id === session.studentId)
+              const sessionAppointment = store.appointments.find(appointment =>
+                appointment.id === session.appointmentId ||
+                appointment.requestId === session.requestId
+              )
+              return (
+                <Card key={session.id} className="border-emerald-100 dark:border-emerald-900/60">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 space-y-1.5">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">
+                          {sessionStudent?.name || session.studentId}
+                        </h3>
+                        {sessionStudent?.code && (
+                          <span className="font-mono text-[11px] text-slate-500">{sessionStudent.code}</span>
+                        )}
+                        <div className="text-[11px]">
+                          <span className="mr-3 text-emerald-700 dark:text-emerald-300">
+                            {t('วันที่บันทึก:', 'Entry date:')} {session.createdAt.split('T')[0]}
+                          </span>
+                          <span className="text-sky-500 dark:text-sky-300">
+                            {t('วันที่นัดหมาย:', 'Appointment date:')} {sessionAppointment?.scheduledDate || request?.preferredDate || '-'}
+                          </span>
+                        </div>
+                      </div>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                        {request ? getCategoryLabel(request.category) : t('บันทึกการให้คำปรึกษา', 'Advising session')}
+                      </p>
+                      <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed whitespace-pre-wrap">
+                        {session.summary || t('ไม่มีสรุปบันทึก', 'No summary recorded')}
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => editSavedLog(session.requestId)}
+                      className="shrink-0"
+                    >
+                      <Pencil className="h-3.5 w-3.5 mr-1" />
+                      {t('แก้ไข', 'Edit')}
+                    </Button>
+                  </div>
+                </Card>
+              )
+            })}
+          </div>
+        )
+      ) : completedRequests.length === 0 && !selectedRequestId ? (
         <Card>
           <EmptyState
             icon={<ClipboardCheck className="h-6 w-6 text-sky-500" />}
@@ -448,6 +542,27 @@ export default function AdvisorLog() {
               />
             </div>
 
+            {existingSession && (
+              <div className="p-3.5 bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-800/60 rounded-xl">
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <h3 className="text-xs sm:text-sm font-bold text-emerald-900 dark:text-emerald-200">
+                    {t('บันทึกผลการเข้าพบที่บันทึกไว้แล้ว', 'Saved Session Log')}
+                  </h3>
+                  <span className="text-[10px] font-medium text-right">
+                    <span className="block text-emerald-700 dark:text-emerald-300">
+                      {t('วันที่บันทึก:', 'Entry date:')} {existingSession.createdAt.split('T')[0]}
+                    </span>
+                    <span className="block text-sky-500 dark:text-sky-300">
+                      {t('วันที่นัดหมาย:', 'Appointment date:')} {appointment?.scheduledDate || selectedReq?.preferredDate || '-'}
+                    </span>
+                  </span>
+                </div>
+                <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-200 leading-relaxed whitespace-pre-wrap">
+                  {existingSession.summary || '-'}
+                </p>
+              </div>
+            )}
+
             {/* Optional Follow-up Task Assignment */}
             <div className="border-t border-slate-100 dark:border-slate-800 pt-4">
               <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 mb-1 flex items-center gap-1.5">
@@ -523,5 +638,3 @@ export default function AdvisorLog() {
     </div>
   )
 }
-
-

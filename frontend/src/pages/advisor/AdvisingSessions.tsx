@@ -27,7 +27,7 @@ export default function AdvisingSessions() {
 
   const [tab, setTab] = useState(() => {
     const requestedTab = (location.state as { tab?: string } | null)?.tab
-    return requestedTab && ['pending', 'upcoming', 'completed', 'cancelled'].includes(requestedTab)
+    return requestedTab && ['pending', 'upcoming', 'ongoing', 'completed', 'cancelled'].includes(requestedTab)
       ? requestedTab
       : 'pending'
   })
@@ -81,6 +81,7 @@ export default function AdvisingSessions() {
   const filterMap: Record<string, string[]> = {
     pending: ['requested', 'pending'],
     upcoming: ['scheduled'],
+    ongoing: ['scheduled'],
     completed: ['completed', 'closed'],
     cancelled: ['cancelled'],
   }
@@ -162,6 +163,7 @@ export default function AdvisingSessions() {
   const tabs = [
     { value: 'pending', label: t('คำขอนัดหมายใหม่', 'Pending Requests'), count: myRequests.filter(r => ['requested', 'pending'].includes(r.status)).length },
     { value: 'upcoming', label: t('นัดหมายที่ยืนยันแล้ว', 'Upcoming Appointments'), count: myRequests.filter(r => r.status === 'scheduled').length },
+    { value: 'ongoing', label: t('การให้คำปรึกษาที่กำลังดำเนินอยู่', 'Ongoing Sessions'), count: myRequests.filter(r => r.status === 'scheduled').length },
     { value: 'completed', label: t('เสร็จสิ้นแล้ว', 'Completed'), count: myRequests.filter(r => ['completed', 'closed'].includes(r.status)).length },
     { value: 'cancelled', label: t('ยกเลิก', 'Cancelled'), count: myRequests.filter(r => r.status === 'cancelled').length },
   ]
@@ -270,6 +272,23 @@ export default function AdvisingSessions() {
     setCancelReason('')
   }
 
+  function handleComplete(req: AdvisingRequest) {
+    if (!currentUser) return
+    store.updateRequestStatus(req.id, 'closed')
+    store.appointments
+      .filter(a => a.requestId === req.id && a.status === 'scheduled')
+      .forEach(a => store.updateAppointmentStatus(a.id, 'completed'))
+    store.addAuditLog({
+      userId: currentUser.id,
+      userName: currentUser.name,
+      userRole: currentUser.role === 'qa_chair' ? 'qa_chair' : 'advisor',
+      action: 'request_updated',
+      description: `Completed advising session for ${store.users.find(u => u.id === req.studentId)?.name || req.studentId}`,
+      targetId: req.id,
+    })
+    addToast('success', t('เสร็จสิ้นการให้คำปรึกษาแล้ว', 'Advising Session Completed'))
+  }
+
   function handleSubmitCancel() {
     if (!cancelReq || !currentUser) return
     const reason = cancelReason.trim()
@@ -361,7 +380,7 @@ export default function AdvisingSessions() {
         )
       },
     },
-    ...(tab === 'pending' || tab === 'upcoming'
+    ...(tab === 'pending' || tab === 'upcoming' || tab === 'ongoing'
       ? [
           {
             key: 'actions',
@@ -390,16 +409,28 @@ export default function AdvisingSessions() {
                   )}
 
                   {r.status === 'scheduled' && (
-                    <Button
-                      size="sm"
-                      variant="primary"
-                      onClick={() => {
-                        markRequestViewed(r.id)
-                        navigate('/advisor/log', { state: { requestId: r.id } })
-                      }}
-                    >
-                      <ClipboardList className="h-3 w-3 mr-1" /> {t('บันทึกการเข้าพบ', 'Log Notes')}
-                    </Button>
+                    <>
+                      <Button
+                        size="sm"
+                        variant="primary"
+                        onClick={() => {
+                          markRequestViewed(r.id)
+                          navigate('/advisor/log', { state: { requestId: r.id } })
+                        }}
+                      >
+                        <ClipboardList className="h-3 w-3 mr-1" /> {t('บันทึกการเข้าพบ', 'Log Notes')}
+                      </Button>
+                      {(tab === 'upcoming' || tab === 'ongoing') && (
+                        <Button
+                          size="sm"
+                          variant="primary"
+                          className="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 focus:ring-emerald-500/15"
+                          onClick={() => handleComplete(r)}
+                        >
+                          <CheckCircle2 className="h-3 w-3 mr-1" /> {t('เสร็จสิ้น', 'Complete')}
+                        </Button>
+                      )}
+                    </>
                   )}
 
                   {r.status !== 'completed' && r.status !== 'cancelled' && r.status !== 'closed' && (
@@ -448,6 +479,36 @@ export default function AdvisingSessions() {
       >
         {detailReq && (
           <div className="space-y-4">
+            {(() => {
+              const session = store.sessions.find(s => s.requestId === detailReq.id)
+              if (!session) return null
+              return (
+                <div className="p-3.5 bg-emerald-50/70 dark:bg-emerald-950/30 rounded-xl border border-emerald-200/80 dark:border-emerald-800/60">
+                  <h4 className="text-xs font-bold text-emerald-900 dark:text-emerald-200 mb-2">
+                    {t('บันทึกผลการเข้าพบ', 'Advising Session Log')}
+                  </h4>
+                  <div className="space-y-2 text-xs text-slate-700 dark:text-slate-200">
+                    <div>
+                      <span className="font-semibold text-emerald-800 dark:text-emerald-300">{t('สรุปผล:', 'Summary:')}</span>
+                      <p className="mt-0.5 whitespace-pre-wrap">{session.summary || '-'}</p>
+                    </div>
+                    {session.advice && session.advice !== session.summary && (
+                      <div>
+                        <span className="font-semibold text-emerald-800 dark:text-emerald-300">{t('คำแนะนำ:', 'Advice:')}</span>
+                        <p className="mt-0.5 whitespace-pre-wrap">{session.advice}</p>
+                      </div>
+                    )}
+                    {session.outcome && session.outcome !== session.summary && (
+                      <div>
+                        <span className="font-semibold text-emerald-800 dark:text-emerald-300">{t('ผลลัพธ์:', 'Outcome:')}</span>
+                        <p className="mt-0.5 whitespace-pre-wrap">{session.outcome}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )
+            })()}
+
             {/* Student Name */}
             <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
               <span className="text-[11px] text-slate-400 block font-medium">{t('นักศึกษาผู้ยื่นคำร้อง', 'Student')}</span>

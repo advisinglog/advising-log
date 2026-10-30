@@ -1,5 +1,6 @@
 ```txt
 npm install
+npm run db:migrate:local
 npm run dev
 ```
 
