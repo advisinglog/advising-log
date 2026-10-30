@@ -163,18 +163,27 @@ export function openGoogleCalendarEvent(options: GoogleCalendarEventOptions): vo
  * Builds direct Google Calendar URL to view an advisor's availability / schedule
  * Uses embed mode to directly show a clean weekly schedule view without forcing a "Subscribe/Add Calendar" prompt.
  */
-export function buildAdvisorCalendarUrl(advisorEmail?: string): string {
+export function buildAdvisorCalendarUrl(
+  advisorEmail?: string,
+  mode: 'WEEK' | 'MONTH' | 'AGENDA' = 'WEEK',
+  dateStr?: string
+): string {
   if (!advisorEmail || !advisorEmail.includes('@')) {
     return 'https://calendar.google.com/calendar/r'
   }
-  return `https://calendar.google.com/calendar/embed?src=${encodeURIComponent(advisorEmail.trim())}&mode=WEEK&ctz=Asia%2FBangkok&showTitle=0&showNav=1&showDate=1&showPrint=0&showTabs=0&showCalendars=0&showTz=0`
+  let dateQuery = ''
+  if (dateStr && /^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    const cleanDate = dateStr.replace(/-/g, '')
+    dateQuery = `&dates=${cleanDate}%2F${cleanDate}`
+  }
+  return `https://calendar.google.com/calendar/embed?src=${encodeURIComponent(advisorEmail.trim())}&mode=${mode}&ctz=Asia%2FBangkok&showTitle=0&showNav=1&showDate=1&showPrint=0&showTabs=1&showCalendars=0&showTz=0${dateQuery}`
 }
 
 /**
  * Opens advisor's Google Calendar directly in a new tab
  */
-export function openAdvisorCalendar(advisorEmail?: string): void {
-  const url = buildAdvisorCalendarUrl(advisorEmail)
+export function openAdvisorCalendar(advisorEmail?: string, dateStr?: string): void {
+  const url = buildAdvisorCalendarUrl(advisorEmail, 'WEEK', dateStr)
   if (typeof window !== 'undefined') {
     window.open(url, '_blank', 'noopener,noreferrer')
   }
