@@ -210,7 +210,7 @@ export default function AdvisorLog() {
     setSection('entry')
   }
 
-  function handleSubmit(e: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const targetStudentId = selectedReq?.studentId || student?.id
 
@@ -261,7 +261,7 @@ export default function AdvisorLog() {
       if (anyReq) {
         reqId = anyReq.id
       } else {
-        const walkInReq = store.addRequest({
+        const walkInReq = await store.addRequest({
           studentId: targetStudentId,
           advisorId: currentUser!.id,
           category: 'academic_performance',
@@ -871,7 +871,7 @@ export default function AdvisorLog() {
         <DocumentViewerModal
           isOpen={Boolean(previewDoc)}
           onClose={() => setPreviewDoc(null)}
-          doc={previewDoc}
+          document={previewDoc}
         />
       )}
     </div>

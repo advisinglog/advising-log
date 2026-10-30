@@ -220,7 +220,7 @@ class ApiClient {
   async updateAppointmentStatus(id: string, status: Appointment['status']) {
     return this.request<{ success: boolean }>(`/api/appointments/${id}/status`, {
       method: 'PATCH',
-      body: JSON.stringify({ status, ...(dueDate ? { dueDate } : {}) }),
+      body: JSON.stringify({ status }),
     })
   }
 
