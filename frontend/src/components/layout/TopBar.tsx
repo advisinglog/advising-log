@@ -168,7 +168,7 @@ export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
       } else if (rel.startsWith('EXIT')) {
         navigate('/advisor/exit-cases')
       } else if (rel.startsWith('FU')) {
-        navigate('/advisor/sessions')
+        navigate('/advisor/followups')
       } else {
         navigate('/advisor/sessions')
       }

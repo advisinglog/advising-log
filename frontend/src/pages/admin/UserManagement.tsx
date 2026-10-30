@@ -1,5 +1,5 @@
 import BackendDataStatus from '@/components/BackendDataStatus'
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { z } from 'zod'
 import { useStore } from '@/data/store'
@@ -8,7 +8,7 @@ import { useLanguage } from '@/contexts/LanguageContext'
 import { useToast } from '@/contexts/ToastContext'
 import { PageHeader, DataTable, StatusBadge, Button, SearchInput, Modal } from '@/components/ui'
 import type { User, UserRole } from '@/types'
-import { ChevronDown, Bot, ExternalLink, UserPlus, ShieldCheck, User as UserIcon, Users, Info, Trash2, AlertTriangle, ShieldAlert } from 'lucide-react'
+import { ChevronDown, Bot, ExternalLink, UserPlus, ShieldCheck, User as UserIcon, Users, Info, Trash2, AlertTriangle, ShieldAlert, Upload } from 'lucide-react'
 import { getLocalDateString } from '@/utils/dateUtils'
 import { getSuperAdminEmail } from '@/utils/adminContact'
 
@@ -47,6 +47,7 @@ export default function UserManagement() {
   const [newDept, setNewDept] = useState('School of Applied Digital Technology (ADT)')
   const [bulkDept, setBulkDept] = useState('School of Applied Digital Technology (ADT)')
   const [bulkText, setBulkText] = useState('')
+  const csvFileInputRef = useRef<HTMLInputElement>(null)
   const [bulkDefaultStaffRole, setBulkDefaultStaffRole] = useState<UserRole>('advisor')
   const [bulkRoleOverrides, setBulkRoleOverrides] = useState<Record<string, UserRole>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -125,6 +126,7 @@ export default function UserManagement() {
     if (!bulkText.trim()) return []
     const lines = bulkText.split('\n').map(l => l.trim()).filter(Boolean)
     const existingEmails = new Set(store.users.map(u => u.email.toLowerCase()))
+    const seenInBatch = new Set<string>()
 
     return lines.map((line, idx) => {
       // Split by comma or tab: email, [name], [role], [department]
@@ -152,7 +154,8 @@ export default function UserManagement() {
       }
 
       const code = deriveCode(role, email)
-      const isDuplicate = existingEmails.has(email.toLowerCase())
+      const isDuplicate = existingEmails.has(email.toLowerCase()) || seenInBatch.has(email.toLowerCase())
+      seenInBatch.add(email.toLowerCase())
 
       return {
         email,
@@ -221,6 +224,20 @@ export default function UserManagement() {
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  function handleImportCsvFile(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => {
+      const text = String(reader.result || '').replace(/^\uFEFF/, '')
+      setBulkText(text)
+      addToast('success', t('อ่านไฟล์ CSV สำเร็จ', 'CSV file loaded'), t(`นำเข้าข้อมูลจาก ${file.name} เรียบร้อยแล้ว`, `Loaded data from ${file.name}`))
+    }
+    reader.onerror = () => addToast('error', t('อ่านไฟล์ไม่สำเร็จ', 'Unable to Read File'), t('กรุณาลองเลือกไฟล์ CSV ใหม่อีกครั้ง', 'Please select the CSV file again.'))
+    reader.readAsText(file, 'UTF-8')
   }
 
   async function handleBulkSubmit() {
@@ -666,9 +683,26 @@ export default function UserManagement() {
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-200">
                     {t('วางรายชื่ออีเมล (เพียงแค่วางอีเมล 1 บรรทัดต่อ 1 คน หรือรูปแบบ CSV) *', 'Paste Emails (1 email per line or CSV) *')}
                   </label>
-                  <span className="text-[10px] text-slate-400 font-mono">
-                    {t('สร้างชื่อ, รหัส และบทบาทให้อัตโนมัติจากอีเมล', 'Name, code & role auto-derived from email')}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <input
+                      id="admin-user-csv"
+                      ref={csvFileInputRef}
+                      type="file"
+                      accept=".csv,text/csv"
+                      onChange={handleImportCsvFile}
+                      className="sr-only"
+                    />
+                    <label
+                      htmlFor="admin-user-csv"
+                      className="inline-flex shrink-0 cursor-pointer items-center rounded-lg bg-sky-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-sky-700"
+                    >
+                      <Upload className="h-3.5 w-3.5 mr-1.5" />
+                      {t('นำเข้าไฟล์ CSV', 'Import CSV File')}
+                    </label>
+                    <span className="text-[10px] text-slate-400 font-mono">
+                      {t('สร้างชื่อ, รหัส และบทบาทให้อัตโนมัติจากอีเมล', 'Name, code & role auto-derived from email')}
+                    </span>
+                  </div>
                 </div>
                 <textarea
                   rows={5}
