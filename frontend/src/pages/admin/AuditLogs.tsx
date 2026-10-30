@@ -1,3 +1,4 @@
+import BackendDataStatus from '@/components/BackendDataStatus'
 import { useState } from 'react'
 import { useStore } from '@/data/mock-store'
 import { useLanguage } from '@/contexts/LanguageContext'
@@ -76,6 +77,8 @@ export default function AuditLogs() {
       render: (l: AuditLog) => <span className="text-xs text-slate-400 dark:text-slate-500 font-mono">{l.targetId || '—'}</span>,
     },
   ]
+
+  if (store.backendStatus !== 'ready') return <BackendDataStatus />
 
   return (
     <div>

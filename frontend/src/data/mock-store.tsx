@@ -1,6 +1,6 @@
 // ============================================================
 // AdvisingLog — Mock Store (React Context)
-// Simple reactive store for prototype state management
+// Backend data with fixtures restricted to automated tests
 // ============================================================
 
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react'
@@ -55,13 +55,13 @@ import {
 
 import { getLocalDateString } from '@/utils/dateUtils'
 
-const isTestEnv = import.meta.env?.MODE === 'test'
+const isTestEnv = () => import.meta.env?.MODE === 'test'
 
 // --- Helper: generate simple IDs ---
 let counter = 1000
 function nextId(prefix: string): string {
   counter++
-  if (isTestEnv) {
+  if (isTestEnv()) {
     return `${prefix}${counter}`
   }
   return `${prefix}_${Date.now()}_${counter}`
@@ -74,6 +74,8 @@ function now(): string {
 // --- Store Shape ---
 
 interface StoreState {
+  backendStatus: 'loading' | 'ready' | 'error'
+  refreshBackend: () => void
   users: User[]
   roster: StudentAdvisorAssignment[]
   requests: AdvisingRequest[]
@@ -200,26 +202,29 @@ export function useStore(): Store {
 }
 
 export function StoreProvider({ children }: { children: ReactNode }) {
-  const [users, setUsers] = useState<User[]>([...mockUsers])
-  const [roster, setRoster] = useState<StudentAdvisorAssignment[]>([...mockRoster])
-  const [requests, setRequests] = useState<AdvisingRequest[]>([...mockRequests])
-  const [appointments, setAppointments] = useState<Appointment[]>([...mockAppointments])
-  const [sessions, setSessions] = useState<AdvisingSession[]>([...mockSessions])
-  const [followUps, setFollowUps] = useState<FollowUp[]>([...mockFollowUps])
-  const [referrals, setReferrals] = useState<Referral[]>([...mockReferrals])
-  const [notifications, setNotifications] = useState<Notification[]>([...mockNotifications])
-  const [earlyWarnings, setEarlyWarnings] = useState<EarlyWarningCase[]>([...mockEarlyWarnings])
-  const [earlyWarningFollowUps, setEarlyWarningFollowUps] = useState<EarlyWarningFollowUp[]>([...mockEarlyWarningFollowUps])
-  const [followUpProgress, setFollowUpProgress] = useState<FollowUpProgress[]>([...mockFollowUpProgress])
-  const [requestProgress, setRequestProgress] = useState<RequestProgress[]>([...mockRequestProgress])
-  const [exitCases, setExitCases] = useState<ExitCase[]>([...mockExitCases])
-  const [advisorAssessments, setAdvisorAssessments] = useState<AdvisorExitAssessment[]>([...mockAdvisorAssessments])
-  const [studentVoiceResponses, setStudentVoiceResponses] = useState<StudentVoiceResponse[]>([...mockStudentVoiceResponses])
+  const [backendStatus, setBackendStatus] = useState<'loading' | 'ready' | 'error'>(() => isTestEnv() ? 'ready' : 'loading')
+  const [refreshVersion, setRefreshVersion] = useState(0)
+  const refreshBackend = useCallback(() => setRefreshVersion(version => version + 1), [])
+  const [users, setUsers] = useState<User[]>(() => isTestEnv() ? [...mockUsers] : [])
+  const [roster, setRoster] = useState<StudentAdvisorAssignment[]>(() => isTestEnv() ? [...mockRoster] : [])
+  const [requests, setRequests] = useState<AdvisingRequest[]>(() => isTestEnv() ? [...mockRequests] : [])
+  const [appointments, setAppointments] = useState<Appointment[]>(() => isTestEnv() ? [...mockAppointments] : [])
+  const [sessions, setSessions] = useState<AdvisingSession[]>(() => isTestEnv() ? [...mockSessions] : [])
+  const [followUps, setFollowUps] = useState<FollowUp[]>(() => isTestEnv() ? [...mockFollowUps] : [])
+  const [referrals, setReferrals] = useState<Referral[]>(() => isTestEnv() ? [...mockReferrals] : [])
+  const [notifications, setNotifications] = useState<Notification[]>(() => isTestEnv() ? [...mockNotifications] : [])
+  const [earlyWarnings, setEarlyWarnings] = useState<EarlyWarningCase[]>(() => isTestEnv() ? [...mockEarlyWarnings] : [])
+  const [earlyWarningFollowUps, setEarlyWarningFollowUps] = useState<EarlyWarningFollowUp[]>(() => isTestEnv() ? [...mockEarlyWarningFollowUps] : [])
+  const [followUpProgress, setFollowUpProgress] = useState<FollowUpProgress[]>(() => isTestEnv() ? [...mockFollowUpProgress] : [])
+  const [requestProgress, setRequestProgress] = useState<RequestProgress[]>(() => isTestEnv() ? [...mockRequestProgress] : [])
+  const [exitCases, setExitCases] = useState<ExitCase[]>(() => isTestEnv() ? [...mockExitCases] : [])
+  const [advisorAssessments, setAdvisorAssessments] = useState<AdvisorExitAssessment[]>(() => isTestEnv() ? [...mockAdvisorAssessments] : [])
+  const [studentVoiceResponses, setStudentVoiceResponses] = useState<StudentVoiceResponse[]>(() => isTestEnv() ? [...mockStudentVoiceResponses] : [])
   const [completedVoiceStudents, setCompletedVoiceStudents] = useState<string[]>([])
-  const [documents, setDocuments] = useState<StudentDocument[]>([...mockStudentDocuments])
-  const [categoryConfigs, setCategoryConfigs] = useState<AdvisingCategoryConfig[]>([...mockCategoryConfigs])
-  const [documentTypes, setDocumentTypes] = useState<DocumentType[]>([...mockDocumentTypes])
-  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([...mockAuditLogs])
+  const [documents, setDocuments] = useState<StudentDocument[]>(() => isTestEnv() ? [...mockStudentDocuments] : [])
+  const [categoryConfigs, setCategoryConfigs] = useState<AdvisingCategoryConfig[]>(() => isTestEnv() ? [...mockCategoryConfigs] : [])
+  const [documentTypes, setDocumentTypes] = useState<DocumentType[]>(() => isTestEnv() ? [...mockDocumentTypes] : [])
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>(() => isTestEnv() ? [...mockAuditLogs] : [])
   const [aiKeys, setAiKeys] = useState<AiApiKey[]>([])
   const [systemApiConfig, setSystemApiConfig] = useState<SystemApiConfig>({
     isAiApiEnabled: true,
@@ -240,7 +245,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let isMounted = true
-    if (isTestEnv) return // In test mode, keep test fixtures intact
+    if (isTestEnv()) return // In test mode, keep test fixtures intact
+    setBackendStatus('loading')
     async function syncFromBackend() {
       const [uRes, rosRes, rRes, aptRes, fRes, sRes, eRes, vRes, aRes, kRes, ewRes, docRes, catRes, dtRes] = await Promise.all([
         api.getUsers(),
@@ -259,6 +265,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         api.getDocumentTypes(),
       ])
       if (!isMounted) return
+      const adminDataLoaded = Array.isArray(uRes?.users) && Array.isArray(rosRes?.roster)
+        && Array.isArray(aRes?.logs) && Array.isArray(catRes?.categories) && Array.isArray(dtRes?.documentTypes)
+      setBackendStatus(adminDataLoaded ? 'ready' : 'error')
       if (uRes && Array.isArray(uRes.users)) {
         const superAdminEmail = ((import.meta.env.VITE_SUPER_ADMIN_EMAIL as string) || 'se.advisinglog@gmail.com').toLowerCase().trim()
         const normalizedUsers = uRes.users.map(u => {
@@ -365,9 +374,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       if (catRes && Array.isArray(catRes.categories)) setCategoryConfigs(catRes.categories)
       if (dtRes && Array.isArray(dtRes.documentTypes)) setDocumentTypes(dtRes.documentTypes)
     }
-    syncFromBackend()
+    syncFromBackend().catch(() => { if (isMounted) setBackendStatus('error') })
     return () => { isMounted = false }
-  }, [])
+  }, [refreshVersion])
 
   // --- Actions ---
 
@@ -1047,6 +1056,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const store: Store = {
+    backendStatus, refreshBackend,
     users, roster, requests, appointments, sessions, followUps, referrals,
     notifications, earlyWarnings, earlyWarningFollowUps, followUpProgress, requestProgress, exitCases, advisorAssessments, studentVoiceResponses, completedVoiceStudents, documents,
     categoryConfigs, documentTypes, auditLogs, systemApiConfig, aiKeys,

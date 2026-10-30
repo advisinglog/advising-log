@@ -294,7 +294,7 @@ app.post('/api/auth/google', async (c) => {
 // ============================================================
 app.get('/api/users', async (c) => {
   const database = db(c)
-  if (!database) return c.json({ users: [] })
+  if (!database) return c.json({ error: 'Database unavailable' }, 503)
   
   const superAdminEmail = (c.env?.SUPER_ADMIN_EMAIL || 'se.advisinglog@gmail.com').toLowerCase().trim()
   const role = c.req.query('role')
@@ -503,7 +503,7 @@ app.delete('/api/users/:id', async (c) => {
 
 app.get('/api/roster', async (c) => {
   const database = db(c)
-  if (!database) return c.json({ roster: [] })
+  if (!database) return c.json({ error: 'Database unavailable' }, 503)
   const list = await database.select().from(schema.studentAdvisorAssignments).orderBy(desc(schema.studentAdvisorAssignments.assignedAt))
   
   // Deduplicate by studentId so each student only has their latest assignment
@@ -1260,7 +1260,7 @@ app.post('/api/early-warnings', async (c) => {
 // ============================================================
 app.get('/api/audit-logs', async (c) => {
   const database = db(c)
-  if (!database) return c.json({ logs: [] })
+  if (!database) return c.json({ error: 'Database unavailable' }, 503)
   const list = await database.select().from(schema.auditLogs).orderBy(desc(schema.auditLogs.timestamp)).limit(100)
   const normalized = list.map(l => ({
     ...l,
@@ -1869,7 +1869,7 @@ app.get('/api/categories', async (c) => {
   try {
     const database = db(c)
     if (!database) {
-      return c.json({ success: true, categories: [] })
+      return c.json({ error: 'Database unavailable' }, 503)
     }
     const cats = await database.select().from(schema.advisingCategoryConfigs).all()
     const formatted = cats.map(cat => ({
@@ -1884,7 +1884,7 @@ app.get('/api/categories', async (c) => {
     return c.json({ success: true, categories: formatted })
   } catch (err) {
     console.error('Failed to get categories from D1:', err)
-    return c.json({ success: true, categories: [] })
+    return c.json({ error: 'Database unavailable' }, 503)
   }
 })
 
@@ -1966,7 +1966,7 @@ const documentTypeSchema = z.object({
 app.get('/api/document-types', async (c) => {
   const database = db(c)
   if (!database) {
-    return c.json({ success: true, documentTypes: [] })
+    return c.json({ error: 'Database unavailable' }, 503)
   }
   const dts = await database.select().from(schema.documentTypeConfigs).all()
   const formatted = dts.map(d => {

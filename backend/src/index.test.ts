@@ -143,11 +143,10 @@ describe('Backend Hono API', () => {
     expect(data.analysis).toContain('AUN-QA')
   })
 
-  it('GET /api/users returns safe empty array when DB binding is detached in unit test', async () => {
+  it('GET /api/users reports unavailable database', async () => {
     const res = await app.request('/api/users')
-    expect(res.status).toBe(200)
-    const data = await res.json() as { users: any[] }
-    expect(Array.isArray(data.users)).toBe(true)
+    expect(res.status).toBe(503)
+    expect(await res.json()).toMatchObject({ error: 'Database unavailable' })
   })
 
   it('GET /api/requests returns safe empty array when DB binding is detached in unit test', async () => {
@@ -189,11 +188,10 @@ describe('Backend Hono API', () => {
     expect([400, 404, 503]).toContain(res.status)
   })
 
-  it('GET /api/categories returns category configs array', async () => {
+  it('GET /api/categories reports unavailable database', async () => {
     const res = await app.request('/api/categories')
-    expect(res.status).toBe(200)
-    const data = await res.json() as { categories: any[] }
-    expect(Array.isArray(data.categories)).toBe(true)
+    expect(res.status).toBe(503)
+    expect(await res.json()).toMatchObject({ error: 'Database unavailable' })
   })
 
   it('POST /api/categories validates required fields', async () => {
@@ -205,11 +203,10 @@ describe('Backend Hono API', () => {
     expect([400, 503]).toContain(res.status)
   })
 
-  it('GET /api/document-types returns document types array', async () => {
+  it('GET /api/document-types reports unavailable database', async () => {
     const res = await app.request('/api/document-types')
-    expect(res.status).toBe(200)
-    const data = await res.json() as { documentTypes: any[] }
-    expect(Array.isArray(data.documentTypes)).toBe(true)
+    expect(res.status).toBe(503)
+    expect(await res.json()).toMatchObject({ error: 'Database unavailable' })
   })
 
   it('POST /api/document-types validates required fields', async () => {
@@ -219,5 +216,12 @@ describe('Backend Hono API', () => {
       body: JSON.stringify({ name: '' }),
     })
     expect([400, 503]).toContain(res.status)
+  })
+})
+
+ describe('Admin data availability', () => {
+  it.each(['/api/roster', '/api/audit-logs'])('%s does not disguise a missing database as an empty list', async path => {
+    const res = await app.request(path)
+    expect(res.status).toBe(503)
   })
 })

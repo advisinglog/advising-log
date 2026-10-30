@@ -1,3 +1,4 @@
+import BackendDataStatus from '@/components/BackendDataStatus'
 // ============================================================
 // AdvisingLog — Admin Dashboard (Ultra-Modern, High-End SaaS)
 // ============================================================
@@ -8,29 +9,21 @@ import { useStore } from '@/data/mock-store'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useTheme } from '@/contexts/ThemeContext'
 import { PageHeader, Card, Button, UserAvatar } from '@/components/ui'
-import { useToast } from '@/contexts/ToastContext'
 import {
   Users,
   BookOpen,
   Shield,
+  ShieldCheck,
   FolderCog,
   ScrollText,
-  ShieldCheck,
-  Database,
-  Server,
   FileCog,
   Tag,
   ArrowRight,
-  Activity,
   Sparkles,
   Clock,
-  CloudLightning,
   UserCheck,
   ChevronRight,
-  CheckCircle2,
-  HardDrive,
   Bot,
-  Power,
 } from 'lucide-react'
 import {
   PieChart,
@@ -39,7 +32,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import type { UserRole } from '@/types'
 
 export default function AdminDashboard() {
@@ -48,31 +41,9 @@ export default function AdminDashboard() {
   const { t } = useLanguage()
   const { isDark } = useTheme()
   const navigate = useNavigate()
-  const { addToast } = useToast()
   const [auditFilter, setAuditFilter] = useState<'all' | 'login' | 'roster' | 'request'>('all')
 
   if (!currentUser) return null
-
-  const isAiEnabled = store.systemApiConfig?.isAiApiEnabled !== false
-
-  function handleToggleAiApi() {
-    const nextState = !isAiEnabled
-    store.toggleAiApi(nextState, currentUser?.name || (currentUser?.role === 'super_admin' ? 'Super Admin' : 'Admin'))
-    store.addAuditLog({
-      userId: currentUser?.id || 'ADM001',
-      userName: currentUser?.name || (currentUser?.role === 'super_admin' ? 'Super Admin' : 'Admin'),
-      userRole: currentUser?.role || 'admin',
-      action: 'api_toggled',
-      description: `Administrator ${nextState ? 'ENABLED' : 'DISABLED'} AI/LLM API service platform-wide`,
-    })
-    addToast(
-      nextState ? 'success' : 'warning',
-      nextState ? t('เปิดใช้งาน AI API สำเร็จ', 'AI API Enabled') : t('ปิดการใช้งาน AI API สำเร็จ', 'AI API Disabled'),
-      nextState
-        ? t('ระบบ AI พร้อมใช้งานแล้ว', 'AI system is now active across the platform.')
-        : t('ระงับการเรียกใช้ API ภายนอกชั่วคราว ข้อมูลจะไม่ถูกส่งออก', 'External LLM API requests are paused by Administrator.')
-    )
-  }
 
   // User breakdown
   const totalUsers = store.users.length
@@ -80,17 +51,24 @@ export default function AdminDashboard() {
   const totalAdvisors = store.users.filter(u => u.role === 'advisor').length
   const totalQAChairs = store.users.filter(u => u.role === 'qa_chair').length
   const totalAdmins = store.users.filter(u => u.role === 'admin').length
+  const totalSuperAdmins = store.users.filter(u => u.role === 'super_admin').length
+  const activeUserPct = totalUsers > 0 ? Math.round(store.users.filter(u => u.isActive).length / totalUsers * 100) : 0
 
   // Roster & Configuration stats
   const activeRosterCount = store.roster.filter(r => r.isActive).length
   const totalCategories = store.categoryConfigs.length
   const totalDocTypes = store.documentTypes.length
 
+  const assignedStudents = new Set(store.roster.filter(r => r.isActive).map(r => r.studentId))
+  const coveredStudents = store.users.filter(u => u.role === 'student' && assignedStudents.has(u.id)).length
+  const coveragePct = totalStudents > 0 ? Math.round(coveredStudents / totalStudents * 100) : 0
+  const averageLoad = totalAdvisors > 0 ? (activeRosterCount / totalAdvisors).toFixed(1) : '0'
+
   // Percentages for role distribution bar
   const studentPct = totalUsers > 0 ? Math.round((totalStudents / totalUsers) * 100) : 0
   const advisorPct = totalUsers > 0 ? Math.round((totalAdvisors / totalUsers) * 100) : 0
   const qaPct = totalUsers > 0 ? Math.round((totalQAChairs / totalUsers) * 100) : 0
-  const adminPct = totalUsers > 0 ? Math.max(0, 100 - studentPct - advisorPct - qaPct) : 0
+  const adminPct = totalUsers > 0 ? Math.round((totalAdmins / totalUsers) * 100) : 0
 
   // Chart Theme configuration for dark/light
   const chartTheme = {
@@ -105,6 +83,7 @@ export default function AdminDashboard() {
     { name: t('อาจารย์ที่ปรึกษา', 'Advisors'), value: totalAdvisors, color: '#0ea5e9' },
     { name: t('ประกันคุณภาพ', 'QA Chairs'), value: totalQAChairs, color: '#38bdf8' },
     { name: t('ผู้ดูแลระบบ', 'Admins'), value: totalAdmins, color: '#94a3b8' },
+    { name: 'Super Admin', value: totalSuperAdmins, color: '#a855f7' },
   ].filter(d => d.value > 0)
 
   // Filtered audit logs
@@ -124,7 +103,7 @@ export default function AdminDashboard() {
     .slice(0, 6)
 
   // Recent 5 Users
-  const recentUsers = store.users.slice(0, 5)
+  const recentUsers = [...store.users].sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || '')).slice(0, 5)
 
   // Role metadata helper
   const roleMeta: Record<UserRole, { labelTh: string; labelEn: string; color: string; bg: string }> = {
@@ -228,6 +207,8 @@ export default function AdminDashboard() {
     },
   ]
 
+  if (store.backendStatus !== 'ready') return <BackendDataStatus />
+
   return (
     <div className="space-y-6">
       {/* Top Header */}
@@ -239,7 +220,7 @@ export default function AdminDashboard() {
         }
         description={t(
           'จัดการสิทธิ์ผู้ใช้งาน จัดสรรคู่ที่ปรึกษา ตรวจสอบหมวดหมู่ และติดตามความปลอดภัยของระบบ',
-          'Manage user permissions, student-advisor roster mapping, system configuration, and infrastructure telemetry.'
+          'Manage user permissions, student-advisor roster mapping, and system configuration.'
         )}
         actions={
           <div className="flex items-center gap-2.5">
@@ -255,35 +236,20 @@ export default function AdminDashboard() {
         }
       />
 
-      {/* Live Operational Status Telemetry Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/60 shadow-xs">
-        <div className="flex items-center gap-2.5">
-          <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold bg-sky-50 dark:bg-sky-500/10 text-sky-700 dark:text-sky-300 border border-sky-200/70 dark:border-sky-500/25">
-            <span className="h-2 w-2 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse ring-4 ring-emerald-500/20" />
-            {t('ระบบทำงานปกติ 100%', 'All Systems Operational')}
-          </span>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <div className="flex items-center gap-2 text-xs font-semibold text-sky-700 dark:text-sky-300 bg-white dark:bg-slate-800 border border-sky-200/70 dark:border-slate-700/80 px-3.5 py-1.5 rounded-xl shadow-2xs">
-            <CloudLightning className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400" />
-            <span>Cloudflare D1 & Hono Edge</span>
-          </div>
-          <div className="flex items-center gap-2 text-[11px] font-medium text-slate-500 dark:text-slate-400 bg-white/80 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 px-3 py-1.5 rounded-xl">
-            <span className="h-1.5 w-1.5 rounded-full bg-sky-500" />
-            <span>Bangkok Edge Node · 12ms</span>
-          </div>
-        </div>
+      <div className="flex items-center justify-between gap-3 text-sm text-slate-500">
+        <span>{t('ข้อมูลจากฐานข้อมูลระบบ', 'Data from the system database')}</span>
+        <Button variant="secondary" size="sm" onClick={store.refreshBackend}>{t('รีเฟรชข้อมูล', 'Refresh data')}</Button>
       </div>
 
       {/* KPI Stat Cards Grid (Enhanced with Visual Trends) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="group relative overflow-hidden bg-white dark:bg-[#0e1424] rounded-2xl border border-slate-200/70 dark:border-slate-800/80 p-5 shadow-sm hover:shadow-premium dark:hover:border-sky-500/40 hover:-translate-y-0.5 transition-all duration-200">
+        <Link to="/admin/users" className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 group relative overflow-hidden bg-white dark:bg-[#0e1424] rounded-2xl border border-slate-200/70 dark:border-slate-800/80 p-5 shadow-sm hover:shadow-premium dark:hover:border-sky-500/40 hover:-translate-y-0.5 transition-all duration-200">
           <div className="flex items-center justify-between">
             <div className="h-11 w-11 rounded-xl bg-sky-50 dark:bg-sky-500/12 text-sky-600 dark:text-sky-300 flex items-center justify-center ring-1 ring-sky-200/60 dark:ring-sky-500/25 shadow-2xs group-hover:scale-105 transition-transform">
               <Users className="h-5 w-5" />
             </div>
             <span className="text-[10px] font-bold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-500/12 px-2 py-0.5 rounded-full border border-sky-100 dark:border-sky-500/25">
-              100% {t('เปิดใช้งาน', 'Active')}
+              {activeUserPct}% {t('เปิดใช้งาน', 'Active')}
             </span>
           </div>
           <div className="mt-3">
@@ -295,9 +261,9 @@ export default function AdminDashboard() {
             <span>·</span>
             <span>{totalAdvisors} {t('อาจารย์', 'Advisors')}</span>
           </div>
-        </div>
+        </Link>
 
-        <div className="group relative overflow-hidden bg-white dark:bg-[#0e1424] rounded-2xl border border-slate-200/70 dark:border-slate-800/80 p-5 shadow-sm hover:shadow-premium dark:hover:border-sky-500/40 hover:-translate-y-0.5 transition-all duration-200">
+        <Link to="/admin/users?role=student" className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 group relative overflow-hidden bg-white dark:bg-[#0e1424] rounded-2xl border border-slate-200/70 dark:border-slate-800/80 p-5 shadow-sm hover:shadow-premium dark:hover:border-sky-500/40 hover:-translate-y-0.5 transition-all duration-200">
           <div className="flex items-center justify-between">
             <div className="h-11 w-11 rounded-xl bg-sky-50 dark:bg-sky-500/12 text-sky-600 dark:text-sky-300 flex items-center justify-center ring-1 ring-sky-200/60 dark:ring-sky-500/25 shadow-2xs group-hover:scale-105 transition-transform">
               <BookOpen className="h-5 w-5" />
@@ -308,15 +274,15 @@ export default function AdminDashboard() {
           </div>
           <div className="mt-3">
             <p className="text-3xl font-black tracking-tight text-slate-900 dark:text-slate-100 font-sans">{totalStudents}</p>
-            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">{t('นักศึกษาที่ลงทะเบียน', 'Active Students')}</p>
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">{t('นักศึกษาที่ลงทะเบียน', 'Registered Students')}</p>
           </div>
           <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400">
             <span>{t('สำนักวิชา ADT', 'School of ADT')}</span>
-            <span className="text-emerald-600 dark:text-emerald-400 font-semibold">{t('ปกติ', 'Good')}</span>
+            <span>{t('บัญชีนักศึกษา', 'Student accounts')}</span>
           </div>
-        </div>
+        </Link>
 
-        <div className="group relative overflow-hidden bg-white dark:bg-[#0e1424] rounded-2xl border border-slate-200/70 dark:border-slate-800/80 p-5 shadow-sm hover:shadow-premium dark:hover:border-sky-500/40 hover:-translate-y-0.5 transition-all duration-200">
+        <Link to="/admin/users?role=advisor" className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 group relative overflow-hidden bg-white dark:bg-[#0e1424] rounded-2xl border border-slate-200/70 dark:border-slate-800/80 p-5 shadow-sm hover:shadow-premium dark:hover:border-sky-500/40 hover:-translate-y-0.5 transition-all duration-200">
           <div className="flex items-center justify-between">
             <div className="h-11 w-11 rounded-xl bg-sky-50 dark:bg-sky-500/12 text-sky-600 dark:text-sky-300 flex items-center justify-center ring-1 ring-sky-200/60 dark:ring-sky-500/25 shadow-2xs group-hover:scale-105 transition-transform">
               <Shield className="h-5 w-5" />
@@ -331,11 +297,11 @@ export default function AdminDashboard() {
           </div>
           <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400">
             <span>{t('อัตราส่วนเฉลี่ย', 'Avg Load')}</span>
-            <span className="font-semibold text-slate-700 dark:text-slate-200">~15 {t('คน/ท่าน', 'advisees')}</span>
+            <span className="font-semibold text-slate-700 dark:text-slate-200">{averageLoad} {t('คน/ท่าน', 'advisees')}</span>
           </div>
-        </div>
+        </Link>
 
-        <div className="group relative overflow-hidden bg-white dark:bg-[#0e1424] rounded-2xl border border-slate-200/70 dark:border-slate-800/80 p-5 shadow-sm hover:shadow-premium dark:hover:border-sky-500/40 hover:-translate-y-0.5 transition-all duration-200">
+        <Link to="/admin/roster" className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 group relative overflow-hidden bg-white dark:bg-[#0e1424] rounded-2xl border border-slate-200/70 dark:border-slate-800/80 p-5 shadow-sm hover:shadow-premium dark:hover:border-sky-500/40 hover:-translate-y-0.5 transition-all duration-200">
           <div className="flex items-center justify-between">
             <div className="h-11 w-11 rounded-xl bg-sky-50 dark:bg-sky-500/12 text-sky-600 dark:text-sky-300 flex items-center justify-center ring-1 ring-sky-200/60 dark:ring-sky-500/25 shadow-2xs group-hover:scale-105 transition-transform">
               <FolderCog className="h-5 w-5" />
@@ -350,9 +316,9 @@ export default function AdminDashboard() {
           </div>
           <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400">
             <span>{t('ความครอบคลุม', 'Coverage')}</span>
-            <span className="font-semibold text-emerald-600 dark:text-emerald-400">100%</span>
+            <span className="font-semibold text-emerald-600 dark:text-emerald-400">{coveragePct}%</span>
           </div>
-        </div>
+        </Link>
       </div>
 
       {/* Admin Modules Quick Launch Panel */}
@@ -595,7 +561,7 @@ export default function AdminDashboard() {
 
             {/* Role breakdown grid */}
             <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-              <div className="p-2 rounded-xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800/80">
+              <Link to="/admin/users?role=student" className="block hover:border-sky-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 p-2 rounded-xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800/80">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
                     <span className="h-2 w-2 rounded-full bg-sky-500" />
@@ -604,9 +570,9 @@ export default function AdminDashboard() {
                   <span className="text-xs font-bold text-slate-900 dark:text-slate-100">{totalStudents}</span>
                 </div>
                 <p className="text-[10px] text-slate-400 mt-0.5">{studentPct}% {t('ของระบบ', 'share')}</p>
-              </div>
+              </Link>
 
-              <div className="p-2 rounded-xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800/80">
+              <Link to="/admin/users?role=advisor" className="block hover:border-sky-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 p-2 rounded-xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800/80">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
                     <span className="h-2 w-2 rounded-full bg-sky-500" />
@@ -615,9 +581,9 @@ export default function AdminDashboard() {
                   <span className="text-xs font-bold text-slate-900 dark:text-slate-100">{totalAdvisors}</span>
                 </div>
                 <p className="text-[10px] text-slate-400 mt-0.5">{advisorPct}% {t('ของระบบ', 'share')}</p>
-              </div>
+              </Link>
 
-              <div className="p-2 rounded-xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800/80">
+              <Link to="/admin/users?role=qa_chair" className="block hover:border-sky-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 p-2 rounded-xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800/80">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
                     <span className="h-2 w-2 rounded-full bg-sky-300" />
@@ -626,9 +592,9 @@ export default function AdminDashboard() {
                   <span className="text-xs font-bold text-slate-900 dark:text-slate-100">{totalQAChairs}</span>
                 </div>
                 <p className="text-[10px] text-slate-400 mt-0.5">{qaPct}% {t('ของระบบ', 'share')}</p>
-              </div>
+              </Link>
 
-              <div className="p-2 rounded-xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800/80">
+              <Link to="/admin/users?role=admin" className="block hover:border-sky-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 p-2 rounded-xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800/80">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
                     <span className="h-2 w-2 rounded-full bg-slate-400" />
@@ -637,201 +603,21 @@ export default function AdminDashboard() {
                   <span className="text-xs font-bold text-slate-900 dark:text-slate-100">{totalAdmins}</span>
                 </div>
                 <p className="text-[10px] text-slate-400 mt-0.5">{adminPct}% {t('ของระบบ', 'share')}</p>
-              </div>
-            </div>
-          </Card>
-
-          {/* AI & LLM API Service Control Console */}
-          <Card className={`transition-all duration-300 border ${
-            isAiEnabled
-              ? 'border-sky-200/80 dark:border-sky-800/60 bg-gradient-to-br from-white via-sky-50/25 to-white dark:from-slate-900 dark:via-slate-900 dark:to-sky-950/20'
-              : 'border-slate-200/80 dark:border-slate-800 bg-gradient-to-br from-white via-slate-50/70 to-white dark:from-slate-900 dark:via-slate-900 dark:to-slate-950'
-          }`}>
-            <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-100 dark:border-slate-800">
-              <div className="flex items-center gap-2">
-                <div className={`h-8 w-8 rounded-xl flex items-center justify-center shadow-xs ring-1 ${
-                  isAiEnabled ? 'bg-sky-50 dark:bg-sky-500/12 text-sky-600 dark:text-sky-300 ring-sky-200/70 dark:ring-sky-500/25' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-300 ring-slate-200/70 dark:ring-slate-700'
-                }`}>
-                  <Bot className="h-4 w-4" />
+              </Link>
+              <Link to="/admin/users?role=super_admin" className="block rounded-xl border border-slate-200/60 bg-slate-50/70 p-2 hover:border-sky-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:border-slate-800/80 dark:bg-slate-800/40">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-semibold text-slate-600 dark:text-slate-300">Super Admin</span>
+                  <span className="font-bold text-slate-900 dark:text-slate-100">{totalSuperAdmins}</span>
                 </div>
-                <div>
-                  <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
-                    {t('การควบคุม API & ระบบปัญญาประดิษฐ์', 'AI / LLM API Control Console')}
-                  </h3>
-                  <p className="text-[10px] text-slate-400 dark:text-slate-500">
-                    {t('สิทธิ์ผู้ดูแลระบบ: เปิด/ปิดการเข้าถึงโมเดลภาษาขนาดใหญ่', 'Admin Role: Toggle LLM model access platform-wide')}
-                  </p>
-                </div>
-              </div>
-
-              <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${
-                isAiEnabled
-                  ? 'bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-200/80 dark:border-emerald-500/30'
-                  : 'bg-rose-50 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-200/80 dark:border-rose-500/30'
-              }`}>
-                <span className={`h-1.5 w-1.5 rounded-full ${isAiEnabled ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
-                {isAiEnabled ? t('API: เปิดใช้งาน', 'API: Active') : t('API: ปิดใช้งาน', 'API: Disabled')}
-              </span>
-            </div>
-
-            <div className="p-3.5 rounded-2xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/70 dark:border-slate-800 shadow-2xs space-y-3">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div>
-                  <p className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                    {t('สวิตช์ควบคุมหลัก (Master API Switch)', 'Master LLM API Switch')}
-                  </p>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
-                    {isAiEnabled
-                      ? t('ระบบ AI เปิดให้บริการสำหรับฝ่าย QA และประธานหลักสูตรตามปกติ', 'AI system is accessible for QA & Program Chair.')
-                      : t('ระบบ AI ถูกระงับชั่วคราว หน้า QA จะแสดงคำเตือนและไม่ส่งข้อมูลออกภายนอก', 'AI is paused; QA interface will show disabled warning.')}
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={handleToggleAiApi}
-                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl font-bold text-xs cursor-pointer shadow-xs transition-all flex-shrink-0 ${
-                    isAiEnabled
-                      ? 'bg-sky-600 hover:bg-sky-700 text-white'
-                      : 'bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 text-slate-700 dark:text-slate-200'
-                  }`}
-                >
-                  <Power className="h-3.5 w-3.5" />
-                  <span>{isAiEnabled ? t('เปิดใช้งานอยู่ (คลิกเพื่อปิด)', 'Enabled (Click to Disable)') : t('ปิดใช้งานอยู่ (คลิกเพื่อเปิด)', 'Disabled (Click to Enable)')}</span>
-                </button>
-              </div>
-
-              <div className="pt-2.5 border-t border-slate-100 dark:border-slate-800/80 grid grid-cols-1 sm:grid-cols-2 gap-1 text-[11px]">
-                <div className="text-slate-500 dark:text-slate-400">
-                  <span className="font-semibold text-slate-700 dark:text-slate-300">{t('ผู้ให้บริการ:', 'Provider:')}</span> {store.systemApiConfig.provider}
-                </div>
-                <div className="text-slate-400 sm:text-right">
-                  {t('แก้ไขล่าสุดโดย:', 'Last toggled by:')} <span className="font-semibold text-slate-600 dark:text-slate-300">{store.systemApiConfig.lastToggledBy || 'Admin'}</span>
-                </div>
-              </div>
-
-              {/* Per-User Granular Authorization Status */}
-              <div className="pt-2.5 border-t border-slate-100 dark:border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px]">
-                <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
-                  <Bot className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400" />
-                  <span>
-                    {t(
-                      `สิทธิ์บุคลากร: อนุมัติแล้ว ${store.users.filter(u => u.role !== 'student' && u.hasAiAccess === true).length} จาก ${store.users.filter(u => u.role !== 'student').length} ท่าน`,
-                      `Faculty/QA: ${store.users.filter(u => u.role !== 'student' && u.hasAiAccess === true).length} of ${store.users.filter(u => u.role !== 'student').length} authorized`
-                    )}
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => navigate('/admin/ai-governance')}
-                  className="text-xs font-bold text-sky-600 dark:text-sky-400 hover:underline flex items-center gap-1 cursor-pointer self-start sm:self-auto"
-                >
-                  <span>{t('จัดการระบบ AI & กำหนดสิทธิ์', 'Manage AI Governance')}</span>
-                  <ArrowRight className="h-3 w-3" />
-                </button>
-              </div>
+                <p className="mt-0.5 text-[10px] text-slate-400">{totalUsers > 0 ? Math.round(totalSuperAdmins / totalUsers * 100) : 0}% {t('ของระบบ', 'share')}</p>
+              </Link>
             </div>
           </Card>
 
 
-          {/* Infrastructure Health Card */}
-          <Card>
 
-            <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-100 dark:border-slate-800">
-              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                {t('สถานะโครงสร้างพื้นฐานระบบ', 'Infrastructure & Telemetry')}
-              </h3>
-              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/12 px-2.5 py-0.5 rounded-full border border-emerald-100 dark:border-emerald-500/25">
-                <Activity className="h-3 w-3 animate-pulse" /> Live Telemetry
-              </span>
-            </div>
 
-            <div className="space-y-2.5">
-              {/* Cloudflare D1 */}
-              <div className="p-3 rounded-xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800/80 flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="h-8 w-8 rounded-lg bg-sky-50 dark:bg-sky-500/12 text-sky-600 dark:text-sky-400 flex items-center justify-center">
-                    <Database className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                      Cloudflare D1 Database
-                    </p>
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">
-                      SQLite Edge Engine · 12ms
-                    </p>
-                  </div>
-                </div>
-                <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/12 px-2.5 py-0.5 rounded-full border border-emerald-200/60 dark:border-emerald-500/25">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  {t('ปกติ', 'Healthy')}
-                </span>
-              </div>
 
-              {/* Workers API Gateway */}
-              <div className="p-3 rounded-xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800/80 flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="h-8 w-8 rounded-lg bg-sky-50 dark:bg-sky-500/12 text-sky-600 dark:text-sky-400 flex items-center justify-center">
-                    <Server className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                      Workers API Gateway (Hono)
-                    </p>
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">
-                      Edge Routing · 99.98% Uptime
-                    </p>
-                  </div>
-                </div>
-                <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/12 px-2.5 py-0.5 rounded-full border border-emerald-200/60 dark:border-emerald-500/25">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  {t('ออนไลน์', 'Online')}
-                </span>
-              </div>
-
-              {/* Cloudinary Media Pipeline */}
-              <div className="p-3 rounded-xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800/80 flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="h-8 w-8 rounded-lg bg-sky-50 dark:bg-sky-500/12 text-sky-600 dark:text-sky-400 flex items-center justify-center">
-                    <HardDrive className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                      Cloudinary Media Pipeline
-                    </p>
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">
-                      Signed URLs · PDPA Encrypted
-                    </p>
-                  </div>
-                </div>
-                <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/12 px-2.5 py-0.5 rounded-full border border-emerald-200/60 dark:border-emerald-500/25">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                  {t('พร้อมใช้งาน', 'Ready')}
-                </span>
-              </div>
-
-              {/* React Context State */}
-              <div className="p-3 rounded-xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800/80 flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="h-8 w-8 rounded-lg bg-sky-50 dark:bg-sky-500/12 text-sky-600 dark:text-sky-400 flex items-center justify-center">
-                    <CheckCircle2 className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                      In-Memory React State
-                    </p>
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">
-                      Client Store Hydrated
-                    </p>
-                  </div>
-                </div>
-                <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-500/12 px-2.5 py-0.5 rounded-full border border-sky-200/60 dark:border-sky-500/25">
-                  {t('ซิงค์แล้ว', 'Synced')}
-                </span>
-              </div>
-            </div>
-          </Card>
         </div>
       </div>
 

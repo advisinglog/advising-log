@@ -1,3 +1,4 @@
+import BackendDataStatus from '@/components/BackendDataStatus'
 import { useState } from 'react'
 import { useStore } from '@/data/mock-store'
 import { useLanguage } from '@/contexts/LanguageContext'
@@ -300,6 +301,8 @@ export default function Categories() {
       ),
     },
   ]
+
+  if (store.backendStatus !== 'ready') return <BackendDataStatus />
 
   return (
     <div className="space-y-6">

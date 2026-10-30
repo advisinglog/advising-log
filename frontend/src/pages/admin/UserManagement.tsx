@@ -1,5 +1,7 @@
+import BackendDataStatus from '@/components/BackendDataStatus'
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { z } from 'zod'
 import { useStore } from '@/data/mock-store'
 import { useAuth } from '@/contexts/AuthContext'
 import { useLanguage } from '@/contexts/LanguageContext'
@@ -9,6 +11,8 @@ import type { User, UserRole } from '@/types'
 import { ChevronDown, Bot, ExternalLink, UserPlus, ShieldCheck, User as UserIcon, Users, Info, Trash2, AlertTriangle, ShieldAlert } from 'lucide-react'
 import { getLocalDateString } from '@/utils/dateUtils'
 
+const roleFilterSchema = z.enum(['all', 'student', 'advisor', 'qa_chair', 'admin', 'super_admin'])
+
 export default function UserManagement() {
   const store = useStore()
   const { currentUser } = useAuth()
@@ -16,7 +20,18 @@ export default function UserManagement() {
   const { t } = useLanguage()
   const { addToast } = useToast()
   const [search, setSearch] = useState('')
-  const [roleFilter, setRoleFilter] = useState<UserRole | 'all'>('all')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const parsedRole = roleFilterSchema.safeParse(searchParams.get('role'))
+  const roleFilter = parsedRole.success ? parsedRole.data : 'all'
+
+  function setRoleFilter(role: UserRole | 'all') {
+    setSearchParams(previous => {
+      const next = new URLSearchParams(previous)
+      if (role === 'all') next.delete('role')
+      else next.set('role', role)
+      return next
+    })
+  }
   const [showRoleDropdown, setShowRoleDropdown] = useState(false)
 
   // Delete User State
@@ -386,6 +401,8 @@ export default function UserManagement() {
       },
     },
   ]
+
+  if (store.backendStatus !== 'ready') return <BackendDataStatus />
 
   return (
     <div className="space-y-4">

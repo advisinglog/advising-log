@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, fireEvent, act } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
+import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { StoreProvider, useStore } from '@/data/mock-store'
 import { ToastProvider } from '@/contexts/ToastContext'
 import { LanguageProvider } from '@/contexts/LanguageContext'
@@ -53,26 +53,27 @@ describe('Admin API Control & CSV Roster Import', () => {
     localStorage.clear()
   })
 
+  it('opens the student list from the dashboard student count', () => {
+    renderWithProviders(
+      <Routes>
+        <Route path="/" element={<AdminDashboard />} />
+        <Route path="/admin/users" element={<UserManagement />} />
+      </Routes>
+    )
+
+    fireEvent.click(screen.getByRole('link', { name: /นักศึกษาที่ลงทะเบียน/ }))
+
+    expect(screen.getByRole('button', { name: /นักศึกษา/ })).toBeInTheDocument()
+    expect(screen.queryByRole('cell', { name: 'admin@mfu.ac.th' })).not.toBeInTheDocument()
+  })
+
   // -------------------------------------------------------------
   // PART 1: Admin API Toggle Tests
   // -------------------------------------------------------------
-  it('renders AI/LLM API control card in AdminDashboard and toggles API state', () => {
+  it('does not present local AI settings or static telemetry as live server status', () => {
     renderWithProviders(<AdminDashboard />)
-
-    // Verify card exists
-    expect(screen.getByText(/การควบคุม API & ระบบปัญญาประดิษฐ์/i)).toBeInTheDocument()
-    expect(screen.getByText(/API: เปิดใช้งาน/i)).toBeInTheDocument()
-
-    const toggleButton = screen.getByRole('button', { name: /เปิดใช้งานอยู่ \(คลิกเพื่อปิด\)/i })
-    expect(toggleButton).toBeInTheDocument()
-
-    // Toggle OFF
-    act(() => {
-      fireEvent.click(toggleButton)
-    })
-
-    expect(screen.getByText(/API: ปิดใช้งาน/i)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /ปิดใช้งานอยู่ \(คลิกเพื่อเปิด\)/i })).toBeInTheDocument()
+    expect(screen.queryByText(/12ms|99.98%|Live Telemetry/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Master API Switch|Master LLM API Switch/)).not.toBeInTheDocument()
   })
 
   it('rejects LLM calls with disabled notice when Admin turns off the API', async () => {

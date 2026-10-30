@@ -1,3 +1,4 @@
+import BackendDataStatus from '@/components/BackendDataStatus'
 // ============================================================
 // AdvisingLog — Student-Advisor Roster Management (Admin)
 // Cohort Assignment & Batch CSV Import with Duplicate Prevention
@@ -335,6 +336,8 @@ export default function Roster() {
       ),
     },
   ]
+
+  if (store.backendStatus !== 'ready') return <BackendDataStatus />
 
   return (
     <div>
