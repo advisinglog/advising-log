@@ -378,6 +378,23 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return () => { isMounted = false }
   }, [refreshVersion])
 
+  useEffect(() => {
+    if (isTestEnv()) return
+
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === 'visible') {
+        refreshBackend()
+      }
+    }
+
+    window.addEventListener('focus', refreshWhenVisible)
+    document.addEventListener('visibilitychange', refreshWhenVisible)
+    return () => {
+      window.removeEventListener('focus', refreshWhenVisible)
+      document.removeEventListener('visibilitychange', refreshWhenVisible)
+    }
+  }, [refreshBackend])
+
   // --- Actions ---
 
   const addRequest = useCallback((req: Omit<AdvisingRequest, 'id' | 'createdAt' | 'updatedAt'>): AdvisingRequest => {

@@ -2,14 +2,14 @@
 // Advisor Dashboard — REG MFU Academic Information Style
 // ============================================================
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useStore } from '@/data/mock-store'
 import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useNavigate } from 'react-router-dom'
 import { PageHeader, StatCard, Card, StatusBadge, EmptyState, Button, Modal, AdvisorCohortBanner } from '@/components/ui'
-import { FileEdit, CalendarClock, ListChecks, UserX, AlertTriangle, Clock, ArrowRight, UserPlus, CheckCircle2, Search } from 'lucide-react'
+import { FileEdit, CalendarClock, ListChecks, UserX, AlertTriangle, Clock, ArrowRight, UserPlus, CheckCircle2, Search, Users, RefreshCw, Upload } from 'lucide-react'
 import { isAdvisorMatch } from '@/utils/advisorUtils'
 import { getLocalDateString } from '@/utils/dateUtils'
 
@@ -20,13 +20,123 @@ export default function AdvisorDashboard() {
   const { addToast } = useToast()
   const navigate = useNavigate()
 
+  useEffect(() => {
+    store.refreshBackend()
+    const refreshTimer = window.setInterval(store.refreshBackend, 10000)
+    return () => window.clearInterval(refreshTimer)
+  }, [store.refreshBackend])
+
   const [showAddAdvisee, setShowAddAdvisee] = useState(false)
+  const [showImportCsv, setShowImportCsv] = useState(false)
+  const [csvText, setCsvText] = useState('')
+  const [csvRows, setCsvRows] = useState<Array<{ name: string; code: string }>>([])
+  const [showAdviseeList, setShowAdviseeList] = useState(false)
   const [selectedStudentId, setSelectedStudentId] = useState('')
   const [studentSearch, setStudentSearch] = useState('')
+
+  function parseStudentCsv(text: string): Array<{ name: string; code: string }> {
+    const rows = text.split(/\r?\n/).map(line => line.trim()).filter(Boolean)
+    if (rows.length === 0) return []
+
+    const firstRow = rows[0].split(/[,;\t]/).map(value => value.trim().toLowerCase())
+    const nameHeaders = ['name', 'student_name', 'student name', 'ชื่อ', 'ชื่อ-นามสกุล']
+    const codeHeaders = ['code', 'student_code', 'student code', 'student id', 'student_id', 'รหัสนักศึกษา']
+    const nameIndex = firstRow.findIndex(value => nameHeaders.includes(value))
+    const codeIndex = firstRow.findIndex(value => codeHeaders.includes(value))
+    const hasHeader = nameIndex >= 0 || codeIndex >= 0
+    const startIndex = hasHeader ? 1 : 0
+
+    return rows.slice(startIndex).map(row => {
+      const values = row.split(/[,;\t]/).map(value => value.trim().replace(/^["']|["']$/g, ''))
+      return {
+        name: values[hasHeader && nameIndex >= 0 ? nameIndex : 1] || '',
+        code: values[hasHeader && codeIndex >= 0 ? codeIndex : 0] || '',
+      }
+    }).filter(row => row.name && row.code)
+  }
+
+  function previewStudentCsv(text: string) {
+    const rows = parseStudentCsv(text)
+    setCsvText(text)
+    setCsvRows(rows)
+    if (rows.length === 0) {
+      addToast('error', t('ไฟล์ไม่ถูกต้อง', 'Invalid CSV'), t('ต้องมีคอลัมน์ชื่อและรหัสนักศึกษา', 'CSV must contain name and student ID columns.'))
+    }
+  }
+
+  function handleImportCsvFile(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = () => {
+      previewStudentCsv(String(reader.result || ''))
+    }
+    reader.onerror = () => addToast('error', t('อ่านไฟล์ไม่สำเร็จ', 'Unable to Read File'), t('กรุณาลองเลือกไฟล์ CSV ใหม่อีกครั้ง', 'Please select the CSV file again.'))
+    reader.readAsText(file, 'UTF-8')
+  }
+
+  function confirmStudentCsvImport() {
+    let addedCount = 0
+    let existingCount = 0
+    let skippedCount = 0
+    const seenCodes = new Set<string>()
+
+    for (const row of csvRows) {
+        const code = row.code.trim()
+        const normalizedCode = code.toLowerCase()
+        if (seenCodes.has(normalizedCode)) {
+          skippedCount++
+          continue
+        }
+        seenCodes.add(normalizedCode)
+
+        const existingStudent = store.users.find(user =>
+          user.role === 'student' &&
+          (user.code.toLowerCase() === normalizedCode || user.email.toLowerCase().startsWith(`${normalizedCode}@`))
+        )
+
+        const student = existingStudent || store.addUser({
+          code,
+          name: row.name.trim(),
+          email: `${code.toLowerCase()}@lamduan.mfu.ac.th`,
+          role: 'student',
+          department: currentUser!.department || 'School of Applied Digital Technology (ADT)',
+          isActive: true,
+          hasAiAccess: false,
+        })
+
+        if (existingStudent) existingCount++
+        else addedCount++
+        store.updateRosterEntry(student.id, currentUser!.id)
+    }
+
+    setShowImportCsv(false)
+    setCsvText('')
+    setCsvRows([])
+    addToast(
+      'success',
+      t('นำเข้าและจับคู่นักศึกษาสำเร็จ', 'Students Imported and Assigned'),
+      t(`เพิ่มใหม่ ${addedCount} คน, มีอยู่แล้ว ${existingCount} คน, ข้ามรายการซ้ำ ${skippedCount} รายการ`, `${addedCount} added, ${existingCount} already registered, ${skippedCount} duplicates skipped.`)
+    )
+    store.refreshBackend()
+  }
 
   if (!currentUser) return null
 
   const myAdvisees = store.roster.filter(r => isAdvisorMatch(r.advisorId, currentUser, store.users) && r.isActive)
+  const adviseeStudents = myAdvisees
+    .map(assignment => store.users.find(student =>
+      student.role === 'student' && (
+        student.id === assignment.studentId ||
+        student.code?.toUpperCase() === assignment.studentId?.toUpperCase() ||
+        student.email?.toLowerCase() === assignment.studentId?.toLowerCase()
+      )
+    ))
+    .filter((student): student is NonNullable<typeof student> => Boolean(student))
+    .filter((student, index, students) => students.findIndex(item => item.id === student.id) === index)
+    .sort((a, b) => a.name.localeCompare(b.name))
   const myRequests = store.requests.filter(r => isAdvisorMatch(r.advisorId, currentUser, store.users))
   const pendingRequests = myRequests.filter(r => r.status === 'requested' || r.status === 'pending')
   const confirmedApts = store.appointments
@@ -140,10 +250,6 @@ export default function AdvisorDashboard() {
         description={t('ภาพรวมคำร้องขอเข้าพบ ตารางนัดหมาย และการติดตามผลนักศึกษาในความดูแล ภาคการศึกษา 1/2569', 'Overview of advising petitions, upcoming sessions, and advisee academic tracking for Semester 1/2026.')}
         actions={
           <div className="flex items-center gap-2">
-            <Button variant="secondary" onClick={() => setShowAddAdvisee(true)}>
-              <UserPlus className="h-4 w-4 mr-1.5" />
-              {t('เพิ่มนักศึกษาในความดูแล', 'Add Advisee')}
-            </Button>
             <Button onClick={() => navigate('/advisor/sessions')}>
               <CalendarClock className="h-4 w-4 mr-1.5" />
               {t('จัดการการให้คำปรึกษา', 'Manage Sessions')}
@@ -189,6 +295,128 @@ export default function AdvisorDashboard() {
           onClick={() => navigate('/advisor/warnings')}
         />
       </div>
+
+      <Card className="mb-6">
+        <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-100 dark:border-slate-800">
+          <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+            <Users className="h-4 w-4 text-sky-600 dark:text-sky-400" />
+            {t('บัญชีคู่ที่ปรึกษาทางวิชาการ', 'Student-Advisor Roster')}
+          </h3>
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="secondary" onClick={store.refreshBackend}>
+              <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+              {t('รีเฟรช', 'Refresh')}
+            </Button>
+            <Button size="sm" variant="secondary" onClick={() => setShowAddAdvisee(true)}>
+              <UserPlus className="h-3.5 w-3.5 mr-1.5" />
+              {t('เพิ่มนักศึกษาในความดูแล', 'Add Advisee')}
+            </Button>
+            <Button size="sm" variant="secondary" onClick={() => setShowImportCsv(true)}>
+              <Upload className="h-3.5 w-3.5 mr-1.5" />
+              {t('นำเข้าไฟล์ CSV', 'Import CSV')}
+            </Button>
+          </div>
+        </div>
+
+        {adviseeStudents.length > 0 ? (
+          <div className="flex items-center justify-between gap-3 p-4 rounded-xl bg-sky-50/70 dark:bg-sky-950/20 border border-sky-100 dark:border-sky-900/60">
+            <div>
+              <p className="text-2xl font-extrabold text-sky-700 dark:text-sky-300">{adviseeStudents.length}</p>
+              <p className="text-xs font-semibold text-slate-600 dark:text-slate-300">
+                {t('นักศึกษาในความดูแลทั้งหมด', 'Total Assigned Advisees')}
+              </p>
+            </div>
+            <Button onClick={() => setShowAdviseeList(true)}>
+              <Users className="h-4 w-4 mr-1.5" />
+              {t('ดูรายชื่อนักศึกษา', 'View Advisee List')} ({adviseeStudents.length})
+            </Button>
+          </div>
+        ) : (
+          <EmptyState
+            icon={<Users className="h-8 w-8 text-slate-400" />}
+            title={t('ยังไม่มีนักศึกษาในความดูแล', 'No assigned advisees')}
+            description={t('เพิ่มนักศึกษาเพื่อเริ่มติดตามและให้คำปรึกษา', 'Add students to start managing their advising activities.')}
+            action={<Button size="sm" onClick={() => setShowAddAdvisee(true)}>{t('เพิ่มนักศึกษาในความดูแล', 'Add Advisee')}</Button>}
+          />
+        )}
+      </Card>
+
+      <Modal
+        isOpen={showAdviseeList}
+        onClose={() => setShowAdviseeList(false)}
+        title={t(`นักศึกษาในความดูแล (${adviseeStudents.length} คน)`, `Assigned Advisees (${adviseeStudents.length})`)}
+      >
+        <div className="space-y-2 max-h-[60vh] overflow-y-auto">
+          {adviseeStudents.map(student => (
+            <div key={student.id} className="flex items-center justify-between gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700">
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate">{student.name}</p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 font-mono mt-0.5">{student.code}</p>
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 truncate max-w-[48%]">{student.email}</p>
+            </div>
+          ))}
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={showImportCsv}
+        onClose={() => setShowImportCsv(false)}
+        title={t('นำเข้านักศึกษาจาก CSV', 'Import Students from CSV')}
+      >
+        <div className="space-y-4">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            {t('ไฟล์ต้องมีคอลัมน์รหัสนักศึกษาและชื่อ เช่น รหัสนักศึกษา,ชื่อ หรือ student_code,name', 'CSV must contain student ID and name columns, for example student_code,name.')}
+          </p>
+          <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+            <Button size="sm" variant={csvRows.length === 0 ? 'primary' : 'secondary'} onClick={() => setCsvRows([])}>
+              {t('1. นำเข้าข้อมูล', '1. Input Data')}
+            </Button>
+            <Button size="sm" variant={csvRows.length > 0 ? 'primary' : 'secondary'} disabled={csvRows.length === 0}>
+              {t(`2. ตรวจสอบพรีวิว (${csvRows.length})`, `2. Preview (${csvRows.length})`)}
+            </Button>
+          </div>
+          <textarea
+            rows={5}
+            value={csvText}
+            onChange={event => previewStudentCsv(event.target.value)}
+            placeholder={'รหัสนักศึกษา,ชื่อ\n6631503001,สมชาย ใจดี'}
+            className="w-full p-3 font-mono text-xs rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+          />
+          <div className="rounded-xl border border-dashed border-sky-300 dark:border-sky-700 bg-sky-50/60 dark:bg-sky-950/20 p-5 text-center">
+            <Upload className="h-7 w-7 mx-auto text-sky-600 dark:text-sky-400 mb-2" />
+            <input
+              id="advisor-student-csv"
+              type="file"
+              accept=".csv,text/csv"
+              onChange={handleImportCsvFile}
+              className="block w-full text-xs text-slate-600 dark:text-slate-300 file:mr-3 file:rounded-lg file:border-0 file:bg-sky-600 file:px-3 file:py-2 file:text-xs file:font-semibold file:text-white hover:file:bg-sky-700"
+            />
+          </div>
+          {csvRows.length > 0 && (
+            <div className="max-h-40 overflow-y-auto rounded-xl border border-slate-200 dark:border-slate-800">
+              {csvRows.map((row, index) => (
+                <div key={`${row.code}-${index}`} className="flex justify-between gap-3 px-3 py-2 text-xs border-b last:border-b-0 border-slate-100 dark:border-slate-800">
+                  <span className="font-semibold text-slate-800 dark:text-slate-200">{row.name}</span>
+                  <span className="font-mono text-slate-500 dark:text-slate-400">{row.code}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          <p className="text-[11px] text-slate-400 dark:text-slate-500">
+            {t('นักศึกษาที่มีรหัสอยู่แล้วจะไม่สร้างซ้ำ แต่จะถูกจับคู่กับคุณใหม่', 'Existing student IDs will not be duplicated and will be assigned to you.')}
+          </p>
+          <div className="flex justify-end gap-2 border-t border-slate-100 dark:border-slate-800 pt-3">
+            <Button variant="secondary" onClick={() => setShowImportCsv(false)}>
+              {t('ยกเลิก', 'Cancel')}
+            </Button>
+            <Button onClick={confirmStudentCsvImport} disabled={csvRows.length === 0}>
+              <CheckCircle2 className="h-4 w-4 mr-1.5" />
+              {t(`ยืนยันการนำเข้า (${csvRows.length})`, `Confirm Import (${csvRows.length})`)}
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
       {/* ── Section Divider: Requests & Appointments ── */}
       <div className="relative my-6">
