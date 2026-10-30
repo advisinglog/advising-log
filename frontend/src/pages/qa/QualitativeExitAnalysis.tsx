@@ -79,20 +79,41 @@ import {
 } from 'recharts'
 
 
+// Normalize backend values without introducing demo/fake records.
+function normalizedExitType(record: ExitCase): 'withdrawal' | 'leave' | 'unknown' {
+  const raw = record as ExitCase & Record<string, unknown>
+  const value = String(raw.exitType ?? raw.exit_type ?? raw.type ?? '').trim().toLowerCase().replace(/[\s-]+/g, '_')
+  if (['withdrawal', 'dropout', 'transfer', 'permanent_withdrawal', 'resignation', 'resign', 'withdraw'].includes(value)) return 'withdrawal'
+  if (['leave_of_absence', 'leave', 'temporary_leave', 'academic_leave', 'leave_of_study'].includes(value)) return 'leave'
+  return 'unknown'
+}
+
+function normalizedReason(record: ExitCase): string {
+  const raw = record as ExitCase & Record<string, unknown>
+  const value = String(raw.reasonCode ?? raw.reason_code ?? '').trim().toLowerCase().replace(/[\s-]+/g, '_')
+  const aliases: Record<string, string> = {
+    academic_difficulty: 'academic', academic_foundation: 'academic',
+    family_obligation: 'personal_family', family: 'personal_family',
+  }
+  return aliases[value] || value || 'other'
+}
+
 type MetricTone = 'rose' | 'amber' | 'sky' | 'purple' | 'emerald'
 
 function MetricTile({
   label,
   value,
   icon,
+  onClick,
 }: {
   label: ReactNode
   value: number
   icon: ReactNode
   tone: MetricTone
+  onClick?: () => void
 }) {
   return (
-    <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#0e1424] p-4 shadow-sm hover:border-sky-300 dark:hover:border-sky-800 transition-all flex flex-col justify-between">
+    <button type="button" onClick={onClick} className="w-full text-left cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-500 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#0e1424] p-4 shadow-sm hover:border-sky-300 dark:hover:border-sky-800 transition-all flex flex-col justify-between">
       <div className="flex items-center justify-between gap-2 mb-2.5">
         <div className="h-9 w-9 rounded-xl border border-sky-100 dark:border-sky-900/50 bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0">
           {icon}
@@ -104,7 +125,7 @@ function MetricTile({
       <div className="text-xs font-medium leading-relaxed text-slate-600 dark:text-slate-300">
         {label}
       </div>
-    </div>
+    </button>
   )
 }
 
@@ -122,6 +143,8 @@ export default function QualitativeExitAnalysis() {
   const [searchQuery, setSearchQuery] = useState('')
   const [privacyMask, setPrivacyMask] = useState(true)
   const [drilldownCase, setDrilldownCase] = useState<ExitCase | null>(null)
+  const [metricCases, setMetricCases] = useState<{ title: string; cases: ExitCase[] } | null>(null)
+  const [metricSearch, setMetricSearch] = useState('')
 
   // AI states
   const [aiMode, setAiMode] = useState<'strategic' | 'chat'>('strategic')
@@ -334,26 +357,26 @@ export default function QualitativeExitAnalysis() {
   // Emerald = positive action / successful intervention
   // Other theme colors are used only as small semantic icon accents.
 
-  // --- Calculations: Why Resign vs Why Leave ---
-  const withdrawalCases = useMemo(() => {
-    return store.exitCases.filter(e => e.exitType === 'withdrawal' || e.exitType === 'dropout' || e.exitType === 'transfer')
-  }, [store.exitCases])
-
-  const leaveCases = useMemo(() => {
-    return store.exitCases.filter(e => e.exitType === 'leave_of_absence')
-  }, [store.exitCases])
-
+  // Only count records currently returned by Store (Cloudflare D1 in normal mode).
+  const withdrawalCases = useMemo(
+    () => store.exitCases.filter(e => normalizedExitType(e) === 'withdrawal'),
+    [store.exitCases]
+  )
+  const leaveCases = useMemo(
+    () => store.exitCases.filter(e => normalizedExitType(e) === 'leave'),
+    [store.exitCases]
+  )
   const totalDepartures = store.exitCases.length
   const withdrawalCount = withdrawalCases.length
   const leaveCount = leaveCases.length
+  const unclassifiedCount = totalDepartures - withdrawalCount - leaveCount
 
   // Dynamically group and rank top reasons for Withdrawals from real data
   const topWithdrawalReasons = useMemo(() => {
     if (withdrawalCases.length === 0) return []
     const groups: Record<string, { count: number; cases: ExitCase[] }> = {}
     withdrawalCases.forEach(c => {
-      let key: string = c.reasonCode || 'other'
-      if (key === 'academic_foundation') key = 'academic'
+      let key: string = normalizedReason(c)
       if (!groups[key]) groups[key] = { count: 0, cases: [] }
       groups[key].count++
       groups[key].cases.push(c)
@@ -384,8 +407,7 @@ export default function QualitativeExitAnalysis() {
     if (leaveCases.length === 0) return []
     const groups: Record<string, { count: number; cases: ExitCase[] }> = {}
     leaveCases.forEach(c => {
-      let key: string = c.reasonCode || 'other'
-      if (key === 'family_obligation') key = 'personal_family'
+      let key: string = normalizedReason(c)
       if (!groups[key]) groups[key] = { count: 0, cases: [] }
       groups[key].count++
       groups[key].cases.push(c)
@@ -411,26 +433,37 @@ export default function QualitativeExitAnalysis() {
       .slice(0, 3)
   }, [leaveCases, getExitReasonLabel, store.studentVoiceResponses])
 
-  // Comparative reasons data for chart
+  // Include all observed reason codes, not only enumerated options.
+  // This prevents silently dropping a case whose API reason code differs.
   const comparativeChartData = useMemo(() => {
-    return EXIT_REASON_CODES.map(r => {
-      const wCount = withdrawalCases.filter(e => e.reasonCode === r.value).length
-      const lCount = leaveCases.filter(e => e.reasonCode === r.value).length
+    const counted = new Map<string, { withdrawal: number; leave: number }>()
+    const add = (cases: ExitCase[], type: 'withdrawal' | 'leave') => {
+      cases.forEach(e => {
+        const key = normalizedReason(e)
+        const item = counted.get(key) ?? { withdrawal: 0, leave: 0 }
+        item[type] += 1
+        counted.set(key, item)
+      })
+    }
+    add(withdrawalCases, 'withdrawal')
+    add(leaveCases, 'leave')
+    return [...counted.entries()].map(([code, counts]) => {
+      const known = EXIT_REASON_CODES.find(r => r.value === code)
       return {
-        reason: language === 'th' ? r.labelTh : r.labelEn,
-        rawReason: r.value,
-        withdrawal: wCount,
-        leave: lCount,
-        total: wCount + lCount,
+        reason: known ? (language === 'th' ? known.labelTh : known.labelEn) :
+          code.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+        rawReason: code,
+        ...counts,
+        total: counts.withdrawal + counts.leave,
       }
-    }).filter(d => d.total > 0).sort((a, b) => b.total - a.total)
+    }).sort((a, b) => b.total - a.total)
   }, [withdrawalCases, leaveCases, language])
 
   // Count by thematic clusters
-  const academicCount = store.exitCases.filter(e => e.reasonCode === 'academic').length
-  const mentalHealthCount = store.exitCases.filter(e => e.reasonCode === 'mental_health').length
-  const financialCount = store.exitCases.filter(e => e.reasonCode === 'financial').length
-  const familyCount = store.exitCases.filter(e => e.reasonCode === 'personal_family' || e.reasonCode === 'health').length
+  const academicCount = store.exitCases.filter(e => normalizedReason(e) === 'academic').length
+  const mentalHealthCount = store.exitCases.filter(e => normalizedReason(e) === 'mental_health').length
+  const financialCount = store.exitCases.filter(e => normalizedReason(e) === 'financial').length
+  const familyCount = store.exitCases.filter(e => ['personal_family', 'health'].includes(normalizedReason(e))).length
 
   // Dynamically synthesized qualitative themes from real exit cases & student surveys
   const thematicSyntheses = useMemo(() => {
@@ -629,6 +662,20 @@ export default function QualitativeExitAnalysis() {
     }
   }
 
+  function openCaseMetric(title: string, cases: ExitCase[]) {
+    setMetricSearch('')
+    setMetricCases({ title, cases })
+  }
+
+  const filteredMetricCases = metricCases?.cases.filter(c => {
+    const student = store.users.find(u => u.id === c.studentId)
+    const advisor = store.users.find(u => u.id === c.advisorId)
+    // Anonymized identities must never become searchable when privacy masking is on.
+    const parts = [c.id, c.status, getExitTypeLabel(c.exitType), getExitReasonLabel(c.reasonCode)]
+    if (!privacyMask) parts.push(student?.name || '', student?.code || '', advisor?.name || '')
+    return parts.join(' ').toLowerCase().includes(metricSearch.trim().toLowerCase())
+  }) || []
+
   return (
     <div className="space-y-6 text-slate-700 dark:text-slate-200 font-sans antialiased">
       {/* Top Banner: Qualitative Diagnosis Focus */}
@@ -667,36 +714,42 @@ export default function QualitativeExitAnalysis() {
         <MetricTile
           label={t('ขอลาออกถาวร (Withdrawal)', 'Permanent Withdrawal')}
           value={withdrawalCount}
+          onClick={() => openCaseMetric(t('ขอลาออกถาวร', 'Permanent Withdrawal'), withdrawalCases)}
           icon={<UserX className="h-[18px] w-[18px]" />}
           tone="rose"
         />
         <MetricTile
           label={t('ขอพักการศึกษา (Leave)', 'Leave of Absence')}
           value={leaveCount}
+          onClick={() => openCaseMetric(t('ขอพักการศึกษา', 'Leave of Absence'), leaveCases)}
           icon={<HeartHandshake className="h-[18px] w-[18px]" />}
           tone="amber"
         />
         <MetricTile
           label={t('ปัญหาหลักสูตร / วิชาการ', 'Academic / Rigor')}
           value={academicCount}
+          onClick={() => openCaseMetric(t('ปัญหาวิชาการ', 'Academic / Rigor'), store.exitCases.filter(e => e.reasonCode === 'academic'))}
           icon={<GraduationCap className="h-[18px] w-[18px]" />}
           tone="sky"
         />
         <MetricTile
           label={t('สุขภาพจิต & ความเครียด', 'Mental Health & Stress')}
           value={mentalHealthCount}
+          onClick={() => openCaseMetric(t('สุขภาพจิต', 'Mental Health'), store.exitCases.filter(e => e.reasonCode === 'mental_health'))}
           icon={<Brain className="h-[18px] w-[18px]" />}
           tone="purple"
         />
         <MetricTile
           label={t('ปัญหาเศรษฐกิจ / การเงิน', 'Financial Hardship')}
           value={financialCount}
+          onClick={() => openCaseMetric(t('ปัญหาการเงิน', 'Financial Hardship'), store.exitCases.filter(e => e.reasonCode === 'financial'))}
           icon={<DollarSign className="h-[18px] w-[18px]" />}
           tone="emerald"
         />
         <MetricTile
           label={t('ครอบครัว / สุขภาพกาย', 'Family & Physical')}
           value={familyCount}
+          onClick={() => openCaseMetric(t('ครอบครัว / สุขภาพ', 'Family & Physical'), store.exitCases.filter(e => e.reasonCode === 'personal_family' || e.reasonCode === 'health'))}
           icon={<Users className="h-[18px] w-[18px]" />}
           tone="sky"
         />
@@ -1138,12 +1191,32 @@ export default function QualitativeExitAnalysis() {
           </div>
         </div>
 
+        {unclassifiedCount > 0 && (
+          <p className="mb-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
+            {t(`มี ${unclassifiedCount} เคสที่ไม่สามารถจัดประเภทลาออก/ลาพักได้ กรุณาตรวจสอบ exitType ที่ส่งจาก API`,
+              `${unclassifiedCount} case(s) have an unrecognized exit type. Please check the API exitType values.`)}
+          </p>
+        )}
+        {store.backendStatus !== 'ready' && (
+          <p className="mb-3 rounded-xl border border-sky-200 bg-sky-50 p-3 text-xs text-sky-800 dark:border-sky-900 dark:bg-sky-950/30 dark:text-sky-200">
+            {store.backendStatus === 'loading'
+              ? t('กำลังโหลดข้อมูลจาก Backend...', 'Loading data from backend...')
+              : t('โหลดข้อมูล Backend ไม่สำเร็จ ตัวเลขอาจยังไม่ครบ', 'Backend data could not be loaded. Counts may be incomplete.')}
+          </p>
+        )}
         {/* Comparative Bar Chart: Reasons by Exit Type */}
         <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
           <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 tracking-tight mb-3 flex items-center gap-2">
             <BarChart className="h-4 w-4 text-sky-600" />
             {t('กราฟเปรียบเทียบสัดส่วนสาเหตุแยกตามประเภทการออก (Withdrawal vs. Leave of Absence)', 'Reasons Comparison by Exit Type')}
           </h4>
+          {comparativeChartData.length === 0 ? (
+            <div className="h-64 flex items-center justify-center rounded-xl border border-dashed border-slate-200 dark:border-slate-700 text-center px-5 text-sm text-slate-500 dark:text-slate-400">
+              {store.backendStatus === 'loading'
+                ? t('กำลังโหลดข้อมูลกราฟ...', 'Loading chart data...')
+                : t('ยังไม่มีเคสลาออกหรือพักการศึกษาที่จัดประเภทได้', 'No classified withdrawal or leave cases available for comparison.')}
+            </div>
+          ) : (
           <div className="h-64 sm:h-72">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
@@ -1172,6 +1245,7 @@ export default function QualitativeExitAnalysis() {
                   height={54}
                 />
                 <YAxis
+                  domain={[0, (dataMax: number) => Math.max(1, Math.ceil(dataMax))]}
                   allowDecimals={false}
                   tick={{ fontSize: 11, fill: chartTheme.axis }}
                   tickLine={false}
@@ -1237,6 +1311,7 @@ export default function QualitativeExitAnalysis() {
               </BarChart>
             </ResponsiveContainer>
           </div>
+          )}
         </div>
       </Card>
 
@@ -1655,6 +1730,50 @@ export default function QualitativeExitAnalysis() {
           )}
         </div>
       </Card>
+
+      {/* KPI drill-down: records used in each tile. Existing privacy mask applies. */}
+      {metricCases && (
+        <Modal isOpen={true} onClose={() => setMetricCases(null)} title={`${metricCases.title} (${metricCases.cases.length})`} size="lg">
+          <div className="space-y-3">
+            <input
+              type="search"
+              value={metricSearch}
+              onChange={e => setMetricSearch(e.target.value)}
+              placeholder={t('ค้นหารหัสเคส ประเภท หรือสถานะ', 'Search case ID, type or status')}
+              aria-label={t('ค้นหาเคส', 'Search cases')}
+              className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-3 text-sm"
+            />
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              {privacyMask ? t('ซ่อนข้อมูลระบุตัวตน', 'Identities masked') : t('แสดงข้อมูลที่ได้รับอนุญาต', 'Showing permitted identity details')}
+            </p>
+            <div className="max-h-[55vh] overflow-auto divide-y divide-slate-100 dark:divide-slate-800">
+              {filteredMetricCases.length === 0 && (
+                <p className="py-8 text-center text-sm text-slate-500">{t('ไม่พบข้อมูล', 'No matching cases')}</p>
+              )}
+              {filteredMetricCases.map(c => {
+                const student = store.users.find(u => u.id === c.studentId)
+                return (
+                  <button type="button" key={c.id}
+                    onClick={() => { setMetricCases(null); setDrilldownCase(c) }}
+                    className="w-full text-left flex items-center justify-between gap-3 py-3 hover:bg-sky-50 dark:hover:bg-slate-800 rounded-lg px-2">
+                    <div className="min-w-0">
+                      <div className="text-sm font-semibold text-slate-900 dark:text-white">{c.id}</div>
+                      <div className="text-xs text-slate-500 dark:text-slate-400">
+                        {getExitTypeLabel(c.exitType)} · {getExitReasonLabel(c.reasonCode)}
+                      </div>
+                      {!privacyMask && <div className="text-xs text-slate-500">{student?.name || student?.code || c.studentId}</div>}
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0 text-xs text-slate-600 dark:text-slate-300">
+                      <StatusBadge status={c.status} />
+                      <Eye className="h-4 w-4" />
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        </Modal>
+      )}
 
       {/* ============================================================ */}
       {/* MODAL: COMPLETE QUALITATIVE DIAGNOSTIC PROFILE */}
