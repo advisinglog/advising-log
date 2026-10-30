@@ -20,7 +20,7 @@ export interface AIAnalysisPayloadCase {
 
 export type AIAnalysisMode = 'strategic_synthesis' | 'chat_query' | 'case_diagnostic'
 
-export type AIProviderId = 'gemini' | 'openai' | 'claude' | 'deepseek'
+export type AIProviderId = 'gemini' | 'openai' | 'claude' | 'deepseek' | 'sambanova'
 
 export interface AIProviderPreset {
   id: AIProviderId
@@ -103,6 +103,26 @@ export const AI_PROVIDER_PRESETS: Record<AIProviderId, AIProviderPreset> = {
     keyPrefix: 'sk-',
     studioUrl: 'https://platform.deepseek.com/api_keys',
     baseUrl: 'https://api.deepseek.com/v1',
+  },
+  sambanova: {
+    id: 'sambanova',
+    name: 'SambaNova Cloud',
+    labelTh: 'SambaNova Cloud (Llama 405B / Qwen 72B)',
+    labelEn: 'SambaNova Cloud (Llama 405B / Qwen 72B)',
+    taglineTh: 'ฟรี 100% โมเดลระดับเรือธง Llama 405B และ Qwen 72B',
+    taglineEn: '100% Free Flagship Models (Llama 405B & Qwen 72B)',
+    badge: 'SambaNova',
+    defaultModel: 'Qwen2.5-72B-Instruct',
+    popularModels: [
+      'Qwen2.5-72B-Instruct',
+      'Meta-Llama-3.1-405B-Instruct',
+      'Meta-Llama-3.3-70B-Instruct',
+      'DeepSeek-R1',
+    ],
+    keyPlaceholder: 'Bearer key...',
+    keyFormatHint: 'API Key จาก cloud.sambanova.ai',
+    studioUrl: 'https://cloud.sambanova.ai/apis',
+    baseUrl: 'https://api.sambanova.ai/v1',
   },
 }
 
@@ -485,7 +505,7 @@ async function requestAnalysis(req: AIAnalysisRequest): Promise<AIAnalysisRespon
     }
   }
 
-  // 1. System Gateway: Backend Hono API (Cloudflare Workers) with the admin-managed key
+// 1. System Gateway: Backend Hono API (Cloudflare Workers) with the admin-managed key
   if (keySource === 'system') {
     try {
       const res = await fetch(`${getApiBase()}/api/qa/ai-analyze`, {
@@ -525,6 +545,7 @@ async function requestAnalysis(req: AIAnalysisRequest): Promise<AIAnalysisRespon
   if (userApiKey && userApiKey.length > 5) {
     const providerId = effectiveProv
     const customModel = req.customModel || getStoredCustomModel()
+    const customBaseUrl = req.customBaseUrl || getStoredCustomBaseUrl()
 
     try {
       // 2A. Google Gemini Provider
@@ -646,14 +667,18 @@ async function requestAnalysis(req: AIAnalysisRequest): Promise<AIAnalysisRespon
         }
       }
 
-      // 2C. OpenAI / DeepSeek Endpoints
-      if (providerId === 'openai' || providerId === 'deepseek') {
-        const baseUrl = providerId === 'openai'
-          ? 'https://api.openai.com/v1/chat/completions'
-          : 'https://api.deepseek.com/v1/chat/completions'
+      // 2C. OpenAI / DeepSeek / SambaNova Endpoints
+      if (providerId === 'openai' || providerId === 'deepseek' || providerId === 'sambanova') {
+        const baseUrl = customBaseUrl || (
+          providerId === 'openai'
+            ? 'https://api.openai.com/v1/chat/completions'
+            : providerId === 'deepseek'
+            ? 'https://api.deepseek.com/v1/chat/completions'
+            : 'https://api.sambanova.ai/v1/chat/completions'
+        )
 
-        const brandLabel = providerId === 'openai' ? 'OpenAI' : 'DeepSeek AI'
-        const defaultModel = providerId === 'openai' ? 'gpt-4o-mini' : 'deepseek-chat'
+        const brandLabel = providerId === 'openai' ? 'OpenAI' : providerId === 'deepseek' ? 'DeepSeek AI' : 'SambaNova Cloud'
+        const defaultModel = providerId === 'openai' ? 'gpt-4o-mini' : providerId === 'deepseek' ? 'deepseek-chat' : 'Qwen2.5-72B-Instruct'
         const model = customModel || defaultModel
 
         const headers: Record<string, string> = {
