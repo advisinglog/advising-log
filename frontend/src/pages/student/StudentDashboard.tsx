@@ -183,10 +183,34 @@ export default function StudentDashboard() {
 
       {/* Stats row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <StatCard label={t('คำร้องทั้งหมด', 'Total Requests')} value={myRequests.length} icon={<FileEdit className="h-5 w-5" />} color="sky" />
-        <StatCard label={t('นัดหมายที่ยืนยันแล้ว', 'Confirmed Sessions')} value={myAppointments.length} icon={<CheckCircle2 className="h-5 w-5" />} color="emerald" />
-        <StatCard label={t('นัดหมายวันนี้ / ล่วงหน้า', 'Today / Upcoming')} value={`${todayAppointments.length} / ${futureAppointments.length}`} icon={<Calendar className="h-5 w-5" />} color="sky" />
-        <StatCard label={t('งานที่ต้องดำเนินการ', 'Pending Tasks')} value={myFollowUps.length} icon={<ListChecks className="h-5 w-5" />} color="amber" />
+        <StatCard
+          label={t('คำร้องทั้งหมด', 'Total Requests')}
+          value={myRequests.length}
+          icon={<FileEdit className="h-5 w-5" />}
+          color="sky"
+          onClick={() => navigate('/student/history')}
+        />
+        <StatCard
+          label={t('นัดหมายที่ยืนยันแล้ว', 'Confirmed Sessions')}
+          value={myAppointments.length}
+          icon={<CheckCircle2 className="h-5 w-5" />}
+          color="emerald"
+          onClick={() => navigate('/student/history')}
+        />
+        <StatCard
+          label={t('นัดหมายวันนี้ / ล่วงหน้า', 'Today / Upcoming')}
+          value={`${todayAppointments.length} / ${futureAppointments.length}`}
+          icon={<Calendar className="h-5 w-5" />}
+          color="sky"
+          onClick={() => navigate('/student/history')}
+        />
+        <StatCard
+          label={t('งานที่ต้องดำเนินการ', 'Pending Tasks')}
+          value={myFollowUps.length}
+          icon={<ListChecks className="h-5 w-5" />}
+          color="amber"
+          onClick={() => navigate('/student/followups')}
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
@@ -407,6 +431,5 @@ export default function StudentDashboard() {
     </div>
   )
 }
-
 
 

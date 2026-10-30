@@ -279,7 +279,7 @@ export function PageHeader({ title, description, actions }: { title: string; des
 
 // --- Stat Card ---
 
-export function StatCard({ label, value, icon, color = 'sky' }: { label: string; value: string | number; icon: ReactNode; color?: string }) {
+export function StatCard({ label, value, icon, color = 'sky', onClick }: { label: string; value: string | number; icon: ReactNode; color?: string; onClick?: () => void }) {
   const colorMap: Record<string, { bg: string; text: string; ring: string }> = {
     sky: { bg: 'bg-sky-50/90 dark:bg-sky-500/12', text: 'text-sky-600 dark:text-sky-300', ring: 'ring-1 ring-sky-200/60 dark:ring-sky-500/25' },
     indigo: { bg: 'bg-sky-50/90 dark:bg-sky-500/12', text: 'text-sky-600 dark:text-sky-300', ring: 'ring-1 ring-sky-200/60 dark:ring-sky-500/25' },
@@ -293,7 +293,21 @@ export function StatCard({ label, value, icon, color = 'sky' }: { label: string;
   const theme = colorMap[color] || colorMap.sky
 
   return (
-    <div className="group relative bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200/70 dark:border-slate-800/80 p-3 sm:p-4 md:p-5 shadow-premium hover:shadow-premium-hover hover:border-sky-300/60 dark:hover:border-sky-500/50 transition-all duration-200">
+    <div
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onClick={onClick}
+      onKeyDown={onClick ? (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault()
+          onClick()
+        }
+      } : undefined}
+      className={cn(
+        'group relative bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200/70 dark:border-slate-800/80 p-3 sm:p-4 md:p-5 shadow-premium hover:shadow-premium-hover hover:border-sky-300/60 dark:hover:border-sky-500/50 transition-all duration-200',
+        onClick && 'cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950'
+      )}
+    >
       <div className="flex items-center gap-2.5 sm:gap-3.5">
         <div className={cn('h-9 w-9 sm:h-11 sm:w-11 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-105 duration-200', theme.bg, theme.text, theme.ring)}>
           {icon}
