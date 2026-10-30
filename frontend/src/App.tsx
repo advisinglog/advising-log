@@ -1,3 +1,4 @@
+import { lazy } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import { StoreProvider } from '@/data/store'
@@ -11,37 +12,38 @@ import { AppLayout } from '@/components/layout/AppLayout'
 // Pages
 import LoginPage from '@/pages/LoginPage'
 
+// Role pages load on demand, so each user only downloads the pages for their role
 // Student Pages
-import StudentDashboard from '@/pages/student/StudentDashboard'
-import RequestAdvising from '@/pages/student/RequestAdvising'
-import AdvisingHistory from '@/pages/student/AdvisingHistory'
-import AdvisingDetail from '@/pages/student/AdvisingDetail'
-import StudentForms from '@/pages/student/StudentForms'
-import FollowUps from '@/pages/student/FollowUps'
-import StudentVoiceSurvey from '@/pages/student/StudentVoiceSurvey'
+const StudentDashboard = lazy(() => import('@/pages/student/StudentDashboard'))
+const RequestAdvising = lazy(() => import('@/pages/student/RequestAdvising'))
+const AdvisingHistory = lazy(() => import('@/pages/student/AdvisingHistory'))
+const AdvisingDetail = lazy(() => import('@/pages/student/AdvisingDetail'))
+const StudentForms = lazy(() => import('@/pages/student/StudentForms'))
+const FollowUps = lazy(() => import('@/pages/student/FollowUps'))
+const StudentVoiceSurvey = lazy(() => import('@/pages/student/StudentVoiceSurvey'))
 
 // Advisor Pages
-import AdvisorDashboard from '@/pages/advisor/AdvisorDashboard'
-import AdvisingSessions from '@/pages/advisor/AdvisingSessions'
-import AdvisorLog from '@/pages/advisor/AdvisorLog'
-import AdvisorFollowUps from '@/pages/advisor/FollowUps'
-import EarlyWarning from '@/pages/advisor/EarlyWarning'
-import Referrals from '@/pages/advisor/Referrals'
-import ExitCases from '@/pages/advisor/ExitCases'
+const AdvisorDashboard = lazy(() => import('@/pages/advisor/AdvisorDashboard'))
+const AdvisingSessions = lazy(() => import('@/pages/advisor/AdvisingSessions'))
+const AdvisorLog = lazy(() => import('@/pages/advisor/AdvisorLog'))
+const AdvisorFollowUps = lazy(() => import('@/pages/advisor/FollowUps'))
+const EarlyWarning = lazy(() => import('@/pages/advisor/EarlyWarning'))
+const Referrals = lazy(() => import('@/pages/advisor/Referrals'))
+const ExitCases = lazy(() => import('@/pages/advisor/ExitCases'))
 
 // QA Pages
-import QADashboard from '@/pages/qa/QADashboard'
-import ExitCaseReview from '@/pages/qa/ExitCaseReview'
-import AiAnalysisPage from '@/pages/qa/AiAnalysisPage'
+const QADashboard = lazy(() => import('@/pages/qa/QADashboard'))
+const ExitCaseReview = lazy(() => import('@/pages/qa/ExitCaseReview'))
+const AiAnalysisPage = lazy(() => import('@/pages/qa/AiAnalysisPage'))
 
 // Admin Pages
-import AdminDashboard from '@/pages/admin/AdminDashboard'
-import UserManagement from '@/pages/admin/UserManagement'
-import AiGovernance from '@/pages/admin/AiGovernance'
-import Roster from '@/pages/admin/Roster'
-import Categories from '@/pages/admin/Categories'
-import DocumentTypes from '@/pages/admin/DocumentTypes'
-import AuditLogs from '@/pages/admin/AuditLogs'
+const AdminDashboard = lazy(() => import('@/pages/admin/AdminDashboard'))
+const UserManagement = lazy(() => import('@/pages/admin/UserManagement'))
+const AiGovernance = lazy(() => import('@/pages/admin/AiGovernance'))
+const Roster = lazy(() => import('@/pages/admin/Roster'))
+const Categories = lazy(() => import('@/pages/admin/Categories'))
+const DocumentTypes = lazy(() => import('@/pages/admin/DocumentTypes'))
+const AuditLogs = lazy(() => import('@/pages/admin/AuditLogs'))
 
 import type { UserRole } from '@/types'
 
