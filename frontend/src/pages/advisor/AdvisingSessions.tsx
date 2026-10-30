@@ -10,11 +10,12 @@ import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { PageHeader, Tabs, DataTable, Button, Modal, DocumentViewerModal, SearchInput, type DocumentViewerTarget } from '@/components/ui'
 import type { AdvisingRequest } from '@/types'
-import { Calendar, Eye, FileText, Sparkles, Building2, Video, CheckCircle2, MapPin, Link2, ClipboardList, AlertTriangle, XCircle, X, Clock, ExternalLink } from 'lucide-react'
+import { Calendar, Eye, FileText, Sparkles, Building2, Video, CheckCircle2, MapPin, Link2, ClipboardList, AlertTriangle, XCircle, X, ExternalLink, ChevronDown } from 'lucide-react'
 import { isAdvisorMatch } from '@/utils/advisorUtils'
-import { openGoogleCalendarEvent, openAdvisorCalendar } from '@/utils/calendarUtils'
+import { openGoogleCalendarEvent, openAdvisorCalendar, buildAdvisorCalendarUrl } from '@/utils/calendarUtils'
 import { getLocalDateString } from '@/utils/dateUtils'
-import AdvisorScheduleCalendar from '@/components/advisor/AdvisorScheduleCalendar'
+
+
 
 export default function AdvisingSessions() {
   const { currentUser } = useAuth()
@@ -41,8 +42,8 @@ export default function AdvisingSessions() {
   const [meetingMode, setMeetingMode] = useState<'in_person' | 'online'>('in_person')
   const [schedLoc, setSchedLoc] = useState('')
   const [autoOpenCalendar, setAutoOpenCalendar] = useState(true)
-  const [showCalendarModal, setShowCalendarModal] = useState(false)
-  const [calendarViewDate, setCalendarViewDate] = useState(() => getLocalDateString(new Date()))
+  const [showGCalPreview, setShowGCalPreview] = useState(false)
+
 
   // Cancel reason modal state
   const [cancelReq, setCancelReq] = useState<AdvisingRequest | null>(null)
@@ -380,7 +381,8 @@ export default function AdvisingSessions() {
                         setMeetingMode('in_person')
                         setSchedLoc('')
                         setAutoOpenCalendar(true)
-                        setShowSchedule(true)
+                          setShowGCalPreview(false)
+                          setShowSchedule(true)
                       }}
                     >
                       <CheckCircle2 className="h-3 w-3 mr-1" /> {t('ตอบรับการนัด', 'Accept')}
@@ -420,20 +422,10 @@ export default function AdvisingSessions() {
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2">
-        <PageHeader
-          title={t('ตารางนัดหมายและการเข้าพบ', 'Appointments & Advising Sessions')}
-          description={t('ตรวจสอบคำขอนัดหมาย ยืนยันเวลาเข้าพบ และบันทึกผลการพูดคุยกับนักศึกษา', 'Review meeting requests, confirm appointment slots, and record session notes.')}
-        />
-        <Button
-          variant="secondary"
-          onClick={() => setShowCalendarModal(true)}
-          className="self-start sm:self-auto shrink-0 cursor-pointer"
-        >
-          <Calendar className="h-4 w-4 mr-1.5 text-sky-600 dark:text-sky-400" />
-          {t('ดูปฏิทินตารางนัดหมายของฉัน', 'View My Schedule Calendar')}
-        </Button>
-      </div>
+      <PageHeader
+        title={t('ตารางนัดหมายและการเข้าพบ', 'Appointments & Advising Sessions')}
+        description={t('ตรวจสอบคำขอนัดหมาย ยืนยันเวลาเข้าพบ และบันทึกผลการพูดคุยกับนักศึกษา', 'Review meeting requests, confirm appointment slots, and record session notes.')}
+      />
 
       <Tabs tabs={tabs} active={tab} onChange={setTab} />
 
@@ -467,27 +459,12 @@ export default function AdvisingSessions() {
               </p>
             </div>
 
-            {/* Requested Slot & Google Calendar Availability Check */}
-            <div className="p-3 bg-sky-50/70 dark:bg-sky-950/40 rounded-xl border border-sky-100 dark:border-sky-900/50 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-              <div>
-                <span className="text-[11px] text-slate-500 dark:text-slate-400 block font-medium">
-                  {t('วัน-เวลาที่นักศึกษาขอเข้าพบ', 'Requested Date & Time')}
-                </span>
-                <span className="font-bold text-slate-900 dark:text-slate-100 mt-0.5 inline-flex items-center gap-1.5">
-                  <Calendar className="h-3.5 w-3.5 text-sky-600" />
-                  <span>{detailReq.preferredDate} · {detailReq.preferredTime}</span>
-                </span>
-              </div>
-              <Button
-                size="sm"
-                variant="secondary"
-                onClick={() => openAdvisorCalendar(currentUser?.email, detailReq.preferredDate)}
-                className="cursor-pointer self-start sm:self-auto shrink-0"
-                
-              >
-                <ExternalLink className="h-3.5 w-3.5 mr-1 text-sky-600" />
-                {t('เช็คตารางใน Google Calendar', 'Check Google Calendar')}
-              </Button>
+            {/* Requested Slot */}
+            <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
+              <span className="text-[11px] text-slate-400 block font-medium">{t('วัน-เวลาที่ขอเข้าพบ', 'Requested Date & Time')}</span>
+              <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 mt-0.5">
+                {detailReq.preferredDate} · {detailReq.preferredTime}
+              </p>
             </div>
 
             {/* Pending Tasks for this student from earlier sessions */}
@@ -560,7 +537,8 @@ export default function AdvisingSessions() {
                     setMeetingMode('in_person')
                     setSchedLoc('')
                     setAutoOpenCalendar(true)
-                    setShowSchedule(true)
+                          setShowGCalPreview(false)
+                          setShowSchedule(true)
                   }}
                 >
                   <CheckCircle2 className="h-4 w-4 mr-1" />
@@ -582,219 +560,240 @@ export default function AdvisingSessions() {
       <Modal
         isOpen={showSchedule}
         onClose={() => setShowSchedule(false)}
-        title={t('ตอบรับและยืนยันการนัดหมายเข้าพบอาจารย์ที่ปรึกษา', 'Accept & Confirm Advising Appointment')}
-        size="xl"
+        title={t('ตอบรับและยืนยันการนัดหมาย', 'Confirm Appointment')}
+        size="lg"
       >
         {selectedReq && (
           <div className="space-y-4">
-            {/* Student & Agreed Slot Banner */}
-            <div className="rounded-xl border border-sky-100 dark:border-sky-900/60 bg-sky-50/50 dark:bg-sky-950/40 p-3.5 space-y-2">
+            {/* Student & Request Summary Card */}
+            <div className="rounded-xl border border-sky-100 dark:border-sky-900/60 bg-sky-50/60 dark:bg-sky-950/40 p-3.5 space-y-2">
               <div className="flex items-center justify-between gap-2 flex-wrap text-xs">
                 <span className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
                   <span>{store.users.find(u => u.id === selectedReq.studentId)?.name || '-'}</span>
-                  <span className="font-mono text-slate-500 font-normal">({store.users.find(u => u.id === selectedReq.studentId)?.code || '-'})</span>
+                  <span className="font-mono text-slate-500 font-normal">
+                    ({store.users.find(u => u.id === selectedReq.studentId)?.code || '-'})
+                  </span>
                 </span>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-sky-100 dark:bg-sky-900 text-sky-700 dark:text-sky-300">
                   {getCategoryLabel(selectedReq.category)}
                 </span>
               </div>
-              <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400 bg-white/80 dark:bg-slate-900/80 px-2.5 py-1.5 rounded-lg border border-emerald-200/60 dark:border-emerald-900/40">
-                <Calendar className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-                <span>{t('วัน-เวลาที่นักศึกษาขอเข้าพบ:', 'Requested Slot:')}</span>
-                <span className="font-bold">{selectedReq.preferredDate} · {selectedReq.preferredTime}</span>
+
+              <div className="flex items-center justify-between gap-2 flex-wrap text-xs font-semibold text-emerald-700 dark:text-emerald-400 bg-white/80 dark:bg-slate-900/80 px-2.5 py-1.5 rounded-lg border border-emerald-200/60 dark:border-emerald-900/40">
+                <div className="flex items-center gap-1.5">
+                  <Calendar className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                  <span>{t('วัน-เวลาที่นักศึกษาขอเข้าพบ:', 'Requested Slot:')}</span>
+                  <span className="font-bold">{selectedReq.preferredDate} · {selectedReq.preferredTime}</span>
+                </div>
+                {(schedDate !== selectedReq.preferredDate || schedTime !== selectedReq.preferredTime) && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (selectedReq.preferredDate) setSchedDate(selectedReq.preferredDate)
+                      if (selectedReq.preferredTime) setSchedTime(selectedReq.preferredTime)
+                    }}
+                    className="text-[11px] text-emerald-700 dark:text-emerald-300 hover:underline cursor-pointer"
+                  >
+                    {t('ใช้วัน-เวลานี้', 'Use this slot')}
+                  </button>
+                )}
               </div>
             </div>
 
-            {/* Dual Column Layout: Advisor Calendar (Left) + Form Details (Right) */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-              {/* Left Column: Advisor Calendar (7 cols on lg) */}
-              <div className="lg:col-span-7">
-                <AdvisorScheduleCalendar
-                  selectedDate={schedDate}
-                  selectedTime={schedTime}
-                  preferredDate={selectedReq.preferredDate}
-                  preferredTime={selectedReq.preferredTime}
-                  onSelectDate={d => setSchedDate(d)}
-                  onSelectTime={tm => setSchedTime(tm)}
-                  studentName={store.users.find(u => u.id === selectedReq.studentId)?.name}
-                  studentCode={store.users.find(u => u.id === selectedReq.studentId)?.code}
+            {/* Scheduled Date & Time Inputs */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">
+                  {t('วันที่นัดหมาย', 'Scheduled Date')} *
+                </label>
+                <input
+                  type="date"
+                  value={schedDate}
+                  min={new Date().toISOString().split('T')[0]}
+                  onChange={e => setSchedDate(e.target.value)}
+                  className="w-full px-3 py-2 text-xs sm:text-sm border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
                 />
               </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">
+                  {t('เวลานัดหมาย', 'Scheduled Time')} *
+                </label>
+                <input
+                  type="time"
+                  value={schedTime}
+                  onChange={e => setSchedTime(e.target.value)}
+                  className={`w-full px-3 py-2 text-xs sm:text-sm border rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 ${
+                    isAdvisorSlotCollided
+                      ? 'border-rose-400 dark:border-rose-600 focus:ring-rose-500/20 focus:border-rose-500'
+                      : 'border-slate-200 dark:border-slate-700 focus:ring-sky-500/20 focus:border-sky-500'
+                  }`}
+                />
+              </div>
+            </div>
 
-              {/* Right Column: Appointment Form & Details (5 cols on lg) */}
-              <div className="lg:col-span-5 space-y-3.5 bg-slate-50/70 dark:bg-slate-900/40 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800">
-                <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center gap-1.5">
-                  <Clock className="h-4 w-4 text-sky-600 dark:text-sky-400" />
-                  {t('กำหนดรายละเอียดการนัดหมาย', 'Appointment Details')}
-                </h4>
+            {/* Collision warning in AdvisingLog */}
+            {isAdvisorSlotCollided && (
+              <div className="p-3 rounded-xl text-xs flex items-start gap-2 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 text-rose-800 dark:text-rose-300">
+                <AlertTriangle className="h-4 w-4 text-rose-600 dark:text-rose-400 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-bold">{t('ช่วงเวลานี้มีนัดหมายอื่นแล้ว', 'Time Slot Collision')}</p>
+                  <p className="text-[11px] mt-0.5">
+                    {t('ท่านมีนัดหมายอื่นที่ยืนยันแล้วในวันและเวลานี้ กรุณาปรับเปลี่ยนเวลาเข้าพบ', 'You already have another confirmed appointment at this time. Please adjust the slot.')}
+                  </p>
+                </div>
+              </div>
+            )}
 
-                {/* Scheduled Date & Time Pickers */}
-                <div className="grid grid-cols-2 gap-2.5">
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">
-                      {t('วันที่นัดหมาย', 'Scheduled Date')} *
-                    </label>
-                    <input
-                      type="date"
-                      value={schedDate}
-                      min={new Date().toISOString().split('T')[0]}
-                      onChange={e => setSchedDate(e.target.value)}
-                      className="w-full px-3 py-2 text-xs border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
-                    />
+            {/* Sleek, User-Friendly Google Calendar Assistant */}
+            <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/50 p-3 space-y-2.5">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <div className="h-7 w-7 rounded-lg bg-sky-100 dark:bg-sky-950/70 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0">
+                    <Calendar className="h-4 w-4" />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">
-                      {t('เวลานัดหมาย', 'Scheduled Time')} *
-                    </label>
-                    <input
-                      type="time"
-                      value={schedTime}
-                      onChange={e => setSchedTime(e.target.value)}
-                      className={`w-full px-3 py-2 text-xs border rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 ${
-                        isAdvisorSlotCollided
-                          ? 'border-rose-400 dark:border-rose-600 focus:ring-rose-500/20 focus:border-rose-500'
-                          : 'border-slate-200 dark:border-slate-700 focus:ring-sky-500/20 focus:border-sky-500'
-                      }`}
-                    />
+                    <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                      {t('Google Calendar ของอาจารย์', 'Advisor Google Calendar')}
+                    </span>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      {t('ตรวจสอบเวลาว่างเพื่อไม่ให้ชนกับตารางสอนหรือภารกิจอื่น', 'Check availability to prevent scheduling conflicts')}
+                    </p>
                   </div>
                 </div>
 
-                {/* Google Calendar quick check link */}
-                <div className="flex items-center justify-between text-[11px]">
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowGCalPreview(!showGCalPreview)}
+                    className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-1 cursor-pointer"
+                  >
+                    <span>{showGCalPreview ? t('ซ่อนปฏิทิน', 'Hide Calendar') : t('แสดงตารางในหน้านี้', 'Preview Calendar')}</span>
+                    <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showGCalPreview ? 'rotate-180' : ''}`} />
+                  </button>
+
                   <button
                     type="button"
                     onClick={() => openAdvisorCalendar(currentUser?.email, schedDate)}
-                    className="font-semibold text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 flex items-center gap-1 cursor-pointer"
+                    className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-sky-600 hover:bg-sky-700 text-white transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
                   >
-                    <ExternalLink className="h-3 w-3" />
-                    <span>{t('เปิด Google Calendar ในแท็บใหม่เพื่อเช็คเวลาว่าง', 'Open Google Calendar in new tab to check availability')}</span>
+                    <ExternalLink className="h-3.5 w-3.5" />
+                    <span>{t('เปิด Google Calendar', 'Open Calendar')}</span>
                   </button>
                 </div>
-
-                {isAdvisorSlotCollided && (
-                  <div className="p-3 rounded-xl text-xs flex items-start gap-2 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 text-rose-800 dark:text-rose-300">
-                    <AlertTriangle className="h-4 w-4 text-rose-600 dark:text-rose-400 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-bold">{t('ช่วงเวลานี้มีนัดหมายอื่นแล้ว', 'Time Slot Collision')}</p>
-                      <p className="text-[11px] mt-0.5">{t('ท่านมีนัดหมายอื่นที่ยืนยันแล้วในวันและเวลานี้ กรุณาปรับเปลี่ยนเวลาเข้าพบ', 'You already have another confirmed appointment at this time. Please adjust the slot.')}</p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Meeting Mode Selector (In-person vs Online) */}
-                <div>
-                  <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1.5">
-                    {t('รูปแบบการเข้าพบ', 'Meeting Format')}
-                  </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setMeetingMode('in_person')}
-                      className={`flex items-center justify-center gap-1.5 p-2 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
-                        meetingMode === 'in_person'
-                          ? 'bg-sky-50 dark:bg-sky-950/60 border-sky-500 text-sky-700 dark:text-sky-300 shadow-2xs'
-                          : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300'
-                      }`}
-                    >
-                      <Building2 className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400" />
-                      <span>{t('เข้าพบตัวต่อตัว (Onsite)', 'In-Person (Onsite)')}</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setMeetingMode('online')}
-                      className={`flex items-center justify-center gap-1.5 p-2 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
-                        meetingMode === 'online'
-                          ? 'bg-sky-50 dark:bg-sky-950/60 border-sky-500 text-sky-700 dark:text-sky-300 shadow-2xs'
-                          : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300'
-                      }`}
-                    >
-                      <Video className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
-                      <span>{t('ออนไลน์ (Virtual)', 'Online (Virtual)')}</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Location / Platform link field */}
-                <div>
-                  <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">
-                    {meetingMode === 'in_person' ? (
-                      <span className="flex items-center gap-1.5">
-                        <MapPin className="h-3.5 w-3.5 text-sky-600" />
-                        {t('สถานที่ / ห้องเข้าพบ', 'Room / Location')} *
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-1.5">
-                        <Link2 className="h-3.5 w-3.5 text-indigo-600" />
-                        {t('ลิงก์ห้องประชุม', 'Meeting Link')} *
-                      </span>
-                    )}
-                  </label>
-
-                  <input
-                    type="text"
-                    value={schedLoc}
-                    onChange={e => setSchedLoc(e.target.value)}
-                    placeholder={
-                      meetingMode === 'in_person'
-                        ? t('เช่น ห้องพักอาจารย์ S2-301', 'e.g. Office Room S2-301')
-                        : t('เช่น ลิงก์ Google Meet หรือ Zoom', 'e.g. Google Meet or Zoom link')
-                    }
-                    className="w-full px-3 py-2 text-xs border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-colors"
-                  />
-                </div>
-
-                {/* Google Calendar Sync Checkbox */}
-                <div className="pt-2 border-t border-slate-200/80 dark:border-slate-800">
-                  <label className="flex items-center gap-2 cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={autoOpenCalendar}
-                      onChange={e => setAutoOpenCalendar(e.target.checked)}
-                      className="rounded border-slate-300 text-sky-600 focus:ring-sky-500 h-4 w-4"
-                    />
-                    <span className="text-[11px] text-slate-700 dark:text-slate-300 font-medium">
-                      {t('เพิ่มลงใน Google Calendar และส่งคำเชิญให้นักศึกษา', 'Add to Google Calendar & invite student')}
-                    </span>
-                  </label>
-                </div>
-
-                {/* Footer Buttons */}
-                <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-200/80 dark:border-slate-800">
-                  <Button variant="secondary" onClick={() => setShowSchedule(false)}>
-                    {t('ยกเลิก', 'Cancel')}
-                  </Button>
-                  <Button variant="primary" onClick={handleSchedule}>
-                    <CheckCircle2 className="h-4 w-4 mr-1" />
-                    {t('ยืนยันนัดหมาย', 'Confirm Appointment')}
-                  </Button>
-                </div>
               </div>
+
+              {/* Collapsible Clean Google Calendar Preview */}
+              {showGCalPreview && (
+                <div className="pt-1">
+                  <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-inner">
+                    <iframe
+                      src={buildAdvisorCalendarUrl(currentUser?.email, 'WEEK', schedDate)}
+                      style={{ border: 0 }}
+                      width="100%"
+                      height="350"
+                      frameBorder="0"
+                      scrolling="no"
+                      className="w-full"
+                      title="Advisor Google Calendar"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Meeting Mode (In-person vs Online) */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1.5">
+                {t('รูปแบบการเข้าพบ', 'Meeting Format')}
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setMeetingMode('in_person')}
+                  className={`flex items-center justify-center gap-1.5 p-2 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
+                    meetingMode === 'in_person'
+                      ? 'bg-sky-50 dark:bg-sky-950/60 border-sky-500 text-sky-700 dark:text-sky-300 shadow-2xs'
+                      : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                  }`}
+                >
+                  <Building2 className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400" />
+                  <span>{t('เข้าพบตัวต่อตัว (Onsite)', 'In-Person (Onsite)')}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setMeetingMode('online')}
+                  className={`flex items-center justify-center gap-1.5 p-2 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
+                    meetingMode === 'online'
+                      ? 'bg-sky-50 dark:bg-sky-950/60 border-sky-500 text-sky-700 dark:text-sky-300 shadow-2xs'
+                      : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                  }`}
+                >
+                  <Video className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
+                  <span>{t('ออนไลน์ (Virtual)', 'Online (Virtual)')}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Location / Platform link */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">
+                {meetingMode === 'in_person' ? (
+                  <span className="flex items-center gap-1.5">
+                    <MapPin className="h-3.5 w-3.5 text-sky-600" />
+                    {t('สถานที่ / ห้องเข้าพบ', 'Room / Location')} *
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1.5">
+                    <Link2 className="h-3.5 w-3.5 text-indigo-600" />
+                    {t('ลิงก์ห้องประชุม', 'Meeting Link')} *
+                  </span>
+                )}
+              </label>
+
+              <input
+                type="text"
+                value={schedLoc}
+                onChange={e => setSchedLoc(e.target.value)}
+                placeholder={
+                  meetingMode === 'in_person'
+                    ? t('เช่น ห้องพักอาจารย์ S2-301', 'e.g. Office Room S2-301')
+                    : t('เช่น ลิงก์ Google Meet หรือ Zoom', 'e.g. Google Meet or Zoom link')
+                }
+                className="w-full px-3 py-2 text-xs border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-colors"
+              />
+            </div>
+
+            {/* Google Calendar Sync Checkbox */}
+            <div className="pt-2 border-t border-slate-200/80 dark:border-slate-800">
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={autoOpenCalendar}
+                  onChange={e => setAutoOpenCalendar(e.target.checked)}
+                  className="rounded border-slate-300 text-sky-600 focus:ring-sky-500 h-4 w-4"
+                />
+                <span className="text-[11px] text-slate-700 dark:text-slate-300 font-medium">
+                  {t('เพิ่มลงใน Google Calendar และส่งคำเชิญให้นักศึกษา', 'Add to Google Calendar & invite student')}
+                </span>
+              </label>
+            </div>
+
+            {/* Footer Buttons */}
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+              <Button variant="secondary" onClick={() => setShowSchedule(false)}>
+                {t('ยกเลิก', 'Cancel')}
+              </Button>
+              <Button variant="primary" onClick={handleSchedule}>
+                <CheckCircle2 className="h-4 w-4 mr-1" />
+                {t('ยืนยันนัดหมาย', 'Confirm Appointment')}
+              </Button>
             </div>
           </div>
         )}
       </Modal>
 
-      {/* Standalone Advisor Schedule Calendar Modal */}
-      <Modal
-        isOpen={showCalendarModal}
-        onClose={() => setShowCalendarModal(false)}
-        title={t('ปฏิทินตารางนัดหมายและการให้คำปรึกษาของอาจารย์', 'Advisor Advising & Appointment Calendar')}
-        size="lg"
-      >
-        <div className="space-y-4">
-          <AdvisorScheduleCalendar
-            selectedDate={calendarViewDate}
-            onSelectDate={d => setCalendarViewDate(d)}
-          />
-          <div className="flex justify-end pt-2">
-            <Button variant="secondary" onClick={() => setShowCalendarModal(false)}>
-              {t('ปิด', 'Close')}
-            </Button>
-          </div>
-        </div>
-      </Modal>
-
+      
       {/* Cancel Reason Modal (RED themed for warning/cancellation) */}
       {cancelReq && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
