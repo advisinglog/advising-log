@@ -271,6 +271,7 @@ export default function AdvisorLog() {
             {advisorSessions.map(session => {
               const request = store.requests.find(r => r.id === session.requestId)
               const sessionStudent = store.users.find(u => u.id === session.studentId)
+              const requestId = session.requestId
               const sessionAppointment = store.appointments.find(appointment =>
                 appointment.id === session.appointmentId ||
                 appointment.requestId === session.requestId
@@ -306,8 +307,10 @@ export default function AdvisorLog() {
                       type="button"
                       size="sm"
                       variant="secondary"
-                      onClick={() => session.requestId && editSavedLog(session.requestId)}
-                      disabled={!session.requestId}
+                      onClick={() => {
+                        if (requestId) editSavedLog(requestId)
+                      }}
+                      disabled={!requestId}
                       className="shrink-0"
                     >
                       <Pencil className="h-3.5 w-3.5 mr-1" />
