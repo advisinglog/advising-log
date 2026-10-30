@@ -321,3 +321,33 @@ describe('Rate limiting', () => {
     }
   })
 })
+
+describe('Notifications: who may notify whom', () => {
+  const ctx = { env: ENV }
+  const student = { id: 'STU9', code: '6631509999', email: 'stu9@lamduan.mfu.ac.th', role: 'student' }
+  const advisor = { id: 'ADV9', code: 'ADV009', email: 'adv9@mfu.ac.th', role: 'advisor' }
+  const as = (role: Role) => ({ userId: `USER_${role}`, name: role, email: `${role}@mfu.ac.th`, baseRole: role, role })
+
+  it('admins may notify anyone', async () => {
+    const { canNotify } = await import('./index')
+    expect(await canNotify(ctx, as('admin'), student)).toBe(true)
+  })
+
+  it('QA may notify staff but not students', async () => {
+    const { canNotify } = await import('./index')
+    expect(await canNotify(ctx, as('qa_chair'), advisor)).toBe(true)
+    expect(await canNotify(ctx, as('qa_chair'), student)).toBe(false)
+  })
+
+  it('advisors may notify staff but not students outside their advisees', async () => {
+    const { canNotify } = await import('./index')
+    expect(await canNotify(ctx, as('advisor'), advisor)).toBe(true)
+    expect(await canNotify(ctx, as('advisor'), student)).toBe(false)
+  })
+
+  it('students may not notify (or email) anyone except their own advisor', async () => {
+    const { canNotify } = await import('./index')
+    expect(await canNotify(ctx, as('student'), advisor)).toBe(false) // not their advisor
+    expect(await canNotify(ctx, as('student'), student)).toBe(false)
+  })
+})

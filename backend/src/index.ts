@@ -472,11 +472,25 @@ const notificationInput = z.object({
   sendEmail: z.boolean().optional().default(false),
 })
 
+/**
+ * Who may notify (and email, from the official sender) whom:
+ * students -> only their own advisor; advisors -> their advisees and staff;
+ * QA -> staff; admins -> anyone.
+ */
+export async function canNotify(c: any, auth: AuthContext, recipient: { id: string; code: string | null; email: string; role: string }) {
+  if (auth.role === 'admin' || auth.role === 'super_admin') return true
+  if (auth.role === 'qa_chair') return recipient.role !== 'student'
+  const viewer = await viewerFor(c, auth, 'users')
+  const isLinked = [recipient.id, recipient.code, recipient.email].some(a => a && viewer.linkedAliases.has(norm(a)))
+  if (auth.role === 'advisor') return isLinked || recipient.role !== 'student'
+  return isLinked // student -> own advisor only
+}
+
 app.get('/api/notifications', async (c) => {
   const database = db(c)
   if (!database) return c.json({ notifications: [], error: 'DATABASE_NOT_CONFIGURED' }, 503)
-  const userId = c.req.query('userId')
-  if (!userId) return c.json({ error: 'userId is required' }, 400)
+  // Always the signed-in user's own notifications; a ?userId= from the client is ignored
+  const userId = c.get('auth')!.userId
   const rows = await database.select().from(schema.notifications)
     .where(eq(schema.notifications.userId, userId))
     .orderBy(desc(schema.notifications.createdAt))
@@ -490,9 +504,12 @@ app.post('/api/notifications', async (c) => {
   const parsed = notificationInput.safeParse(await c.req.json())
   if (!parsed.success) return c.json({ success: false, error: 'INVALID_NOTIFICATION', details: parsed.error.flatten() }, 400)
   const input = parsed.data
-  const recipient = await database.select({ email: schema.users.email }).from(schema.users)
+  const recipient = await database.select({ id: schema.users.id, code: schema.users.code, email: schema.users.email, role: schema.users.role }).from(schema.users)
     .where(eq(schema.users.id, input.userId)).get()
   if (!recipient) return c.json({ success: false, error: 'RECIPIENT_NOT_FOUND' }, 404)
+  if (!(await canNotify(c, c.get('auth')!, recipient))) {
+    return c.json({ success: false, error: 'RECIPIENT_NOT_ALLOWED' }, 403)
+  }
 
   const id = `NOT_${crypto.randomUUID()}`
   const createdAt = new Date().toISOString()
@@ -524,20 +541,20 @@ app.post('/api/notifications', async (c) => {
 app.patch('/api/notifications/:id/read', async (c) => {
   const database = db(c)
   if (!database) return c.json({ success: false, error: 'DATABASE_NOT_CONFIGURED' }, 503)
+  // Only the recipient can mark their own notification as read
   await database.update(schema.notifications)
     .set({ isRead: true, readAt: new Date().toISOString() })
-    .where(eq(schema.notifications.id, c.req.param('id')))
+    .where(and(eq(schema.notifications.id, c.req.param('id')), eq(schema.notifications.userId, c.get('auth')!.userId)))
   return c.json({ success: true })
 })
 
 app.patch('/api/notifications/read-all', async (c) => {
   const database = db(c)
   if (!database) return c.json({ success: false, error: 'DATABASE_NOT_CONFIGURED' }, 503)
-  const body = await c.req.json<{ userId?: string }>()
-  if (!body.userId) return c.json({ success: false, error: 'userId is required' }, 400)
+  // Always the signed-in user's own notifications; a userId in the body is ignored
   await database.update(schema.notifications)
     .set({ isRead: true, readAt: new Date().toISOString() })
-    .where(eq(schema.notifications.userId, body.userId))
+    .where(eq(schema.notifications.userId, c.get('auth')!.userId))
   return c.json({ success: true })
 })
 
