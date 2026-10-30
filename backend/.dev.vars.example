@@ -14,3 +14,9 @@ GEMINI_API_KEY=your-optional-gemini-api-key
 CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
+
+# Google Workspace Gmail API (server-side only; never expose these to the frontend)
+GOOGLE_WORKSPACE_CLIENT_ID=your-oauth-client-id
+GOOGLE_WORKSPACE_CLIENT_SECRET=your-oauth-client-secret
+GOOGLE_WORKSPACE_REFRESH_TOKEN=your-mailbox-refresh-token
+GOOGLE_WORKSPACE_SENDER=se.advisinglog@gmail.com

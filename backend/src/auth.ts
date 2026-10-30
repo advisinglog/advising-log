@@ -154,6 +154,10 @@ const ADMINS: Role[] = ['admin', 'super_admin']
 const ROUTE_RULES: Array<[method: string, path: RegExp, roles: Role[]]> = [
   // Shared reads (record-level scoping per user is phase 2)
   ['GET', /^\/api\/(users|users\/[^/]+|roster|requests|appointments|sessions|follow-ups|follow-up-progress|exit-cases|student-voice|early-warnings|documents|categories|document-types)$/, ALL],
+  ['GET', /^\/api\/notifications$/, ALL],
+  ['POST', /^\/api\/notifications$/, ALL],
+  ['PATCH', /^\/api\/notifications\/[^/]+\/read$/, ALL],
+  ['PATCH', /^\/api\/notifications\/read-all$/, ALL],
 
   // Users & roster: advisors may only manage student accounts (enforced in the routes)
   ['POST', /^\/api\/users(\/bulk)?$/, ['advisor', ...ADMINS]],

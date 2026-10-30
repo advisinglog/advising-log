@@ -208,11 +208,10 @@ export default function AdvisorScheduleCalendar({
           <button
             type="button"
             onClick={() => setActiveTab('system')}
-            className={`px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
-              activeTab === 'system'
-                ? 'bg-white dark:bg-slate-900 text-sky-700 dark:text-sky-300 shadow-xs font-bold'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-            }`}
+            className={`px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${activeTab === 'system'
+              ? 'bg-white dark:bg-slate-900 text-sky-700 dark:text-sky-300 shadow-xs font-bold'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+              }`}
           >
             <Calendar className="h-3.5 w-3.5 text-sky-600" />
             <span>{t('ตารางนัดหมาย & เวลาว่าง', 'Schedule & Appointments')}</span>
@@ -221,11 +220,10 @@ export default function AdvisorScheduleCalendar({
           <button
             type="button"
             onClick={() => setActiveTab('google')}
-            className={`px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
-              activeTab === 'google'
-                ? 'bg-white dark:bg-slate-900 text-sky-700 dark:text-sky-300 shadow-xs font-bold'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-            }`}
+            className={`px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${activeTab === 'google'
+              ? 'bg-white dark:bg-slate-900 text-sky-700 dark:text-sky-300 shadow-xs font-bold'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+              }`}
           >
             <Globe className="h-3.5 w-3.5 text-emerald-600" />
             <span>Google Calendar</span>
@@ -311,35 +309,32 @@ export default function AdvisorScheduleCalendar({
                   key={`${cell.dateStr}-${idx}`}
                   type="button"
                   onClick={() => onSelectDate(cell.dateStr)}
-                  className={`min-h-11 sm:min-h-12 p-1 rounded-xl text-left transition-all border flex flex-col justify-between cursor-pointer ${
-                    cell.isSelected
-                      ? 'bg-sky-600 text-white border-sky-600 shadow-xs font-bold'
-                      : cell.isPreferred
+                  className={`min-h-11 sm:min-h-12 p-1 rounded-xl text-left transition-all border flex flex-col justify-between cursor-pointer ${cell.isSelected
+                    ? 'bg-sky-600 text-white border-sky-600 shadow-xs font-bold'
+                    : cell.isPreferred
                       ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-700/80 hover:border-emerald-400'
                       : cell.isCurrentMonth
-                      ? 'bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 hover:border-sky-300 dark:hover:border-sky-600'
-                      : 'bg-slate-50/60 dark:bg-slate-900/30 border-transparent text-slate-400 dark:text-slate-600'
-                  }`}
+                        ? 'bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 hover:border-sky-300 dark:hover:border-sky-600'
+                        : 'bg-slate-50/60 dark:bg-slate-900/30 border-transparent text-slate-400 dark:text-slate-600'
+                    }`}
                 >
                   <div className="flex items-center justify-between w-full">
                     <span
-                      className={`text-xs font-semibold ${
-                        cell.isSelected
-                          ? 'text-white'
-                          : cell.isToday
+                      className={`text-xs font-semibold ${cell.isSelected
+                        ? 'text-white'
+                        : cell.isToday
                           ? 'text-sky-600 dark:text-sky-400 font-bold'
                           : cell.isCurrentMonth
-                          ? 'text-slate-800 dark:text-slate-200'
-                          : 'text-slate-400 dark:text-slate-600'
-                      }`}
+                            ? 'text-slate-800 dark:text-slate-200'
+                            : 'text-slate-400 dark:text-slate-600'
+                        }`}
                     >
                       {cell.day}
                     </span>
                     {cell.isToday && (
                       <span
-                        className={`h-1.5 w-1.5 rounded-full ${
-                          cell.isSelected ? 'bg-white' : 'bg-sky-600 dark:bg-sky-400'
-                        }`}
+                        className={`h-1.5 w-1.5 rounded-full ${cell.isSelected ? 'bg-white' : 'bg-sky-600 dark:bg-sky-400'
+                          }`}
                       />
                     )}
                   </div>
@@ -347,11 +342,10 @@ export default function AdvisorScheduleCalendar({
                   <div className="flex items-center gap-1 w-full truncate">
                     {hasAppointments ? (
                       <span
-                        className={`text-[9px] px-1 py-0.2 rounded font-bold truncate ${
-                          cell.isSelected
-                            ? 'bg-white/20 text-white'
-                            : 'bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300 border border-rose-200/60 dark:border-rose-900/60'
-                        }`}
+                        className={`text-[9px] px-1 py-0.2 rounded font-bold truncate ${cell.isSelected
+                          ? 'bg-white/20 text-white'
+                          : 'bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300 border border-rose-200/60 dark:border-rose-900/60'
+                          }`}
                       >
                         {cell.appointmentsCount} {t('นัด', 'apt')}
                       </span>
@@ -461,18 +455,16 @@ export default function AdvisorScheduleCalendar({
                 <button
                   type="button"
                   onClick={() => setGoogleCalendarMode('WEEK')}
-                  className={`px-2 py-1 rounded font-semibold cursor-pointer text-[11px] ${
-                    googleCalendarMode === 'WEEK' ? 'bg-sky-600 text-white font-bold' : 'text-slate-600 dark:text-slate-400'
-                  }`}
+                  className={`px-2 py-1 rounded font-semibold cursor-pointer text-[11px] ${googleCalendarMode === 'WEEK' ? 'bg-sky-600 text-white font-bold' : 'text-slate-600 dark:text-slate-400'
+                    }`}
                 >
                   {t('สัปดาห์', 'Week')}
                 </button>
                 <button
                   type="button"
                   onClick={() => setGoogleCalendarMode('MONTH')}
-                  className={`px-2 py-1 rounded font-semibold cursor-pointer text-[11px] ${
-                    googleCalendarMode === 'MONTH' ? 'bg-sky-600 text-white font-bold' : 'text-slate-600 dark:text-slate-400'
-                  }`}
+                  className={`px-2 py-1 rounded font-semibold cursor-pointer text-[11px] ${googleCalendarMode === 'MONTH' ? 'bg-sky-600 text-white font-bold' : 'text-slate-600 dark:text-slate-400'
+                    }`}
                 >
                   {t('เดือน', 'Month')}
                 </button>
@@ -501,6 +493,7 @@ export default function AdvisorScheduleCalendar({
               title="Advisor Google Calendar"
             />
           </div>
+
         </div>
       )}
     </div>

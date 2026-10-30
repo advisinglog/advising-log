@@ -19,6 +19,7 @@ import type {
   StudentDocument,
   AdvisingCategoryConfig,
   DocumentType,
+  Notification,
 } from '@/types'
 
 const API_BASE = ((import.meta.env.VITE_API_URL as string) || 'http://localhost:8787').replace(/\/$/, '')
@@ -109,6 +110,30 @@ class ApiClient {
   // --- Health & Info ---
   async getHealth() {
     return this.request<{ status: string; environment: string; database: string }>('/api/health')
+  }
+
+  async getNotifications(userId: string) {
+    return this.request<{ notifications: Notification[] }>(`/api/notifications?userId=${encodeURIComponent(userId)}`)
+  }
+
+  async createNotification(notification: Omit<Notification, 'id' | 'createdAt' | 'isRead'> & { sendEmail?: boolean }) {
+    return this.request<{ success: boolean; notification: Notification }>('/api/notifications', {
+      method: 'POST',
+      body: JSON.stringify(notification),
+    })
+  }
+
+  async markNotificationRead(id: string) {
+    return this.request<{ success: boolean }>(`/api/notifications/${encodeURIComponent(id)}/read`, {
+      method: 'PATCH',
+    })
+  }
+
+  async markAllNotificationsRead(userId: string) {
+    return this.request<{ success: boolean }>('/api/notifications/read-all', {
+      method: 'PATCH',
+      body: JSON.stringify({ userId }),
+    })
   }
 
   async getInfo() {

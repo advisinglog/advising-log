@@ -25,6 +25,10 @@ export type Bindings = {
   SESSION_SECRET?: string
   /** Comma-separated frontend origins allowed to call the API */
   ALLOWED_ORIGINS?: string
+  GOOGLE_WORKSPACE_CLIENT_ID?: string
+  GOOGLE_WORKSPACE_CLIENT_SECRET?: string
+  GOOGLE_WORKSPACE_REFRESH_TOKEN?: string
+  GOOGLE_WORKSPACE_SENDER?: string
   /** Workers Rate Limiting bindings (wrangler.jsonc "ratelimits"); absent in unit tests */
   USER_RATE_LIMITER?: RateLimiter
   ANON_RATE_LIMITER?: RateLimiter
@@ -388,6 +392,154 @@ function db(c: any) {
   if (!c.env?.DB) return null
   return getDb(c.env.DB)
 }
+
+function escapeHtml(value: string): string {
+  return value.replace(/[&<>"']/g, character => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  }[character] || character))
+}
+
+function encodeBase64Url(value: string): string {
+  const bytes = new TextEncoder().encode(value)
+  let binary = ''
+  bytes.forEach(byte => { binary += String.fromCharCode(byte) })
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '')
+}
+
+function encodeMimeHeader(value: string): string {
+  const bytes = new TextEncoder().encode(value)
+  let binary = ''
+  bytes.forEach(byte => { binary += String.fromCharCode(byte) })
+  return `=?UTF-8?B?${btoa(binary)}?=`
+}
+
+async function sendWorkspaceEmail(
+  env: Bindings,
+  recipient: string,
+  subject: string,
+  message: string,
+): Promise<{ sent: boolean; error?: string }> {
+  const { GOOGLE_WORKSPACE_CLIENT_ID, GOOGLE_WORKSPACE_CLIENT_SECRET, GOOGLE_WORKSPACE_REFRESH_TOKEN, GOOGLE_WORKSPACE_SENDER } = env
+  if (!GOOGLE_WORKSPACE_CLIENT_ID || !GOOGLE_WORKSPACE_CLIENT_SECRET || !GOOGLE_WORKSPACE_REFRESH_TOKEN || !GOOGLE_WORKSPACE_SENDER) {
+    return { sent: false, error: 'EMAIL_PROVIDER_NOT_CONFIGURED' }
+  }
+
+  const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      client_id: GOOGLE_WORKSPACE_CLIENT_ID,
+      client_secret: GOOGLE_WORKSPACE_CLIENT_SECRET,
+      refresh_token: GOOGLE_WORKSPACE_REFRESH_TOKEN,
+      grant_type: 'refresh_token',
+    }),
+  })
+  if (!tokenResponse.ok) return { sent: false, error: 'GOOGLE_TOKEN_REQUEST_FAILED' }
+  const tokenData = await tokenResponse.json() as { access_token?: string }
+  if (!tokenData.access_token) return { sent: false, error: 'GOOGLE_ACCESS_TOKEN_MISSING' }
+
+  const rawMessage = [
+    `From: ${GOOGLE_WORKSPACE_SENDER}`,
+    `To: ${recipient}`,
+    `Subject: ${encodeMimeHeader(subject)}`,
+    'MIME-Version: 1.0',
+    'Content-Type: text/plain; charset=UTF-8',
+    '',
+    message,
+  ].join('\r\n')
+  const gmailResponse = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${tokenData.access_token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ raw: encodeBase64Url(rawMessage) }),
+  })
+  if (!gmailResponse.ok) return { sent: false, error: `GMAIL_SEND_FAILED_${gmailResponse.status}` }
+  return { sent: true }
+}
+
+const notificationInput = z.object({
+  userId: z.string().min(1),
+  type: z.enum(['info', 'warning', 'success', 'action_required']),
+  title: z.string().min(1).max(200),
+  message: z.string().min(1).max(5000),
+  relatedId: z.string().optional(),
+  sendEmail: z.boolean().optional().default(false),
+})
+
+app.get('/api/notifications', async (c) => {
+  const database = db(c)
+  if (!database) return c.json({ notifications: [], error: 'DATABASE_NOT_CONFIGURED' }, 503)
+  const userId = c.req.query('userId')
+  if (!userId) return c.json({ error: 'userId is required' }, 400)
+  const rows = await database.select().from(schema.notifications)
+    .where(eq(schema.notifications.userId, userId))
+    .orderBy(desc(schema.notifications.createdAt))
+    .limit(100)
+  return c.json({ notifications: rows })
+})
+
+app.post('/api/notifications', async (c) => {
+  const database = db(c)
+  if (!database) return c.json({ success: false, error: 'DATABASE_NOT_CONFIGURED' }, 503)
+  const parsed = notificationInput.safeParse(await c.req.json())
+  if (!parsed.success) return c.json({ success: false, error: 'INVALID_NOTIFICATION', details: parsed.error.flatten() }, 400)
+  const input = parsed.data
+  const recipient = await database.select({ email: schema.users.email }).from(schema.users)
+    .where(eq(schema.users.id, input.userId)).get()
+  if (!recipient) return c.json({ success: false, error: 'RECIPIENT_NOT_FOUND' }, 404)
+
+  const id = `NOT_${crypto.randomUUID()}`
+  const createdAt = new Date().toISOString()
+  let emailStatus: 'not_requested' | 'pending' | 'sent' | 'failed' = input.sendEmail ? 'pending' : 'not_requested'
+  let emailError: string | null = null
+  if (input.sendEmail) {
+    const result = await sendWorkspaceEmail(c.env, recipient.email, input.title, input.message)
+    emailStatus = result.sent ? 'sent' : 'failed'
+    emailError = result.error || null
+  }
+
+  const notification = {
+    id,
+    userId: input.userId,
+    type: input.type,
+    title: input.title,
+    message: input.message,
+    relatedId: input.relatedId || null,
+    isRead: false,
+    emailStatus,
+    emailError,
+    createdAt,
+    readAt: null,
+  }
+  await database.insert(schema.notifications).values(notification)
+  return c.json({ success: emailStatus !== 'failed', notification }, emailStatus === 'failed' ? 207 : 201)
+})
+
+app.patch('/api/notifications/:id/read', async (c) => {
+  const database = db(c)
+  if (!database) return c.json({ success: false, error: 'DATABASE_NOT_CONFIGURED' }, 503)
+  await database.update(schema.notifications)
+    .set({ isRead: true, readAt: new Date().toISOString() })
+    .where(eq(schema.notifications.id, c.req.param('id')))
+  return c.json({ success: true })
+})
+
+app.patch('/api/notifications/read-all', async (c) => {
+  const database = db(c)
+  if (!database) return c.json({ success: false, error: 'DATABASE_NOT_CONFIGURED' }, 503)
+  const body = await c.req.json<{ userId?: string }>()
+  if (!body.userId) return c.json({ success: false, error: 'userId is required' }, 400)
+  await database.update(schema.notifications)
+    .set({ isRead: true, readAt: new Date().toISOString() })
+    .where(eq(schema.notifications.userId, body.userId))
+  return c.json({ success: true })
+})
 
 // ============================================================
 // 0. Google OAuth Authentication & SSO

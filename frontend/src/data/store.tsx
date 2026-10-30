@@ -136,6 +136,7 @@ interface StoreActions {
   addNotification: (n: Omit<Notification, 'id' | 'createdAt'>) => void
   markNotificationRead: (id: string) => void
   markAllNotificationsRead: (userId: string) => void
+  hydrateNotifications: (items: Notification[]) => void
 
   // Early Warnings
   addEarlyWarning: (ew: Omit<EarlyWarningCase, 'id' | 'createdAt'>) => EarlyWarningCase
@@ -510,15 +511,33 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const addNotification = useCallback((n: Omit<Notification, 'id' | 'createdAt'>) => {
-    setNotifications(prev => [{ ...n, id: nextId('NOT'), createdAt: now() }, ...prev])
+    const optimistic: Notification = { ...n, id: nextId('NOT'), createdAt: now() }
+    setNotifications(prev => [optimistic, ...prev])
+    api.createNotification({ ...n, sendEmail: true }).then(result => {
+      if (result?.notification) {
+        setNotifications(prev => prev.map(item => item.id === optimistic.id ? result.notification : item))
+      }
+    }).catch(() => {
+      setNotifications(prev => prev.filter(item => item.id !== optimistic.id))
+    })
   }, [])
 
   const markNotificationRead = useCallback((id: string) => {
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n))
+    api.markNotificationRead(id).catch(() => {})
   }, [])
 
   const markAllNotificationsRead = useCallback((userId: string) => {
     setNotifications(prev => prev.map(n => n.userId === userId ? { ...n, isRead: true } : n))
+    api.markAllNotificationsRead(userId).catch(() => {})
+  }, [])
+
+  const hydrateNotifications = useCallback((items: Notification[]) => {
+    setNotifications(previous => {
+      const byId = new Map(previous.map(item => [item.id, item]))
+      items.forEach(item => byId.set(item.id, item))
+      return [...byId.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    })
   }, [])
 
   const addEarlyWarning = useCallback((ew: Omit<EarlyWarningCase, 'id' | 'createdAt'>): EarlyWarningCase => {
@@ -1122,7 +1141,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     addFollowUpProgress, updateFollowUpProgress,
     addRequestProgress, updateRequestProgress,
     addReferral, updateReferralStatus,
-    addNotification, markNotificationRead, markAllNotificationsRead,
+    addNotification, markNotificationRead, markAllNotificationsRead, hydrateNotifications,
     addEarlyWarning, updateEarlyWarningStatus,
     addEarlyWarningFollowUp, updateEarlyWarningFollowUpStatus,
     addExitCase, updateExitCaseStatus,

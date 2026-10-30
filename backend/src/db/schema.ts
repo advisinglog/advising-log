@@ -227,3 +227,17 @@ export const documentTypeConfigs = sqliteTable('document_type_configs', {
   updatedAt: text('updated_at').notNull(),
 })
 
+// 17. Durable in-app notifications and email delivery state
+export const notifications = sqliteTable('notifications', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().references(() => users.id),
+  type: text('type', { enum: ['info', 'warning', 'success', 'action_required'] }).notNull(),
+  title: text('title').notNull(),
+  message: text('message').notNull(),
+  relatedId: text('related_id'),
+  isRead: integer('is_read', { mode: 'boolean' }).notNull().default(false),
+  emailStatus: text('email_status', { enum: ['not_requested', 'pending', 'sent', 'failed'] }).notNull().default('not_requested'),
+  emailError: text('email_error'),
+  createdAt: text('created_at').notNull(),
+  readAt: text('read_at'),
+})

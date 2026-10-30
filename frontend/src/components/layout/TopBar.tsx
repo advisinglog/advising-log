@@ -15,9 +15,10 @@ import {
   ShieldCheck,
   User as UserIcon,
 } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { Notification, UserRole } from '@/types'
+import api from '@/services/apiClient'
 import {
   ROLE_CONFIGS,
   getAvailableRolesForUser,
@@ -82,6 +83,16 @@ export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
   const navigate = useNavigate()
   const [showNotifs, setShowNotifs] = useState(false)
   const [showProfileMenu, setShowProfileMenu] = useState(false)
+
+  useEffect(() => {
+    if (!currentUser) return
+    let active = true
+    api.getNotifications(currentUser.id).then(result => {
+      if (!active || !result?.notifications) return
+      store.hydrateNotifications(result.notifications)
+    })
+    return () => { active = false }
+  }, [currentUser?.id, store.hydrateNotifications])
 
   if (!currentUser) return null
 
