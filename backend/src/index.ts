@@ -1551,6 +1551,7 @@ app.patch('/api/follow-ups/:id/status', async (c) => {
   await database.update(schema.followUps)
     .set({
       status: body.status,
+      ...(body.dueDate !== undefined ? { dueDate: body.dueDate } : {}),
       completedAt: body.status === 'completed' ? new Date().toISOString().split('T')[0] : null,
     })
     .where(eq(schema.followUps.id, id))

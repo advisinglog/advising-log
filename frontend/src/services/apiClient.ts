@@ -220,7 +220,7 @@ class ApiClient {
   async updateAppointmentStatus(id: string, status: Appointment['status']) {
     return this.request<{ success: boolean }>(`/api/appointments/${id}/status`, {
       method: 'PATCH',
-      body: JSON.stringify({ status }),
+      body: JSON.stringify({ status, ...(dueDate ? { dueDate } : {}) }),
     })
   }
 
@@ -255,10 +255,10 @@ class ApiClient {
     })
   }
 
-  async updateFollowUpStatus(id: string, status: string) {
+  async updateFollowUpStatus(id: string, status: string, dueDate?: string) {
     return this.request<{ success: boolean }>(`/api/follow-ups/${id}/status`, {
       method: 'PATCH',
-      body: JSON.stringify({ status }),
+      body: JSON.stringify({ status, ...(dueDate ? { dueDate } : {}) }),
     })
   }
 

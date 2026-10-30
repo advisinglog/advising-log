@@ -4,8 +4,19 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useStore } from '@/data/store'
 import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { cn } from '@/lib/utils'
 import { PageHeader, Card, Button, EmptyState, DocumentViewerModal, Tabs, type DocumentViewerTarget } from '@/components/ui'
-import { ClipboardCheck, User, PlusCircle, FileText, Eye, CheckCircle2, Pencil } from 'lucide-react'
+import {
+  ClipboardCheck,
+  User,
+  PlusCircle,
+  FileText,
+  Eye,
+  CheckCircle2,
+  Pencil,
+  CalendarClock,
+  ChevronDown,
+} from 'lucide-react'
 
 import { isAdvisorMatch } from '@/utils/advisorUtils'
 import { getLocalDateString } from '@/utils/dateUtils'
@@ -20,11 +31,20 @@ export default function AdvisorLog() {
 
   type LogNavigationState = { appointmentId?: string; requestId?: string; studentId?: string }
   const navState = location.state as LogNavigationState | null
-  // Only a Dashboard Record Log click uses the direct, preselected view.
-  // Opening Advisor Log from the sidebar keeps the original dropdown workflow.
-  const isDashboardRecordLog = Boolean(navState?.appointmentId && navState?.requestId && navState?.studentId)
+
+  // Preselected student if navigated from My Advisees, Appointments, or Dashboard
+  const navStudent = navState?.studentId
+    ? store.users.find(
+        u =>
+          u.id === navState.studentId ||
+          u.code?.toUpperCase() === navState.studentId?.toUpperCase()
+      )
+    : null
+
+  const isDirectStudentLog = Boolean(navStudent || (navState?.appointmentId && navState?.requestId && navState?.studentId))
   const [selectedRequestId, setSelectedRequestId] = useState<string>(navState?.requestId || '')
   const [section, setSection] = useState<'entry' | 'saved'>('entry')
+
   // Existing logs are editable only through the Saved Log tab.
   const [editingRequestId, setEditingRequestId] = useState('')
   const [summary, setSummary] = useState('')
@@ -33,8 +53,11 @@ export default function AdvisorLog() {
   const [previewDoc, setPreviewDoc] = useState<DocumentViewerTarget | null>(null)
   const [autoApproveDocs, setAutoApproveDocs] = useState(true)
 
+  // Auto-pull previous follow-ups interactive state
+  const [extendingTaskId, setExtendingTaskId] = useState<string | null>(null)
+  const [showCompletedTasks, setShowCompletedTasks] = useState(false)
+
   // Resolve the actual request from the clicked appointment after backend data loads.
-  // Never trust route state as authorization; the request is checked against the advisor.
   const linkedAppointment = navState?.appointmentId
     ? store.appointments.find(a => a.id === navState.appointmentId)
     : undefined
@@ -53,7 +76,7 @@ export default function AdvisorLog() {
   }, [selectedRequestId, store.sessions])
 
   function getAttachments(request: AdvisingRequest): DocumentViewerTarget[] {
-    const student = store.users.find(u => u.id === request.studentId)
+    const studentObj = store.users.find(u => u.id === request.studentId)
     return (Array.isArray(request.attachments) ? request.attachments : []).map((attachment, index) => {
       let value = attachment as unknown
       if (typeof value === 'string' && value.startsWith('{')) {
@@ -64,7 +87,7 @@ export default function AdvisorLog() {
 
       if (typeof value === 'string') {
         const matchedDoc = store.documents.find(
-          d => (d.studentId === request.studentId || (student?.code && d.studentId.toUpperCase() === student.code.toUpperCase())) &&
+          d => (d.studentId === request.studentId || (studentObj?.code && d.studentId.toUpperCase() === studentObj.code.toUpperCase())) &&
                (d.fileName === value || d.documentName === value)
         )
         return {
@@ -74,8 +97,8 @@ export default function AdvisorLog() {
           fileUrl: matchedDoc?.fileUrl,
           cloudinaryPublicId: matchedDoc?.cloudinaryPublicId,
           signatureMethod: matchedDoc?.signatureMethod,
-          studentName: student?.name,
-          studentCode: student?.code,
+          studentName: studentObj?.name,
+          studentCode: studentObj?.code,
           uploadedAt: matchedDoc?.uploadedAt,
         }
       }
@@ -90,8 +113,8 @@ export default function AdvisorLog() {
         cloudinaryPublicId: typeof file.cloudinaryPublicId === 'string' ? file.cloudinaryPublicId : typeof file.publicId === 'string' ? file.publicId : undefined,
         fileType: typeof file.fileType === 'string' ? file.fileType : undefined,
         signatureMethod: file.signatureMethod as any,
-        studentName: student?.name,
-        studentCode: student?.code,
+        studentName: studentObj?.name,
+        studentCode: studentObj?.code,
         uploadedAt: typeof file.uploadedAt === 'string' ? file.uploadedAt : undefined,
       }
     })
@@ -108,27 +131,78 @@ export default function AdvisorLog() {
     !store.sessions.some(session => session.requestId === r.id)
   )
 
+  // Auto-select request if student was pre-selected and has an eligible request
+  useEffect(() => {
+    if (navStudent && !selectedRequestId) {
+      const studentReq =
+        completedRequests.find(r => r.studentId === navStudent.id) ||
+        eligibleRequests.find(r => r.studentId === navStudent.id)
+      if (studentReq) {
+        setSelectedRequestId(studentReq.id)
+      }
+    }
+  }, [navStudent, completedRequests, eligibleRequests, selectedRequestId])
+
   // A saved request can be selected for modification ONLY through its Edit button.
   const selectedReq = eligibleRequests.find(r =>
     r.id === selectedRequestId &&
     (completedRequests.some(pending => pending.id === r.id) || editingRequestId === r.id) &&
     (!navState?.studentId || !linkedRequestId || selectedRequestId !== linkedRequestId || r.studentId === navState.studentId)
   )
-  const student = selectedReq ? store.users.find(u => u.id === selectedReq.studentId) : null
+
+  const student = (selectedReq ? store.users.find(u => u.id === selectedReq.studentId) : null) || navStudent
+
   const appointment = selectedReq
     ? (linkedAppointment?.requestId === selectedReq.id
       ? linkedAppointment
       : store.appointments.find(a => a.requestId === selectedReq.id && isAdvisorMatch(a.advisorId, currentUser, store.users)))
     : null
+
   const existingSession = selectedRequestId
     ? store.sessions.find(session => session.requestId === selectedRequestId)
     : undefined
+
   const advisorSessions = store.sessions
     .filter(session => isAdvisorMatch(session.advisorId, currentUser, store.users))
     .sort((a, b) => {
       const bySessionDate = b.sessionDate.localeCompare(a.sessionDate)
       return bySessionDate || b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id)
     })
+
+  // Previous follow-up tasks for this student
+  const studentFollowUps = student
+    ? store.followUps.filter(
+        f =>
+          f.studentId === student.id ||
+          (student.code && f.studentId?.toUpperCase() === student.code.toUpperCase())
+      )
+    : []
+  const pendingFollowUps = studentFollowUps.filter(f => f.status !== 'completed')
+  const completedFollowUps = studentFollowUps.filter(f => f.status === 'completed')
+
+  function handleToggleFollowUp(fuId: string, status: 'completed' | 'in_progress', taskName: string) {
+    store.updateFollowUpStatus(fuId, status)
+    addToast(
+      'success',
+      t('บันทึกความคืบหน้าเรียบร้อย', 'Follow-up Updated'),
+      status === 'completed'
+        ? t(`ทำเครื่องหมายงาน "${taskName}" เสร็จสิ้นแล้ว`, `Marked "${taskName}" as completed.`)
+        : t(`ปรับสถานะงาน "${taskName}" เป็นกำลังดำเนินการ`, `Marked "${taskName}" in progress.`)
+    )
+  }
+
+  function handleExtendDueDate(fuId: string, newDueDate: string, taskName: string) {
+    store.updateFollowUpStatus(fuId, 'in_progress', newDueDate)
+    setExtendingTaskId(null)
+    addToast(
+      'success',
+      t('ขยายวันกำหนดส่งเรียบร้อย', 'Due Date Extended'),
+      t(
+        `ขยายกำหนดส่งงาน "${taskName}" เป็นวันที่ ${newDueDate} แล้ว`,
+        `Extended due date for "${taskName}" to ${newDueDate}.`
+      )
+    )
+  }
 
   function editSavedLog(requestId: string) {
     setEditingRequestId(requestId)
@@ -138,38 +212,82 @@ export default function AdvisorLog() {
 
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    if (!selectedReq || !summary.trim()) {
-      addToast('error', t('ข้อมูลไม่ครบถ้วน', 'Validation Error'), t('กรุณาเลือกนัดหมายและระบุสรุปผลการให้คำปรึกษา', 'Please select a session and provide the advising summary.'))
+    const targetStudentId = selectedReq?.studentId || student?.id
+
+    if (!targetStudentId || !summary.trim()) {
+      addToast(
+        'error',
+        t('ข้อมูลไม่ครบถ้วน', 'Validation Error'),
+        t('กรุณาระบุสรุปผลการให้คำปรึกษา', 'Please provide the advising summary.')
+      )
       return
     }
 
     if (followUpTask.trim() && !followUpDate) {
-      addToast('error', t('กรุณาระบุวันกำหนดส่ง', 'Due Date Required'), t('กรุณาระบุวันที่กำหนดส่งสำหรับงานติดตามผลที่มอบหมาย', 'Please select a due date for the assigned follow-up task.'))
+      addToast(
+        'error',
+        t('กรุณาระบุวันกำหนดส่ง', 'Due Date Required'),
+        t('กรุณาระบุวันที่กำหนดส่งสำหรับงานติดตามผลที่มอบหมาย', 'Please select a due date for the assigned follow-up task.')
+      )
       return
     }
 
     if (!followUpTask.trim() && followUpDate) {
-      addToast('error', t('กรุณาระบุชื่องานติดตามผล', 'Follow-up Task Required'), t('กรุณาระบุรายละเอียดงานที่ต้องการมอบหมาย', 'Please specify the follow-up task description.'))
+      addToast(
+        'error',
+        t('กรุณาระบุชื่องานติดตามผล', 'Follow-up Task Required'),
+        t('กรุณาระบุรายละเอียดงานที่ต้องการมอบหมาย', 'Please specify the follow-up task description.')
+      )
       return
     }
 
     const cleanSummary = summary.trim()
-    const existingSession = store.sessions.find(s => s.requestId === selectedRequestId)
-    if (existingSession && editingRequestId !== selectedRequestId) {
-      addToast('error', t('รายการนี้บันทึกแล้ว', 'Already Recorded'), t('กรุณาแก้ไขจากแท็บบันทึกที่จัดเก็บแล้ว', 'Please use Edit in the Saved Log tab.'))
+    const currentSession = selectedRequestId ? store.sessions.find(s => s.requestId === selectedRequestId) : undefined
+    if (currentSession && editingRequestId !== selectedRequestId) {
+      addToast(
+        'error',
+        t('รายการนี้บันทึกแล้ว', 'Already Recorded'),
+        t('กรุณาแก้ไขจากแท็บบันทึกที่จัดเก็บแล้ว', 'Please use Edit in the Saved Log tab.')
+      )
       return
     }
-    const session = existingSession
-      ? (store.updateSession(existingSession.id, {
+
+    // Resolve or generate requestId to satisfy foreign key requirement
+    let reqId = selectedRequestId
+    if (!reqId) {
+      const anyReq = store.requests.find(
+        r => r.studentId === targetStudentId && isAdvisorMatch(r.advisorId, currentUser, store.users)
+      )
+      if (anyReq) {
+        reqId = anyReq.id
+      } else {
+        const walkInReq = store.addRequest({
+          studentId: targetStudentId,
+          advisorId: currentUser!.id,
+          category: 'academic_performance',
+          details: cleanSummary.slice(0, 150),
+          preferredDate: getLocalDateString(),
+          preferredTime: '10:00',
+          attachments: [],
+          pdpaConsent: true,
+          status: 'completed',
+        })
+        reqId = walkInReq.id
+      }
+    }
+
+    const session = currentSession
+      ? (store.updateSession(currentSession.id, {
           sessionDate: getLocalDateString(),
           summary: cleanSummary,
           problem: cleanSummary,
           advice: cleanSummary,
-        }), { ...existingSession, summary: cleanSummary, problem: cleanSummary, advice: cleanSummary })
+        }),
+        { ...currentSession, summary: cleanSummary, problem: cleanSummary, advice: cleanSummary })
       : store.addSession({
-          requestId: selectedRequestId,
+          requestId: reqId,
           appointmentId: appointment?.id || undefined,
-          studentId: selectedReq!.studentId,
+          studentId: targetStudentId,
           advisorId: currentUser!.id,
           sessionDate: getLocalDateString(),
           summary: cleanSummary,
@@ -184,7 +302,7 @@ export default function AdvisorLog() {
       userName: currentUser!.name,
       userRole: 'advisor',
       action: 'log_created',
-      description: `Created advising log for ${student?.name}`,
+      description: `Created advising log for ${student?.name || targetStudentId}`,
       targetId: session.id,
     })
 
@@ -192,15 +310,15 @@ export default function AdvisorLog() {
     if (followUpTask.trim() && followUpDate) {
       const fu = store.addFollowUp({
         sessionId: session.id,
-        requestId: selectedRequestId,
-        studentId: selectedReq!.studentId,
+        requestId: reqId,
+        studentId: targetStudentId,
         advisorId: currentUser!.id,
         task: followUpTask.trim(),
         dueDate: followUpDate,
         status: 'pending',
       })
       store.addNotification({
-        userId: selectedReq!.studentId,
+        userId: targetStudentId,
         type: 'action_required',
         title: t('งานติดตามผลใหม่จากอาจารย์', 'New Follow-up Task'),
         message: `${t('อาจารย์มอบหมายงานติดตามผล:', 'Your advisor has assigned a follow-up:')} ${followUpTask.trim()}`,
@@ -212,12 +330,16 @@ export default function AdvisorLog() {
         userName: currentUser!.name,
         userRole: 'advisor',
         action: 'followup_created',
-        description: `Created follow-up for ${student?.name}: ${followUpTask.trim()}`,
+        description: `Created follow-up for ${student?.name || targetStudentId}: ${followUpTask.trim()}`,
         targetId: fu.id,
       })
     }
 
-    addToast('success', t('บันทึกผลการให้คำปรึกษาแล้ว', 'Advising Log Saved'), t('บันทึกสรุปและประวัติการให้คำปรึกษาได้รับการอัปเดตเรียบร้อย', 'The session record and audit trail have been updated.'))
+    addToast(
+      'success',
+      t('บันทึกผลการให้คำปรึกษาแล้ว', 'Advising Log Saved'),
+      t('บันทึกสรุปและประวัติการให้คำปรึกษาได้รับการอัปเดตเรียบร้อย', 'The session record and audit trail have been updated.')
+    )
     setSelectedRequestId('')
     setEditingRequestId('')
     setSection('saved')
@@ -230,7 +352,10 @@ export default function AdvisorLog() {
     <div className="max-w-3xl mx-auto space-y-6">
       <PageHeader
         title={t('บันทึกผลการเข้าพบอาจารย์ที่ปรึกษา', 'Advisor Log Entry')}
-        description={t('บันทึกสรุปผลการให้คำปรึกษา คำแนะนำ และกำหนดงานติดตามผลแก่นักศึกษาอย่างกระชับและรวดเร็ว', 'Document session summary, guidance provided, and assign action items.')}
+        description={t(
+          'บันทึกสรุปผลการให้คำปรึกษา คำแนะนำ และกำหนดงานติดตามผลแก่นักศึกษาอย่างกระชับและรวดเร็ว',
+          'Document session summary, guidance provided, and assign action items.'
+        )}
       />
 
       <Tabs
@@ -257,9 +382,10 @@ export default function AdvisorLog() {
               const request = store.requests.find(r => r.id === session.requestId)
               const sessionStudent = store.users.find(u => u.id === session.studentId)
               const requestId = session.requestId
-              const sessionAppointment = store.appointments.find(appointment =>
-                appointment.id === session.appointmentId ||
-                appointment.requestId === session.requestId
+              const sessionAppointment = store.appointments.find(
+                appointmentItem =>
+                  appointmentItem.id === session.appointmentId ||
+                  appointmentItem.requestId === session.requestId
               )
               return (
                 <Card key={session.id} className="border-emerald-100 dark:border-emerald-900/60">
@@ -277,7 +403,8 @@ export default function AdvisorLog() {
                             {t('วันที่บันทึก:', 'Entry date:')} {session.createdAt.split('T')[0]}
                           </span>
                           <span className="text-sky-500 dark:text-sky-300">
-                            {t('วันที่นัดหมาย:', 'Appointment date:')} {sessionAppointment?.scheduledDate || request?.preferredDate || '-'}
+                            {t('วันที่นัดหมาย:', 'Appointment date:')}{' '}
+                            {sessionAppointment?.scheduledDate || request?.preferredDate || '-'}
                           </span>
                         </div>
                       </div>
@@ -307,42 +434,49 @@ export default function AdvisorLog() {
             })}
           </div>
         )
-      ) : completedRequests.length === 0 && !selectedReq ? (
+      ) : completedRequests.length === 0 && !selectedReq && !student ? (
         <Card>
           <EmptyState
             icon={<ClipboardCheck className="h-6 w-6 text-sky-500" />}
             title={t('ไม่มีนัดหมายที่รอการเขียนบันทึก', 'No sessions pending documentation')}
-            description={t('รายการนัดหมายที่ถึงกำหนดหรือเสร็จสิ้นแล้วจะปรากฏที่นี่เพื่อเขียนบันทึกผล', 'Scheduled sessions will appear here to write their official advising log.')}
+            description={t(
+              'รายการนัดหมายที่ถึงกำหนดหรือเสร็จสิ้นแล้วจะปรากฏที่นี่เพื่อเขียนบันทึกผล หรือเลือกจากหน้านักศึกษาในความดูแล',
+              'Scheduled sessions will appear here to write their official advising log.'
+            )}
           />
         </Card>
       ) : (
         <Card>
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Dashboard Record Log: preselect appointment; sidebar: only requests without a saved session. */}
-            {isDashboardRecordLog ? (
-              selectedReq ? (
-                <div className="rounded-xl border border-sky-200 dark:border-sky-800 bg-sky-50 dark:bg-sky-950/30 p-4 space-y-2">
-                  <p className="text-xs font-semibold text-sky-700 dark:text-sky-300">
-                    {t('กำลังบันทึกผลให้นักศึกษาคนนี้', 'Recording log for this student')}
-                  </p>
-                  <p className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                    {student?.name || selectedReq.studentId} {student?.code ? `(${student.code})` : ''}
-                  </p>
-                  <p className="text-xs text-slate-600 dark:text-slate-300">
-                    {getCategoryLabel(selectedReq.category)} · {t('วันที่นัดหมาย:', 'Appointment date:')} {appointment?.scheduledDate || selectedReq.preferredDate || '-'}
-                    {appointment?.scheduledTime ? ` · ${appointment.scheduledTime}` : ''}
-                  </p>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                    {t('ข้อมูลนักศึกษาและคำร้องถูกเลือกให้อัตโนมัติจากรายการที่กด', 'Student, request and appointment are loaded automatically from the selected record.')}
-                  </p>
+            {/* Direct Student Pre-selected banner (Locks student automatically without dropdown) */}
+            {isDirectStudentLog && student ? (
+              <div className="rounded-xl border border-sky-200 dark:border-sky-800 bg-sky-50/80 dark:bg-sky-950/40 p-4 space-y-1.5 shadow-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-sky-800 dark:text-sky-300 flex items-center gap-1.5">
+                    <User className="h-4 w-4 text-sky-600" />
+                    {t('กำลังบันทึกผลการเข้าพบให้นักศึกษาคนนี้', 'Recording log for this student')}
+                  </span>
+                  <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-sky-100 dark:bg-sky-900/60 text-sky-800 dark:text-sky-200">
+                    {student.code}
+                  </span>
                 </div>
-              ) : (
-                <p className="text-xs text-amber-700 dark:text-amber-300">
-                  {eligibleRequests.some(r => r.id === linkedRequestId) && store.sessions.some(s => s.requestId === linkedRequestId)
-                    ? t('นัดหมายนี้บันทึกผลแล้ว กรุณาเปิดแท็บบันทึกที่จัดเก็บแล้วเพื่อดูหรือแก้ไข', 'This appointment has already been recorded. Use Saved Log to view or edit it.')
-                    : t('ไม่พบคำร้องของนักศึกษาที่เลือก หรือรายการนี้ไม่อยู่ในความดูแลของคุณ', 'The selected request is unavailable or is not assigned to you.')}
+                <p className="text-base font-extrabold text-slate-900 dark:text-slate-100">
+                  {student.name}
                 </p>
-              )
+                <p className="text-xs text-slate-600 dark:text-slate-300">
+                  {selectedReq ? `${getCategoryLabel(selectedReq.category)} · ` : ''}
+                  {t('สำนักวิชา / สาขา:', 'Department:')} {student.department || '-'}
+                  {appointment?.scheduledDate
+                    ? ` · ${t('วันนัดหมาย:', 'Appointment date:')} ${appointment.scheduledDate}`
+                    : ''}
+                </p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 pt-0.5">
+                  {t(
+                    'ข้อมูลนักศึกษาและคำร้องถูกเลือกให้อัตโนมัติ ไม่ต้องค้นหาใหม่',
+                    'Student profile loaded automatically from the active selection.'
+                  )}
+                </p>
+              </div>
             ) : (
               <div>
                 <label className="block text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 mb-1.5">
@@ -350,10 +484,15 @@ export default function AdvisorLog() {
                 </label>
                 <select
                   value={selectedRequestId}
-                  onChange={e => { setEditingRequestId(''); setSelectedRequestId(e.target.value) }}
+                  onChange={e => {
+                    setEditingRequestId('')
+                    setSelectedRequestId(e.target.value)
+                  }}
                   className="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200/90 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-xs cursor-pointer"
                 >
-                  <option value="">{t('-- เลือกรายการนัดหมายที่ต้องการบันทึก --', 'Select an advising session to log')}</option>
+                  <option value="">
+                    {t('-- เลือกรายการนัดหมายที่ต้องการบันทึก --', 'Select an advising session to log')}
+                  </option>
                   {completedRequests.map(r => {
                     const s = store.users.find(u => u.id === r.studentId)
                     return (
@@ -363,6 +502,171 @@ export default function AdvisorLog() {
                     )
                   })}
                 </select>
+              </div>
+            )}
+
+            {/* Auto-Pulled Previous Follow-ups Section (ดึงการบ้านจากครั้งก่อนมาแสดงอัตโนมัติ) */}
+            {student && (
+              <div className="p-4 rounded-xl border border-amber-200/90 dark:border-amber-800/70 bg-amber-50/70 dark:bg-amber-950/25 space-y-3 shadow-2xs">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 rounded-lg bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300">
+                      <ClipboardCheck className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100">
+                        {t('งานที่มอบหมายไว้จากครั้งก่อนหน้า (การบ้าน/สิ่งที่ต้องทำต่อ)', 'Previous Assigned Follow-up Tasks')}
+                      </h4>
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                        {t(
+                          'ดึงงานเดิมของนักศึกษามาแสดงอัตโนมัติ ติ๊กเสร็จสิ้น หรือขยายกำหนดส่งได้ทันที',
+                          'Auto-pulled from previous sessions. Check off done or extend due date.'
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                  <span
+                    className={cn(
+                      'text-xs font-bold px-2.5 py-1 rounded-full',
+                      pendingFollowUps.length > 0
+                        ? 'bg-amber-200/80 dark:bg-amber-900/80 text-amber-900 dark:text-amber-100'
+                        : 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300'
+                    )}
+                  >
+                    {pendingFollowUps.length > 0
+                      ? `${pendingFollowUps.length} ${t('งานค้างส่ง', 'pending')}`
+                      : t('ไม่มีงานค้าง', 'All completed')}
+                  </span>
+                </div>
+
+                {pendingFollowUps.length > 0 ? (
+                  <div className="space-y-2 pt-1">
+                    {pendingFollowUps.map(fu => {
+                      const isOverdue = fu.dueDate && fu.dueDate < getLocalDateString()
+                      const isExtending = extendingTaskId === fu.id
+                      return (
+                        <div
+                          key={fu.id}
+                          className="p-3 rounded-xl border border-amber-200/70 dark:border-amber-900/60 bg-white dark:bg-slate-900 shadow-2xs transition-all space-y-2"
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <label className="flex items-start gap-3 cursor-pointer select-none flex-1">
+                              <input
+                                type="checkbox"
+                                checked={fu.status === 'completed'}
+                                onChange={() => handleToggleFollowUp(fu.id, 'completed', fu.task)}
+                                className="mt-0.5 h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer shrink-0"
+                              />
+                              <div className="min-w-0">
+                                <p className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100 leading-snug">
+                                  {fu.task}
+                                </p>
+                                <div className="flex items-center gap-2 mt-1.5 text-xs flex-wrap">
+                                  <span
+                                    className={cn(
+                                      'font-mono text-[11px] px-2 py-0.5 rounded font-semibold',
+                                      isOverdue
+                                        ? 'bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800'
+                                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                                    )}
+                                  >
+                                    {t('กำหนดส่ง:', 'Due:')} {fu.dueDate || '-'}
+                                    {isOverdue && ` (${t('เกินกำหนดแล้ว', 'Overdue')})`}
+                                  </span>
+                                </div>
+                              </div>
+                            </label>
+
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setExtendingTaskId(isExtending ? null : fu.id)}
+                                className="text-xs h-7 px-2.5 text-slate-600 hover:text-sky-700 hover:bg-sky-50 dark:hover:bg-slate-800"
+                              >
+                                <CalendarClock className="h-3.5 w-3.5 mr-1 text-sky-600" />
+                                {isExtending ? t('ยกเลิก', 'Cancel') : t('ต่ออายุ / ขยายเวลา', 'Extend Date')}
+                              </Button>
+                            </div>
+                          </div>
+
+                          {/* Inline Extend Date Drawer */}
+                          {isExtending && (
+                            <div className="flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
+                              <span className="font-semibold text-slate-700 dark:text-slate-300">
+                                {t('เลือกวันกำหนดส่งใหม่:', 'New Due Date:')}
+                              </span>
+                              <input
+                                type="date"
+                                min={getLocalDateString()}
+                                defaultValue={fu.dueDate || getLocalDateString()}
+                                onChange={e => {
+                                  if (e.target.value) {
+                                    handleExtendDueDate(fu.id, e.target.value, fu.task)
+                                  }
+                                }}
+                                className="px-2.5 py-1 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-mono text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-sky-500/20"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  <div className="p-3 rounded-lg bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/70 dark:border-emerald-800/50 flex items-center gap-2 text-xs text-emerald-800 dark:text-emerald-300">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                    <span>
+                      {t(
+                        'นักศึกษาคนนี้ไม่มีงานติดตามผลที่ค้างอยู่ (งานเดิมเสร็จสิ้นครบถ้วนแล้ว)',
+                        'No pending tasks! All previous follow-ups for this student are completed.'
+                      )}
+                    </span>
+                  </div>
+                )}
+
+                {/* Toggle View Completed Tasks */}
+                {completedFollowUps.length > 0 && (
+                  <div className="pt-2 border-t border-amber-200/60 dark:border-amber-800/40">
+                    <button
+                      type="button"
+                      onClick={() => setShowCompletedTasks(!showCompletedTasks)}
+                      className="text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <ChevronDown
+                        className={cn('h-3.5 w-3.5 transition-transform duration-200', showCompletedTasks ? 'rotate-180' : '')}
+                      />
+                      {showCompletedTasks
+                        ? t('ซ่อนงานที่เสร็จสิ้นแล้ว', 'Hide completed tasks')
+                        : t(
+                            `ดูงานเดิมที่ทำเสร็จสิ้นแล้ว (${completedFollowUps.length} รายการ)`,
+                            `View completed tasks (${completedFollowUps.length})`
+                          )}
+                    </button>
+
+                    {showCompletedTasks && (
+                      <div className="space-y-1.5 mt-2.5">
+                        {completedFollowUps.map(cfu => (
+                          <div
+                            key={cfu.id}
+                            className="p-2.5 rounded-lg bg-white/80 dark:bg-slate-900/80 border border-slate-200/70 dark:border-slate-800 flex items-center justify-between text-xs text-slate-600 dark:text-slate-300"
+                          >
+                            <span className="flex items-center gap-2 min-w-0">
+                              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                              <span className="line-through text-slate-400 dark:text-slate-500 truncate">
+                                {cfu.task}
+                              </span>
+                            </span>
+                            <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-mono shrink-0">
+                              {t('เสร็จเมื่อ', 'Completed')}: {cfu.completedAt || '-'}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
 
@@ -384,33 +688,14 @@ export default function AdvisorLog() {
                   {selectedReq.details}
                 </p>
 
-                {/* Open Tasks from Previous Sessions */}
-                {(() => {
-                  const studentPendingFollowUps = store.followUps.filter(
-                    f => (f.studentId === selectedReq.studentId || (student?.code && f.studentId?.toUpperCase() === student.code.toUpperCase())) &&
-                         f.status !== 'completed'
-                  )
-                  if (studentPendingFollowUps.length === 0) return null
-                  return (
-                    <div className="pt-2 border-t border-sky-100 dark:border-sky-900/60 space-y-1.5">
-                      <span className="text-[11px] font-bold text-sky-900 dark:text-sky-200 flex items-center gap-1.5">
-                        <ClipboardCheck className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400" />
-                        {t(`งานติดตามผลที่ค้างอยู่ (${studentPendingFollowUps.length} รายการ)`, `Previous Pending Tasks (${studentPendingFollowUps.length})`)}
-                      </span>
-                      <div className="space-y-1">
-                        {studentPendingFollowUps.map(fu => (
-                          <div key={fu.id} className="flex items-center justify-between gap-2 bg-white/90 dark:bg-slate-900/80 p-2 rounded-lg border border-sky-100 dark:border-slate-800 text-[11px] text-slate-700 dark:text-slate-200">
-                            <span className="truncate font-medium">{fu.task}</span>
-                            {fu.dueDate && <span className="font-mono text-[10px] text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/80 px-1.5 py-0.5 rounded border border-sky-200/50 dark:border-sky-800/50 shrink-0">{t('กำหนด:', 'Due:')} {fu.dueDate}</span>}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )
-                })()}
-
                 {/* Attached Documents Preview Box */}
-                {(getAttachments(selectedReq).length > 0 || store.documents.some(d => (d.studentId === selectedReq.studentId || (student?.code && d.studentId.toUpperCase() === student.code.toUpperCase())) && (d.status === 'uploaded' || d.status === 'required'))) && (
+                {(getAttachments(selectedReq).length > 0 ||
+                  store.documents.some(
+                    d =>
+                      (d.studentId === selectedReq.studentId ||
+                        (student?.code && d.studentId.toUpperCase() === student.code.toUpperCase())) &&
+                      (d.status === 'uploaded' || d.status === 'required')
+                  )) && (
                   <div className="pt-2 border-t border-sky-100 dark:border-sky-900/60 space-y-2">
                     <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
                       <FileText className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400" />
@@ -418,29 +703,49 @@ export default function AdvisorLog() {
                     </span>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {getAttachments(selectedReq).map(att => (
-                        <div key={att.id} className="flex items-center justify-between gap-2 bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs">
+                        <div
+                          key={att.id}
+                          className="flex items-center justify-between gap-2 bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs"
+                        >
                           <span className="truncate font-medium text-slate-700 dark:text-slate-300">{att.fileName}</span>
-                          <Button size="sm" variant="secondary" type="button" onClick={() => setPreviewDoc(att)} className="h-7 text-[11px] px-2">
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            type="button"
+                            onClick={() => setPreviewDoc(att)}
+                            className="h-7 text-[11px] px-2"
+                          >
                             <Eye className="h-3 w-3 mr-1" /> {t('เปิดดู', 'View')}
                           </Button>
                         </div>
                       ))}
                       {store.documents
-                        .filter(d => (d.studentId === selectedReq.studentId || (student?.code && d.studentId.toUpperCase() === student.code.toUpperCase())) && (d.status === 'uploaded' || d.status === 'required'))
+                        .filter(
+                          d =>
+                            (d.studentId === selectedReq.studentId ||
+                              (student?.code && d.studentId.toUpperCase() === student.code.toUpperCase())) &&
+                            (d.status === 'uploaded' || d.status === 'required')
+                        )
                         .map(doc => (
-                          <div key={doc.id} className="flex items-center justify-between gap-2 bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs">
-                            <span className="truncate font-medium text-slate-700 dark:text-slate-300">{doc.documentName || doc.fileName}</span>
+                          <div
+                            key={doc.id}
+                            className="flex items-center justify-between gap-2 bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs"
+                          >
+                            <span className="truncate font-medium text-slate-700 dark:text-slate-300">
+                              {doc.documentName || doc.fileName}
+                            </span>
                             <Button
                               size="sm"
                               variant="secondary"
                               type="button"
-                              onClick={() => setPreviewDoc({
-                                id: doc.id,
-                                title: doc.documentName,
-                                fileName: doc.fileName || doc.documentName,
-                                fileUrl: doc.fileUrl,
-                                cloudinaryPublicId: doc.cloudinaryPublicId,
-                              })}
+                              onClick={() =>
+                                setPreviewDoc({
+                                  id: doc.id,
+                                  fileName: doc.fileName || doc.documentName,
+                                  fileUrl: doc.fileUrl,
+                                  cloudinaryPublicId: doc.cloudinaryPublicId,
+                                })
+                              }
                               className="h-7 text-[11px] px-2"
                             >
                               <Eye className="h-3 w-3 mr-1" /> {t('เปิดดู', 'View')}
@@ -500,7 +805,8 @@ export default function AdvisorLog() {
                       {t('วันที่บันทึก:', 'Entry date:')} {existingSession.createdAt.split('T')[0]}
                     </span>
                     <span className="block text-sky-500 dark:text-sky-300">
-                      {t('วันที่นัดหมาย:', 'Appointment date:')} {appointment?.scheduledDate || selectedReq?.preferredDate || '-'}
+                      {t('วันที่นัดหมาย:', 'Appointment date:')}{' '}
+                      {appointment?.scheduledDate || selectedReq?.preferredDate || '-'}
                     </span>
                   </span>
                 </div>
@@ -517,53 +823,57 @@ export default function AdvisorLog() {
                 <span>{t('มอบหมายงานติดตามผล (ไม่บังคับ)', 'Assign Follow-up Task (Optional)')}</span>
               </h3>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-3">
-                {t('หากมีสิ่งที่นักศึกษาต้องดำเนินการส่งต่อในภายหลัง สามารถระบุเพื่อแจ้งเตือนในระบบได้', 'Assign an action item if the student needs to submit documents or report progress.')}
+                {t(
+                  'หากมีสิ่งที่นักศึกษาต้องดำเนินการส่งต่อในภายหลัง สามารถระบุเพื่อแจ้งเตือนในระบบได้',
+                  'Assign an action item if the student needs to submit documents or report progress.'
+                )}
               </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    {t('รายละเอียดงานที่มอบหมาย', 'Task Description')}
-                  </label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="sm:col-span-2">
                   <input
                     type="text"
                     value={followUpTask}
                     onChange={e => setFollowUpTask(e.target.value)}
-                    placeholder={t('เช่น ส่งแบบคำร้องเพิ่ม-ถอนรายวิชาที่แก้ไขแล้ว', 'e.g. Submit updated course registration form')}
-                    className="w-full px-3.5 py-2 text-xs sm:text-sm border border-slate-200/90 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-xs"
+                    placeholder={t('เช่น นำส่งใบคำร้องขอถอนรายวิชา, ส่งเอกสารทุนการศึกษา...', 'e.g. Submit course withdrawal form, submit scholarship receipt...')}
+                    className="w-full px-3 py-2 text-xs sm:text-sm border border-slate-200/90 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-xs"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    {t('กำหนดส่งงาน', 'Target Due Date')}
-                  </label>
                   <input
                     type="date"
-                    value={followUpDate}
                     min={getLocalDateString()}
+                    value={followUpDate}
                     onChange={e => setFollowUpDate(e.target.value)}
-                    className="w-full px-3.5 py-2 text-xs sm:text-sm border border-slate-200/90 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-xs"
+                    className="w-full px-3 py-2 text-xs sm:text-sm border border-slate-200/90 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-xs"
                   />
                 </div>
               </div>
             </div>
 
-            {/* Actions */}
-            <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100 dark:border-slate-800">
-              <Button type="submit" variant="primary" disabled={!selectedReq}>
-                {t('บันทึกผลการให้คำปรึกษา', 'Save Advising Log')}
+            {/* Submit Action Buttons */}
+            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+              <Button
+                type="submit"
+                disabled={(!selectedReq && !student) || !summary.trim()}
+              >
+                <ClipboardCheck className="h-4 w-4 mr-1.5" />
+                {existingSession
+                  ? t('บันทึกการแก้ไข', 'Update Log')
+                  : t('บันทึกผลการให้คำปรึกษา', 'Save Advising Log')}
               </Button>
             </div>
           </form>
         </Card>
       )}
 
-      {/* Document Preview Modal */}
-      <DocumentViewerModal
-        isOpen={Boolean(previewDoc)}
-        onClose={() => setPreviewDoc(null)}
-        document={previewDoc}
-      />
-
+      {/* Document Viewer Modal */}
+      {previewDoc && (
+        <DocumentViewerModal
+          isOpen={Boolean(previewDoc)}
+          onClose={() => setPreviewDoc(null)}
+          doc={previewDoc}
+        />
+      )}
     </div>
   )
 }

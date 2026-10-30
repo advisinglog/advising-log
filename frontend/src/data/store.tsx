@@ -117,7 +117,7 @@ interface StoreActions {
 
   // Follow-ups
   addFollowUp: (fu: Omit<FollowUp, 'id' | 'createdAt'>) => FollowUp
-  updateFollowUpStatus: (id: string, status: FollowUp['status']) => void
+  updateFollowUpStatus: (id: string, status: FollowUp['status'], dueDate?: string) => void
   addFollowUpProgress: (fp: Omit<FollowUpProgress, 'id' | 'createdAt'>) => FollowUpProgress
   updateFollowUpProgress: (id: string, progress: number, notes: string) => void
 
@@ -474,9 +474,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return newFu
   }, [])
 
-  const updateFollowUpStatus = useCallback((id: string, status: FollowUp['status']) => {
-    setFollowUps(prev => prev.map(f => f.id === id ? { ...f, status, ...(status === 'completed' ? { completedAt: now() } : {}) } : f))
-    api.updateFollowUpStatus(id, status).catch(() => {})
+  const updateFollowUpStatus = useCallback((id: string, status: FollowUp['status'], dueDate?: string) => {
+    setFollowUps(prev => prev.map(f => f.id === id ? { ...f, status, ...(dueDate ? { dueDate } : {}), ...(status === 'completed' ? { completedAt: now() } : {}) } : f))
+    api.updateFollowUpStatus(id, status, dueDate).catch(() => {})
   }, [])
 
   const addFollowUpProgress = useCallback((fp: Omit<FollowUpProgress, 'id' | 'createdAt'>): FollowUpProgress => {

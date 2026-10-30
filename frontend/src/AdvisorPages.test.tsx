@@ -87,7 +87,6 @@ describe('Advisor Pages Audit & Resilience Tests', () => {
     expect(screen.getByText(/ระบบเตือนภัยวิชาการนักศึกษา|Student Early Warning System/i)).toBeInTheDocument()
   })
 
-
   it('renders streamlined appointment confirmation modal with Google Calendar availability check when clicking Accept', () => {
     renderWithProviders(<AdvisingSessions />)
 
@@ -128,5 +127,25 @@ describe('Advisor Pages Audit & Resilience Tests', () => {
     expect(screen.getByText(/Somchai Jaidee/i)).toBeInTheDocument()
     expect(screen.getByText(/6631503001/i)).toBeInTheDocument()
     expect(screen.getAllByText(/เพิ่มนักศึกษาในความดูแล|Add Advisee/i).length).toBeGreaterThan(0)
+  })
+
+  it('renders AdvisorLog with preloaded student and pulls previous follow-ups', () => {
+    render(
+      <MemoryRouter initialEntries={[{ pathname: '/advisor/log', state: { studentId: 'STU007' } }]}>
+        <ThemeProvider>
+          <LanguageProvider>
+            <ToastProvider>
+              <StoreProvider>
+                <AdvisorLog />
+              </StoreProvider>
+            </ToastProvider>
+          </LanguageProvider>
+        </ThemeProvider>
+      </MemoryRouter>
+    )
+
+    expect(screen.getByText(/บันทึกผลการเข้าพบอาจารย์ที่ปรึกษา|Advisor Log Entry/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/Tanawat Rungroj/i).length).toBeGreaterThan(0)
+    expect(screen.getByText(/งานที่มอบหมายไว้จากครั้งก่อนหน้า|Previous Assigned Follow-up Tasks/i)).toBeInTheDocument()
   })
 })
