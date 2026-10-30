@@ -13,7 +13,7 @@ import {
   verifySession,
   type Role,
 } from './auth'
-import { aliasSet, norm, scopeNeeds, scopeResponse, scopedRoute, type Viewer } from './scope'
+import { aliasSet, createOwnershipError, norm, ownsRecord, scopeNeeds, scopeResponse, scopedRoute, type Viewer } from './scope'
 
 export type Bindings = {
   DB?: D1Database
@@ -346,6 +346,78 @@ app.use('/api/*', async (c, next) => {
       description: `QA viewed ${count} ${route.kind === 'exit' ? 'exit cases' : 'student voice responses'} (case-level)`,
     })
   }
+})
+
+// ---------------------------------------------------------------
+// Record ownership on writes: users may only change their own records
+// (students: their own; advisors: their advisees'). Route rules decide the role,
+// this decides the record.
+// ---------------------------------------------------------------
+const OWNED_TABLES = {
+  requests: schema.advisingRequests,
+  appointments: schema.appointments,
+  'follow-ups': schema.followUps,
+  'exit-cases': schema.exitCases,
+  documents: schema.documents,
+} as const
+
+app.use('/api/*', async (c, next) => {
+  const auth = c.get('auth')
+  const method = c.req.method
+  const database = db(c)
+  if (!auth || method === 'GET' || method === 'OPTIONS' || !database) return next()
+  if (auth.role === 'admin' || auth.role === 'super_admin' || auth.role === 'qa_chair') return next()
+
+  const path = c.req.path
+  const viewer = await viewerFor(c, auth, 'users') // student: own advisors; advisor: own advisees
+  const is = (set: Set<string>, v: unknown) => v != null && v !== '' && set.has(norm(v))
+  const owns = (rec: { studentId?: unknown; advisorId?: unknown }) => ownsRecord(viewer, rec)
+  const forbid = async (detail: string) => {
+    await writeAudit(c, { userId: auth.userId, userName: auth.name, userRole: auth.role, action: 'unauthorized_access', description: `NOT_YOUR_RECORD: ${method} ${path} (${detail})`, targetId: path })
+    return c.json({ success: false, error: 'NOT_YOUR_RECORD' }, 403)
+  }
+
+  // 1. Changing or deleting an existing record
+  const existing = path.match(/^\/api\/(requests|appointments|follow-ups|exit-cases|documents)\/([^/]+)(?:\/status)?$/)
+  if (existing) {
+    const table = OWNED_TABLES[existing[1] as keyof typeof OWNED_TABLES]
+    const rec = await database.select().from(table).where(eq(table.id, decodeURIComponent(existing[2]))).get() as any
+    if (rec && !owns(rec)) return forbid('record belongs to someone else')
+    return next()
+  }
+
+  // 2. Creating a record for a student
+  const created = method === 'POST' && path.match(/^\/api\/(requests|appointments|sessions|follow-ups|follow-up-progress|exit-cases|student-voice|early-warnings|documents|roster)$/)
+  if (created) {
+    const resource = created[1]
+    const body = await c.req.json().catch(() => null) as Record<string, any> | null
+    if (!body) return next()
+    const studentRefs = [body.studentId, body.studentCode, body.studentEmail].filter(v => v != null && v !== '')
+    const error = createOwnershipError(viewer, resource, body)
+    if (error) return forbid(error)
+
+    // Progress must be on a follow-up the user owns
+    if (resource === 'follow-up-progress' && body.followUpId) {
+      const followUp = await database.select().from(schema.followUps).where(eq(schema.followUps.id, String(body.followUpId))).get()
+      if (followUp && !owns(followUp)) return forbid('follow-up belongs to someone else')
+    }
+
+    // Advisors may assign students to themselves only, and not take another advisor's active advisee
+    if (resource === 'roster' && auth.role === 'advisor') {
+      // The student may be referenced by id, code or email: match all of them
+      const studentAliases = new Set(studentRefs.map(norm))
+      const people = await database.select({ id: schema.users.id, code: schema.users.code, email: schema.users.email }).from(schema.users)
+      for (const p of people) {
+        if ([p.id, p.code, p.email].some(a => is(studentAliases, a))) [p.id, p.code, p.email].forEach(a => a && studentAliases.add(norm(a)))
+      }
+      const assignments = await database.select().from(schema.studentAdvisorAssignments)
+      const takenByOther = assignments.some(a =>
+        a.isActive && is(studentAliases, a.studentId) && !is(viewer.aliases, a.advisorId))
+      if (takenByOther) return forbid('student is assigned to another advisor')
+    }
+  }
+
+  return next()
 })
 
 /** Advisors may only create or edit student accounts (e.g. roster CSV import). */

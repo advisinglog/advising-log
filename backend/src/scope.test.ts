@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { aliasSet, scopeResponse, type Viewer } from './scope'
+import { aliasSet, createOwnershipError, ownsRecord, scopeResponse, type Viewer } from './scope'
 
 // Students may be referenced by id, code or email depending on how the record was created
 const users = [
@@ -87,5 +87,42 @@ describe('Record-level scoping', () => {
       { id: 'V3', studentId: 'STU3', shareWithAdvisor: true },
     ]
     expect(ids(scopeResponse('/api/student-voice', { surveys }, advisor1).surveys)).toEqual(['V1'])
+  })
+})
+
+describe('Write ownership', () => {
+  const student1 = viewer('student', ['STU1', '6631503001', 'stu1@lamduan.mfu.ac.th'], ['ADV1', 'ADV001'])
+  const advisor1 = viewer('advisor', ['ADV1', 'ADV001', 'adv1@mfu.ac.th'], ['STU1', '6631503001', 'STU2', '6631503002'])
+
+  it('students may only change their own records', () => {
+    expect(ownsRecord(student1, { studentId: 'STU1', advisorId: 'ADV1' })).toBe(true)
+    expect(ownsRecord(student1, { studentId: '6631503001' })).toBe(true) // referenced by code
+    expect(ownsRecord(student1, { studentId: 'STU2', advisorId: 'ADV1' })).toBe(false)
+  })
+
+  it("advisors may only change their own or their advisees' records", () => {
+    expect(ownsRecord(advisor1, { studentId: 'STU2', advisorId: 'ADV2' })).toBe(true) // their advisee
+    expect(ownsRecord(advisor1, { studentId: 'STU3', advisorId: 'ADV1' })).toBe(true) // their record
+    expect(ownsRecord(advisor1, { studentId: 'STU3', advisorId: 'ADV2' })).toBe(false)
+  })
+
+  it('students may only create records for themselves, sent to their own advisor', () => {
+    expect(createOwnershipError(student1, 'requests', { studentId: 'STU1', advisorId: 'ADV1' })).toBeNull()
+    expect(createOwnershipError(student1, 'requests', { studentId: 'STU2' })).toBe('student is not you')
+    expect(createOwnershipError(student1, 'requests', { studentId: 'STU1', advisorId: 'ADV2' })).toBe('not your advisor')
+    expect(createOwnershipError(student1, 'documents', {})).toBe('missing student')
+    expect(createOwnershipError(student1, 'student-voice', { isAnonymous: true })).toBeNull()
+  })
+
+  it('advisors may only create records for their advisees, as themselves', () => {
+    expect(createOwnershipError(advisor1, 'sessions', { studentId: 'STU2', advisorId: 'ADV1' })).toBeNull()
+    expect(createOwnershipError(advisor1, 'sessions', { studentId: 'STU3', advisorId: 'ADV1' })).toBe('not your advisee')
+    expect(createOwnershipError(advisor1, 'appointments', { studentId: 'STU1', advisorId: 'ADV2' })).toBe('advisor is not you')
+  })
+
+  it('advisors may add new students to the roster, but only under themselves', () => {
+    expect(createOwnershipError(advisor1, 'roster', { studentId: 'NEW_STUDENT', advisorId: 'ADV1' })).toBeNull()
+    expect(createOwnershipError(advisor1, 'roster', { studentId: 'NEW_STUDENT', advisorId: 'ADV2' })).toBe('advisor is not you')
+    expect(createOwnershipError(advisor1, 'roster', { studentId: 'NEW_STUDENT' })).toBe('advisor is not you')
   })
 })

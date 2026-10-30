@@ -164,3 +164,35 @@ export function scopeResponse(path: string, body: any, viewer: Viewer): any {
   if (!Array.isArray(value)) return body
   return { ...body, [route.key]: scopeList(route.kind, value, viewer) }
 }
+
+// ---------------------------------------------------------------
+// Write ownership (who may change or create which records)
+// ---------------------------------------------------------------
+
+const inSet = (set: Set<string>, v: unknown) => v != null && v !== '' && set.has(norm(v))
+
+/** Student: their own record. Advisor: a record they own or one about their advisee. */
+export function ownsRecord(v: Viewer, rec: { studentId?: unknown; advisorId?: unknown }): boolean {
+  return v.role === 'student'
+    ? inSet(v.aliases, rec.studentId)
+    : inSet(v.aliases, rec.advisorId) || inSet(v.linkedAliases, rec.studentId)
+}
+
+/**
+ * Why a student/advisor may not create this record, or null if allowed.
+ * (Database-backed checks — follow-up ownership, roster conflicts — are done by the caller.)
+ */
+export function createOwnershipError(v: Viewer, resource: string, body: Record<string, any>): string | null {
+  const studentRefs = [body.studentId, body.studentCode, body.studentEmail].filter(x => x != null && x !== '')
+  if (v.role === 'student') {
+    if (studentRefs.length === 0 && resource !== 'student-voice') return 'missing student' // anonymous surveys allowed
+    if (studentRefs.some(ref => !inSet(v.aliases, ref))) return 'student is not you'
+    if (body.advisorId && !inSet(v.linkedAliases, body.advisorId)) return 'not your advisor'
+    return null
+  }
+  if (studentRefs.length === 0 && resource !== 'follow-up-progress') return 'missing student'
+  if (resource !== 'roster' && studentRefs.some(ref => !inSet(v.linkedAliases, ref))) return 'not your advisee'
+  if (resource === 'roster' && !body.advisorId) return 'advisor is not you'
+  if (body.advisorId && !inSet(v.aliases, body.advisorId)) return 'advisor is not you'
+  return null
+}
