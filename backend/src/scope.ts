@@ -70,6 +70,7 @@ const QA_SAFE_FIELDS = new Set([
   'category', 'subCategory', 'status', 'warningType', 'severity', 'riskLevel', 'progress',
   'preferredDate', 'scheduledDate', 'sessionDate', 'dueDate', 'completedAt', 'dateDetected',
   'assignedAt', 'isActive', 'pdpaConsent', 'createdAt', 'updatedAt',
+  'referrals', // early warnings: [{ to: destination code, status }] only
 ])
 
 function pick(obj: any, fields: Set<string>) {

@@ -126,3 +126,19 @@ describe('Write ownership', () => {
     expect(createOwnershipError(advisor1, 'roster', { studentId: 'NEW_STUDENT' })).toBe('advisor is not you')
   })
 })
+
+describe('Early-warning referrals for QA', () => {
+  it('QA sees referral destinations and status, but not follow-up notes or the student', () => {
+    const qaViewer = viewer('qa_chair', ['QA1'])
+    const earlyWarnings = [{
+      id: 'EW1', studentId: 'STU1', advisorId: 'ADV1', severity: 'high', status: 'active', description: 'private',
+      followUps: [{ id: 'F1', notes: 'private notes', referredTo: 'guidance_counseling', status: 'completed' }],
+      referrals: [{ to: 'guidance_counseling', status: 'completed' }],
+    }]
+    const [row] = scopeResponse('/api/early-warnings', { earlyWarnings }, qaViewer).earlyWarnings
+    expect(row.referrals).toEqual([{ to: 'guidance_counseling', status: 'completed' }])
+    expect(row).not.toHaveProperty('followUps')
+    expect(row).not.toHaveProperty('studentId')
+    expect(row).not.toHaveProperty('description')
+  })
+})

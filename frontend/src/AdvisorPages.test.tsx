@@ -10,7 +10,6 @@ import AdvisingSessions from '@/pages/advisor/AdvisingSessions'
 import ExitCases from '@/pages/advisor/ExitCases'
 import AdvisorLog from '@/pages/advisor/AdvisorLog'
 import EarlyWarning from '@/pages/advisor/EarlyWarning'
-import Referrals from '@/pages/advisor/Referrals'
 
 // Mock currentUser as Advisor
 vi.mock('@/contexts/AuthContext', async () => {
@@ -87,20 +86,6 @@ describe('Advisor Pages Audit & Resilience Tests', () => {
     expect(screen.getByText(/ระบบเตือนภัยวิชาการนักศึกษา|Student Early Warning System/i)).toBeInTheDocument()
   })
 
-  it('renders Referrals table and creation button', () => {
-    renderWithProviders(<Referrals />)
-    expect(screen.getByText(/การส่งต่อหน่วยงาน|Referrals/i)).toBeInTheDocument()
-  })
-
-  it('allows opening referral modal and shows student options', () => {
-    renderWithProviders(<Referrals />)
-    const createBtn = screen.getByRole('button', { name: /สร้างการส่งต่อใหม่|Create Referral/i })
-    fireEvent.click(createBtn)
-
-    expect(screen.getByText(/ส่งต่อนักศึกษาไปยังหน่วยงานสนับสนุน|Create Student Support Referral/i)).toBeInTheDocument()
-    expect(screen.getByText(/เลือกนักศึกษาในความดูแล|Select Advisee/i)).toBeInTheDocument()
-    expect(screen.getByText(/หน่วยงานปลายทาง|Target Department/i)).toBeInTheDocument()
-  })
 
   it('renders streamlined appointment confirmation modal with Google Calendar availability check when clicking Accept', () => {
     renderWithProviders(<AdvisingSessions />)

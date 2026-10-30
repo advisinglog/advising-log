@@ -347,6 +347,10 @@ export interface EarlyWarningCase {
   followUpDate: string
   status: 'active' | 'monitoring' | 'resolved'
   createdAt: string
+  /** Follow-ups saved with the warning (owners only) */
+  followUps?: EarlyWarningFollowUp[]
+  /** De-identified referral summary (destination code + status), also visible to QA */
+  referrals?: Array<{ to: ReferralDestination; status: EarlyWarningFollowUp['status'] }>
 }
 
 export interface EarlyWarningFollowUp {
@@ -358,6 +362,8 @@ export interface EarlyWarningFollowUp {
   outcome: string
   followUpDate: string
   status: 'in_progress' | 'completed' | 'pending'
+  /** Support unit the student was referred to, if any (AUN-QA C6 referral evidence) */
+  referredTo?: ReferralDestination
   createdAt: string
 }
 

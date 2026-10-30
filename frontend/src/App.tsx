@@ -28,7 +28,6 @@ const AdvisingSessions = lazy(() => import('@/pages/advisor/AdvisingSessions'))
 const AdvisorLog = lazy(() => import('@/pages/advisor/AdvisorLog'))
 const AdvisorFollowUps = lazy(() => import('@/pages/advisor/FollowUps'))
 const EarlyWarning = lazy(() => import('@/pages/advisor/EarlyWarning'))
-const Referrals = lazy(() => import('@/pages/advisor/Referrals'))
 const ExitCases = lazy(() => import('@/pages/advisor/ExitCases'))
 
 // QA Pages
@@ -106,7 +105,6 @@ export default function App() {
                       <Route path="advisor/log" element={<RequireRole allowedRoles={['advisor']}><AdvisorLog /></RequireRole>} />
                       <Route path="advisor/followups" element={<RequireRole allowedRoles={['advisor', 'qa_chair']}><AdvisorFollowUps /></RequireRole>} />
                       <Route path="advisor/warnings" element={<RequireRole allowedRoles={['advisor', 'qa_chair']}><EarlyWarning /></RequireRole>} />
-                      <Route path="advisor/referrals" element={<RequireRole allowedRoles={['advisor']}><Referrals /></RequireRole>} />
                       <Route path="advisor/exit-cases" element={<RequireRole allowedRoles={['advisor', 'qa_chair']}><ExitCases /></RequireRole>} />
 
                       {/* QA Routes */}

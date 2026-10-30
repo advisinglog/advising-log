@@ -16,6 +16,10 @@ import type {
 } from '@/types'
 import { EXIT_TYPES, EXIT_REASON_CODES } from '@/types'
 
+const COUNSELING_UNITS = ['guidance_counseling', 'mental_health', 'medical_center']
+const FINANCIAL_UNITS = ['finance_accounting', 'scholarship_office', 'student_loan_office']
+const ACADEMIC_UNITS = ['academic_support', 'registrar', 'programme_coordinator', 'library_cits']
+
 export interface AunQaExportOptions {
   language?: 'th' | 'en'
   metrics: {
@@ -262,6 +266,14 @@ export function exportAunQaExcelReport(options: AunQaExportOptions): void {
   // -------------------------------------------------------------
   // Sheet 1: Executive Summary Dashboard (ตรงตาม PDF Sheet 1)
   // -------------------------------------------------------------
+  // Referrals come from early-warning follow-ups (coded destination), not fixed numbers
+  const referrals = (options.earlyWarnings || []).flatMap(w =>
+    w.referrals ?? (w.followUps || []).filter(f => f.referredTo).map(f => ({ to: f.referredTo!, status: f.status }))
+  )
+  const countReferrals = (units: string[]) => referrals.filter(r => units.includes(r.to)).length
+  const referralTotal = referrals.length
+  const referralCompleted = referrals.filter(r => r.status === 'completed').length
+
   const sheet1Rows = [
     {
       [isTh ? 'ลำดับ' : 'No.']: 1,
@@ -580,42 +592,42 @@ export function exportAunQaExcelReport(options: AunQaExportOptions): void {
     {
       [isTh ? 'หมวดการรายงาน' : 'Section']: isTh ? '4.2 บริการช่วยเหลือและส่งต่อนักศึกษา' : '4.2 Referral / Support Service',
       [isTh ? 'รายการตัวชี้วัด (Indicator)' : 'Indicator']: isTh ? 'จำนวน Case ส่งต่อ' : 'Total Referral Cases',
-      [isTh ? 'ผลการดำเนินงาน' : 'Recorded Value']: '3',
+      [isTh ? 'ผลการดำเนินงาน' : 'Recorded Value']: String(referralTotal),
       [isTh ? 'หน่วยนับ' : 'Unit']: isTh ? 'Case (เคส)' : 'Case',
       [isTh ? 'เกณฑ์ AUN-QA' : 'AUN-QA Criterion']: 'C6',
     },
     {
       [isTh ? 'หมวดการรายงาน' : 'Section']: isTh ? '4.2 บริการช่วยเหลือและส่งต่อนักศึกษา' : '4.2 Referral / Support Service',
       [isTh ? 'รายการตัวชี้วัด (Indicator)' : 'Indicator']: isTh ? 'Counseling Referral' : 'Counselling & Mental Health Referrals',
-      [isTh ? 'ผลการดำเนินงาน' : 'Recorded Value']: '1',
+      [isTh ? 'ผลการดำเนินงาน' : 'Recorded Value']: String(countReferrals(COUNSELING_UNITS)),
       [isTh ? 'หน่วยนับ' : 'Unit']: isTh ? 'Case (เคส)' : 'Case',
       [isTh ? 'เกณฑ์ AUN-QA' : 'AUN-QA Criterion']: 'C6',
     },
     {
       [isTh ? 'หมวดการรายงาน' : 'Section']: isTh ? '4.2 บริการช่วยเหลือและส่งต่อนักศึกษา' : '4.2 Referral / Support Service',
       [isTh ? 'รายการตัวชี้วัด (Indicator)' : 'Indicator']: isTh ? 'Financial Referral' : 'Financial Aid & Scholarship Referrals',
-      [isTh ? 'ผลการดำเนินงาน' : 'Recorded Value']: '1',
+      [isTh ? 'ผลการดำเนินงาน' : 'Recorded Value']: String(countReferrals(FINANCIAL_UNITS)),
       [isTh ? 'หน่วยนับ' : 'Unit']: isTh ? 'Case (เคส)' : 'Case',
       [isTh ? 'เกณฑ์ AUN-QA' : 'AUN-QA Criterion']: 'C6',
     },
     {
       [isTh ? 'หมวดการรายงาน' : 'Section']: isTh ? '4.2 บริการช่วยเหลือและส่งต่อนักศึกษา' : '4.2 Referral / Support Service',
       [isTh ? 'รายการตัวชี้วัด (Indicator)' : 'Indicator']: isTh ? 'Academic Referral' : 'Academic Learning Support Referrals',
-      [isTh ? 'ผลการดำเนินงาน' : 'Recorded Value']: '1',
+      [isTh ? 'ผลการดำเนินงาน' : 'Recorded Value']: String(countReferrals(ACADEMIC_UNITS)),
       [isTh ? 'หน่วยนับ' : 'Unit']: isTh ? 'Case (เคส)' : 'Case',
       [isTh ? 'เกณฑ์ AUN-QA' : 'AUN-QA Criterion']: 'C6',
     },
     {
       [isTh ? 'หมวดการรายงาน' : 'Section']: isTh ? '4.2 บริการช่วยเหลือและส่งต่อนักศึกษา' : '4.2 Referral / Support Service',
       [isTh ? 'รายการตัวชี้วัด (Indicator)' : 'Indicator']: isTh ? 'Referral Completed' : 'Completed Referrals with Feedback',
-      [isTh ? 'ผลการดำเนินงาน' : 'Recorded Value']: '3',
+      [isTh ? 'ผลการดำเนินงาน' : 'Recorded Value']: String(referralCompleted),
       [isTh ? 'หน่วยนับ' : 'Unit']: isTh ? 'Case (เคส)' : 'Case',
       [isTh ? 'เกณฑ์ AUN-QA' : 'AUN-QA Criterion']: 'C6',
     },
     {
       [isTh ? 'หมวดการรายงาน' : 'Section']: isTh ? '4.2 บริการช่วยเหลือและส่งต่อนักศึกษา' : '4.2 Referral / Support Service',
       [isTh ? 'รายการตัวชี้วัด (Indicator)' : 'Indicator']: isTh ? 'Referral Success Rate' : 'Referral Intervention Success Rate',
-      [isTh ? 'ผลการดำเนินงาน' : 'Recorded Value']: '100.0%',
+      [isTh ? 'ผลการดำเนินงาน' : 'Recorded Value']: referralTotal ? `${((referralCompleted / referralTotal) * 100).toFixed(1)}%` : '-',
       [isTh ? 'หน่วยนับ' : 'Unit']: '%',
       [isTh ? 'เกณฑ์ AUN-QA' : 'AUN-QA Criterion']: 'C6',
     },

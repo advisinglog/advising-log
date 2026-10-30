@@ -4,8 +4,8 @@ import { useStore } from '@/data/store'
 import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { PageHeader, DataTable, StatusBadge, Button, Modal, Card, CustomSelect } from '@/components/ui'
-import { EARLY_WARNING_TYPES } from '@/types'
-import type { EarlyWarningCase, EarlyWarningType, EarlyWarningSeverity, EarlyWarningFollowUp } from '@/types'
+import { EARLY_WARNING_TYPES, REFERRAL_DESTINATIONS } from '@/types'
+import type { EarlyWarningCase, EarlyWarningType, EarlyWarningSeverity, EarlyWarningFollowUp, ReferralDestination } from '@/types'
 import { Plus, FileText, Clock, CheckCircle2 } from 'lucide-react'
 
 import { isAdvisorMatch } from '@/utils/advisorUtils'
@@ -15,7 +15,7 @@ export default function EarlyWarning() {
   const { currentUser } = useAuth()
   const store = useStore()
   const { addToast } = useToast()
-  const { t, getWarningTypeLabel } = useLanguage()
+  const { t, getWarningTypeLabel, getReferralLabel } = useLanguage()
   const [showCreate, setShowCreate] = useState(false)
   const [showFollowUp, setShowFollowUp] = useState(false)
   const [selectedWarning, setSelectedWarning] = useState<EarlyWarningCase | null>(null)
@@ -28,6 +28,11 @@ export default function EarlyWarning() {
   const [followUpNotes, setFollowUpNotes] = useState('')
   const [followUpActions, setFollowUpActions] = useState('')
   const [followUpOutcome, setFollowUpOutcome] = useState('')
+  const [followUpReferredTo, setFollowUpReferredTo] = useState<ReferralDestination | ''>('')
+  const referralOptions = [
+    { value: '', label: t('ไม่ได้ส่งต่อ', 'No referral') },
+    ...REFERRAL_DESTINATIONS.map(d => ({ value: d.value, label: getReferralLabel(d.value) })),
+  ]
 
   if (!currentUser) return null
   const myWarnings = store.earlyWarnings.filter(w => currentUser.role === 'qa_chair' || isAdvisorMatch(w.advisorId, currentUser, store.users))
@@ -97,6 +102,7 @@ export default function EarlyWarning() {
       outcome: followUpOutcome,
       followUpDate: getLocalDateString(),
       status: 'in_progress',
+      ...(followUpReferredTo ? { referredTo: followUpReferredTo } : {}),
     })
     store.addAuditLog({
       userId: currentUser!.id,
@@ -112,6 +118,7 @@ export default function EarlyWarning() {
     setFollowUpNotes('')
     setFollowUpActions('')
     setFollowUpOutcome('')
+    setFollowUpReferredTo('')
   }
 
   function getFollowUpsForWarning(warningId: string): EarlyWarningFollowUp[] {
@@ -236,6 +243,9 @@ export default function EarlyWarning() {
                         </div>
                       </div>
                       <p className="text-xs text-slate-700 dark:text-slate-300 mb-1">{fw.notes}</p>
+                      {fw.referredTo && (
+                        <p className="text-[11px] font-semibold text-sky-700 dark:text-sky-400">{t('ส่งต่อไปยัง', 'Referred to')}: {getReferralLabel(fw.referredTo)}</p>
+                      )}
                       {fw.actionsTaken && (
                         <p className="text-[11px] text-slate-600 dark:text-slate-400 italic">{t('การดำเนินการ', 'Actions')}: {fw.actionsTaken}</p>
                       )}
@@ -341,6 +351,16 @@ export default function EarlyWarning() {
               rows={3}
               placeholder={t('บันทึกสิ่งที่หารือ คำตอบของนักศึกษา ข้อสังเกต...', 'Document what was discussed, student\'s response, observations...')}
               className="w-full px-3.5 py-2 text-xs sm:text-sm border border-slate-200/90 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 resize-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1.5">{t('ส่งต่อไปยังหน่วยงาน', 'Referred to')}</label>
+            <CustomSelect
+              value={followUpReferredTo}
+              onChange={val => setFollowUpReferredTo(val as ReferralDestination | '')}
+              options={referralOptions}
+              placeholder={t('ไม่ได้ส่งต่อ', 'No referral')}
             />
           </div>
 

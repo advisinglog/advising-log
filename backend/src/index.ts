@@ -396,6 +396,13 @@ app.use('/api/*', async (c, next) => {
     const error = createOwnershipError(viewer, resource, body)
     if (error) return forbid(error)
 
+    // Upserts by id: the existing record must be the user's own too
+    const upsertTable = resource === 'early-warnings' ? schema.earlyWarnings : OWNED_TABLES[resource as keyof typeof OWNED_TABLES]
+    if (body.id && upsertTable) {
+      const current = await database.select().from(upsertTable).where(eq(upsertTable.id, String(body.id))).get() as any
+      if (current && !owns(current)) return forbid('record belongs to someone else')
+    }
+
     // Progress must be on a follow-up the user owns
     if (resource === 'follow-up-progress' && body.followUpId) {
       const followUp = await database.select().from(schema.followUps).where(eq(schema.followUps.id, String(body.followUpId))).get()
@@ -1787,10 +1794,31 @@ app.get('/api/early-warnings', async (c) => {
       followUpDate: extra.followUpDate || '',
       status: item.status,
       createdAt: item.createdAt,
+      followUps: Array.isArray(extra.followUps) ? extra.followUps : [],
+      referrals: (Array.isArray(extra.followUps) ? extra.followUps : [])
+        .filter((f: any) => f.referredTo)
+        .map((f: any) => ({ to: f.referredTo, status: f.status })),
     }
   })
   return c.json({ earlyWarnings: formatted })
 })
+
+/** Early-warning follow-ups are stored with the warning (no separate table). Referral = coded destination. */
+function sanitizeWarningFollowUps(list: unknown) {
+  if (!Array.isArray(list)) return []
+  const str = (v: unknown, max: number) => (v == null ? '' : String(v).slice(0, max))
+  return list.slice(0, 100).map((f: any) => ({
+    id: str(f?.id, 64),
+    advisorId: str(f?.advisorId, 64),
+    notes: str(f?.notes, 2000),
+    actionsTaken: str(f?.actionsTaken, 2000),
+    outcome: str(f?.outcome, 2000),
+    followUpDate: str(f?.followUpDate, 32),
+    status: ['in_progress', 'completed', 'pending'].includes(f?.status) ? f.status : 'in_progress',
+    referredTo: f?.referredTo ? str(f.referredTo, 64) : undefined,
+    createdAt: str(f?.createdAt, 40),
+  }))
+}
 
 app.post('/api/early-warnings', async (c) => {
   const database = db(c)
@@ -1809,6 +1837,7 @@ app.post('/api/early-warnings', async (c) => {
       dateDetected: body.dateDetected,
       recommendedAction: body.recommendedAction,
       followUpDate: body.followUpDate,
+      followUps: sanitizeWarningFollowUps(body.followUps),
     }),
     status: body.status || 'active',
     notes: body.description || '',

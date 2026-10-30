@@ -2,7 +2,7 @@
 // Student — Request Advising Form (3-Step Interactive Wizard)
 // ============================================================
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { useStore } from '@/data/store'
@@ -38,7 +38,6 @@ import {
   Loader2,
   FileCheck2,
   Globe,
-  Search,
 } from 'lucide-react'
 import { buildAdvisorCalendarUrl, openAdvisorCalendar } from '@/utils/calendarUtils'
 import { getLocalDateString } from '@/utils/dateUtils'
@@ -78,24 +77,9 @@ export default function RequestAdvising() {
   const [pdpaConsent, setPdpaConsent] = useState(false)
   const [showCalendarModal, setShowCalendarModal] = useState(false)
   const [calendarTab, setCalendarTab] = useState<'google' | 'system'>('google')
-  const [selectedAdvisorId, setSelectedAdvisorId] = useState<string>('')
-  const [isAdvisorDropdownOpen, setIsAdvisorDropdownOpen] = useState(false)
-  const [advisorSearch, setAdvisorSearch] = useState('')
-  const advisorDropdownRef = useRef<HTMLDivElement>(null)
   const [showExitReasonDropdown, setShowExitReasonDropdown] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
-
-  useEffect(() => {
-    if (!isAdvisorDropdownOpen) return
-    const handleClickOutside = (e: MouseEvent) => {
-      if (advisorDropdownRef.current && !advisorDropdownRef.current.contains(e.target as Node)) {
-        setIsAdvisorDropdownOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [isAdvisorDropdownOpen])
 
   function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -178,13 +162,8 @@ export default function RequestAdvising() {
       )
     : null
 
-  // All active faculty advisors
-  const availableAdvisors = store.users.filter(
-    u => u.role === 'advisor' && u.isActive
-  )
-
-  const advisor = (selectedAdvisorId ? store.users.find(u => u.id === selectedAdvisorId) : null) || assignedAdvisor || null
-  const isAssignedAdvisor = Boolean(assignedAdvisor && advisor?.id === assignedAdvisor?.id)
+  // Requests are always routed to the student's assigned advisor (via the roster)
+  const advisor = assignedAdvisor || null
 
   const advisorAppointments = store.appointments
     .filter(a => a.advisorId === advisor?.id && a.status === 'scheduled')
@@ -451,7 +430,7 @@ export default function RequestAdvising() {
         targetId: newRequest.id,
       })
 
-      addToast('success', t('ยื่นคำร้องสำเร็จ', 'Request Submitted'), isAssignedAdvisor ? t('คำร้องของคุณถูกส่งไปยังอาจารย์ที่ปรึกษาเรียบร้อยแล้ว', 'Your advising request has been sent to your advisor.') : t(`คำร้องของคุณถูกส่งไปยัง ${advisor.name} เรียบร้อยแล้ว`, `Your advising request has been sent to ${advisor.name}.`))
+      addToast('success', t('ยื่นคำร้องสำเร็จ', 'Request Submitted'), t('คำร้องของคุณถูกส่งไปยังอาจารย์ที่ปรึกษาเรียบร้อยแล้ว', 'Your advising request has been sent to your advisor.'))
       navigate('/student/history')
     } catch (err) {
       console.error(err)
@@ -572,22 +551,10 @@ export default function RequestAdvising() {
                   <span>{t('อาจารย์ที่ปรึกษาผู้รับคำร้อง', 'Faculty Advisor')}</span>
                   <span className="text-rose-500">*</span>
                 </label>
-                {selectedAdvisorId && assignedAdvisor && selectedAdvisorId !== assignedAdvisor.id && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedAdvisorId('')
-                      setIsAdvisorDropdownOpen(false)
-                    }}
-                    className="text-xs text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 font-semibold cursor-pointer underline decoration-dotted self-start sm:self-auto"
-                  >
-                    {t('↩ คืนค่าเป็นอาจารย์ที่ปรึกษาประจำตัว', '↩ Reset to Assigned')}
-                  </button>
-                )}
               </div>
 
-              {/* Main Interactive Custom Advisor Card / Selector */}
-              <div ref={advisorDropdownRef} className="relative">
+              {/* Assigned advisor (requests are routed to them automatically) */}
+              <div className="relative">
                 {advisor ? (
                   <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/60 p-3.5 transition-all hover:border-sky-300 dark:hover:border-sky-700/60 shadow-2xs">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -601,16 +568,10 @@ export default function RequestAdvising() {
                             <p className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate">
                               {advisor.name}
                             </p>
-                            {isAssignedAdvisor ? (
-                              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800/60">
-                                <CheckCircle2 className="h-3 w-3 text-emerald-500" />
-                                {t('อาจารย์ที่ปรึกษาประจำตัว', 'Assigned Advisor')}
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/80 px-2 py-0.5 rounded-full border border-sky-200 dark:border-sky-800/60">
-                                {t('อาจารย์ประจำสาขา', 'Faculty Advisor')}
-                              </span>
-                            )}
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800/60">
+                              <CheckCircle2 className="h-3 w-3 text-emerald-500" />
+                              {t('อาจารย์ที่ปรึกษาประจำตัว', 'Assigned Advisor')}
+                            </span>
                           </div>
                           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">
                             {advisor.email || advisor.department || 'School of Applied Digital Technology (ADT)'}
@@ -619,17 +580,8 @@ export default function RequestAdvising() {
                         </div>
                       </div>
 
-                      {/* Right: Actions (Change Advisor + Calendar) */}
+                      {/* Right: Calendar */}
                       <div className="flex items-center gap-2 flex-shrink-0 self-start sm:self-auto">
-                        <button
-                          type="button"
-                          onClick={() => setIsAdvisorDropdownOpen(prev => !prev)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold transition-all cursor-pointer shadow-2xs"
-                        >
-                          <span>{t('สลับอาจารย์', 'Switch Advisor')}</span>
-                          <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${isAdvisorDropdownOpen ? 'rotate-180 text-sky-500' : 'text-slate-400'}`} />
-                        </button>
-
                         {advisor.email && (
                           <button
                             type="button"
@@ -648,110 +600,11 @@ export default function RequestAdvising() {
                   <div className="p-4 rounded-xl border border-amber-200 dark:border-amber-900/60 bg-amber-50/60 dark:bg-amber-950/30 text-xs text-amber-800 dark:text-amber-200 flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2">
                       <AlertTriangle className="h-4 w-4 text-amber-600 flex-shrink-0" />
-                      <span>{t('ยังไม่ได้เลือกอาจารย์ที่ปรึกษา', 'No advisor currently selected.')}</span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setIsAdvisorDropdownOpen(prev => !prev)}
-                      className="px-3 py-1 rounded-lg bg-amber-600 text-white font-semibold text-xs cursor-pointer"
-                    >
-                      {t('เลือกอาจารย์', 'Select Advisor')}
-                    </button>
-                  </div>
-                )}
-
-                {/* Floating Custom Dropdown Menu */}
-                {isAdvisorDropdownOpen && (
-                  <div className="absolute top-full left-0 right-0 mt-2 z-30 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden animate-[fadeIn_0.15s_ease-out]">
-                    <div className="p-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/90">
-                      <div className="relative">
-                        <Search className="h-3.5 w-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                        <input
-                          type="text"
-                          value={advisorSearch}
-                          onChange={e => setAdvisorSearch(e.target.value)}
-                          placeholder={t('ค้นหาชื่อหรือสาขาวิชาอาจารย์...', 'Search advisor by name or department...')}
-                          className="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/30"
-                          autoFocus
-                        />
-                      </div>
-                    </div>
-
-                    <div className="max-h-64 overflow-y-auto p-1.5 space-y-1 divide-y divide-slate-100 dark:divide-slate-800/60">
-                      {/* Assigned Advisor Pin Item */}
-                      {assignedAdvisor && (!advisorSearch || assignedAdvisor.name.toLowerCase().includes(advisorSearch.toLowerCase())) && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSelectedAdvisorId(assignedAdvisor.id)
-                            setIsAdvisorDropdownOpen(false)
-                            setAdvisorSearch('')
-                          }}
-                          className={`w-full flex items-center justify-between p-2.5 rounded-xl text-left text-xs transition-all cursor-pointer ${
-                            advisor?.id === assignedAdvisor.id
-                              ? 'bg-sky-50/80 dark:bg-sky-950/60 text-sky-900 dark:text-sky-100 border border-sky-200/80 dark:border-sky-800/60'
-                              : 'hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            <div className="h-8 w-8 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 flex items-center justify-center font-bold text-xs flex-shrink-0">
-                              <User className="h-4 w-4" />
-                            </div>
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-1.5 flex-wrap">
-                                <span className="font-bold text-slate-900 dark:text-slate-100 truncate">{assignedAdvisor.name}</span>
-                                <span className="text-[9px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950 px-1.5 py-0.2 rounded border border-emerald-200 dark:border-emerald-800">
-                                  {t('อาจารย์ที่ปรึกษาประจำตัว', 'Assigned Advisor')}
-                                </span>
-                              </div>
-                              <p className="text-[11px] text-slate-400 truncate mt-0.5">{assignedAdvisor.department || assignedAdvisor.email}</p>
-                            </div>
-                          </div>
-                          {advisor?.id === assignedAdvisor.id && <Check className="h-4 w-4 text-sky-600 dark:text-sky-400 flex-shrink-0 ml-2" />}
-                        </button>
-                      )}
-
-                      {/* Other Faculty Advisors */}
-                      {availableAdvisors
-                        .filter(u => u.id !== assignedAdvisor?.id)
-                        .filter(u => {
-                          if (!advisorSearch.trim()) return true
-                          const q = advisorSearch.toLowerCase()
-                          return u.name.toLowerCase().includes(q) || (u.department && u.department.toLowerCase().includes(q)) || (u.email && u.email.toLowerCase().includes(q))
-                        })
-                        .map(u => {
-                          const isSelected = advisor?.id === u.id
-                          return (
-                            <button
-                              key={u.id}
-                              type="button"
-                              onClick={() => {
-                                setSelectedAdvisorId(u.id)
-                                setIsAdvisorDropdownOpen(false)
-                                setAdvisorSearch('')
-                              }}
-                              className={`w-full flex items-center justify-between p-2.5 rounded-xl text-left text-xs transition-all cursor-pointer ${
-                                isSelected
-                                  ? 'bg-sky-50/80 dark:bg-sky-950/60 text-sky-900 dark:text-sky-100 border border-sky-200/80 dark:border-sky-800/60'
-                                  : 'hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200'
-                              }`}
-                            >
-                              <div className="flex items-center gap-2.5 min-w-0">
-                                <div className="h-8 w-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center font-bold text-xs flex-shrink-0">
-                                  <User className="h-4 w-4" />
-                                </div>
-                                <div className="min-w-0">
-                                  <p className="font-bold text-slate-900 dark:text-slate-100 truncate">{u.name}</p>
-                                  <p className="text-[11px] text-slate-400 truncate mt-0.5">{u.department || u.email}</p>
-                                </div>
-                              </div>
-                              {isSelected && <Check className="h-4 w-4 text-sky-600 dark:text-sky-400 flex-shrink-0 ml-2" />}
-                            </button>
-                          )
-                        })}
+                      <span>{t('ยังไม่มีอาจารย์ที่ปรึกษาประจำตัว กรุณาติดต่อสำนักวิชาเพื่อจัดสรรอาจารย์ที่ปรึกษา', 'You have no assigned advisor yet. Please contact your school to be assigned one.')}</span>
                     </div>
                   </div>
                 )}
+
               </div>
 
               {/* Hidden native select for accessibility & automation testing */}
@@ -761,17 +614,12 @@ export default function RequestAdvising() {
                 tabIndex={-1}
                 aria-label={t('อาจารย์ผู้รับคำร้อง / นัดหมายเข้าพบ', 'Select Advising Faculty / Advisor')}
                 value={advisor?.id || ''}
-                onChange={e => setSelectedAdvisorId(e.target.value)}
+                onChange={() => {}}
                 className="sr-only"
               >
                 {assignedAdvisor && (
                   <option value={assignedAdvisor.id}>{assignedAdvisor.name}</option>
                 )}
-                {availableAdvisors
-                  .filter(u => u.id !== assignedAdvisor?.id)
-                  .map(u => (
-                    <option key={u.id} value={u.id}>{u.name}</option>
-                  ))}
               </select>
             </div>
 

@@ -3,7 +3,7 @@
 // Backend data with fixtures restricted to automated tests
 // ============================================================
 
-import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react'
+import { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from 'react'
 import api, { getSessionToken, onSessionChange } from '@/services/apiClient'
 import type {
   AdvisingRequest,
@@ -12,7 +12,6 @@ import type {
   AdvisingSession,
   FollowUp,
   FollowUpProgress,
-  Referral,
   Notification,
   EarlyWarningCase,
   EarlyWarningFollowUp,
@@ -38,7 +37,6 @@ import {
   mockSessions,
   mockFollowUps,
   mockFollowUpProgress,
-  mockReferrals,
   mockNotifications,
   mockEarlyWarnings,
   mockEarlyWarningFollowUps,
@@ -85,7 +83,6 @@ interface StoreState {
   appointments: Appointment[]
   sessions: AdvisingSession[]
   followUps: FollowUp[]
-  referrals: Referral[]
   notifications: Notification[]
   earlyWarnings: EarlyWarningCase[]
   earlyWarningFollowUps: EarlyWarningFollowUp[]
@@ -127,10 +124,6 @@ interface StoreActions {
   // Request Progress
   addRequestProgress: (rp: Omit<RequestProgress, 'id' | 'createdAt'>) => RequestProgress
   updateRequestProgress: (id: string, progress: number, notes: string) => void
-
-  // Referrals
-  addReferral: (ref: Omit<Referral, 'id' | 'createdAt'>) => Referral
-  updateReferralStatus: (id: string, status: Referral['status']) => void
 
   // Notifications
   addNotification: (n: Omit<Notification, 'id' | 'createdAt'>) => void
@@ -217,7 +210,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [appointments, setAppointments] = useState<Appointment[]>(() => isTestEnv() ? [...mockAppointments] : [])
   const [sessions, setSessions] = useState<AdvisingSession[]>(() => isTestEnv() ? [...mockSessions] : [])
   const [followUps, setFollowUps] = useState<FollowUp[]>(() => isTestEnv() ? [...mockFollowUps] : [])
-  const [referrals, setReferrals] = useState<Referral[]>(() => isTestEnv() ? [...mockReferrals] : [])
   const [notifications, setNotifications] = useState<Notification[]>(() => isTestEnv() ? [...mockNotifications] : [])
   const [earlyWarnings, setEarlyWarnings] = useState<EarlyWarningCase[]>(() => isTestEnv() ? [...mockEarlyWarnings] : [])
   const [earlyWarningFollowUps, setEarlyWarningFollowUps] = useState<EarlyWarningFollowUp[]>(() => isTestEnv() ? [...mockEarlyWarningFollowUps] : [])
@@ -377,7 +369,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       }
       if (aRes && Array.isArray(aRes.logs)) setAuditLogs(aRes.logs)
       if (kRes && Array.isArray(kRes.keys)) setAiKeys(kRes.keys)
-      if (ewRes && Array.isArray(ewRes.earlyWarnings)) setEarlyWarnings(ewRes.earlyWarnings)
+      if (ewRes && Array.isArray(ewRes.earlyWarnings)) {
+        setEarlyWarnings(ewRes.earlyWarnings)
+        // Follow-ups are stored with each warning on the server
+        setEarlyWarningFollowUps(ewRes.earlyWarnings.flatMap(w =>
+          (w.followUps || []).map(f => ({ ...f, warningId: w.id }))
+        ))
+      }
       if (docRes && Array.isArray(docRes.documents)) setDocuments(docRes.documents)
       if (catRes && Array.isArray(catRes.categories)) setCategoryConfigs(catRes.categories)
       if (dtRes && Array.isArray(dtRes.documentTypes)) setDocumentTypes(dtRes.documentTypes)
@@ -503,16 +501,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setRequestProgress(prev => prev.map(rp => rp.id === id ? { ...rp, progress, notes } : rp))
   }, [])
 
-  const addReferral = useCallback((ref: Omit<Referral, 'id' | 'createdAt'>): Referral => {
-    const newRef: Referral = { ...ref, id: nextId('REF'), createdAt: now() }
-    setReferrals(prev => [newRef, ...prev])
-    return newRef
-  }, [])
-
-  const updateReferralStatus = useCallback((id: string, status: Referral['status']) => {
-    setReferrals(prev => prev.map(r => r.id === id ? { ...r, status } : r))
-  }, [])
-
   const addNotification = useCallback((n: Omit<Notification, 'id' | 'createdAt'>) => {
     const optimistic: Notification = { ...n, id: nextId('NOT'), createdAt: now() }
     setNotifications(prev => [optimistic, ...prev])
@@ -550,19 +538,38 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return newEw
   }, [])
 
-  const updateEarlyWarningStatus = useCallback((id: string, status: EarlyWarningCase['status']) => {
-    setEarlyWarnings(prev => prev.map(e => e.id === id ? { ...e, status } : e))
+  // Latest warnings/follow-ups, so a change can save the whole warning (follow-ups are stored with it)
+  const earlyWarningsRef = useRef(earlyWarnings)
+  const earlyWarningFollowUpsRef = useRef(earlyWarningFollowUps)
+  earlyWarningsRef.current = earlyWarnings
+  earlyWarningFollowUpsRef.current = earlyWarningFollowUps
+
+  const saveWarningWithFollowUps = useCallback((warning: EarlyWarningCase | undefined, followUps: EarlyWarningFollowUp[]) => {
+    if (!warning) return
+    const { followUps: _old, referrals: _summary, ...fields } = warning
+    api.saveEarlyWarning({ ...fields, followUps: followUps.filter(f => f.warningId === warning.id) }).catch(() => {})
   }, [])
+
+  const updateEarlyWarningStatus = useCallback((id: string, status: EarlyWarningCase['status']) => {
+    const warning = earlyWarningsRef.current.find(e => e.id === id)
+    setEarlyWarnings(prev => prev.map(e => e.id === id ? { ...e, status } : e))
+    if (warning) saveWarningWithFollowUps({ ...warning, status }, earlyWarningFollowUpsRef.current)
+  }, [saveWarningWithFollowUps])
 
   const addEarlyWarningFollowUp = useCallback((fw: Omit<EarlyWarningFollowUp, 'id' | 'createdAt'>): EarlyWarningFollowUp => {
     const newFw: EarlyWarningFollowUp = { ...fw, id: nextId('EWF'), createdAt: now() }
-    setEarlyWarningFollowUps(prev => [newFw, ...prev])
+    const followUps = [newFw, ...earlyWarningFollowUpsRef.current]
+    setEarlyWarningFollowUps(followUps)
+    saveWarningWithFollowUps(earlyWarningsRef.current.find(e => e.id === fw.warningId), followUps)
     return newFw
-  }, [])
+  }, [saveWarningWithFollowUps])
 
   const updateEarlyWarningFollowUpStatus = useCallback((id: string, status: EarlyWarningFollowUp['status']) => {
-    setEarlyWarningFollowUps(prev => prev.map(f => f.id === id ? { ...f, status } : f))
-  }, [])
+    const followUps = earlyWarningFollowUpsRef.current.map(f => f.id === id ? { ...f, status } : f)
+    setEarlyWarningFollowUps(followUps)
+    const changed = followUps.find(f => f.id === id)
+    if (changed) saveWarningWithFollowUps(earlyWarningsRef.current.find(e => e.id === changed.warningId), followUps)
+  }, [saveWarningWithFollowUps])
 
   const addExitCase = useCallback((ec: Omit<ExitCase, 'id' | 'createdAt' | 'updatedAt'>): ExitCase => {
     const newEc: ExitCase = {
@@ -1133,7 +1140,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const store: Store = {
     backendStatus, refreshBackend,
-    users, roster, requests, appointments, sessions, followUps, referrals,
+    users, roster, requests, appointments, sessions, followUps,
     notifications, earlyWarnings, earlyWarningFollowUps, followUpProgress, requestProgress, exitCases, advisorAssessments, studentVoiceResponses, completedVoiceStudents, documents,
     categoryConfigs, documentTypes, auditLogs, systemApiConfig, aiKeys,
     addRequest, updateRequestStatus,
@@ -1143,7 +1150,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     addFollowUp, updateFollowUpStatus,
     addFollowUpProgress, updateFollowUpProgress,
     addRequestProgress, updateRequestProgress,
-    addReferral, updateReferralStatus,
     addNotification, markNotificationRead, markAllNotificationsRead, hydrateNotifications,
     addEarlyWarning, updateEarlyWarningStatus,
     addEarlyWarningFollowUp, updateEarlyWarningFollowUpStatus,
