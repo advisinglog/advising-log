@@ -30,6 +30,7 @@ export default function AdvisorDashboard() {
   const [showImportCsv, setShowImportCsv] = useState(false)
   const [csvText, setCsvText] = useState('')
   const [csvRows, setCsvRows] = useState<Array<{ name: string; code: string }>>([])
+  const [csvImportMode, setCsvImportMode] = useState<'upsert' | 'replace'>('upsert')
   const [showAdviseeList, setShowAdviseeList] = useState(false)
   const [selectedStudentId, setSelectedStudentId] = useState('')
   const [studentSearch, setStudentSearch] = useState('')
@@ -82,6 +83,7 @@ export default function AdvisorDashboard() {
     let existingCount = 0
     let skippedCount = 0
     const seenCodes = new Set<string>()
+    const importedCodes = new Set(csvRows.map(row => row.code.trim().toLowerCase()))
 
     for (const row of csvRows) {
         const code = row.code.trim()
@@ -107,9 +109,24 @@ export default function AdvisorDashboard() {
           hasAiAccess: false,
         })
 
+        if (existingStudent && existingStudent.name !== row.name.trim()) {
+          store.updateUser(existingStudent.id, { name: row.name.trim() })
+        }
         if (existingStudent) existingCount++
         else addedCount++
         store.updateRosterEntry(student.id, currentUser!.id)
+    }
+
+    let removedCount = 0
+    if (csvImportMode === 'replace') {
+      for (const assignment of myAdvisees) {
+        const student = store.users.find(user => user.id === assignment.studentId)
+        const studentCode = student?.code?.toLowerCase()
+        if (studentCode && !importedCodes.has(studentCode)) {
+          store.deactivateRosterEntry(assignment.studentId, assignment.advisorId)
+          removedCount++
+        }
+      }
     }
 
     setShowImportCsv(false)
@@ -118,7 +135,10 @@ export default function AdvisorDashboard() {
     addToast(
       'success',
       t('นำเข้าและจับคู่นักศึกษาสำเร็จ', 'Students Imported and Assigned'),
-      t(`เพิ่มใหม่ ${addedCount} คน, มีอยู่แล้ว ${existingCount} คน, ข้ามรายการซ้ำ ${skippedCount} รายการ`, `${addedCount} added, ${existingCount} already registered, ${skippedCount} duplicates skipped.`)
+      t(
+        `${csvImportMode === 'replace' ? 'แทนที่รายชื่อแล้ว' : 'อัปเดต/เพิ่มแล้ว'} เพิ่มใหม่ ${addedCount} คน, มีอยู่แล้ว ${existingCount} คน, นำออก ${removedCount} คน, ข้ามรายการซ้ำ ${skippedCount} รายการ`,
+        `${csvImportMode === 'replace' ? 'Roster replaced.' : 'Roster updated.'} ${addedCount} added, ${existingCount} already registered, ${removedCount} removed, ${skippedCount} duplicates skipped.`
+      )
     )
     store.refreshBackend()
   }
@@ -368,6 +388,24 @@ export default function AdvisorDashboard() {
           <p className="text-xs text-slate-500 dark:text-slate-400">
             {t('ไฟล์ต้องมีคอลัมน์รหัสนักศึกษาและชื่อ เช่น รหัสนักศึกษา,ชื่อ หรือ student_code,name', 'CSV must contain student ID and name columns, for example student_code,name.')}
           </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => setCsvImportMode('upsert')}
+              className={`rounded-xl border p-3 text-left text-xs ${csvImportMode === 'upsert' ? 'border-sky-500 bg-sky-50 dark:bg-sky-950/30' : 'border-slate-200 dark:border-slate-700'}`}
+            >
+              <p className="font-bold text-slate-900 dark:text-slate-100">{t('อัปเดต / เพิ่มจากไฟล์', 'Update / Add from CSV')}</p>
+              <p className="mt-1 text-slate-500 dark:text-slate-400">{t('เพิ่มรายการใหม่และอัปเดตชื่อ โดยไม่ลบคนเดิม', 'Add new students and update names without removing existing advisees.')}</p>
+            </button>
+            <button
+              type="button"
+              onClick={() => setCsvImportMode('replace')}
+              className={`rounded-xl border p-3 text-left text-xs ${csvImportMode === 'replace' ? 'border-amber-500 bg-amber-50 dark:bg-amber-950/30' : 'border-slate-200 dark:border-slate-700'}`}
+            >
+              <p className="font-bold text-slate-900 dark:text-slate-100">{t('แทนที่รายชื่อทั้งหมด', 'Replace Entire Roster')}</p>
+              <p className="mt-1 text-slate-500 dark:text-slate-400">{t('รายชื่อที่ไม่อยู่ในไฟล์จะถูกนำออกจากความดูแลของคุณ', 'Students missing from the CSV will be removed from your advisee roster.')}</p>
+            </button>
+          </div>
           <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
             <Button size="sm" variant={csvRows.length === 0 ? 'primary' : 'secondary'} onClick={() => setCsvRows([])}>
               {t('1. นำเข้าข้อมูล', '1. Input Data')}
@@ -383,15 +421,26 @@ export default function AdvisorDashboard() {
             placeholder={'รหัสนักศึกษา,ชื่อ\n6631503001,สมชาย ใจดี'}
             className="w-full p-3 font-mono text-xs rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
           />
-          <div className="rounded-xl border border-dashed border-sky-300 dark:border-sky-700 bg-sky-50/60 dark:bg-sky-950/20 p-5 text-center">
-            <Upload className="h-7 w-7 mx-auto text-sky-600 dark:text-sky-400 mb-2" />
+          <div className="flex items-center justify-between gap-3 rounded-xl border border-dashed border-sky-300 dark:border-sky-700 bg-sky-50/60 dark:bg-sky-950/20 px-3 py-2.5">
+            <div className="flex min-w-0 items-center gap-2">
+              <Upload className="h-4 w-4 shrink-0 text-sky-600 dark:text-sky-400" />
+              <span className="truncate text-xs font-semibold text-slate-700 dark:text-slate-300">
+                {t('เลือกไฟล์ CSV จากเครื่อง', 'Choose a CSV file')}
+              </span>
+            </div>
             <input
               id="advisor-student-csv"
               type="file"
               accept=".csv,text/csv"
               onChange={handleImportCsvFile}
-              className="block w-full text-xs text-slate-600 dark:text-slate-300 file:mr-3 file:rounded-lg file:border-0 file:bg-sky-600 file:px-3 file:py-2 file:text-xs file:font-semibold file:text-white hover:file:bg-sky-700"
+              className="sr-only"
             />
+            <label
+              htmlFor="advisor-student-csv"
+              className="inline-flex shrink-0 cursor-pointer items-center rounded-lg bg-sky-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-sky-700"
+            >
+              {t('เลือกไฟล์', 'Choose file')}
+            </label>
           </div>
           {csvRows.length > 0 && (
             <div className="max-h-40 overflow-y-auto rounded-xl border border-slate-200 dark:border-slate-800">
@@ -404,7 +453,9 @@ export default function AdvisorDashboard() {
             </div>
           )}
           <p className="text-[11px] text-slate-400 dark:text-slate-500">
-            {t('นักศึกษาที่มีรหัสอยู่แล้วจะไม่สร้างซ้ำ แต่จะถูกจับคู่กับคุณใหม่', 'Existing student IDs will not be duplicated and will be assigned to you.')}
+            {csvImportMode === 'replace'
+              ? t('โหมดแทนที่จะนำออกเฉพาะนักศึกษาที่อยู่ในความดูแลของคุณและไม่มีในไฟล์นี้', 'Replace mode removes only your current advisees that are missing from this file.')
+              : t('นักศึกษาที่มีรหัสอยู่แล้วจะไม่สร้างซ้ำ ระบบจะอัปเดตชื่อและจับคู่กับคุณ', 'Existing student IDs are not duplicated; their name is updated and they are assigned to you.')}
           </p>
           <div className="flex justify-end gap-2 border-t border-slate-100 dark:border-slate-800 pt-3">
             <Button variant="secondary" onClick={() => setShowImportCsv(false)}>

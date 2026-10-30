@@ -166,6 +166,7 @@ interface StoreActions {
   // Roster
   addRosterEntry: (entry: Omit<StudentAdvisorAssignment, 'id' | 'assignedAt'>) => void
   updateRosterEntry: (studentId: string, newAdvisorId: string) => void
+  deactivateRosterEntry: (studentId: string, advisorId: string) => void
   batchImportRoster: (entries: RosterImportEntry[], mode: 'upsert' | 'replace') => RosterImportResult
 
   // System & API Configuration
@@ -695,6 +696,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const updateUser = useCallback((id: string, updates: Partial<User>) => {
     setUsers(prev => prev.map(u => u.id === id ? { ...u, ...updates } : u))
+    api.bulkSaveUsers([{ id, ...updates }]).catch(() => {})
   }, [])
 
   const deleteUser = useCallback(async (id: string): Promise<{ success: boolean; error?: string }> => {
@@ -733,6 +735,20 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       return [newEntry, ...filtered]
     })
     api.saveRosterEntry(entryData).catch(() => {})
+  }, [])
+
+  const deactivateRosterEntry = useCallback((studentId: string, advisorId: string) => {
+    setRoster(prev => prev.map(entry =>
+      entry.studentId === studentId && entry.advisorId === advisorId && entry.isActive
+        ? { ...entry, isActive: false }
+        : entry
+    ))
+    api.saveRosterEntry({
+      studentId,
+      advisorId,
+      assignedAt: now(),
+      isActive: false,
+    }).catch(() => {})
   }, [])
 
   const addCategory = useCallback((cat: Omit<AdvisingCategoryConfig, 'id'>) => {
@@ -1093,7 +1109,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     addStudentVoiceResponse, markVoiceSurveyCompleted,
     addDocument, updateDocument, updateDocumentStatus, deleteDocument,
     addUser, bulkAddUsers, updateUser, deleteUser,
-    addRosterEntry, updateRosterEntry, batchImportRoster,
+    addRosterEntry, updateRosterEntry, deactivateRosterEntry, batchImportRoster,
     toggleAiApi, toggleUserAiAccess,
     addAiKey, setDefaultAiKey, deleteAiKey, refreshAiKeys,
     addCategory, updateCategory, deleteCategory,
