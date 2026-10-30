@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, act } from '@testing-library/react'
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
-import { StoreProvider } from '@/data/mock-store'
+import { StoreProvider } from '@/data/store'
 import { ToastProvider } from '@/contexts/ToastContext'
 import { LanguageProvider } from '@/contexts/LanguageContext'
 import { ThemeProvider } from '@/contexts/ThemeContext'

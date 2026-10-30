@@ -3,7 +3,7 @@
 // ============================================================
 
 import { useParams, useNavigate } from 'react-router-dom'
-import { useStore } from '@/data/mock-store'
+import { useStore } from '@/data/store'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { PageHeader, Card, StatusBadge, EmptyState, GoogleCalendarButton, DocumentViewerModal, type DocumentViewerTarget } from '@/components/ui'

@@ -54,8 +54,11 @@ import {
 } from '@/test/fixtures'
 
 import { getLocalDateString } from '@/utils/dateUtils'
+import { getSuperAdminEmail } from '@/utils/adminContact'
 
 const isTestEnv = () => import.meta.env?.MODE === 'test'
+
+const CLIENT_ONLY_AUDIT_ACTIONS = new Set<AuditLog['action']>(['qa_exported_data', 'qa_viewed_case', 'ai_analysis_run', 'document_signed'])
 
 // --- Helper: generate simple IDs ---
 let counter = 1000
@@ -230,8 +233,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [aiKeys, setAiKeys] = useState<AiApiKey[]>([])
   const [systemApiConfig, setSystemApiConfig] = useState<SystemApiConfig>({
     isAiApiEnabled: true,
-    provider: 'Google Gemini 1.5 Flash',
-    model: 'gemini-1.5-flash',
+    provider: 'Google Gemini',
+    model: 'gemini-2.5-flash',
     lastToggledAt: new Date().toISOString(),
     lastToggledBy: 'Admin (System)',
     notes: 'Active for Higher Ed QA retention analysis',
@@ -273,7 +276,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         && Array.isArray(catRes?.categories) && Array.isArray(dtRes?.documentTypes)
       setBackendStatus(coreDataLoaded ? 'ready' : 'error')
       if (uRes && Array.isArray(uRes.users)) {
-        const superAdminEmail = ((import.meta.env.VITE_SUPER_ADMIN_EMAIL as string) || 'se.advisinglog@gmail.com').toLowerCase().trim()
+        const superAdminEmail = getSuperAdminEmail()
         const normalizedUsers = uRes.users.map(u => {
           if (u.email?.toLowerCase().trim() === superAdminEmail || u.code === 'ADM-SUPER') {
             const isOldName = !u.name || u.name.includes('System Admin') || u.name.includes('SE AdvisingLog') || u.name.includes('System Super Admin')
@@ -810,6 +813,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const addAuditLog = useCallback((log: Omit<AuditLog, 'id' | 'createdAt'>) => {
     setAuditLogs(prev => [{ ...log, id: nextId('AL'), createdAt: new Date().toISOString() }, ...prev])
+    // Changes to records are audited by the server itself; events the server cannot see
+    // (exports, case views, AI runs) are saved here. The server sets user, time and IP.
+    if (CLIENT_ONLY_AUDIT_ACTIONS.has(log.action) && !isTestEnv()) {
+      api.logAudit({ action: log.action, description: log.description, targetId: log.targetId }).catch(() => {})
+    }
   }, [])
 
   const toggleAiApi = useCallback((enabled: boolean, adminName: string = 'Admin') => {
@@ -1069,7 +1077,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             maskedKey: masked,
             isDefault: makeDefault,
             provider: 'Google Gemini',
-            model: 'gemini-1.5-flash',
+            model: 'gemini-2.5-flash',
             status: 'active' as const,
             createdAt: now(),
             lastTestedAt: null,

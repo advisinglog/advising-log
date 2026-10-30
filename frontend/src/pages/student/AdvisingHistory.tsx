@@ -3,7 +3,7 @@
 // ============================================================
 
 import { useAuth } from '@/contexts/AuthContext'
-import { useStore } from '@/data/mock-store'
+import { useStore } from '@/data/store'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useNavigate } from 'react-router-dom'
 import { PageHeader, DataTable, StatusBadge, SearchInput, Button } from '@/components/ui'

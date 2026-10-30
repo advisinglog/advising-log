@@ -10,5 +10,21 @@
       "database_id": "ec3feeae-c53d-4b95-adea-864612f94eb6",
       "migrations_dir": "drizzle/migrations"
     }
+  ],
+  // Spam protection (Workers Rate Limiting). Limits are per Cloudflare location and approximate.
+  // namespace_id must be unique within the Cloudflare account.
+  "ratelimits": [
+    {
+      // Signed-in users, keyed by user id (campus Wi-Fi shares one IP, so not by IP)
+      "name": "USER_RATE_LIMITER",
+      "namespace_id": "1001",
+      "simple": { "limit": 600, "period": 60 }
+    },
+    {
+      // Requests without a valid session (incl. sign-in), keyed by IP
+      "name": "ANON_RATE_LIMITER",
+      "namespace_id": "1002",
+      "simple": { "limit": 100, "period": 60 }
+    }
   ]
 }

@@ -263,3 +263,61 @@ describe('Authentication & authorization', () => {
     })
   })
 })
+
+describe('Audit trail', () => {
+  it('names every change with a meaningful audit action', async () => {
+    const { auditActionFor } = await import('./index')
+    expect(auditActionFor('POST', '/api/requests')).toBe('request_created')
+    expect(auditActionFor('PATCH', '/api/requests/REQ1/status')).toBe('request_updated')
+    expect(auditActionFor('POST', '/api/sessions')).toBe('log_created')
+    expect(auditActionFor('DELETE', '/api/documents/DOC1')).toBe('document_deleted')
+    expect(auditActionFor('POST', '/api/users/bulk')).toBe('users_imported')
+    expect(auditActionFor('DELETE', '/api/ai/keys/K1')).toBe('ai_key_changed')
+    expect(auditActionFor('PUT', '/api/categories/C1')).toBe('category_updated')
+  })
+
+  it('records the affected record id from the path or the created object', async () => {
+    const { auditTargetId } = await import('./index')
+    expect(auditTargetId('/api/requests/REQ1/status', null)).toBe('REQ1')
+    expect(auditTargetId('/api/requests', { success: true, request: { id: 'REQ9' } })).toBe('REQ9')
+    expect(auditTargetId('/api/users/bulk', { count: 2 })).toBeNull()
+  })
+})
+
+describe('Rate limiting', () => {
+  const limiter = (allow: boolean | 'throw') => ({
+    limit: vi.fn(async () => {
+      if (allow === 'throw') throw new Error('limiter down')
+      return { success: allow }
+    }),
+  })
+
+  it('blocks anonymous spam per IP with 429 before any other work', async () => {
+    const anon = limiter(false)
+    const res = await app.request('/api/users', { headers: { 'cf-connecting-ip': '203.0.113.9' } }, { ...ENV, ANON_RATE_LIMITER: anon })
+    expect(res.status).toBe(429)
+    expect(res.headers.get('retry-after')).toBe('60')
+    expect(anon.limit).toHaveBeenCalledWith({ key: 'ip:203.0.113.9' })
+  })
+
+  it('limits signed-in users per user id, not per shared campus IP', async () => {
+    const user = limiter(false)
+    const token = await tokenFor('advisor')
+    const res = await app.request('/api/requests', { headers: { Authorization: `Bearer ${token}` } }, { ...ENV, USER_RATE_LIMITER: user })
+    expect(res.status).toBe(429)
+    expect(user.limit).toHaveBeenCalledWith({ key: 'user:USER_advisor' })
+  })
+
+  it('rate-limits sign-in attempts per IP', async () => {
+    const res = await app.request('/api/auth/google', { method: 'POST', body: '{}' }, { ...ENV, ANON_RATE_LIMITER: limiter(false) })
+    expect(res.status).toBe(429)
+  })
+
+  it('lets requests through when within the limit or if the limiter fails', async () => {
+    const token = await tokenFor('advisor')
+    for (const l of [limiter(true), limiter('throw')]) {
+      const res = await app.request('/api/requests', { headers: { Authorization: `Bearer ${token}` } }, { ...ENV, USER_RATE_LIMITER: l })
+      expect(res.status).toBe(200)
+    }
+  })
+})

@@ -5,7 +5,7 @@ import BackendDataStatus from '@/components/BackendDataStatus'
 
 import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
-import { useStore } from '@/data/mock-store'
+import { useStore } from '@/data/store'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useTheme } from '@/contexts/ThemeContext'
 import { PageHeader, Card, Button, UserAvatar } from '@/components/ui'

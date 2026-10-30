@@ -25,6 +25,13 @@ export type Bindings = {
   SESSION_SECRET?: string
   /** Comma-separated frontend origins allowed to call the API */
   ALLOWED_ORIGINS?: string
+  /** Workers Rate Limiting bindings (wrangler.jsonc "ratelimits"); absent in unit tests */
+  USER_RATE_LIMITER?: RateLimiter
+  ANON_RATE_LIMITER?: RateLimiter
+}
+
+interface RateLimiter {
+  limit(options: { key: string }): Promise<{ success: boolean }>
 }
 
 export interface AuthContext {
@@ -55,6 +62,11 @@ app.use('*', async (c, next) => {
   })(c, next)
 })
 
+/** The configured super admin's email (normalized). Only this account holds super_admin. */
+function superAdminEmail(c: any): string {
+  return (c.env?.SUPER_ADMIN_EMAIL || 'se.advisinglog@gmail.com').toLowerCase().trim()
+}
+
 const PUBLIC_PATHS = new Set(['/', '/api/health', '/api/info', '/api/auth/google'])
 
 function clientIp(c: any): string {
@@ -83,11 +95,40 @@ async function writeAudit(c: any, entry: {
   } catch {}
 }
 
+/** True if the request is within the limit (or no limiter is configured) */
+async function withinLimit(limiter: RateLimiter | undefined, key: string): Promise<boolean> {
+  if (!limiter) return true
+  try {
+    return (await limiter.limit({ key })).success
+  } catch {
+    return true // never lock users out because the limiter itself failed
+  }
+}
+
+const tooManyRequests = (c: any) => c.json({ success: false, error: 'RATE_LIMITED', message: 'Too many requests. Please wait a minute and try again.' }, 429, { 'Retry-After': '60' })
+
+// Unauthenticated denials write at most one audit row per IP per minute, so spam
+// cannot exhaust the database write quota while still leaving a trail
+const lastAnonDenialLogged = new Map<string, number>()
+
 // Every /api route except the public ones requires a valid session and an allowed role
 app.use('/api/*', async (c, next) => {
-  if (c.req.method === 'OPTIONS' || PUBLIC_PATHS.has(c.req.path)) return next()
+  if (c.req.method === 'OPTIONS') return next()
+  if (PUBLIC_PATHS.has(c.req.path)) {
+    // Sign-in calls Google and writes audit rows: limit it per IP
+    if (c.req.path === '/api/auth/google' && !(await withinLimit(c.env?.ANON_RATE_LIMITER, `ip:${clientIp(c)}`))) {
+      return tooManyRequests(c)
+    }
+    return next()
+  }
 
   const deny = async (status: 401 | 403, error: string, auth?: Partial<AuthContext>) => {
+    if (!auth?.userId) {
+      const ip = clientIp(c)
+      const now = Date.now()
+      if ((lastAnonDenialLogged.get(ip) || 0) + 60_000 > now) return c.json({ success: false, error }, status)
+      lastAnonDenialLogged.set(ip, now)
+    }
     await writeAudit(c, {
       userId: auth?.userId || 'anonymous',
       userName: auth?.name || 'anonymous',
@@ -105,7 +146,11 @@ app.use('/api/*', async (c, next) => {
   const header = c.req.header('authorization') || ''
   const token = header.startsWith('Bearer ') ? header.slice(7) : ''
   const claims = token ? await verifySession(token, secret) : null
-  if (!claims) return deny(401, 'UNAUTHENTICATED')
+  if (!claims) {
+    if (!(await withinLimit(c.env?.ANON_RATE_LIMITER, `ip:${clientIp(c)}`))) return tooManyRequests(c)
+    return deny(401, 'UNAUTHENTICATED')
+  }
+  if (!(await withinLimit(c.env?.USER_RATE_LIMITER, `user:${claims.sub}`))) return tooManyRequests(c)
 
   // Re-check the account on every request so deactivation and role changes apply immediately
   let baseRole = claims.role
@@ -130,6 +175,58 @@ app.use('/api/*', async (c, next) => {
   c.set('auth', auth)
   return next()
 })
+
+// ---------------------------------------------------------------
+// Audit trail for every change (Computer Crime Act §26): logged by the server,
+// so it cannot be skipped or spoofed by the client
+// ---------------------------------------------------------------
+const AUDIT_ACTIONS: Array<[method: string, path: RegExp, action: string]> = [
+  ['POST', /^\/api\/requests$/, 'request_created'],
+  ['PATCH', /^\/api\/requests\/[^/]+\/status$/, 'request_updated'],
+  ['DELETE', /^\/api\/requests\/[^/]+$/, 'request_deleted'],
+  ['POST', /^\/api\/appointments$/, 'appointment_scheduled'],
+  ['PATCH', /^\/api\/appointments\/[^/]+\/status$/, 'appointment_updated'],
+  ['POST', /^\/api\/sessions$/, 'log_created'],
+  ['POST', /^\/api\/follow-ups$/, 'followup_created'],
+  ['PATCH', /^\/api\/follow-ups\/[^/]+\/status$/, 'followup_updated'],
+  ['POST', /^\/api\/follow-up-progress$/, 'followup_progress_added'],
+  ['POST', /^\/api\/exit-cases$/, 'exit_case_created'],
+  ['PATCH', /^\/api\/exit-cases\/[^/]+$/, 'exit_case_updated'],
+  ['POST', /^\/api\/student-voice$/, 'student_voice_submitted'],
+  ['POST', /^\/api\/early-warnings$/, 'warning_created'],
+  ['POST', /^\/api\/documents$/, 'document_uploaded'],
+  ['DELETE', /^\/api\/documents\/[^/]+$/, 'document_deleted'],
+  ['POST', /^\/api\/users$/, 'user_saved'],
+  ['POST', /^\/api\/users\/bulk$/, 'users_imported'],
+  ['PATCH', /^\/api\/users\/[^/]+$/, 'user_updated'],
+  ['DELETE', /^\/api\/users\/[^/]+$/, 'user_deleted'],
+  ['POST', /^\/api\/roster$/, 'roster_updated'],
+  ['POST', /^\/api\/qa\/ai-analyze$/, 'ai_analysis_run'],
+]
+
+export function auditActionFor(method: string, path: string): string {
+  for (const [m, re, action] of AUDIT_ACTIONS) if (m === method && re.test(path)) return action
+  if (path.startsWith('/api/ai/keys')) return 'ai_key_changed'
+  if (path.startsWith('/api/categories')) return 'category_updated'
+  if (path.startsWith('/api/document-types')) return 'document_type_updated'
+  return 'record_changed'
+}
+
+/** Record id from the path (/api/x/:id/...) or from the created object in the response */
+export function auditTargetId(path: string, body: any): string | null {
+  const seg = path.split('/')[3]
+  if (seg && seg !== 'bulk') return seg
+  if (body && typeof body === 'object') {
+    if (typeof body.id === 'string') return body.id
+    for (const v of Object.values(body)) if (v && typeof v === 'object' && typeof (v as any).id === 'string') return (v as any).id
+  }
+  return null
+}
+
+// Reads of advising records are logged at most once per user, list and role every 10 minutes:
+// logging every refresh would exhaust the database write quota (lists reload often).
+const READ_LOG_INTERVAL_MS = 10 * 60_000
+const lastReadLogged = new Map<string, number>()
 
 // ---------------------------------------------------------------
 // Record-level scoping (phase 2): every read returns only what the viewer may see
@@ -202,6 +299,17 @@ app.use('/api/*', async (c, next) => {
   // Roster / user / exit-case changes alter who may see what: drop cached lookups
   if (c.req.method !== 'GET' && /^\/api\/(roster|users|exit-cases)/.test(c.req.path)) scopeCache.clear()
 
+  // Every change by a signed-in user is audited with its result (audit-log appends are not re-logged)
+  if (auth && c.req.method !== 'GET' && c.req.path !== '/api/audit-logs') {
+    const resBody = await c.res.clone().json().catch(() => null)
+    await writeAudit(c, {
+      userId: auth.userId, userName: auth.name, userRole: auth.role,
+      action: auditActionFor(c.req.method, c.req.path),
+      description: `${c.req.method} ${c.req.path} → ${c.res.status} ${c.res.ok ? 'success' : 'failed'}`,
+      targetId: auditTargetId(c.req.path, resBody),
+    })
+  }
+
   if (!auth || !route || c.res.status !== 200) return
   if (!(c.res.headers.get('content-type') || '').includes('application/json')) return
 
@@ -211,6 +319,20 @@ app.use('/api/*', async (c, next) => {
   c.res = scoped === null
     ? c.json({ error: 'User not found' }, 404)
     : c.json(scoped, 200)
+
+  // Reads of advising records (throttled, see READ_LOG_INTERVAL_MS)
+  if (route.kind !== 'users' && route.kind !== 'user' && route.kind !== 'roster' && auth.role !== 'qa_chair') {
+    const key = `${auth.userId}|${auth.role}|${c.req.path}`
+    const now = Date.now()
+    if ((lastReadLogged.get(key) || 0) + READ_LOG_INTERVAL_MS < now) {
+      lastReadLogged.set(key, now)
+      const count = Array.isArray(scoped?.[route.key]) ? scoped[route.key].length : 0
+      await writeAudit(c, {
+        userId: auth.userId, userName: auth.name, userRole: auth.role, action: 'records_viewed',
+        description: `Viewed ${count} ${route.key} (GET ${c.req.path})`,
+      })
+    }
+  }
 
   // QA case-level access to exit cases / student voice is permitted but always logged (C8)
   if (auth.role === 'qa_chair' && (route.kind === 'exit' || route.kind === 'voice')) {
@@ -256,7 +378,7 @@ app.get('/api/info', (c) => {
       platform: 'Cloudflare Workers',
       database: 'Cloudflare D1',
       orm: 'Drizzle ORM',
-      aiProvider: 'Google Gemini 1.5 Flash',
+      aiProvider: 'Google Gemini',
     },
   })
 })
@@ -298,8 +420,8 @@ app.post('/api/auth/google', async (c) => {
 
     const lowerEmail = email
     const codePrefix = lowerEmail.split('@')[0].toUpperCase()
-    const superAdminEmail = (c.env?.SUPER_ADMIN_EMAIL || 'se.advisinglog@gmail.com').toLowerCase().trim()
-    const isAuthorizedSuperAdmin = lowerEmail === superAdminEmail
+    const superEmail = superAdminEmail(c)
+    const isAuthorizedSuperAdmin = lowerEmail === superEmail
 
     const isMfuDomain =
       lowerEmail.endsWith('@mfu.ac.th') ||
@@ -452,14 +574,14 @@ app.get('/api/users', async (c) => {
   const database = db(c)
   if (!database) return c.json({ error: 'Database unavailable' }, 503)
   
-  const superAdminEmail = (c.env?.SUPER_ADMIN_EMAIL || 'se.advisinglog@gmail.com').toLowerCase().trim()
+  const superEmail = superAdminEmail(c)
   const role = c.req.query('role')
   const list = role
     ? await database.select().from(schema.users).where(eq(schema.users.role, role as any))
     : await database.select().from(schema.users)
 
   const normalized = list.map((u) => {
-    if (u.email?.toLowerCase().trim() === superAdminEmail || u.code === 'ADM-SUPER') {
+    if (u.email?.toLowerCase().trim() === superEmail || u.code === 'ADM-SUPER') {
       const isOldName = !u.name || u.name.includes('System Admin') || u.name.includes('SE AdvisingLog') || u.name.includes('System Super Admin')
       return {
         ...u,
@@ -507,12 +629,12 @@ app.post('/api/users', async (c) => {
     return c.json({ error: 'Email is required' }, 400)
   }
 
-  const superAdminEmail = (c.env?.SUPER_ADMIN_EMAIL || 'se.advisinglog@gmail.com').toLowerCase().trim()
+  const superEmail = superAdminEmail(c)
   const emailPrefix = cleanEmail.split('@')[0]
   const isStudent = /^\d/.test(emailPrefix) || cleanEmail.includes('@student.') || cleanEmail.includes('@lamduan.')
   const assignedRole = isStudent
     ? 'student'
-    : (cleanEmail === superAdminEmail ? 'super_admin' : (body.role === 'super_admin' ? 'admin' : (body.role || 'advisor')))
+    : (cleanEmail === superEmail ? 'super_admin' : (body.role === 'super_admin' ? 'admin' : (body.role || 'advisor')))
   const autoCode = body.code ? String(body.code).trim() : (isStudent ? emailPrefix : `STAFF_${Date.now().toString().slice(-4)}`)
   const derivedName = body.name?.trim() || deriveNameFromEmail(body.email)
 
@@ -555,7 +677,7 @@ app.post('/api/users/bulk', async (c) => {
 
   const body = await c.req.json<{ users: any[] }>()
   const userList = Array.isArray(body?.users) ? body.users : []
-  const superAdminEmail = (c.env?.SUPER_ADMIN_EMAIL || 'se.advisinglog@gmail.com').toLowerCase().trim()
+  const superEmail = superAdminEmail(c)
 
   const allUsers = await database.select().from(schema.users)
   const insertedUsers = []
@@ -568,7 +690,7 @@ app.post('/api/users/bulk', async (c) => {
     const isStudent = /^\d/.test(emailPrefix) || cleanEmail.includes('@student.') || cleanEmail.includes('@lamduan.')
     const assignedRole = isStudent
       ? 'student'
-      : (cleanEmail === superAdminEmail ? 'super_admin' : (item.role === 'super_admin' ? 'admin' : (item.role || 'advisor')))
+      : (cleanEmail === superEmail ? 'super_admin' : (item.role === 'super_admin' ? 'admin' : (item.role || 'advisor')))
 
     const autoCode = item.code ? String(item.code).trim() : (isStudent ? emailPrefix : `STAFF_${Date.now().toString().slice(-4)}`)
     const derivedName = item.name?.trim() || deriveNameFromEmail(item.email)
@@ -615,11 +737,11 @@ app.patch('/api/users/:id', async (c) => {
 
   // Protect Super Admin from being deactivated
   const targetUser = await database.select().from(schema.users).where(eq(schema.users.id, id)).get()
-  const superAdminEmail = (c.env?.SUPER_ADMIN_EMAIL || 'se.advisinglog@gmail.com').toLowerCase().trim()
+  const superEmail = superAdminEmail(c)
   if (
     targetUser &&
     body.isActive === false &&
-    (targetUser.id === 'ADM_SE_GOOGLE' || targetUser.code === 'ADM-SUPER' || targetUser.email?.toLowerCase().trim() === superAdminEmail)
+    (targetUser.id === 'ADM_SE_GOOGLE' || targetUser.code === 'ADM-SUPER' || targetUser.email?.toLowerCase().trim() === superEmail)
   ) {
     return c.json({ success: false, error: 'Cannot deactivate Master Super Admin account' }, 400)
   }
@@ -649,11 +771,11 @@ app.delete('/api/users/:id', async (c) => {
   }
 
   // Protect Super Admin from deletion
-  const superAdminEmail = (c.env?.SUPER_ADMIN_EMAIL || 'se.advisinglog@gmail.com').toLowerCase().trim()
+  const superEmail = superAdminEmail(c)
   if (
     targetUser.id === 'ADM_SE_GOOGLE' ||
     targetUser.code === 'ADM-SUPER' ||
-    targetUser.email?.toLowerCase().trim() === superAdminEmail
+    targetUser.email?.toLowerCase().trim() === superEmail
   ) {
     return c.json({ success: false, error: 'Cannot delete Master Super Admin account' }, 400)
   }
@@ -1597,7 +1719,7 @@ app.post('/api/ai/keys', async (c) => {
     key: cleanKey,
     isDefault: makeDefault,
     provider: 'Google Gemini',
-    model: 'gemini-1.5-flash',
+    model: 'gemini-2.5-flash',
     status: 'active' as const,
     createdAt: new Date().toISOString().split('T')[0],
     lastTestedAt: null,
@@ -1676,7 +1798,7 @@ app.post('/api/ai/keys/:id/test', async (c) => {
 
     // Step 1: Query ListModels to see what models this key has access to
     try {
-      const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(trimmedKey)}`)
+      const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models`, { headers: { 'x-goog-api-key': trimmedKey } })
       if (listRes.ok) {
         const listData = await listRes.json() as any
         const availableModels = (listData?.models || []).filter((m: any) =>
@@ -1700,11 +1822,11 @@ app.post('/api/ai/keys/:id/test', async (c) => {
 
           for (const model of sortedModels) {
             const modelName = model.name // e.g. "models/gemini-3.6-flash"
-            const generateUrl = `https://generativelanguage.googleapis.com/v1beta/${modelName}:generateContent?key=${encodeURIComponent(trimmedKey)}`
+            const generateUrl = `https://generativelanguage.googleapis.com/v1beta/${modelName}:generateContent`
 
             const genRes = await fetch(generateUrl, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: { 'Content-Type': 'application/json', 'x-goog-api-key': trimmedKey },
               body: JSON.stringify({
                 contents: [{ parts: [{ text: 'Ping test. Reply with: OK' }] }],
               }),
@@ -1737,17 +1859,15 @@ app.post('/api/ai/keys/:id/test', async (c) => {
     if (!verified && !detailedError.includes('API_KEY_INVALID') && !detailedError.includes('not valid')) {
       const fallbackModels = [
         'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent',
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
         'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent',
-        'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent',
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent',
       ]
 
       for (const endpoint of fallbackModels) {
         try {
-          const res = await fetch(`${endpoint}?key=${encodeURIComponent(trimmedKey)}`, {
+          const res = await fetch(`${endpoint}`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'x-goog-api-key': trimmedKey },
             body: JSON.stringify({ contents: [{ parts: [{ text: 'Ping test. Reply with: OK' }] }] }),
           })
           if (res.ok) {
@@ -1827,7 +1947,7 @@ app.post('/api/qa/ai-analyze', async (c) => {
 - Student Survey Voice: "${item.studentVoiceFeedback || 'N/A'}"`
     }).join('\n\n')
 
-    // If Gemini API Key is available, call Google Gemini 1.5 Flash
+    // If a Gemini API key is available, call Google Gemini (newest available model)
     if (apiKey && apiKey.trim().length > 10) {
       let systemInstruction = `You are an expert Higher Education Quality Assurance (QA) Analyst and Academic Retention Specialist advising the Program Chair and Dean under AUN-QA Criterion 6 (Student Support Services) and Criterion 8 (Retention & Dropout Rates).
 All personal names have been stripped for PDPA compliance. Analyze the qualitative data deeply.
@@ -1875,13 +1995,9 @@ Provide a concise, evidence-based academic response with clear takeaways for cur
       }
 
       const candidateEndpoints = [
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent',
-        'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent',
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent',
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent',
         'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent',
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent',
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
       ]
 
       const payload = {
@@ -1901,10 +2017,10 @@ Provide a concise, evidence-based academic response with clear takeaways for cur
 
       for (const endpoint of candidateEndpoints) {
         try {
-          const geminiUrl = `${endpoint}?key=${encodeURIComponent(apiKey.trim())}`
+          const geminiUrl = `${endpoint}`
           const response = await fetch(geminiUrl, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey.trim() },
             body: JSON.stringify(payload),
           })
 
@@ -1932,7 +2048,7 @@ Provide a concise, evidence-based academic response with clear takeaways for cur
 
       // Dynamic model fallback via listModels
       try {
-        const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(apiKey.trim())}`)
+        const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models`, { headers: { 'x-goog-api-key': apiKey.trim() } })
         if (!listRes.ok) await readGeminiError(listRes)
         if (listRes.ok) {
           const listData = await listRes.json() as any
@@ -1954,10 +2070,10 @@ Provide a concise, evidence-based academic response with clear takeaways for cur
           })
 
           for (const m of sortedModels) {
-            const dynamicUrl = `https://generativelanguage.googleapis.com/v1beta/${m.name}:generateContent?key=${encodeURIComponent(apiKey.trim())}`
+            const dynamicUrl = `https://generativelanguage.googleapis.com/v1beta/${m.name}:generateContent`
             const dynRes = await fetch(dynamicUrl, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey.trim() },
               body: JSON.stringify(payload),
             })
             if (dynRes.ok) {

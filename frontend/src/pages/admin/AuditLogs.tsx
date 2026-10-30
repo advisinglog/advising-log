@@ -1,6 +1,6 @@
 import BackendDataStatus from '@/components/BackendDataStatus'
 import { useState } from 'react'
-import { useStore } from '@/data/mock-store'
+import { useStore } from '@/data/store'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { PageHeader, DataTable, SearchInput, Pagination } from '@/components/ui'
 import type { AuditLog } from '@/types'

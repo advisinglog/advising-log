@@ -48,8 +48,8 @@ export const AI_PROVIDER_PRESETS: Record<AIProviderId, AIProviderPreset> = {
     taglineTh: 'ประมวลผลรวดเร็ว มีโควตาฟรีจาก Google AI Studio',
     taglineEn: 'Fast & responsive with Google AI Studio free tier',
     badge: 'Google AI',
-    defaultModel: 'gemini-1.5-flash',
-    popularModels: ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-2.0-flash'],
+    defaultModel: 'gemini-2.5-flash',
+    popularModels: ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-2.0-flash'],
     keyPlaceholder: 'AIzaSy...',
     keyFormatHint: 'ขึ้นต้นด้วย AIzaSy... (Google AI Studio)',
     keyPrefix: 'AIzaSy',
@@ -529,22 +529,22 @@ async function requestAnalysis(req: AIAnalysisRequest): Promise<AIAnalysisRespon
     try {
       // 2A. Google Gemini Provider
       if (providerId === 'gemini') {
-        const targetModel = customModel || 'gemini-1.5-flash'
+        const targetModel = customModel || 'gemini-2.5-flash'
         const candidateEndpoints = [
           `https://generativelanguage.googleapis.com/v1beta/models/${targetModel}:generateContent`,
           `https://generativelanguage.googleapis.com/v1/models/${targetModel}:generateContent`,
-          'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent',
+          'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent',
+          'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
           'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
-          'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent',
         ]
 
         let lastErrorMsg = ''
         for (const endpoint of candidateEndpoints) {
           try {
-            const geminiUrl = `${endpoint}?key=${encodeURIComponent(userApiKey.trim())}`
+            const geminiUrl = `${endpoint}`
             const geminiRes = await fetch(geminiUrl, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: { 'Content-Type': 'application/json', 'x-goog-api-key': userApiKey.trim() },
               body: JSON.stringify({
                 contents: [{ parts: [{ text: `${systemInstruction}\n\n${prompt}` }] }],
                 generationConfig: {

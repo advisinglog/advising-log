@@ -3,7 +3,7 @@
 // ============================================================
 
 import { useAuth } from '@/contexts/AuthContext'
-import { useStore } from '@/data/mock-store'
+import { useStore } from '@/data/store'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { PageHeader, StatCard, Card, StatusBadge, EmptyState, Button, StudentProfileBanner, GoogleCalendarButton } from '@/components/ui'
 import { Calendar, Clock, ListChecks, FileEdit, ArrowRight, BookOpen, CheckCircle2, XCircle } from 'lucide-react'

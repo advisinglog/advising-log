@@ -1,5 +1,5 @@
 import { useAuth } from '@/contexts/AuthContext'
-import { useStore } from '@/data/mock-store'
+import { useStore } from '@/data/store'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { isAdvisorMatch } from '@/utils/advisorUtils'
 import { PageHeader, StatusBadge, EmptyState, Button } from '@/components/ui'

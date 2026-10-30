@@ -2,7 +2,7 @@ import BackendDataStatus from '@/components/BackendDataStatus'
 import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { z } from 'zod'
-import { useStore } from '@/data/mock-store'
+import { useStore } from '@/data/store'
 import { useAuth } from '@/contexts/AuthContext'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useToast } from '@/contexts/ToastContext'
@@ -10,6 +10,7 @@ import { PageHeader, DataTable, StatusBadge, Button, SearchInput, Modal } from '
 import type { User, UserRole } from '@/types'
 import { ChevronDown, Bot, ExternalLink, UserPlus, ShieldCheck, User as UserIcon, Users, Info, Trash2, AlertTriangle, ShieldAlert } from 'lucide-react'
 import { getLocalDateString } from '@/utils/dateUtils'
+import { getSuperAdminEmail } from '@/utils/adminContact'
 
 const roleFilterSchema = z.enum(['all', 'student', 'advisor', 'qa_chair', 'admin', 'super_admin'])
 
@@ -340,7 +341,7 @@ export default function UserManagement() {
       key: 'actions',
       header: t('การจัดการ', 'Actions'),
       render: (u: User) => {
-        const superAdminEmail = ((import.meta.env.VITE_SUPER_ADMIN_EMAIL as string) || 'se.advisinglog@gmail.com').toLowerCase().trim()
+        const superAdminEmail = getSuperAdminEmail()
         const isSuperAdminUser = u.role === 'super_admin' || u.email?.toLowerCase().trim() === superAdminEmail || u.code === 'ADM-SUPER' || u.id === 'ADM_SE_GOOGLE'
         const isSelf = currentUser?.id === u.id || currentUser?.email?.toLowerCase() === u.email?.toLowerCase()
         const isAdminCaller = currentUser?.role === 'admin'

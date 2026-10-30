@@ -21,7 +21,7 @@ import {
   Activity,
 } from 'lucide-react'
 import { PageHeader, Button, UserAvatar, Modal } from '@/components/ui'
-import { useStore } from '@/data/mock-store'
+import { useStore } from '@/data/store'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
@@ -145,7 +145,7 @@ export default function AiGovernance() {
         addToast(
           'success',
           t('ทดสอบการเชื่อมต่อสำเร็จ', 'Connection Test Passed'),
-          t(`กุญแจ "${key.name}" เชื่อมต่อ Google Gemini 1.5 Flash ได้สมบูรณ์ (${durationMs}ms)`, `Key "${key.name}" connected to Gemini 1.5 Flash successfully (${durationMs}ms).`)
+          t(`กุญแจ "${key.name}" เชื่อมต่อ Google Gemini ได้สมบูรณ์ (${durationMs}ms)`, `Key "${key.name}" connected to Google Gemini successfully (${durationMs}ms).`)
         )
       } else {
         addToast(
@@ -322,7 +322,7 @@ export default function AiGovernance() {
               <Cpu className="h-4 w-4 text-sky-600 dark:text-sky-400 flex-shrink-0" />
               <div className="min-w-0">
                 <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400 truncate">{t('โมเดลหลัก', 'Engine')}</p>
-                <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">Gemini 1.5 Flash</p>
+                <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">Google Gemini</p>
               </div>
             </div>
 
@@ -521,7 +521,7 @@ export default function AiGovernance() {
                               <span className="font-mono text-[11px] text-slate-600 dark:text-slate-300 font-semibold bg-slate-50 dark:bg-slate-800/80 px-2 py-0.5 rounded border border-slate-200/80 dark:border-slate-700">
                                 {k.maskedKey}
                               </span>
-                              <span className="text-[11px] text-slate-400">• {k.model || 'gemini-1.5-flash'}</span>
+                              <span className="text-[11px] text-slate-400">• {k.model || 'gemini-2.5-flash'}</span>
                             </div>
                           </div>
                         </div>
@@ -617,7 +617,7 @@ export default function AiGovernance() {
               <div className="space-y-2 text-xs">
                 <div className="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800">
                   <span className="text-slate-500 dark:text-slate-400">{t('โมเดล AI หลัก', 'Primary Model')}</span>
-                  <span className="font-semibold text-slate-800 dark:text-slate-200">Gemini 1.5 Flash</span>
+                  <span className="font-semibold text-slate-800 dark:text-slate-200">{t('Gemini (รุ่นใหม่ล่าสุดที่ใช้ได้)', 'Gemini (newest available)')}</span>
                 </div>
                 <div className="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800">
                   <span className="text-slate-500 dark:text-slate-400">{t('ผู้ให้บริการ', 'Provider')}</span>
@@ -881,7 +881,7 @@ export default function AiGovernance() {
             </label>
             <input
               type="text"
-              placeholder={t('เช่น Gemini 1.5 Flash (Production)', 'e.g. Gemini 1.5 Flash (Production)')}
+              placeholder={t('เช่น Gemini (Production)', 'e.g. Gemini (Production)')}
               value={newKeyName}
               onChange={e => setNewKeyName(e.target.value)}
               className="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-hidden focus:ring-2 focus:ring-sky-500 shadow-2xs"

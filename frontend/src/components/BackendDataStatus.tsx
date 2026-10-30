@@ -1,4 +1,4 @@
-import { useStore } from '@/data/mock-store'
+import { useStore } from '@/data/store'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { Button, Card } from '@/components/ui'
 

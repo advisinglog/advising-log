@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { StoreProvider, useStore } from '@/data/mock-store'
+import { StoreProvider, useStore } from '@/data/store'
 import { setSession } from '@/services/apiClient'
 
 function StoreProbe() {
