@@ -3,7 +3,7 @@
 // ============================================================
 
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { useStore } from '@/data/mock-store'
 import { useToast } from '@/contexts/ToastContext'
@@ -19,9 +19,15 @@ export default function AdvisingSessions() {
   const store = useStore()
   const { addToast } = useToast()
   const { t, getCategoryLabel, getSubCategoryLabel } = useLanguage()
+  const location = useLocation()
   const navigate = useNavigate()
 
-  const [tab, setTab] = useState('pending')
+  const [tab, setTab] = useState(() => {
+    const requestedTab = (location.state as { tab?: string } | null)?.tab
+    return requestedTab && ['pending', 'upcoming', 'completed', 'cancelled'].includes(requestedTab)
+      ? requestedTab
+      : 'pending'
+  })
   const [search, setSearch] = useState('')
   const [selectedReq, setSelectedReq] = useState<AdvisingRequest | null>(null)
   const [detailReq, setDetailReq] = useState<AdvisingRequest | null>(null)

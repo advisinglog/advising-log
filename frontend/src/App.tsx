@@ -24,6 +24,7 @@ import StudentVoiceSurvey from '@/pages/student/StudentVoiceSurvey'
 import AdvisorDashboard from '@/pages/advisor/AdvisorDashboard'
 import AdvisingSessions from '@/pages/advisor/AdvisingSessions'
 import AdvisorLog from '@/pages/advisor/AdvisorLog'
+import AdvisorFollowUps from '@/pages/advisor/FollowUps'
 import EarlyWarning from '@/pages/advisor/EarlyWarning'
 import Referrals from '@/pages/advisor/Referrals'
 import ExitCases from '@/pages/advisor/ExitCases'
@@ -100,6 +101,7 @@ export default function App() {
                       <Route path="advisor" element={<RequireRole allowedRoles={['advisor']}><AdvisorDashboard /></RequireRole>} />
                       <Route path="advisor/sessions" element={<RequireRole allowedRoles={['advisor']}><AdvisingSessions /></RequireRole>} />
                       <Route path="advisor/log" element={<RequireRole allowedRoles={['advisor']}><AdvisorLog /></RequireRole>} />
+                      <Route path="advisor/followups" element={<RequireRole allowedRoles={['advisor']}><AdvisorFollowUps /></RequireRole>} />
                       <Route path="advisor/warnings" element={<RequireRole allowedRoles={['advisor']}><EarlyWarning /></RequireRole>} />
                       <Route path="advisor/referrals" element={<RequireRole allowedRoles={['advisor']}><Referrals /></RequireRole>} />
                       <Route path="advisor/exit-cases" element={<RequireRole allowedRoles={['advisor']}><ExitCases /></RequireRole>} />

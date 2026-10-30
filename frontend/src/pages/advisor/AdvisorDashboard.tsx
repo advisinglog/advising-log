@@ -29,8 +29,15 @@ export default function AdvisorDashboard() {
   const myAdvisees = store.roster.filter(r => isAdvisorMatch(r.advisorId, currentUser, store.users) && r.isActive)
   const myRequests = store.requests.filter(r => isAdvisorMatch(r.advisorId, currentUser, store.users))
   const pendingRequests = myRequests.filter(r => r.status === 'requested' || r.status === 'pending')
-  const upcomingApts = store.appointments
-    .filter(a => isAdvisorMatch(a.advisorId, currentUser, store.users) && a.status === 'scheduled')
+  const confirmedApts = store.appointments
+    .filter(a =>
+      isAdvisorMatch(a.advisorId, currentUser, store.users) &&
+      a.status === 'scheduled' &&
+      a.studentConfirmed === true &&
+      !a.studentDeclined
+    )
+  const upcomingApts = confirmedApts
+    .filter(a => (a.scheduledDate || '') >= getLocalDateString())
     .sort((a, b) => {
       const cmpDate = (a.scheduledDate || '').localeCompare(b.scheduledDate || '')
       if (cmpDate !== 0) return cmpDate
@@ -145,11 +152,41 @@ export default function AdvisorDashboard() {
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-6">
-        <StatCard label={t('คำร้องรอการตอบรับ', 'Pending Requests')} value={pendingRequests.length} icon={<FileEdit className="h-5 w-5" />} color="amber" />
-        <StatCard label={t('นัดหมายที่จัดไว้', 'Upcoming Sessions')} value={upcomingApts.length} icon={<CalendarClock className="h-5 w-5" />} color="sky" />
-        <StatCard label={t('งานติดตามผลค้างอยู่', 'Open Follow-ups')} value={myFollowUps.length} icon={<ListChecks className="h-5 w-5" />} color="sky" />
-        <StatCard label={t('เคสขอลาพัก/ลาออก', 'Active Exit Cases')} value={myExitCases.length} icon={<UserX className="h-5 w-5" />} color="red" />
-        <StatCard label={t('เคสเตือนภัยวิชาการ', 'Early Warnings')} value={myWarnings.length} icon={<AlertTriangle className="h-5 w-5" />} color="amber" />
+        <StatCard
+          label={t('คำร้องรอการตอบรับ', 'Pending Requests')}
+          value={pendingRequests.length}
+          icon={<FileEdit className="h-5 w-5" />}
+          color="amber"
+          onClick={() => navigate('/advisor/sessions')}
+        />
+        <StatCard
+          label={t('นัดหมายที่จัดไว้', 'Upcoming Sessions')}
+          value={confirmedApts.length}
+          icon={<CalendarClock className="h-5 w-5" />}
+          color="sky"
+          onClick={() => navigate('/advisor/sessions', { state: { tab: 'upcoming' } })}
+        />
+        <StatCard
+          label={t('งานติดตามผลค้างอยู่', 'Open Follow-ups')}
+          value={myFollowUps.length}
+          icon={<ListChecks className="h-5 w-5" />}
+          color="sky"
+          onClick={() => navigate('/advisor/followups')}
+        />
+        <StatCard
+          label={t('เคสขอลาพัก/ลาออก', 'Active Exit Cases')}
+          value={myExitCases.length}
+          icon={<UserX className="h-5 w-5" />}
+          color="red"
+          onClick={() => navigate('/advisor/exit-cases')}
+        />
+        <StatCard
+          label={t('เคสเตือนภัยวิชาการ', 'Early Warnings')}
+          value={myWarnings.length}
+          icon={<AlertTriangle className="h-5 w-5" />}
+          color="amber"
+          onClick={() => navigate('/advisor/warnings')}
+        />
       </div>
 
       {/* ── Section Divider: Requests & Appointments ── */}
@@ -210,7 +247,7 @@ export default function AdvisorDashboard() {
               <CalendarClock className="h-4 w-4 text-sky-600 dark:text-sky-400" /> {t('นัดหมายที่กำลังจะมาถึง', 'Upcoming Appointments')}
             </h3>
             {upcomingApts.length > 0 && (
-              <button onClick={() => navigate('/advisor/sessions')} className="text-xs font-semibold text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 flex items-center gap-1 cursor-pointer">
+              <button onClick={() => navigate('/advisor/sessions', { state: { tab: 'upcoming' } })} className="text-xs font-semibold text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 flex items-center gap-1 cursor-pointer">
                 {t('ดูทั้งหมด', 'View all')} ({upcomingApts.length}) <ArrowRight className="h-3 w-3" />
               </button>
             )}
@@ -248,7 +285,7 @@ export default function AdvisorDashboard() {
               <ListChecks className="h-4 w-4 text-sky-600 dark:text-sky-400" /> {t('งานติดตามผลที่ค้างอยู่', 'Open Follow-up Tasks')}
             </h3>
             {myFollowUps.length > 0 && (
-              <button onClick={() => navigate('/advisor/sessions')} className="text-xs font-semibold text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 flex items-center gap-1 cursor-pointer">
+              <button onClick={() => navigate('/advisor/followups')} className="text-xs font-semibold text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 flex items-center gap-1 cursor-pointer">
                 {t('ดูทั้งหมด', 'View all')} ({myFollowUps.length}) <ArrowRight className="h-3 w-3" />
               </button>
             )}
