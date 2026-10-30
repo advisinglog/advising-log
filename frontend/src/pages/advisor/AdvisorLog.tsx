@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, type FormEvent } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { useStore } from '@/data/mock-store'
@@ -18,10 +18,15 @@ export default function AdvisorLog() {
   const { t, getCategoryLabel } = useLanguage()
   const location = useLocation()
 
-  const [selectedRequestId, setSelectedRequestId] = useState<string>(
-    (location.state as { requestId?: string } | undefined)?.requestId || ''
-  )
+  type LogNavigationState = { appointmentId?: string; requestId?: string; studentId?: string }
+  const navState = location.state as LogNavigationState | null
+  // Only a Dashboard Record Log click uses the direct, preselected view.
+  // Opening Advisor Log from the sidebar keeps the original dropdown workflow.
+  const isDashboardRecordLog = Boolean(navState?.appointmentId && navState?.requestId && navState?.studentId)
+  const [selectedRequestId, setSelectedRequestId] = useState<string>(navState?.requestId || '')
   const [section, setSection] = useState<'entry' | 'saved'>('entry')
+  // Existing logs are editable only through the Saved Log tab.
+  const [editingRequestId, setEditingRequestId] = useState('')
   const [summary, setSummary] = useState('')
   const [followUpTask, setFollowUpTask] = useState('')
   const [followUpDate, setFollowUpDate] = useState('')
@@ -30,13 +35,19 @@ export default function AdvisorLog() {
   const [previewDoc, setPreviewDoc] = useState<DocumentViewerTarget | null>(null)
   const [autoApproveDocs, setAutoApproveDocs] = useState(true)
 
+  // Resolve the actual request from the clicked appointment after backend data loads.
+  // Never trust route state as authorization; the request is checked against the advisor.
+  const linkedAppointment = navState?.appointmentId
+    ? store.appointments.find(a => a.id === navState.appointmentId)
+    : undefined
+  const linkedRequestId = linkedAppointment?.requestId || navState?.requestId || ''
+
   useEffect(() => {
-    const navRequestId = (location.state as { requestId?: string } | undefined)?.requestId
-    if (navRequestId) {
-      setSelectedRequestId(navRequestId)
+    if (linkedRequestId) {
+      setSelectedRequestId(linkedRequestId)
       setSection('entry')
     }
-  }, [location.state])
+  }, [linkedRequestId])
 
   useEffect(() => {
     const existing = store.sessions.find(session => session.requestId === selectedRequestId)
@@ -118,15 +129,27 @@ export default function AdvisorLog() {
     },
   ]
 
-  // Scheduled or Completed requests that don't have a session log yet
-  const completedRequests = store.requests.filter(r =>
+  // Keep recorded requests in Saved Log only, not in the new-entry dropdown.
+  const eligibleRequests = store.requests.filter(r =>
     isAdvisorMatch(r.advisorId, currentUser, store.users) &&
     (r.status === 'scheduled' || r.status === 'completed' || r.status === 'closed')
   )
+  const completedRequests = eligibleRequests.filter(r =>
+    !store.sessions.some(session => session.requestId === r.id)
+  )
 
-  const selectedReq = store.requests.find(r => r.id === selectedRequestId)
+  // A saved request can be selected for modification ONLY through its Edit button.
+  const selectedReq = eligibleRequests.find(r =>
+    r.id === selectedRequestId &&
+    (completedRequests.some(pending => pending.id === r.id) || editingRequestId === r.id) &&
+    (!navState?.studentId || !linkedRequestId || selectedRequestId !== linkedRequestId || r.studentId === navState.studentId)
+  )
   const student = selectedReq ? store.users.find(u => u.id === selectedReq.studentId) : null
-  const appointment = selectedReq ? store.appointments.find(a => a.requestId === selectedReq.id) : null
+  const appointment = selectedReq
+    ? (linkedAppointment?.requestId === selectedReq.id
+      ? linkedAppointment
+      : store.appointments.find(a => a.requestId === selectedReq.id && isAdvisorMatch(a.advisorId, currentUser, store.users)))
+    : null
   const existingSession = selectedRequestId
     ? store.sessions.find(session => session.requestId === selectedRequestId)
     : undefined
@@ -138,6 +161,7 @@ export default function AdvisorLog() {
     })
 
   function editSavedLog(requestId: string) {
+    setEditingRequestId(requestId)
     setSelectedRequestId(requestId)
     setSection('entry')
   }
@@ -156,9 +180,9 @@ export default function AdvisorLog() {
     }
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    if (!selectedRequestId || !summary.trim()) {
+    if (!selectedReq || !summary.trim()) {
       addToast('error', t('ข้อมูลไม่ครบถ้วน', 'Validation Error'), t('กรุณาเลือกนัดหมายและระบุสรุปผลการให้คำปรึกษา', 'Please select a session and provide the advising summary.'))
       return
     }
@@ -175,6 +199,10 @@ export default function AdvisorLog() {
 
     const cleanSummary = summary.trim()
     const existingSession = store.sessions.find(s => s.requestId === selectedRequestId)
+    if (existingSession && editingRequestId !== selectedRequestId) {
+      addToast('error', t('รายการนี้บันทึกแล้ว', 'Already Recorded'), t('กรุณาแก้ไขจากแท็บบันทึกที่จัดเก็บแล้ว', 'Please use Edit in the Saved Log tab.'))
+      return
+    }
     const session = existingSession
       ? (store.updateSession(existingSession.id, {
           sessionDate: getLocalDateString(),
@@ -235,6 +263,8 @@ export default function AdvisorLog() {
 
     addToast('success', t('บันทึกผลการให้คำปรึกษาแล้ว', 'Advising Log Saved'), t('บันทึกสรุปและประวัติการให้คำปรึกษาได้รับการอัปเดตเรียบร้อย', 'The session record and audit trail have been updated.'))
     setSelectedRequestId('')
+    setEditingRequestId('')
+    setSection('saved')
     setSummary('')
     setFollowUpTask('')
     setFollowUpDate('')
@@ -322,7 +352,7 @@ export default function AdvisorLog() {
             })}
           </div>
         )
-      ) : completedRequests.length === 0 && !selectedRequestId ? (
+      ) : completedRequests.length === 0 && !selectedReq ? (
         <Card>
           <EmptyState
             icon={<ClipboardCheck className="h-6 w-6 text-sky-500" />}
@@ -333,27 +363,53 @@ export default function AdvisorLog() {
       ) : (
         <Card>
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Session Selector */}
-            <div>
-              <label className="block text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 mb-1.5">
-                {t('เลือกนัดหมายที่ต้องการบันทึกผล', 'Select Advising Session')} <span className="text-rose-500">*</span>
-              </label>
-              <select
-                value={selectedRequestId}
-                onChange={e => setSelectedRequestId(e.target.value)}
-                className="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200/90 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-xs cursor-pointer"
-              >
-                <option value="">{t('-- เลือกรายการนัดหมายที่ต้องการบันทึก --', 'Select an advising session to log')}</option>
-                {completedRequests.map(r => {
-                  const s = store.users.find(u => u.id === r.studentId)
-                  return (
-                    <option key={r.id} value={r.id}>
-                      {s?.name} ({s?.code}) — {getCategoryLabel(r.category)}
-                    </option>
-                  )
-                })}
-              </select>
-            </div>
+            {/* Dashboard Record Log: preselect appointment; sidebar: only requests without a saved session. */}
+            {isDashboardRecordLog ? (
+              selectedReq ? (
+                <div className="rounded-xl border border-sky-200 dark:border-sky-800 bg-sky-50 dark:bg-sky-950/30 p-4 space-y-2">
+                  <p className="text-xs font-semibold text-sky-700 dark:text-sky-300">
+                    {t('กำลังบันทึกผลให้นักศึกษาคนนี้', 'Recording log for this student')}
+                  </p>
+                  <p className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                    {student?.name || selectedReq.studentId} {student?.code ? `(${student.code})` : ''}
+                  </p>
+                  <p className="text-xs text-slate-600 dark:text-slate-300">
+                    {getCategoryLabel(selectedReq.category)} · {t('วันที่นัดหมาย:', 'Appointment date:')} {appointment?.scheduledDate || selectedReq.preferredDate || '-'}
+                    {appointment?.scheduledTime ? ` · ${appointment.scheduledTime}` : ''}
+                  </p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    {t('ข้อมูลนักศึกษาและคำร้องถูกเลือกให้อัตโนมัติจากรายการที่กด', 'Student, request and appointment are loaded automatically from the selected record.')}
+                  </p>
+                </div>
+              ) : (
+                <p className="text-xs text-amber-700 dark:text-amber-300">
+                  {eligibleRequests.some(r => r.id === linkedRequestId) && store.sessions.some(s => s.requestId === linkedRequestId)
+                    ? t('นัดหมายนี้บันทึกผลแล้ว กรุณาเปิดแท็บบันทึกที่จัดเก็บแล้วเพื่อดูหรือแก้ไข', 'This appointment has already been recorded. Use Saved Log to view or edit it.')
+                    : t('ไม่พบคำร้องของนักศึกษาที่เลือก หรือรายการนี้ไม่อยู่ในความดูแลของคุณ', 'The selected request is unavailable or is not assigned to you.')}
+                </p>
+              )
+            ) : (
+              <div>
+                <label className="block text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 mb-1.5">
+                  {t('เลือกนัดหมายที่ต้องการบันทึกผล', 'Select Advising Session')} <span className="text-rose-500">*</span>
+                </label>
+                <select
+                  value={selectedRequestId}
+                  onChange={e => { setEditingRequestId(''); setSelectedRequestId(e.target.value) }}
+                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200/90 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-xs cursor-pointer"
+                >
+                  <option value="">{t('-- เลือกรายการนัดหมายที่ต้องการบันทึก --', 'Select an advising session to log')}</option>
+                  {completedRequests.map(r => {
+                    const s = store.users.find(u => u.id === r.studentId)
+                    return (
+                      <option key={r.id} value={r.id}>
+                        {s?.name || r.studentId} ({s?.code || '-'}) — {getCategoryLabel(r.category)}
+                      </option>
+                    )
+                  })}
+                </select>
+              </div>
+            )}
 
             {/* Selected Student & Request Summary Preview */}
             {selectedReq && (
@@ -606,7 +662,7 @@ export default function AdvisorLog() {
 
             {/* Actions */}
             <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100 dark:border-slate-800">
-              <Button type="submit" variant="primary">
+              <Button type="submit" variant="primary" disabled={!selectedReq}>
                 {t('บันทึกผลการให้คำปรึกษา', 'Save Advising Log')}
               </Button>
             </div>

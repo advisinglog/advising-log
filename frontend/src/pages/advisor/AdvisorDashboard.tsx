@@ -551,7 +551,16 @@ export default function AdvisorDashboard() {
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Button size="sm" onClick={() => navigate('/advisor/log')}>
+                      <Button
+                          size="sm"
+                          onClick={() => navigate('/advisor/log', {
+                            state: {
+                              appointmentId: a.id,
+                              requestId: a.requestId,
+                              studentId: a.studentId,
+                            },
+                          })}
+                        >
                         {t('บันทึกผล', 'Record Log')}
                       </Button>
                     </div>
