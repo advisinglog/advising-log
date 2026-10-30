@@ -318,11 +318,25 @@ export function StoreProvider({ children }: { children: ReactNode }) {
               ? (() => { try { const p = JSON.parse(e.documents); return Array.isArray(p) ? p : [] } catch { return [] } })()
               : [],
         }))
-        if (normalizedExitCases.length > 0) {
-          const backendIds = new Set(normalizedExitCases.map((c: any) => c.id))
-          const merged = [...normalizedExitCases, ...mockExitCases.filter(m => !backendIds.has(m.id))]
-          setExitCases(merged)
-        }
+        setExitCases(normalizedExitCases)
+
+        // Construct advisor assessments from real exit cases in D1
+        const assessments: AdvisorExitAssessment[] = normalizedExitCases
+          .filter((c: any) => Boolean(c.advisorAssessment))
+          .map((c: any) => ({
+            id: `AEA_${c.id}`,
+            exitCaseId: c.id,
+            advisorId: c.advisorId || '',
+            assessment: c.advisorAssessment || '',
+            contributingFactors: c.details || '',
+            actionsTaken: '',
+            referralsMade: '',
+            followUpAttempts: '',
+            recommendation: c.status === 'closed' ? 'Approved' : 'Under Review',
+            resolution: c.status === 'closed' ? 'Case completed and resolved' : '',
+            createdAt: c.updatedAt || c.createdAt || new Date().toISOString().split('T')[0],
+          }))
+        setAdvisorAssessments(assessments)
       }
       if (vRes && Array.isArray(vRes.surveys)) {
         const normalized = vRes.surveys.map((s: any) => ({
@@ -340,18 +354,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             overallExperience: s.overallRating ?? 3,
           },
         }))
-        if (normalized.length > 0) {
-          const backendIds = new Set(normalized.map((s: any) => s.id))
-          const merged = [...normalized, ...mockStudentVoiceResponses.filter(m => !backendIds.has(m.id))]
-          setStudentVoiceResponses(merged)
-        }
+        setStudentVoiceResponses(normalized)
+        const completedStudentIds = normalized.map((s: any) => s.studentId).filter(Boolean)
+        setCompletedVoiceStudents(prev => Array.from(new Set([...prev, ...completedStudentIds])))
       }
-      if (aRes && Array.isArray(aRes.logs) && aRes.logs.length > 0) setAuditLogs(aRes.logs)
-      if (kRes && Array.isArray(kRes.keys) && kRes.keys.length > 0) setAiKeys(kRes.keys)
-      if (ewRes && Array.isArray(ewRes.earlyWarnings) && ewRes.earlyWarnings.length > 0) setEarlyWarnings(ewRes.earlyWarnings)
-      if (docRes && Array.isArray(docRes.documents) && docRes.documents.length > 0) setDocuments(docRes.documents)
-      if (catRes && Array.isArray(catRes.categories) && catRes.categories.length > 0) setCategoryConfigs(catRes.categories)
-      if (dtRes && Array.isArray(dtRes.documentTypes) && dtRes.documentTypes.length > 0) setDocumentTypes(dtRes.documentTypes)
+      if (aRes && Array.isArray(aRes.logs)) setAuditLogs(aRes.logs)
+      if (kRes && Array.isArray(kRes.keys)) setAiKeys(kRes.keys)
+      if (ewRes && Array.isArray(ewRes.earlyWarnings)) setEarlyWarnings(ewRes.earlyWarnings)
+      if (docRes && Array.isArray(docRes.documents)) setDocuments(docRes.documents)
+      if (catRes && Array.isArray(catRes.categories)) setCategoryConfigs(catRes.categories)
+      if (dtRes && Array.isArray(dtRes.documentTypes)) setDocumentTypes(dtRes.documentTypes)
     }
     syncFromBackend()
     return () => { isMounted = false }
@@ -492,7 +504,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     const newEc: ExitCase = {
       ...ec,
       reasonCategory: ec.reasonCategory || ec.reasonCode,
-      id: nextId('EX'),
+      id: nextId('EXT'),
       createdAt: now(),
       updatedAt: now(),
     }
@@ -510,7 +522,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const addAdvisorAssessment = useCallback((a: Omit<AdvisorExitAssessment, 'id' | 'createdAt'>): AdvisorExitAssessment => {
     const newA: AdvisorExitAssessment = { ...a, id: nextId('AEA'), createdAt: now() }
-    setAdvisorAssessments(prev => [newA, ...prev])
+    setAdvisorAssessments(prev => {
+      const filtered = prev.filter(item => item.exitCaseId !== a.exitCaseId)
+      return [newA, ...filtered]
+    })
+    setExitCases(prev => prev.map(ec => ec.id === a.exitCaseId ? { ...ec, advisorAssessment: a.assessment, status: 'under_review', updatedAt: now() } : ec))
+    api.updateExitCase(a.exitCaseId, { advisorAssessment: a.assessment, status: 'advisor_reviewed' }).catch((err) => {
+      console.error('Failed to persist advisor assessment to backend:', err)
+    })
     return newA
   }, [])
 

@@ -235,7 +235,19 @@ export default function ExitCaseReview() {
   }
 
   const assessment = selectedCase
-    ? store.advisorAssessments.find(a => a.exitCaseId === selectedCase.id)
+    ? (store.advisorAssessments.find(a => a.exitCaseId === selectedCase.id) || (selectedCase.advisorAssessment ? {
+        id: `AEA_${selectedCase.id}`,
+        exitCaseId: selectedCase.id,
+        advisorId: selectedCase.advisorId,
+        assessment: selectedCase.advisorAssessment,
+        contributingFactors: '',
+        actionsTaken: '',
+        referralsMade: '',
+        followUpAttempts: '',
+        recommendation: '',
+        resolution: '',
+        createdAt: selectedCase.updatedAt || selectedCase.createdAt,
+      } : null))
     : null
   const voiceResponse = selectedCase
     ? store.studentVoiceResponses.find(

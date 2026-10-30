@@ -75,13 +75,36 @@ INSERT OR IGNORE INTO follow_up_progress (id, follow_up_id, student_id, progress
 -- 8. Exit Cases
 INSERT OR IGNORE INTO exit_cases (id, student_id, advisor_id, exit_type, reason_code, reason_category, details, documents, advisor_assessment, status, pdpa_consent, voice_survey_completed, created_at, updated_at) VALUES
 ('EXT001', 'STU006', 'ADV002', 'leave_of_absence', 'family_obligation', 'personal', 'Need to take care of elderly parents in Chiang Mai after sudden illness.', '["medical_leave_proof.pdf"]', 'Student has solid GPA 3.40. Strongly recommend approving temporary leave of absence for 1 semester with planned re-entry.', 'advisor_reviewed', 1, 1, '2026-09-02', '2026-09-04'),
-('EXT002', 'STU009', 'ADV003', 'withdrawal', 'academic_foundation', 'academic', 'Struggling with core programming foundation courses. Found interest in communication arts.', '["transcript.pdf"]', 'Student has made considered choice to transition to Mass Communication. Foundation gap in Java programming was primary hurdle.', 'submitted', 1, 0, '2026-09-03', '2026-09-03');
+('EXT002', 'STU009', 'ADV003', 'withdrawal', 'academic_foundation', 'academic', 'Struggling with core programming foundation courses. Found interest in communication arts.', '["transcript.pdf"]', 'Student has made considered choice to transition to Mass Communication. Foundation gap in Java programming was primary hurdle.', 'submitted', 1, 1, '2026-09-03', '2026-09-03'),
+('EXT003', 'STU003', 'ADV001', 'withdrawal', 'financial', 'financial', 'Family business hit by severe financial crisis. Must transition into full-time employment to support family obligations.', '[]', 'Student in Year 3 faced sudden economic loss. Emergency fund insufficient for debt burden. Recommend approval with emergency grant review.', 'advisor_reviewed', 1, 1, '2026-08-20', '2026-08-28'),
+('EXT004', 'STU007', 'ADV003', 'leave_of_absence', 'mental_health', 'personal', 'Severe chronic stress and clinical burnout. Certified by physician for semester-long recuperation.', '[]', 'Student diagnosed with moderate depression and burnout. Referred to MFU Counselling Center. Approved temporary leave with re-entry plan.', 'advisor_reviewed', 1, 1, '2026-09-04', '2026-09-06'),
+('EXT005', 'STU004', 'ADV002', 'withdrawal', 'transfer', 'academic', 'Awarded full institutional scholarship at regional university close to home province.', '[]', 'Student maintains GPAX 3.65. Valid transfer with full scholarship. Syllabi verified for course credit transfers.', 'completed', 1, 0, '2026-08-25', '2026-08-30'),
+('EXT006', 'STU010', 'ADV001', 'leave_of_absence', 'health', 'personal', 'Sustained severe ligament injury requiring orthopedic surgery and 4-6 months physical rehabilitation.', '["medical_cert.pdf"]', 'Physical mobility impaired during recovery period. Online study repository coordinated. Recommend 1 semester leave of absence.', 'advisor_reviewed', 1, 0, '2026-09-05', '2026-09-07');
 
--- 9. Audit Logs
+-- 9. Student Voice Survey Responses
+INSERT OR IGNORE INTO student_voice_responses (id, exit_case_id, student_id, is_anonymous, exit_type, academic_year, primary_factors, curriculum_rating, teaching_rating, advisor_rating, services_rating, overall_rating, what_could_university_do_better, curriculum_improvement_suggestions, advice_for_future_students, share_with_advisor, created_at) VALUES
+('SVR001', 'EXT001', 'STU006', 0, 'leave_of_absence', 'Year 2 (ชั้นปีที่ 2)', '["ภาระครอบครัว / ส่วนตัว (Family & Personal Circumstances)","ความเครียดและสุขภาพจิต (Mental Health & Stress)"]', 4, 4, 5, 4, 4, 'อาจารย์ที่ปรึกษา (อ.วิภาวรรณ) ให้ความช่วยเหลือและแนะนำทางเลือกดีมาก แต่ขั้นตอนการยื่นเอกสารขอพักการศึกษาในส่วนกลางของมหาวิทยาลัยค่อนข้างซับซ้อน อยากให้มีระบบออนไลน์ที่เบ็ดเสร็จรวดเร็วกว่านี้', 'หลักสูตรเนื้อหาดีมาก อยากให้มีคลิปย้อนหลังสำหรับทบทวนเมื่อนักศึกษากลับมาเรียนต่อหลังจากพักการศึกษา', 'หากมีปัญหาเรื่องครอบครัวหรือความเครียด ให้รีบปรึกษาอาจารย์ที่ปรึกษาตั้งแต่เนิ่นๆ อาจารย์พร้อมรับฟังและหาทางออกให้เสมอ', 1, '2026-09-02'),
+('SVR002', 'EXT002', NULL, 1, 'withdrawal', 'Year 1 (ชั้นปีที่ 1)', '["ความยากของหลักสูตร / ไม่ตรงกับความถนัด (Curriculum Difficulty & Fit)","การสอนและภาระงาน (Teaching Pace & Workload)","เป้าหมายอาชีพเปลี่ยนไป (Career Path Redirection)"]', 3, 2, 4, 3, 3, 'วิชาพื้นฐานการเขียนโปรแกรมในปี 1 มีความเร็วในการสอนค่อนข้างสูงและภาระการบ้านหนักมากสำหรับคนที่ไม่มีพื้นฐานสายคอมพิวเตอร์มาก่อน อยากให้มีวิชาปรับพื้นฐานหรือติวเสริมแบบเข้มข้น', 'ควรมี Track หรือวิชาเลือกด้าน Design / UX/UI ที่เน้นปฏิบัติสำหรับคนที่ไม่ถนัดสาย Coding เชิงทฤษฎี', 'ควรศึกษาหลักสูตรและวิชาบังคับล่วงหน้า และกล้าสอบถามอาจารย์ผู้สอนตั้งแต่สัปดาห์แรกๆ', 1, '2026-08-30'),
+('SVR003', 'EXT003', NULL, 1, 'withdrawal', 'Year 3 (ชั้นปีที่ 3)', '["ปัญหาทางการเงินและค่าครองชีพ (Financial Hardship)","โอกาสในการทำงาน / รายได้ (Employment Opportunity)"]', 4, 4, 4, 3, 4, 'อยากให้มีทุนการศึกษาฉุกเฉินหรือตำแหน่งงาน Part-time ภายในคณะที่เพียงพอกว่านี้ สำหรับนักศึกษาที่มีปัญหาการเงินกะทันหัน', 'อยากให้หลักสูตรมีความยืดหยุ่น เช่น การเรียนแบบ Hybrid หรือรายวิชาแบบ Modular ที่สามารถทำงานควบคู่กับการเรียนได้', 'วางแผนการเงินและทุนการศึกษาตั้งแต่เนิ่นๆ หากเริ่มมีปัญหาให้ติดต่อหน่วยทุนของสำนักวิชาทันที', 0, '2026-08-22'),
+('SVR004', 'EXT004', 'STU007', 0, 'leave_of_absence', 'Year 2 (ชั้นปีที่ 2)', '["ความเครียดและสุขภาพจิต (Mental Health & Stress)","การสอนและภาระงาน (Teaching Pace & Workload)"]', 4, 3, 5, 4, 4, 'ศูนย์ให้คำปรึกษาของ มฟล. ช่วยเหลือได้ดีมาก แต่อยากให้อาจารย์ผู้สอนในแต่ละรายวิชามีการประสานงานเรื่องตารางกำหนดส่งงานไม่ให้กระจุกตัวในสัปดาห์เดียวกัน', 'ควรมีระบบแจ้งเตือนภาระงานรวมของนักศึกษาในแต่ละสัปดาห์เพื่อช่วยให้อาจารย์ผู้สอนเห็นภาพรวม', 'อย่าเก็บความเครียดไว้คนเดียว หากรู้สึกไม่ไหวให้รีบพบผู้เชี่ยวชาญหรืออาจารย์ที่ปรึกษา', 1, '2026-09-04');
+
+-- 10. Early Warnings
+INSERT OR IGNORE INTO early_warnings (id, student_id, risk_level, indicators, status, notes, created_at) VALUES
+('EW001', 'STU001', 'high', '{"advisorId":"ADV001","warningType":"academic_risk","severity":"high","description":"GPA dropped below 2.00 in previous semester. Risk of academic probation.","dateDetected":"2026-08-25","recommendedAction":"Schedule academic counseling and limit course registration to 12 credits.","followUpDate":"2026-09-15"}', 'active', 'GPA dropped below 2.00 in previous semester. Risk of academic probation.', '2026-08-25'),
+('EW002', 'STU003', 'medium', '{"advisorId":"ADV001","warningType":"financial_hold","severity":"medium","description":"Late tuition fee payment for current semester. Outstanding balance may cause registration hold.","dateDetected":"2026-08-28","recommendedAction":"Connect with Student Financial Aid Office for emergency grant or payment plan.","followUpDate":"2026-09-12"}', 'active', 'Late tuition fee payment for current semester.', '2026-08-28'),
+('EW003', 'STU007', 'critical', '{"advisorId":"ADV003","warningType":"attendance_drop","severity":"critical","description":"Missed 4 consecutive classes in Database Systems and Computer Networks. Multiple instructor flags.","dateDetected":"2026-08-30","recommendedAction":"Urgent advisor outreach. Assess physical and mental wellbeing.","followUpDate":"2026-09-08"}', 'monitoring', 'Missed 4 consecutive classes in Database Systems and Computer Networks.', '2026-08-30');
+
+-- 11. Documents
+INSERT OR IGNORE INTO documents (id, student_id, title, type, status, public_id, url, created_at) VALUES
+('DOC001', 'STU001', 'Transcript Fall 2025', 'transcript', 'approved', 'docs/stu001_transcript', 'https://res.cloudinary.com/demo/image/upload/sample.pdf', '2026-08-28'),
+('DOC002', 'STU002', 'Scholarship Renewal Application', 'scholarship_form', 'approved', 'docs/stu002_scholarship', 'https://res.cloudinary.com/demo/image/upload/sample.pdf', '2026-08-20'),
+('DOC003', 'STU006', 'Medical Certificate - Hospital', 'medical_certificate', 'approved', 'docs/stu006_medical', 'https://res.cloudinary.com/demo/image/upload/sample.pdf', '2026-09-02');
+
+-- 12. Audit Logs
 INSERT OR IGNORE INTO audit_logs (id, user_id, user_name, user_role, action, description, target_id, timestamp, ip_address) VALUES
 ('LOG001', 'ADM001', 'Supattra Kaewmanee', 'admin', 'system_initialized', 'Database tables and initial system seed loaded successfully', 'SYSTEM', '2026-09-20 08:00:00', '127.0.0.1');
 
--- 10. Advising Categories
+-- 13. Advising Categories
 INSERT OR IGNORE INTO advising_category_configs (id, value, label_th, label_en, sub_categories, is_active, created_at, updated_at) VALUES
 ('CAT001', 'academic_performance', 'ผลการเรียนและพัฒนาการทางการศึกษา', 'Academic Performance & Progress', '["gpa_improvement","study_plan","probation_support","honors_guidance"]', 1, '2024-06-01', '2024-06-01'),
 ('CAT002', 'course_enrollment', 'การลงทะเบียนเรียนและแผนการเรียน', 'Course Enrollment & Study Plan', '["course_prerequisites","overload_request","schedule_conflict","general_education"]', 1, '2024-06-01', '2024-06-01'),
@@ -91,7 +114,7 @@ INSERT OR IGNORE INTO advising_category_configs (id, value, label_th, label_en, 
 ('CAT006', 'withdrawal_leave', 'การลาพักการศึกษาหรือลาออก', 'Leave of Absence / Withdrawal', '["temporary_leave","major_transfer","university_withdrawal","academic_restart"]', 1, '2024-06-01', '2024-06-01'),
 ('CAT007', 'other', 'เรื่องอื่นๆ', 'Other Inquiries', '["general_inquiry","special_request"]', 1, '2024-06-01', '2024-06-01');
 
--- 11. Document Types
+-- 14. Document Types
 INSERT OR IGNORE INTO document_type_configs (id, name, label_th, label_en, allowed_formats, max_size_mb, is_required, is_active, created_at, updated_at) VALUES
 ('DT001', 'transcript', 'ใบรายงานผลการศึกษา (Transcript)', 'Official / Unofficial Transcript', '["PDF","PNG","JPG"]', 10, 0, 1, '2024-06-01', '2024-06-01'),
 ('DT002', 'scholarship_form', 'แบบฟอร์มขอรับ/ต่ออายุทุนการศึกษา', 'Scholarship Application/Renewal Form', '["PDF","DOCX"]', 15, 0, 1, '2024-06-01', '2024-06-01'),
@@ -100,4 +123,3 @@ INSERT OR IGNORE INTO document_type_configs (id, name, label_th, label_en, allow
 ('DT005', 'medical_certificate', 'ใบรับรองแพทย์ (Medical Certificate)', 'Medical Certificate / Health Proof', '["PDF","JPG","PNG"]', 10, 0, 1, '2024-06-01', '2024-06-01'),
 ('DT006', 'resume_cv', 'ประวัติย่อ / เรซูเม่ (Resume/CV)', 'Resume / Curriculum Vitae', '["PDF"]', 10, 0, 1, '2024-06-01', '2024-06-01'),
 ('DT007', 'other_document', 'เอกสารอื่นๆ', 'Other Supporting Documents', '["PDF","JPG","PNG","DOCX"]', 20, 0, 1, '2024-06-01', '2024-06-01');
-
