@@ -330,7 +330,7 @@ export default function UserManagement() {
         }
         const r = roleLabels[u.role] || { th: u.role, en: u.role }
         return (
-          <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-md border ${
+          <span className={`inline-block whitespace-nowrap text-[11px] font-bold px-2.5 py-0.5 rounded-md border ${
             u.role === 'super_admin'
               ? 'bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border-purple-200/70 dark:border-purple-800'
               : u.role === 'admin'
@@ -483,7 +483,7 @@ export default function UserManagement() {
             onClick={() => setShowRoleDropdown(!showRoleDropdown)}
             className="flex items-center gap-2 px-3.5 py-2 border border-slate-200/90 dark:border-slate-800 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-2xs"
           >
-            <span>
+            <span className="truncate max-w-[10rem] sm:max-w-none">
               {t(
                 roleOptions.find(r => r.value === roleFilter)?.labelTh || 'All Roles',
                 roleOptions.find(r => r.value === roleFilter)?.labelEn || 'All Roles'
