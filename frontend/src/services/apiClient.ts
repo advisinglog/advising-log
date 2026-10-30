@@ -21,7 +21,61 @@ import type {
   DocumentType,
 } from '@/types'
 
-const API_BASE = (import.meta.env.VITE_API_URL as string) || 'http://localhost:8787'
+const API_BASE = ((import.meta.env.VITE_API_URL as string) || 'http://localhost:8787').replace(/\/$/, '')
+
+export function getApiBase(): string {
+  return API_BASE
+}
+
+// --- Session (signed token from /api/auth/google + active role for multi-role staff) ---
+const TOKEN_STORAGE_KEY = 'advising_log_auth_token'
+
+let sessionToken: string | null = (() => {
+  try { return localStorage.getItem(TOKEN_STORAGE_KEY) } catch { return null }
+})()
+let activeRole: string | null = null
+const sessionListeners = new Set<() => void>()
+const unauthorizedListeners = new Set<() => void>()
+
+export function getSessionToken(): string | null {
+  return sessionToken
+}
+
+/** Sets (or clears, with null) the session token and active role, and notifies listeners */
+export function setSession(token: string | null, role?: string | null): void {
+  const changed = token !== sessionToken || (role ?? null) !== activeRole
+  sessionToken = token
+  activeRole = role ?? null
+  try {
+    if (token) localStorage.setItem(TOKEN_STORAGE_KEY, token)
+    else localStorage.removeItem(TOKEN_STORAGE_KEY)
+  } catch {}
+  if (changed) sessionListeners.forEach(fn => fn())
+}
+
+/** Called when the session token or active role changes (e.g. to reload data) */
+export function onSessionChange(fn: () => void): () => void {
+  sessionListeners.add(fn)
+  return () => { sessionListeners.delete(fn) }
+}
+
+/** Called when the server rejects the session (expired, deactivated) */
+export function onUnauthorized(fn: () => void): () => void {
+  unauthorizedListeners.add(fn)
+  return () => { unauthorizedListeners.delete(fn) }
+}
+
+export function getAuthHeaders(): Record<string, string> {
+  const headers: Record<string, string> = {}
+  if (sessionToken) headers.Authorization = `Bearer ${sessionToken}`
+  if (activeRole) headers['x-active-role'] = activeRole
+  return headers
+}
+
+/** Report a 401 from any backend call so the app signs the user out */
+export function notifyUnauthorized(status: number): void {
+  if (status === 401 && sessionToken) unauthorizedListeners.forEach(fn => fn())
+}
 
 class ApiClient {
   private base: string
@@ -34,13 +88,15 @@ class ApiClient {
     try {
       const url = `${this.base}${endpoint}`
       const res = await fetch(url, {
+        ...options,
         headers: {
           'Content-Type': 'application/json',
-          ...options.headers,
+          ...getAuthHeaders(),
+          ...(options.headers as Record<string, string> | undefined),
         },
-        ...options,
       })
       if (!res.ok) {
+        notifyUnauthorized(res.status)
         return null
       }
       return (await res.json()) as T

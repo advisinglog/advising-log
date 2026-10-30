@@ -4,7 +4,7 @@
 // ============================================================
 
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react'
-import api from '@/services/apiClient'
+import api, { getSessionToken, onSessionChange } from '@/services/apiClient'
 import type {
   AdvisingRequest,
   RequestProgress,
@@ -247,6 +247,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let isMounted = true
     if (isTestEnv()) return // In test mode, keep test fixtures intact
+    if (!getSessionToken()) return // Signed out: the API requires a session, reload after sign-in
     setBackendStatus('loading')
     async function syncFromBackend() {
       const [uRes, rosRes, rRes, aptRes, fRes, sRes, eRes, vRes, aRes, kRes, ewRes, docRes, catRes, dtRes] = await Promise.all([
@@ -266,9 +267,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         api.getDocumentTypes(),
       ])
       if (!isMounted) return
-      const adminDataLoaded = Array.isArray(uRes?.users) && Array.isArray(rosRes?.roster)
-        && Array.isArray(aRes?.logs) && Array.isArray(catRes?.categories) && Array.isArray(dtRes?.documentTypes)
-      setBackendStatus(adminDataLoaded ? 'ready' : 'error')
+      // Audit logs and AI keys are admin-only, so they are not required for every role
+      const coreDataLoaded = Array.isArray(uRes?.users) && Array.isArray(rosRes?.roster)
+        && Array.isArray(catRes?.categories) && Array.isArray(dtRes?.documentTypes)
+      setBackendStatus(coreDataLoaded ? 'ready' : 'error')
       if (uRes && Array.isArray(uRes.users)) {
         const superAdminEmail = ((import.meta.env.VITE_SUPER_ADMIN_EMAIL as string) || 'se.advisinglog@gmail.com').toLowerCase().trim()
         const normalizedUsers = uRes.users.map(u => {
@@ -378,6 +380,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     syncFromBackend().catch(() => { if (isMounted) setBackendStatus('error') })
     return () => { isMounted = false }
   }, [refreshVersion])
+
+  // Reload when the user signs in, signs out, or switches role (the server scopes access by role)
+  useEffect(() => onSessionChange(refreshBackend), [refreshBackend])
 
   useEffect(() => {
     if (isTestEnv()) return

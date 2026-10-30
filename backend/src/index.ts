@@ -4,20 +4,134 @@ import { z } from 'zod'
 import { getDb } from './db'
 import * as schema from './db/schema'
 import { eq, desc, and, or } from 'drizzle-orm'
+import {
+  AuthError,
+  allowedRolesFor,
+  rolesForRoute,
+  signSession,
+  verifyGoogleAccessToken,
+  verifySession,
+  type Role,
+} from './auth'
 
 export type Bindings = {
   DB?: D1Database
   GEMINI_API_KEY?: string
   SUPER_ADMIN_EMAIL?: string
+  /** Same OAuth Client ID as the frontend's VITE_GOOGLE_CLIENT_ID */
+  GOOGLE_CLIENT_ID?: string
+  /** Long random secret used to sign session tokens */
+  SESSION_SECRET?: string
+  /** Comma-separated frontend origins allowed to call the API */
+  ALLOWED_ORIGINS?: string
 }
 
-const app = new Hono<{ Bindings: Bindings }>()
+export interface AuthContext {
+  userId: string
+  name: string
+  email: string
+  baseRole: Role
+  /** Active role for this request (multi-role staff can switch) */
+  role: Role
+}
 
-app.use('*', cors({
-  origin: '*',
-  allowHeaders: ['Content-Type', 'Authorization', 'x-gemini-key'],
-  allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-}))
+type Variables = { auth?: AuthContext }
+
+const app = new Hono<{ Bindings: Bindings; Variables: Variables }>()
+
+const DEFAULT_ALLOWED_ORIGINS = ['http://localhost:5173', 'http://127.0.0.1:5173']
+
+app.use('*', async (c, next) => {
+  const allowed = c.env?.ALLOWED_ORIGINS
+    ? c.env.ALLOWED_ORIGINS.split(',').map(o => o.trim()).filter(Boolean)
+    : DEFAULT_ALLOWED_ORIGINS
+  return cors({
+    origin: (origin) => (allowed.includes(origin) ? origin : null),
+    allowHeaders: ['Content-Type', 'Authorization', 'x-active-role'],
+    allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  })(c, next)
+})
+
+const PUBLIC_PATHS = new Set(['/', '/api/health', '/api/info', '/api/auth/google'])
+
+function clientIp(c: any): string {
+  return c.req.header('cf-connecting-ip') || c.req.header('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
+}
+
+/** Append-only audit record (Computer Crime Act §26). Never throws. */
+async function writeAudit(c: any, entry: {
+  userId: string
+  userName: string
+  userRole: string
+  action: string
+  description: string
+  targetId?: string | null
+}) {
+  const database = db(c)
+  if (!database) return
+  try {
+    await database.insert(schema.auditLogs).values({
+      id: `LOG${Date.now()}${Math.random().toString(36).slice(2, 6)}`,
+      ...entry,
+      targetId: entry.targetId ?? null,
+      timestamp: new Date().toISOString(),
+      ipAddress: clientIp(c),
+    })
+  } catch {}
+}
+
+// Every /api route except the public ones requires a valid session and an allowed role
+app.use('/api/*', async (c, next) => {
+  if (c.req.method === 'OPTIONS' || PUBLIC_PATHS.has(c.req.path)) return next()
+
+  const deny = async (status: 401 | 403, error: string, auth?: Partial<AuthContext>) => {
+    await writeAudit(c, {
+      userId: auth?.userId || 'anonymous',
+      userName: auth?.name || 'anonymous',
+      userRole: auth?.role || 'none',
+      action: 'unauthorized_access',
+      description: `${error}: ${c.req.method} ${c.req.path}`,
+      targetId: c.req.path,
+    })
+    return c.json({ success: false, error }, status)
+  }
+
+  const secret = c.env?.SESSION_SECRET
+  if (!secret) return c.json({ success: false, error: 'AUTH_NOT_CONFIGURED' }, 500)
+
+  const header = c.req.header('authorization') || ''
+  const token = header.startsWith('Bearer ') ? header.slice(7) : ''
+  const claims = token ? await verifySession(token, secret) : null
+  if (!claims) return deny(401, 'UNAUTHENTICATED')
+
+  // Re-check the account on every request so deactivation and role changes apply immediately
+  let baseRole = claims.role
+  let name = claims.name
+  const database = db(c)
+  if (database) {
+    const user = await database.select().from(schema.users).where(eq(schema.users.id, claims.sub)).get()
+    if (!user || !user.isActive) return deny(401, 'ACCOUNT_INACTIVE', { userId: claims.sub, name: claims.name })
+    baseRole = user.role as Role
+    name = user.name
+  }
+
+  const requestedRole = (c.req.header('x-active-role') || baseRole) as Role
+  const auth: AuthContext = { userId: claims.sub, name, email: claims.email, baseRole, role: requestedRole }
+  if (!allowedRolesFor(baseRole).includes(requestedRole)) return deny(403, 'ROLE_NOT_ALLOWED', auth)
+
+  const allowedRoles = rolesForRoute(c.req.method, c.req.path)
+  if (!allowedRoles || !allowedRoles.includes(requestedRole)) return deny(403, 'FORBIDDEN', auth)
+
+  c.set('auth', auth)
+  return next()
+})
+
+/** Advisors may only create or edit student accounts (e.g. roster CSV import). */
+function canWriteUser(auth: AuthContext | undefined, newRole: string | undefined, existingRole?: string): boolean {
+  if (!auth) return false
+  if (auth.role === 'admin' || auth.role === 'super_admin') return true
+  return newRole === 'student' && (!existingRole || existingRole === 'student')
+}
 
 // --- Health & Info Endpoints ---
 app.get('/', (c) => {
@@ -64,26 +178,29 @@ function db(c: any) {
 // ============================================================
 app.post('/api/auth/google', async (c) => {
   try {
-    const { credential } = await c.req.json<{ credential?: string }>()
-    if (!credential) {
-      return c.json({ success: false, error: 'Missing Google credential token' }, 400)
+    const clientId = c.env?.GOOGLE_CLIENT_ID
+    const sessionSecret = c.env?.SESSION_SECRET
+    if (!clientId || !sessionSecret) {
+      return c.json({ success: false, error: 'AUTH_NOT_CONFIGURED', message: 'Server sign-in is not configured (GOOGLE_CLIENT_ID / SESSION_SECRET).' }, 500)
     }
 
-    // Decode JWT Payload without external dependencies
-    const parts = credential.split('.')
-    if (parts.length < 2) {
-      return c.json({ success: false, error: 'Invalid Google credential token format' }, 400)
+    const { accessToken } = await c.req.json<{ accessToken?: string }>()
+    if (!accessToken) {
+      return c.json({ success: false, error: 'Missing Google access token' }, 400)
     }
 
-    const payloadBase64 = parts[1].replace(/-/g, '+').replace(/_/g, '/')
-    const decoded = JSON.parse(atob(payloadBase64))
-    const { email, name, picture, sub: googleId } = decoded
-
-    if (!email) {
-      return c.json({ success: false, error: 'Google account has no email address' }, 400)
+    // Verify with Google: genuine token, issued for this app, verified email
+    let identity
+    try {
+      identity = await verifyGoogleAccessToken(accessToken, clientId)
+    } catch (err) {
+      const code = err instanceof AuthError ? err.code : 'GOOGLE_AUTH_FAILED'
+      await writeAudit(c, { userId: 'anonymous', userName: 'anonymous', userRole: 'none', action: 'login_failed', description: code })
+      return c.json({ success: false, error: code, message: 'Google sign-in could not be verified. Please try again.' }, 401)
     }
+    const { email, name, picture, sub: googleId } = identity
 
-    const lowerEmail = email.toLowerCase()
+    const lowerEmail = email
     const codePrefix = lowerEmail.split('@')[0].toUpperCase()
     const superAdminEmail = (c.env?.SUPER_ADMIN_EMAIL || 'se.advisinglog@gmail.com').toLowerCase().trim()
     const isAuthorizedSuperAdmin = lowerEmail === superAdminEmail
@@ -95,83 +212,20 @@ app.post('/api/auth/google', async (c) => {
       lowerEmail.endsWith('@lamduan.ac.th')
 
     const database = db(c)
-
-    // Offline / Mock Fallback (when DB binding is absent)
     if (!database) {
-      if (isAuthorizedSuperAdmin) {
-        const adminUser = {
-          id: 'ADM_SE_GOOGLE',
-          code: 'ADM-SUPER',
-          name: 'Super Admin',
-          email: lowerEmail,
-          role: 'super_admin' as const,
-          department: 'Academic & System Affairs',
-          isActive: true,
-          hasAiAccess: true,
-          avatar: picture || null,
-          createdAt: new Date().toISOString().split('T')[0],
-        }
-        return c.json({ success: true, user: adminUser, source: 'offline_fallback' })
-      }
-
-      // Check if user is known in pre-registered list
-      const isKnownUser = lowerEmail.startsWith('6631503') || lowerEmail.startsWith('prasit') || lowerEmail.startsWith('nittaya') || lowerEmail.startsWith('worasak') || lowerEmail.startsWith('admin')
-
-      if (!isKnownUser) {
-        if (!isMfuDomain) {
-          return c.json({
-            success: false,
-            error: 'DOMAIN_RESTRICTED',
-            message: 'ไม่อนุญาตให้เข้าใช้งาน: กรุณาใช้อีเมลมหาวิทยาลัยแม่ฟ้าหลวง (@mfu.ac.th หรือ @lamduan.mfu.ac.th) หรือบัญชีที่ได้รับการลงทะเบียนโดยผู้ดูแลระบบ',
-          }, 403)
-        }
-        return c.json({
-          success: false,
-          error: 'USER_NOT_REGISTERED',
-          message: `ไม่สามารถเข้าสู่ระบบได้: บัญชีของคุณ (${lowerEmail}) ยังไม่ได้รับการเพิ่มหรือลงทะเบียนโดยผู้ดูแลระบบ (Admin) กรุณาติดต่อสำนักวิชาหรือผู้ดูแลระบบเพื่อเพิ่มรายชื่อเข้าสู่ระบบ`,
-        }, 403)
-      }
-
-      let role: 'student' | 'advisor' | 'qa_chair' | 'admin' | 'super_admin' = isAuthorizedSuperAdmin ? 'super_admin' : 'advisor'
-      if (/^\d/.test(codePrefix) || lowerEmail.includes('student') || lowerEmail.includes('lamduan')) {
-        role = 'student'
-      }
-
-      const fallbackUser = {
-        id: `GOOGLE_${googleId.substring(0, 8)}`,
-        code: codePrefix,
-        name: isAuthorizedSuperAdmin ? 'Super Admin' : (name || 'Google User'),
-        email: lowerEmail,
-        role,
-        department: 'School of Applied Digital Technology (ADT)',
-        isActive: true,
-        hasAiAccess: role !== 'student',
-        avatar: picture || null,
-        createdAt: new Date().toISOString().split('T')[0],
-      }
-      return c.json({ success: true, user: fallbackUser, source: 'offline_fallback' })
+      return c.json({ success: false, error: 'Database unavailable' }, 503)
     }
 
     // 1. Search User in Cloudflare D1 (Check if registered by Admin)
-    let user = await database.select().from(schema.users)
-      .where(
-        or(
-          eq(schema.users.email, lowerEmail),
-          eq(schema.users.email, email.trim()),
-          eq(schema.users.code, codePrefix),
-          eq(schema.users.code, codePrefix.toLowerCase()),
-          eq(schema.users.code, codePrefix.toUpperCase()),
-        )
-      ).get()
-
-    // Case-insensitive / whitespace-tolerant fallback across all users
+    // Match by exact email. Matching the email prefix to a student code is only allowed for
+    // university accounts, otherwise e.g. 6631503001@gmail.com could sign in as that student.
+    let user = await database.select().from(schema.users).where(eq(schema.users.email, lowerEmail)).get()
     if (!user) {
       const allUsers = await database.select().from(schema.users)
       user = allUsers.find(
         (u) =>
           u.email?.toLowerCase().trim() === lowerEmail ||
-          u.code?.toUpperCase().trim() === codePrefix ||
-          (u.email && u.email.toLowerCase().trim().split('@')[0] === codePrefix.toLowerCase())
+          (isMfuDomain && u.code?.toUpperCase().trim() === codePrefix)
       )
     }
 
@@ -274,6 +328,12 @@ app.post('/api/auth/google', async (c) => {
       } catch (_e) {}
     }
 
+    const sessionToken = await signSession(
+      { sub: user.id, email: lowerEmail, name: name || user.name, role: user.role as Role },
+      sessionSecret
+    )
+    await writeAudit(c, { userId: user.id, userName: name || user.name, userRole: user.role, action: 'user_login', description: `Signed in with Google (${googleId ? 'verified' : 'no sub'})` })
+
     return c.json({
       success: true,
       user: {
@@ -282,7 +342,7 @@ app.post('/api/auth/google', async (c) => {
         avatar: picture || null,
         advisor: assignedAdvisor,
       },
-      token: `session_${Date.now()}_${googleId.substring(0, 6)}`,
+      token: sessionToken,
     })
   } catch (err: any) {
     return c.json({ success: false, error: err.message || 'Failed to authenticate with Google' }, 500)
@@ -368,6 +428,9 @@ app.post('/api/users', async (c) => {
       u.code.toUpperCase() === autoCode.toUpperCase() ||
       (body.id && u.id === body.id)
   )
+  if (!canWriteUser(c.get('auth'), assignedRole, existingUser?.role)) {
+    return c.json({ success: false, error: 'Advisors can only add or edit student accounts' }, 403)
+  }
 
   const userObj = {
     id: existingUser ? existingUser.id : (body.id || `USER_${Date.now()}`),
@@ -420,6 +483,7 @@ app.post('/api/users/bulk', async (c) => {
         u.code.toUpperCase() === autoCode.toUpperCase() ||
         (item.id && u.id === item.id)
     )
+    if (!canWriteUser(c.get('auth'), assignedRole, existingUser?.role)) continue
 
     const userObj = {
       id: existingUser ? existingUser.id : (item.id || `USER_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`),
@@ -464,7 +528,17 @@ app.patch('/api/users/:id', async (c) => {
     return c.json({ success: false, error: 'Cannot deactivate Master Super Admin account' }, 400)
   }
 
-  await database.update(schema.users).set(body).where(eq(schema.users.id, id))
+  const auth = c.get('auth')
+  if (!targetUser) return c.json({ success: false, error: 'User not found' }, 404)
+  if (!canWriteUser(auth, body.role ?? targetUser.role, targetUser.role)) {
+    return c.json({ success: false, error: 'Advisors can only edit student accounts' }, 403)
+  }
+  // Only the configured super admin email holds super_admin; nobody can grant it here
+  if (body.role === 'super_admin') {
+    return c.json({ success: false, error: 'The super_admin role cannot be assigned' }, 403)
+  }
+  const { id: _ignoredId, ...updates } = body
+  await database.update(schema.users).set(updates).where(eq(schema.users.id, id))
   return c.json({ success: true })
 })
 
@@ -1274,16 +1348,18 @@ app.post('/api/audit-logs', async (c) => {
   if (!database) return c.json({ error: 'Database unavailable' }, 503)
 
   const body = await c.req.json()
+  const auth = c.get('auth')!
+  // Identity, time and IP come from the server, never from the client (no spoofing)
   const log = {
-    id: body.id || `LOG${Date.now()}`,
-    userId: body.userId,
-    userName: body.userName,
-    userRole: body.userRole,
-    action: body.action,
-    description: body.description,
-    targetId: body.targetId || null,
-    timestamp: body.timestamp || new Date().toISOString().replace('T', ' ').substring(0, 19),
-    ipAddress: body.ipAddress || '127.0.0.1',
+    id: `LOG${Date.now()}${Math.random().toString(36).slice(2, 6)}`,
+    userId: auth.userId,
+    userName: auth.name,
+    userRole: auth.role,
+    action: String(body.action || 'unknown').slice(0, 64),
+    description: String(body.description || '').slice(0, 2000),
+    targetId: body.targetId ? String(body.targetId).slice(0, 128) : null,
+    timestamp: new Date().toISOString(),
+    ipAddress: clientIp(c),
   }
 
   await database.insert(schema.auditLogs).values(log)

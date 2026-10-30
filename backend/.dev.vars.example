@@ -1,5 +1,13 @@
 # Backend Local Environment Variables Template (.dev.vars)
 SUPER_ADMIN_EMAIL=your-super-admin@example.com
+
+# Server-verified sign-in (required)
+# Same value as frontend VITE_GOOGLE_CLIENT_ID
+GOOGLE_CLIENT_ID=your-google-oauth-client-id.apps.googleusercontent.com
+# Long random secret that signs session tokens. Generate with: openssl rand -hex 32
+SESSION_SECRET=replace-with-64-random-hex-characters
+# Frontend origins allowed to call the API (comma-separated)
+ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
 GEMINI_API_KEY=your-optional-gemini-api-key
 
 # Cloudinary Credentials (Optional for server-side management)

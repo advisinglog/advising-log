@@ -5,6 +5,7 @@
 // ============================================================
 
 import { getAdminContactEmail } from '@/utils/adminContact'
+import { getApiBase, getAuthHeaders, notifyUnauthorized } from '@/services/apiClient'
 
 export interface AIAnalysisPayloadCase {
   id: string
@@ -487,10 +488,9 @@ async function requestAnalysis(req: AIAnalysisRequest): Promise<AIAnalysisRespon
   // 1. System Gateway: Backend Hono API (Cloudflare Workers) with the admin-managed key
   if (keySource === 'system') {
     try {
-      const backendUrl = 'http://localhost:8787/api/qa/ai-analyze'
-      const res = await fetch(backendUrl, {
+      const res = await fetch(`${getApiBase()}/api/qa/ai-analyze`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({
           mode,
           cases: req.cases,
@@ -501,6 +501,12 @@ async function requestAnalysis(req: AIAnalysisRequest): Promise<AIAnalysisRespon
         }),
       })
 
+      notifyUnauthorized(res.status)
+      if (res.status === 401 || res.status === 403) {
+        return aiError(mode, 'Default API key', 'NOT_AUTHORIZED', lang === 'th'
+          ? '⚠️ คุณไม่มีสิทธิ์ใช้งาน AI ด้วยบทบาทนี้ หรือเซสชันหมดอายุ กรุณาเข้าสู่ระบบอีกครั้ง'
+          : '⚠️ You are not allowed to use AI in this role, or your session expired. Please sign in again.')
+      }
       const data = await res.json().catch(() => null) as AIAnalysisResponse | null
       if (data && typeof data.analysis === 'string') {
         return data

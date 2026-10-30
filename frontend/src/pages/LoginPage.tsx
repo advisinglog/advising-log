@@ -99,25 +99,8 @@ export default function LoginPage() {
       setAuthError(null)
       setLoading(true)
       try {
-        const userInfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-          headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
-        })
-        if (!userInfoRes.ok) {
-          throw new Error('Failed to fetch user profile')
-        }
-        const userInfo = await userInfoRes.json()
-        const userEmail = (userInfo.email || '').toLowerCase().trim()
-
-        // Escape unicode characters to ASCII sequences so btoa / atob decode cleanly without Latin1 errors
-        const safeJson = JSON.stringify(userInfo).replace(
-          /[\u007f-\uffff]/g,
-          (c) => '\\u' + ('0000' + c.charCodeAt(0).toString(16)).slice(-4)
-        )
-        const header = btoa(JSON.stringify({ alg: 'none', typ: 'JWT' }))
-        const payload = btoa(safeJson)
-        const syntheticJwt = `${header}.${payload}.signature`
-
-        const result = await loginWithGoogle(syntheticJwt)
+        // The backend verifies this token with Google (audience, expiry, verified email)
+        const result = await loginWithGoogle(tokenResponse.access_token)
         setLoading(false)
         if (result.success && result.user) {
           redirectForRole(result.user.role)
@@ -125,7 +108,7 @@ export default function LoginPage() {
           setAuthError({
             code: result.error || 'AUTH_FAILED',
             message: result.message,
-            email: result.email || userEmail,
+            email: result.email,
           })
         }
       } catch {
