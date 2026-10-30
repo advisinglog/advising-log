@@ -48,7 +48,7 @@ function renderWithProviders(ui: React.ReactElement, { route = '/' } = {}) {
   )
 }
 
-describe('Admin API Control & CSV Roster Import', () => {
+describe('Admin API Control & Roster Management', () => {
   beforeEach(() => {
     localStorage.clear()
   })
@@ -210,53 +210,13 @@ describe('Admin API Control & CSV Roster Import', () => {
   })
 
   // -------------------------------------------------------------
-  // PART 3: CSV Roster Import & Duplicate Prevention Tests
+  // PART 3: Manual Roster Assignment Tests
   // -------------------------------------------------------------
-  it('opens CSV Roster Import modal and displays duplicate prevention & mode explanation', () => {
+  it('does not expose CSV import and keeps manual assignment available', () => {
     renderWithProviders(<Roster />)
 
-    const importBtn = screen.getByRole('button', { name: /นำเข้าไฟล์ CSV/i })
-    act(() => {
-      fireEvent.click(importBtn)
-    })
-
-    // Expect FAQ & Policy clarifications to answer user questions
-    expect(screen.getByText(/ข้อมูลจะซ้ำไหม\? \(Zero Duplicate\)/i)).toBeInTheDocument()
-    expect(screen.getByText(/จะแทนที่ทั้งหมดไหม\? \(Mode Choice\)/i)).toBeInTheDocument()
-    expect(screen.getByText(/อัปเดตและเพิ่มใหม่ \(Upsert \/ Merge\)/i)).toBeInTheDocument()
-    expect(screen.getByText(/แทนที่ข้อมูลทั้งหมด \(Full Replace \/ Overwrite\)/i)).toBeInTheDocument()
-  })
-
-  it('loads sample CSV data and generates validation preview with zero duplicates', async () => {
-    renderWithProviders(<Roster />)
-
-    // Open import modal
-    act(() => {
-      fireEvent.click(screen.getByRole('button', { name: /นำเข้าไฟล์ CSV/i }))
-    })
-
-    // Click load sample data
-    const loadSampleBtn = screen.getByRole('button', { name: /โหลดข้อมูลตัวอย่าง/i })
-    act(() => {
-      fireEvent.click(loadSampleBtn)
-    })
-
-    // Expect to switch to preview tab and show summary
-    expect(screen.getByText(/2\. ตรวจสอบพรีวิว/i)).toBeInTheDocument()
-    expect(screen.getAllByText(/6631503001/i).length).toBeGreaterThan(0)
-    expect(screen.getAllByText(/6631503002/i).length).toBeGreaterThan(0)
-
-    // Confirm button should be enabled
-    const commitBtn = screen.getByRole('button', { name: /ยืนยันการนำเข้า/i })
-    expect(commitBtn).toBeInTheDocument()
-
-    // Click commit
-    await act(async () => {
-      fireEvent.click(commitBtn)
-    })
-
-    // Modal should close on success
-    expect(screen.queryByText(/2\. ตรวจสอบพรีวิว/i)).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /นำเข้าไฟล์ CSV|Import CSV/i })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /กำหนดที่ปรึกษา|Assign Advisor/i })).toBeInTheDocument()
   })
 
   it('performs store batch import in Upsert mode without deleting unaffected students or duplicating records', async () => {

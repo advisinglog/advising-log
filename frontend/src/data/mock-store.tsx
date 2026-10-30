@@ -681,15 +681,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       }
     })
 
+    const response = await api.bulkSaveUsers(createdUsers)
+    if (response?.success === false) {
+      throw new Error('Bulk user registration was rejected by the server')
+    }
+
     setUsers(prev => {
       const existingEmails = new Set(createdUsers.map(u => u.email.toLowerCase()))
       const filtered = prev.filter(u => !existingEmails.has(u.email.toLowerCase()))
       return [...filtered, ...createdUsers]
     })
-
-    try {
-      await api.bulkSaveUsers(createdUsers)
-    } catch (_err) {}
 
     return createdUsers
   }, [])
