@@ -356,7 +356,7 @@ export default function AdvisorDashboard() {
                 {t('นักศึกษาในความดูแลทั้งหมด', 'Total Assigned Advisees')}
               </p>
             </div>
-            <Button onClick={() => setShowAdviseeList(true)}>
+            <Button onClick={() => navigate('/advisor/advisees')}>
               <Users className="h-4 w-4 mr-1.5" />
               {t('ดูรายชื่อนักศึกษา', 'View Advisee List')} ({adviseeStudents.length})
             </Button>

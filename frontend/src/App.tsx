@@ -24,6 +24,7 @@ const StudentVoiceSurvey = lazy(() => import('@/pages/student/StudentVoiceSurvey
 
 // Advisor Pages
 const AdvisorDashboard = lazy(() => import('@/pages/advisor/AdvisorDashboard'))
+const MyAdvisees = lazy(() => import('@/pages/advisor/MyAdvisees'))
 const AdvisingSessions = lazy(() => import('@/pages/advisor/AdvisingSessions'))
 const AdvisorLog = lazy(() => import('@/pages/advisor/AdvisorLog'))
 const AdvisorFollowUps = lazy(() => import('@/pages/advisor/FollowUps'))
@@ -101,6 +102,7 @@ export default function App() {
 
                       {/* Advisor Routes */}
                       <Route path="advisor" element={<RequireRole allowedRoles={['advisor']}><AdvisorDashboard /></RequireRole>} />
+                      <Route path="advisor/advisees" element={<RequireRole allowedRoles={['advisor', 'qa_chair']}><MyAdvisees /></RequireRole>} />
                       <Route path="advisor/sessions" element={<RequireRole allowedRoles={['advisor', 'qa_chair']}><AdvisingSessions /></RequireRole>} />
                       <Route path="advisor/log" element={<RequireRole allowedRoles={['advisor']}><AdvisorLog /></RequireRole>} />
                       <Route path="advisor/followups" element={<RequireRole allowedRoles={['advisor', 'qa_chair']}><AdvisorFollowUps /></RequireRole>} />

@@ -50,6 +50,7 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
       case 'advisor':
         return [
           { to: '/advisor', label: t('หน้าหลักอาจารย์', 'Advisor Dashboard'), icon: <LayoutDashboard className="h-4 w-4" /> },
+          { to: '/advisor/advisees', label: t('นักศึกษาในความดูแล', 'My Advisees'), icon: <Users className="h-4 w-4" /> },
           { to: '/advisor/sessions', label: t('ตารางนัดหมาย', 'Appointments'), icon: <CalendarClock className="h-4 w-4" /> },
           { to: '/advisor/log', label: t('บันทึกการเข้าพบ', 'Meeting Notes'), icon: <ClipboardList className="h-4 w-4" /> },
           { to: '/advisor/followups', label: t('งานติดตามผล', 'Follow-ups'), icon: <ListChecks className="h-4 w-4" /> },
