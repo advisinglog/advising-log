@@ -30,10 +30,10 @@ export default function EarlyWarning() {
   const [followUpOutcome, setFollowUpOutcome] = useState('')
 
   if (!currentUser) return null
-  const myWarnings = store.earlyWarnings.filter(w => isAdvisorMatch(w.advisorId, currentUser, store.users))
-  const myFollowUps = store.earlyWarningFollowUps.filter(fw => isAdvisorMatch(fw.advisorId, currentUser, store.users))
+  const myWarnings = store.earlyWarnings.filter(w => currentUser.role === 'qa_chair' || isAdvisorMatch(w.advisorId, currentUser, store.users))
+  const myFollowUps = store.earlyWarningFollowUps.filter(fw => currentUser.role === 'qa_chair' || isAdvisorMatch(fw.advisorId, currentUser, store.users))
   const myStudents = store.roster
-    .filter(r => isAdvisorMatch(r.advisorId, currentUser, store.users) && r.isActive)
+    .filter(r => (currentUser.role === 'qa_chair' || isAdvisorMatch(r.advisorId, currentUser, store.users)) && r.isActive)
     .map(r => store.users.find(u => u.id === r.studentId)!)
     .filter(Boolean)
 
@@ -375,4 +375,3 @@ export default function EarlyWarning() {
     </div>
   )
 }
-

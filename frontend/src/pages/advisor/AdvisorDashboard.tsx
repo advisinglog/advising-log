@@ -34,7 +34,8 @@ export default function AdvisorDashboard() {
       isAdvisorMatch(a.advisorId, currentUser, store.users) &&
       a.status === 'scheduled' &&
       a.studentConfirmed === true &&
-      !a.studentDeclined
+      !a.studentDeclined &&
+      store.requests.find(r => r.id === a.requestId)?.status !== 'cancelled'
     )
   const upcomingApts = confirmedApts
     .filter(a => (a.scheduledDate || '') >= getLocalDateString())
@@ -161,7 +162,7 @@ export default function AdvisorDashboard() {
         />
         <StatCard
           label={t('นัดหมายที่จัดไว้', 'Upcoming Sessions')}
-          value={confirmedApts.length}
+          value={upcomingApts.length}
           icon={<CalendarClock className="h-5 w-5" />}
           color="sky"
           onClick={() => navigate('/advisor/sessions', { state: { tab: 'upcoming' } })}

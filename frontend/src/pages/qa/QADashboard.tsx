@@ -8,6 +8,7 @@ import { useStore } from '@/data/mock-store'
 import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useTheme } from '@/contexts/ThemeContext'
+import { useNavigate } from 'react-router-dom'
 import { PageHeader, Card, StatCard, Button } from '@/components/ui'
 import { EXIT_REASON_CODES, STUDENT_VOICE_FACTORS } from '@/types'
 import { exportAunQaExcelReport } from '@/utils/exportUtils'
@@ -92,6 +93,7 @@ export default function QADashboard() {
   const { addToast } = useToast()
   const { t, language, getCategoryLabel } = useLanguage()
   const { isDark } = useTheme()
+  const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<'overview' | 'exit_qualitative' | 'student_voice'>('overview')
 
   const chartTheme = {
@@ -301,12 +303,18 @@ export default function QADashboard() {
         <>
           {/* Stats */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-            <StatCard label={t('คำร้องทั้งหมด', 'Total Requests')} value={totalRequests} icon={<BarChart3 className="h-5 w-5" />} color="sky" />
-            <StatCard label={t('ให้คำปรึกษาสำเร็จ', 'Completed Sessions')} value={totalSessions} icon={<CalendarClock className="h-5 w-5" />} color="sky" />
-            <StatCard label={t('งานติดตามผลทั้งหมด', 'Total Follow-ups')} value={totalFollowUps} icon={<ListChecks className="h-5 w-5" />} color="sky" />
-            <StatCard label={t('อัตราสำเร็จของงาน', 'Completion Rate')} value={`${completionRate}%`} icon={<TrendingUp className="h-5 w-5" />} color="sky" />
-            <StatCard label={t('เคสขอลาออก/ลาพัก', 'Exit & Leaves')} value={totalExitCases} icon={<UserX className="h-5 w-5" />} color="red" />
-            <StatCard label={t('เคสเตือนภัยวิชาการ', 'Early Warnings')} value={totalWarnings} icon={<AlertTriangle className="h-5 w-5" />} color="amber" />
+            <StatCard label={t('คำร้องทั้งหมด', 'Total Requests')} value={totalRequests} icon={<BarChart3 className="h-5 w-5" />} color="sky" onClick={() => navigate('/advisor/sessions')} />
+            <StatCard label={t('ให้คำปรึกษาสำเร็จ', 'Completed Sessions')} value={totalSessions} icon={<CalendarClock className="h-5 w-5" />} color="sky" onClick={() => navigate('/advisor/sessions', { state: { tab: 'completed' } })} />
+            <StatCard label={t('งานติดตามผลทั้งหมด', 'Total Follow-ups')} value={totalFollowUps} icon={<ListChecks className="h-5 w-5" />} color="sky" onClick={() => navigate('/advisor/followups')} />
+            <StatCard label={t('อัตราสำเร็จของงาน', 'Completion Rate')} value={`${completionRate}%`} icon={<TrendingUp className="h-5 w-5" />} color="sky" onClick={() => navigate('/advisor/sessions', { state: { tab: 'completed' } })} />
+            <StatCard
+              label={t('เคสขอลาออก/ลาพัก', 'Exit & Leaves')}
+              value={totalExitCases}
+              icon={<UserX className="h-5 w-5" />}
+              color="red"
+              onClick={() => navigate('/advisor/exit-cases')}
+            />
+            <StatCard label={t('เคสเตือนภัยวิชาการ', 'Early Warnings')} value={totalWarnings} icon={<AlertTriangle className="h-5 w-5" />} color="amber" onClick={() => navigate('/advisor/warnings')} />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

@@ -71,7 +71,7 @@ export default function AdvisingSessions() {
 
   if (!currentUser) return null
 
-  const myRequests = store.requests.filter(r => isAdvisorMatch(r.advisorId, currentUser, store.users))
+  const myRequests = store.requests.filter(r => currentUser.role === 'qa_chair' || isAdvisorMatch(r.advisorId, currentUser, store.users))
 
   const filterMap: Record<string, string[]> = {
     pending: ['requested', 'pending'],
@@ -101,7 +101,7 @@ export default function AdvisingSessions() {
   const isAdvisorSlotCollided = Boolean(
     currentUser && schedDate && schedTime &&
     store.appointments.some(
-      a => isAdvisorMatch(a.advisorId, currentUser, store.users) &&
+      a => (currentUser.role === 'qa_chair' || isAdvisorMatch(a.advisorId, currentUser, store.users)) &&
            a.scheduledDate === schedDate &&
            a.scheduledTime === schedTime &&
            a.status === 'scheduled' &&
@@ -193,7 +193,7 @@ export default function AdvisingSessions() {
     }
 
     const isAdvisorSlotCollided = store.appointments.some(
-      a => isAdvisorMatch(a.advisorId, currentUser, store.users) &&
+      a => (currentUser.role === 'qa_chair' || isAdvisorMatch(a.advisorId, currentUser, store.users)) &&
            a.scheduledDate === schedDate &&
            a.scheduledTime === schedTime &&
            a.status === 'scheduled' &&

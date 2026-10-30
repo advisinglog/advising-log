@@ -99,12 +99,12 @@ export default function App() {
 
                       {/* Advisor Routes */}
                       <Route path="advisor" element={<RequireRole allowedRoles={['advisor']}><AdvisorDashboard /></RequireRole>} />
-                      <Route path="advisor/sessions" element={<RequireRole allowedRoles={['advisor']}><AdvisingSessions /></RequireRole>} />
+                      <Route path="advisor/sessions" element={<RequireRole allowedRoles={['advisor', 'qa_chair']}><AdvisingSessions /></RequireRole>} />
                       <Route path="advisor/log" element={<RequireRole allowedRoles={['advisor']}><AdvisorLog /></RequireRole>} />
-                      <Route path="advisor/followups" element={<RequireRole allowedRoles={['advisor']}><AdvisorFollowUps /></RequireRole>} />
-                      <Route path="advisor/warnings" element={<RequireRole allowedRoles={['advisor']}><EarlyWarning /></RequireRole>} />
+                      <Route path="advisor/followups" element={<RequireRole allowedRoles={['advisor', 'qa_chair']}><AdvisorFollowUps /></RequireRole>} />
+                      <Route path="advisor/warnings" element={<RequireRole allowedRoles={['advisor', 'qa_chair']}><EarlyWarning /></RequireRole>} />
                       <Route path="advisor/referrals" element={<RequireRole allowedRoles={['advisor']}><Referrals /></RequireRole>} />
-                      <Route path="advisor/exit-cases" element={<RequireRole allowedRoles={['advisor']}><ExitCases /></RequireRole>} />
+                      <Route path="advisor/exit-cases" element={<RequireRole allowedRoles={['advisor', 'qa_chair']}><ExitCases /></RequireRole>} />
 
                       {/* QA Routes */}
                       <Route path="qa" element={<RequireRole allowedRoles={['qa_chair']}><QADashboard /></RequireRole>} />

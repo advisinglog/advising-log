@@ -15,7 +15,7 @@ export default function AdvisorFollowUps() {
   if (!currentUser) return null
 
   const followUps = store.followUps
-    .filter(f => isAdvisorMatch(f.advisorId, currentUser, store.users) && f.status !== 'completed')
+    .filter(f => (currentUser.role === 'qa_chair' || isAdvisorMatch(f.advisorId, currentUser, store.users)) && f.status !== 'completed')
     .sort((a, b) => (a.dueDate || '').localeCompare(b.dueDate || ''))
 
   return (

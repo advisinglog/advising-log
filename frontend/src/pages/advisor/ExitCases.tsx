@@ -27,7 +27,7 @@ export default function ExitCases() {
   const [previewDoc, setPreviewDoc] = useState<DocumentViewerTarget | null>(null)
 
   if (!currentUser) return null
-  const myCases = store.exitCases.filter(e => isAdvisorMatch(e.advisorId, currentUser, store.users))
+  const myCases = store.exitCases.filter(e => currentUser.role === 'qa_chair' || isAdvisorMatch(e.advisorId, currentUser, store.users))
 
   const columns = [
     {
@@ -289,4 +289,3 @@ export default function ExitCases() {
     </div>
   )
 }
-
