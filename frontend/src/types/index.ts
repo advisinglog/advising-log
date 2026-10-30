@@ -168,6 +168,7 @@ export type AuditAction =
   | 'api_toggled'
   | 'roster_batch_imported'
   | 'user_ai_access_toggled'
+  | 'ai_analysis_run'
 
 // --- Core Models ---
 

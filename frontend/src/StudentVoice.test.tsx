@@ -1,5 +1,5 @@
 import { render, screen, fireEvent, act } from '@testing-library/react'
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, afterEach } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
 import { StoreProvider } from '@/data/mock-store'
 import { ToastProvider } from '@/contexts/ToastContext'
@@ -8,6 +8,7 @@ import { ThemeProvider } from '@/contexts/ThemeContext'
 import StudentVoiceSurvey from '@/pages/student/StudentVoiceSurvey'
 import RequestAdvising from '@/pages/student/RequestAdvising'
 import QADashboard from '@/pages/qa/QADashboard'
+import AiAnalysisPage from '@/pages/qa/AiAnalysisPage'
 
 const studentUser = {
   id: 'STU001',
@@ -186,15 +187,20 @@ describe('Student Voice Feature', () => {
     createdAt: '2018-01-01',
   }
 
+  function stubBackendAi(answer: string) {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      success: true, provider: 'Google Gemini', mode: 'strategic_synthesis', analysis: answer, timestamp: 'now',
+    }), { status: 200 })))
+  }
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
   it('renders AI Qualitative Analysis and triggers strategic synthesis', async () => {
     mockUser = qaUser
-    renderWithProviders(<QADashboard />)
-
-    // Switch to Qualitative Exit Analysis tab
-    const qualitativeTabBtn = screen.getByRole('button', { name: /วิเคราะห์เจาะลึกทำไมลาออก/i })
-    act(() => {
-      fireEvent.click(qualitativeTabBtn)
-    })
+    stubBackendAi('REAL AI SUMMARY')
+    renderWithProviders(<AiAnalysisPage />)
 
     // Expect AI card
     expect(screen.getByText(/การวิเคราะห์และสรุปประเด็นด้วย AI/i)).toBeInTheDocument()
@@ -207,19 +213,35 @@ describe('Student Voice Feature', () => {
       fireEvent.click(runAiBtn)
     })
 
-    // Expect AI generated synthesis output
-    expect(await screen.findByText(/รายงานการวิเคราะห์เชิงคุณภาพและข้อเสนอแนะระดับหลักสูตร/i)).toBeInTheDocument()
-    expect(screen.getByText(/สรุปภาพรวมข้อมูลคำร้อง/i)).toBeInTheDocument()
+    // Prompt review dialog shows the exact prompt before anything is analyzed
+    expect(await screen.findByText(/ตรวจสอบพรอมต์ก่อนส่งให้ AI/i)).toBeInTheDocument()
+    expect(screen.getByText(/สรุปภาพรวมทุกเคส/i)).toBeInTheDocument()
+
+    // Instructions are editable, with Reset to default
+    const instructionsBox = screen.getByLabelText(/คำสั่งถึง AI/i) as HTMLTextAreaElement
+    expect(instructionsBox.value).toMatch(/Analyze these student departure cases/i)
+    fireEvent.change(instructionsBox, { target: { value: 'Focus only on Year 1 students.' } })
+    expect(screen.getByText('แก้ไขแล้ว')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /คืนค่าเริ่มต้น/i }))
+    expect(instructionsBox.value).toMatch(/Analyze these student departure cases/i)
+    expect(screen.queryByText('แก้ไขแล้ว')).not.toBeInTheDocument()
+
+    // System rules and case data are shown read-only
+    fireEvent.click(screen.getByRole('button', { name: /ดูพรอมต์ฉบับเต็ม/i }))
+    expect(screen.getByText(/กฎของระบบ/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/ล็อก แก้ไขไม่ได้/i)).toHaveLength(2)
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /ยืนยันและวิเคราะห์/i }))
+    })
+
+    // Expect the real AI answer returned by the backend
+    expect(await screen.findByText(/REAL AI SUMMARY/i)).toBeInTheDocument()
   })
 
   it('supports switching to Interactive AI chat and sending prompts', async () => {
     mockUser = qaUser
-    renderWithProviders(<QADashboard />)
-
-    const qualitativeTabBtn = screen.getByRole('button', { name: /วิเคราะห์เจาะลึกทำไมลาออก/i })
-    act(() => {
-      fireEvent.click(qualitativeTabBtn)
-    })
+    stubBackendAi('REAL AI CHAT ANSWER')
+    renderWithProviders(<AiAnalysisPage />)
 
     // Switch to Chat mode
     const chatModeBtn = screen.getByRole('button', { name: /ถาม-ตอบข้อมูลคำร้อง/i })
@@ -235,34 +257,36 @@ describe('Student Voice Feature', () => {
       fireEvent.click(chipBtn)
     })
 
-    // Expect AI response in chat history
-    expect(await screen.findByText(/สรุปคำตอบจากฐานข้อมูลสำหรับประธานหลักสูตร/i)).toBeInTheDocument()
+    // Confirm the reviewed prompt
+    expect(await screen.findByText(/ตรวจสอบพรอมต์ก่อนส่งให้ AI/i)).toBeInTheDocument()
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /ยืนยันและวิเคราะห์/i }))
+    })
+
+    // Expect the real AI answer in chat history
+    expect(await screen.findByText(/REAL AI CHAT ANSWER/i)).toBeInTheDocument()
   })
 
 
   it('allows QA role to configure personal Google Gemini API Key in qualitative view', async () => {
     mockUser = qaUser
-    renderWithProviders(<QADashboard />)
+    renderWithProviders(<AiAnalysisPage />)
 
-    const qualitativeTabBtn = screen.getByRole('button', { name: /วิเคราะห์เจาะลึกทำไมลาออก/i })
-    act(() => {
-      fireEvent.click(qualitativeTabBtn)
-    })
-
-    const apiKeyBtn = screen.getByRole('button', { name: /ตั้งค่าโมเดล/i })
+    const apiKeyBtn = screen.getByRole('button', { name: /คีย์ API/i })
     expect(apiKeyBtn).toBeInTheDocument()
 
     act(() => {
       fireEvent.click(apiKeyBtn)
     })
 
-    expect(screen.getByText(/การตั้งค่าโมเดลและช่องทางประมวลผล/i)).toBeInTheDocument()
-    expect(screen.getByText(/1\. ระบบส่วนกลาง/i)).toBeInTheDocument()
-    expect(screen.getByText(/2\. คีย์ส่วนบุคคล/i)).toBeInTheDocument()
+    expect(screen.getByText(/ตั้งค่าคีย์ API สำหรับ AI/i)).toBeInTheDocument()
+    expect(screen.getByText('คีย์ API เริ่มต้น', { selector: 'span.font-bold' })).toBeInTheDocument()
+    expect(screen.getByText(/ตั้งค่าโดยผู้ดูแลระบบ/i)).toBeInTheDocument()
+    expect(screen.getByText('คีย์ API ของฉัน')).toBeInTheDocument()
 
-    // Click option 2 to show custom key input
+    // Choose "My own API key" to show the key input
     act(() => {
-      fireEvent.click(screen.getByText(/2\. คีย์ส่วนบุคคล/i))
+      fireEvent.click(screen.getByText('คีย์ API ของฉัน'))
     })
 
     expect(screen.getByPlaceholderText('AIzaSy...')).toBeInTheDocument()

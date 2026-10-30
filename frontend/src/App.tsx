@@ -32,6 +32,7 @@ import ExitCases from '@/pages/advisor/ExitCases'
 // QA Pages
 import QADashboard from '@/pages/qa/QADashboard'
 import ExitCaseReview from '@/pages/qa/ExitCaseReview'
+import AiAnalysisPage from '@/pages/qa/AiAnalysisPage'
 
 // Admin Pages
 import AdminDashboard from '@/pages/admin/AdminDashboard'
@@ -109,6 +110,7 @@ export default function App() {
                       {/* QA Routes */}
                       <Route path="qa" element={<RequireRole allowedRoles={['qa_chair']}><QADashboard /></RequireRole>} />
                       <Route path="qa/exit-review" element={<RequireRole allowedRoles={['qa_chair']}><ExitCaseReview /></RequireRole>} />
+                      <Route path="qa/ai-analysis" element={<RequireRole allowedRoles={['qa_chair']}><AiAnalysisPage /></RequireRole>} />
 
                       {/* Admin & Super Admin Routes */}
                       <Route path="admin" element={<RequireRole allowedRoles={['admin', 'super_admin']}><AdminDashboard /></RequireRole>} />

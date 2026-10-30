@@ -114,7 +114,7 @@ describe('Backend Hono API', () => {
     expect(data.message).toContain('ยังไม่ได้รับการเพิ่มหรือลงทะเบียนโดยผู้ดูแลระบบ')
   })
 
-  it('POST /api/qa/ai-analyze generates qualitative retention analysis', async () => {
+  it('POST /api/qa/ai-analyze reports a missing default API key instead of canned text', async () => {
     const payload = {
       mode: 'strategic_synthesis',
       cases: [
@@ -139,8 +139,9 @@ describe('Backend Hono API', () => {
 
     expect(res.status).toBe(200)
     const data = await res.json() as any
-    expect(data.success).toBe(true)
-    expect(data.analysis).toContain('AUN-QA')
+    // No default API key configured: explicit error, never canned analysis text
+    expect(data.success).toBe(false)
+    expect(data.error).toBe('NO_DEFAULT_API_KEY')
   })
 
   it('GET /api/users reports unavailable database', async () => {

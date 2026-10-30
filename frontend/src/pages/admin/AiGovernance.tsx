@@ -16,7 +16,6 @@ import {
   Trash2,
   Star,
   Sparkles,
-  CheckCircle2,
   UserCheck,
   UserX,
   Activity,
@@ -623,13 +622,6 @@ export default function AiGovernance() {
                 <div className="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800">
                   <span className="text-slate-500 dark:text-slate-400">{t('ผู้ให้บริการ', 'Provider')}</span>
                   <span className="font-semibold text-slate-800 dark:text-slate-200">Google AI Studio</span>
-                </div>
-                <div className="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800">
-                  <span className="text-slate-500 dark:text-slate-400">{t('โหมดสำรองออฟไลน์', 'Offline Fallback')}</span>
-                  <span className="font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                    <CheckCircle2 className="h-3 w-3" />
-                    {t('พร้อมทำงาน', 'Ready')}
-                  </span>
                 </div>
               </div>
             </div>

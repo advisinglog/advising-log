@@ -1591,6 +1591,8 @@ app.post('/api/qa/ai-analyze', async (c) => {
       query?: string
       apiKey?: string
       language?: 'th' | 'en'
+      systemInstruction?: string
+      userPrompt?: string
     }>()
 
     const mode = body.mode || 'strategic_synthesis'
@@ -1613,7 +1615,7 @@ app.post('/api/qa/ai-analyze', async (c) => {
 
     // De-identify: Only pass sanitized academic context
     const sanitizedDataSummary = cases.map((item, idx) => {
-      return `Case #${idx + 1} [ID: ${item.studentCode || item.id} | Year: ${item.academicYear || 'N/A'} | Type: ${item.exitType} | Reason: ${item.reasonCode}]
+      return `Case #${idx + 1} [Year: ${item.academicYear || 'N/A'} | Type: ${item.exitType} | Reason: ${item.reasonCode}]
 - Student Stated Reason: "${item.details || 'N/A'}"
 - Advisor Assessment: "${item.advisorAssessment || 'N/A'}"
 - Student Survey Voice: "${item.studentVoiceFeedback || 'N/A'}"`
@@ -1621,7 +1623,7 @@ app.post('/api/qa/ai-analyze', async (c) => {
 
     // If Gemini API Key is available, call Google Gemini 1.5 Flash
     if (apiKey && apiKey.trim().length > 10) {
-      const systemInstruction = `You are an expert Higher Education Quality Assurance (QA) Analyst and Academic Retention Specialist advising the Program Chair and Dean under AUN-QA Criterion 6 (Student Support Services) and Criterion 8 (Retention & Dropout Rates).
+      let systemInstruction = `You are an expert Higher Education Quality Assurance (QA) Analyst and Academic Retention Specialist advising the Program Chair and Dean under AUN-QA Criterion 6 (Student Support Services) and Criterion 8 (Retention & Dropout Rates).
 All personal names have been stripped for PDPA compliance. Analyze the qualitative data deeply.
 Respond in ${lang === 'th' ? 'Thai with professional academic tone and clear markdown bullet points' : 'English with professional academic tone and clear markdown bullet points'}.`
 
@@ -1656,6 +1658,16 @@ Please answer the Program Chair's question:
 Provide a concise, evidence-based academic response with clear takeaways for curriculum improvement.`
       }
 
+      // The client shows the user the exact prompt before analysis; use it verbatim when provided
+      const MAX_PROMPT_CHARS = 100_000
+      if (
+        typeof body.systemInstruction === 'string' && body.systemInstruction.length <= MAX_PROMPT_CHARS &&
+        typeof body.userPrompt === 'string' && body.userPrompt.trim() && body.userPrompt.length <= MAX_PROMPT_CHARS
+      ) {
+        systemInstruction = body.systemInstruction
+        userPrompt = body.userPrompt
+      }
+
       const candidateEndpoints = [
         'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent',
         'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent',
@@ -1672,6 +1684,13 @@ Provide a concise, evidence-based academic response with clear takeaways for cur
           temperature: 0.2,
           maxOutputTokens: 2048,
         },
+      }
+
+      // Last provider error, reported back instead of silently returning canned fallback text
+      let lastError = ''
+      const readGeminiError = async (res: Response) => {
+        const errData = await res.json().catch(() => null) as any
+        lastError = errData?.error?.message || `HTTP ${res.status} ${res.statusText}`
       }
 
       for (const endpoint of candidateEndpoints) {
@@ -1697,13 +1716,18 @@ Provide a concise, evidence-based academic response with clear takeaways for cur
                 timestamp: new Date().toISOString(),
               })
             }
+          } else {
+            await readGeminiError(response)
           }
-        } catch (_err) {}
+        } catch (err: any) {
+          lastError = err?.message || 'Network error'
+        }
       }
 
       // Dynamic model fallback via listModels
       try {
         const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(apiKey.trim())}`)
+        if (!listRes.ok) await readGeminiError(listRes)
         if (listRes.ok) {
           const listData = await listRes.json() as any
           const models = (listData?.models || []).filter((m: any) => 
@@ -1742,106 +1766,39 @@ Provide a concise, evidence-based academic response with clear takeaways for cur
                   timestamp: new Date().toISOString(),
                 })
               }
+            } else {
+              await readGeminiError(dynRes)
             }
           }
         }
-      } catch (_e) {}
+      } catch (err: any) {
+        lastError = err?.message || lastError || 'Network error'
+      }
+
+      // A key is configured but every call failed: say so instead of returning canned text
+      const safeError = (lastError || 'No Gemini model accepted the request').split(apiKey.trim()).join('***')
+      return c.json({
+        success: false,
+        provider: 'Google Gemini (Default API key)',
+        mode,
+        analysis: lang === 'th'
+          ? `⚠️ เรียกใช้ Gemini ด้วยคีย์ API เริ่มต้นไม่สำเร็จ: ${safeError}\n\nกรุณาแจ้งผู้ดูแลระบบให้ตรวจสอบคีย์ API ในหน้า AI Governance`
+          : `⚠️ The default API key failed with Gemini: ${safeError}\n\nPlease ask the Admin to check the API key in AI Governance.`,
+        error: 'GEMINI_API_ERROR',
+        timestamp: new Date().toISOString(),
+      })
     }
 
-    // Smart Local Analytical Fallback (when no active key or offline)
-    let fallbackText = ''
-    if (mode === 'strategic_synthesis') {
-      fallbackText = lang === 'th'
-        ? `### 📊 ผลการสังเคราะห์ข้อมูลเชิงคุณภาพเพื่อการประกันคุณภาพ (AUN-QA Criteria 6 & 8)
-
-#### 1. บทสรุปสำหรับผู้บริหาร (Executive Summary)
-จากข้อมูลเชิงคุณภาพของนักศึกษาที่ขอยื่นลาออกถาวร (Withdrawal) และขอพักการศึกษา (Leave of Absence) รวมทั้งสิ้น ${cases.length} กรณี:
-* **การลาออกถาวร (Permanent Withdrawal):** สาเหตุหลักเกิดจากการค้นพบว่า *สาขาวิชาไม่ตรงกับความถนัด* และ *ความยากสะสมของวิชาโปรแกรมมิ่งในปี 1*
-* **การขอพักการศึกษา (Leave of Absence):** ปัจจัยหลักคือ *ปัญหาสุขภาพจิต/ความเครียดสะสม* และ *ภาระทางการเงิน/ครอบครัว* โดยนักศึกษาส่วนใหญ่ยังมีความประสงค์จะกลับมาศึกษาต่อหากได้รับการช่วยเหลือ
-
-#### 2. สาเหตุรากเหง้า 3 ลำดับแรก (Top 3 Qualitative Root Causes)
-1. **Curriculum Pacing & Foundation Shock:** นักศึกษาที่ไม่มีพื้นฐานสายคำนวณปรับตัวกับความเร็วในการสอนวิชาเขียนโปรแกรมช่วง 4 สัปดาห์แรกไม่ทัน
-2. **Mental Health & Isolation:** ความกดดันในการทำงานกลุ่มและขาดการปฏิสัมพันธ์เชิงลึกกับอาจารย์ที่ปรึกษา
-3. **Financial Hardship:** ปัญหาค่าครองชีพและอุปกรณ์คอมพิวเตอร์สำหรับการเรียน
-
-#### 3. ข้อเสนอแนะเชิงมาตรการพัฒนาคุณภาพ (CQI Recommendations)
-* **ระยะสั้น (0–3 เดือน):** จัดคลินิกเขียนโปรแกรม (Peer Tutoring) และให้อาจารย์ที่ปรึกษานัดพบเชิงรุกสำหรับกลุ่มเสี่ยง
-* **ระยะยาว (1 ปี):** ทบทวนแผนการจัดการเรียนรู้วิชาปี 1 เทอม 1 และเพิ่มหลักสูตรเสริมทักษะแบบไมโครเครเดนเชียล`
-        : `### 📊 Qualitative Retention & Exit Synthesis (AUN-QA Criteria 6 & 8)
-
-#### 1. Executive Summary
-Based on ${cases.length} qualitative departure records (Withdrawals vs. Leaves of Absence):
-* **Permanent Withdrawals:** Heavily driven by mismatched curriculum expectations and introductory programming difficulty.
-* **Leaves of Absence:** Primarily linked to mental health strain, temporary family financial needs, and medical recovery.
-
-#### 2. Top Qualitative Root Causes
-1. **Foundation Shock:** Steep learning curve in Year 1 Term 1 computing and mathematics modules.
-2. **Mental Well-being:** Burnout and hesitation in seeking timely counselling.
-3. **Financial Constraints:** Need for interim employment or lack of high-performance development hardware.
-
-#### 3. AUN-QA CQI Interventions
-* **Immediate (0–3 Months):** Implement departmental assignment coordination and mandatory 2-week pre-sessional coding boot camps.
-* **Curriculum Revision (1 Year):** Introduce flexible minor degree options (UX/UI & Creative Tech) and structured re-entry roadmaps.`
-    } else if (mode === 'case_diagnostic') {
-      const targetCase = cases[0]
-      fallbackText = lang === 'th'
-        ? `### 🩺 การวินิจฉัยเคสรายบุคคลเชิงลึก (AI Case Diagnostic)
-
-* **รหัสเคส / นักศึกษา:** ${targetCase?.studentCode || 'De-identified Case'} (${targetCase?.exitType === 'leave_of_absence' ? 'ขอพักการศึกษา' : 'ขอลาออกถาวร'})
-* **สาเหตุหลักที่ระบุ:** ${targetCase?.reasonCode || 'ทั่วไป'}
-
-#### การประเมินสาเหตุแท้จริง (Root Cause Evaluation)
-* คำอธิบายของนักศึกษาสะท้อนปัญหา: "${targetCase?.details || 'ไม่มีรายละเอียดเพิ่มเติม'}"
-* ข้อวินิจฉัยของอาจารย์ที่ปรึกษา: "${targetCase?.advisorAssessment || 'รอการประเมิน'}"
-
-#### ข้อเสนอแนะเชิงมาตรการช่วยเหลือ (Actionable Guidance)
-1. **การชะลอการตัดสินใจ:** หากเป็นปัญหาความเครียดหรือภาระครอบครัว ควรแนะนำการพักการศึกษาแทนการลาออก เพื่อรักษาสถานภาพและหน่วยกิต
-2. **การประสานส่งต่อ:** ประสานส่วนบริการสุขภาพ/ศูนย์สุขภาพจิต MFU Counselling Center หรือส่วนทะเบียน (REG)
-3. **แผนการกลับเข้าศึกษา:** กำหนดนัดหมายติดตามผลทุก 4 สัปดาห์ เพื่อเตรียมความพร้อมวิชาการก่อนเปิดภาคเรียนถัดไป`
-        : `### 🩺 Individual Case AI Diagnostic
-
-* **Case / Student ID:** ${targetCase?.studentCode || 'De-identified Case'} (${targetCase?.exitType})
-* **Primary Stated Cause:** ${targetCase?.reasonCode}
-
-#### Root Cause Evaluation
-* Student Perspective: "${targetCase?.details || 'N/A'}"
-* Advisor Assessment: "${targetCase?.advisorAssessment || 'N/A'}"
-
-#### Actionable Guidance
-1. **Retention Intervention:** If driven by burnout or family crises, advocate for temporary leave over permanent withdrawal.
-2. **Cross-unit Referral:** Connect with MFU Counselling Center or Registrar Division.
-3. **Re-entry Protocol:** Schedule monthly check-ins to ensure smooth academic return.`
-    } else {
-      fallbackText = lang === 'th'
-        ? `### 💡 คำตอบเชิงคุณภาพจากระบบ AI สำหรับประธานหลักสูตร
-
-**ประเด็นคำถาม:** "${userQuery}"
-
-**การวิเคราะห์จากฐานข้อมูลเคสจริง (${cases.length} เคส):**
-1. **ข้อค้นพบสำคัญ:** ข้อมูลเชิงคุณภาพชี้ให้เห็นว่า นักศึกษาไม่ได้ลาออกเพราะ "ไม่อยากเรียน" แต่เกิดจาก "กำแพงความยากของวิชาแกนช่วงแรก" ผสมกับ "ความกังวลเรื่องค่าใช้จ่ายและสุขภาพจิต"
-2. **เสียงสะท้อนนักศึกษา:** นักศึกษาระบุตรงกันว่าต้องการ *วิชาปรับพื้นฐาน (Boot Camp)* และ *ความยืดหยุ่นของกำหนดส่งงาน*
-3. **ข้อเสนอแนะเชิงรูปธรรม:**
-   * ให้ประธานหลักสูตรจัดประชุมผู้สอนวิชาปี 1 เพื่อปรับจังหวะการสอน (Teaching Pace) ให้มีความชันน้อยลงในเดือนแรก
-   * ให้อาจารย์ที่ปรึกษาใช้ระบบ Early Warning ติดตามนักศึกษาที่ขาดเรียนหรือทำคะแนน Quiz แรกได้น้อยกว่า 50% ทันที`
-        : `### 💡 AI Qualitative Analysis for Program Chair
-
-**Query:** "${userQuery}"
-
-**Evidence-based Analysis from Current Cohort (${cases.length} Cases):**
-1. **Core Insight:** Qualitative narratives show departures stem not from apathy, but from early foundation hurdles coupled with financial/mental fatigue.
-2. **Student Sentiment:** Students strongly advocate for pre-sessional boot camps and workload scheduling.
-3. **Actionable Recommendations:**
-   * Convene Year 1 faculty to modulate initial lecture pacing during the first month.
-   * Mandate advisor early-warning check-ins when quiz scores drop below 50% in weeks 3-4.`
-    }
-
+    // No default API key configured: report it instead of returning canned text
     return c.json({
-      success: true,
-      provider: 'AdvisingLog AI Intelligence Engine (Offline / Smart Fallback)',
+      success: false,
+      provider: 'Default API key',
       mode,
-      analysis: fallbackText,
+      analysis: lang === 'th'
+        ? '⚠️ ยังไม่มีคีย์ API เริ่มต้น กรุณาแจ้งผู้ดูแลระบบให้เพิ่มคีย์ API ในหน้า AI Governance หรือใช้คีย์ API ของคุณเอง'
+        : '⚠️ No default API key is set. Please ask the Admin to add one in AI Governance, or use your own API key.',
+      error: 'NO_DEFAULT_API_KEY',
       timestamp: new Date().toISOString(),
-      note: apiKey ? 'API key was processed' : 'Running on intelligent local engine. Provide a Gemini API key to query live Google cloud model.',
     })
   } catch (err: any) {
     return c.json({

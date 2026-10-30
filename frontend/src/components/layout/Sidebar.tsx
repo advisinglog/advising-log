@@ -59,6 +59,7 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
         return [
           { to: '/qa', label: t('แดชบอร์ดประกันคุณภาพ', 'QA Dashboard'), icon: <BarChart3 className="h-4 w-4" /> },
           { to: '/qa/exit-review', label: t('ทบทวนเคสลาออก', 'Exit Case Review'), icon: <UserX className="h-4 w-4" /> },
+          { to: '/qa/ai-analysis', label: t('ผู้ช่วยวิเคราะห์ AI', 'AI Analysis'), icon: <Bot className="h-4 w-4" /> },
         ]
       case 'super_admin':
         return [
