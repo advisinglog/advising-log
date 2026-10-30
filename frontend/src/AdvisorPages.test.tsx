@@ -114,13 +114,7 @@ describe('Advisor Pages Audit & Resilience Tests', () => {
     expect(screen.getByText(/ตอบรับและยืนยันการนัดหมายเข้าพบอาจารย์ที่ปรึกษา|Accept & Confirm Advising Appointment/i)).toBeInTheDocument()
     expect(screen.getByText(/ปฏิทินตารางเวลาของอาจารย์|Advisor Schedule & Availability/i)).toBeInTheDocument()
     expect(screen.getByText(/ตารางนัดหมายของท่านประจำวันที่|Advisor Appointments for/i)).toBeInTheDocument()
-    expect(screen.getByText(/ช่วงเวลาแนะนำ|Quick Time Slots/i)).toBeInTheDocument()
-
-    // Quick slot interaction
-    const slotBtns = screen.queryAllByRole('button', { name: /10:00|10:30|11:00/i })
-    if (slotBtns.length > 0) {
-      fireEvent.click(slotBtns[0])
-    }
+    expect(screen.queryByText(/ช่วงเวลาแนะนำ|Quick Time Slots/i)).toBeNull()
   })
 
   it('allows opening standalone advisor schedule calendar modal from header button', () => {
@@ -148,13 +142,7 @@ describe('Advisor Pages Audit & Resilience Tests', () => {
     // Should display Advisor Google Calendar view with account info and quick slot selection
     expect(screen.getByText(/Google Calendar ของอาจารย์|Advisor Google Calendar/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /เปิดเต็มจอ|Open Full Tab/i })).toBeInTheDocument()
-    expect(screen.getByText(/เลือกเวลาที่สะดวกหลังตรวจสอบตารางว่างใน Google Calendar|Set appointment time after checking Google Calendar/i)).toBeInTheDocument()
-
-    // Test quick slot selection while viewing Google Calendar
-    const slotBtns = screen.queryAllByRole('button', { name: /10:00|10:30|11:00/i })
-    if (slotBtns.length > 0) {
-      fireEvent.click(slotBtns[0])
-    }
+    expect(screen.getByTitle('Advisor Google Calendar')).toBeInTheDocument()
   })
 
   it('shows Google Calendar availability check button in request details modal', () => {

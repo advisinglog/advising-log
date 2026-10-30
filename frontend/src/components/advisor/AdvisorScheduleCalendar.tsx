@@ -52,12 +52,6 @@ const MONTH_NAMES_EN = [
 const DAY_NAMES_TH = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส']
 const DAY_NAMES_EN = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
-const SUGGESTED_SLOTS = [
-  '09:00', '09:30', '10:00', '10:30',
-  '11:00', '13:00', '13:30', '14:00',
-  '14:30', '15:00', '15:30', '16:00',
-]
-
 export default function AdvisorScheduleCalendar({
   selectedDate,
   selectedTime,
@@ -493,57 +487,6 @@ export default function AdvisorScheduleCalendar({
               </div>
             )}
 
-            {/* Quick Recommended Time Slots */}
-            {onSelectTime && (
-              <div className="space-y-1.5 pt-1">
-                <div className="flex items-center justify-between text-xs font-semibold text-slate-700 dark:text-slate-300">
-                  <span className="flex items-center gap-1">
-                    <Sparkles className="h-3 w-3 text-sky-600" />
-                    <span>{t('ช่วงเวลาแนะนำ (คลิกเพื่อเลือกเวลาทันที)', 'Quick Time Slots (Click to set):')}</span>
-                  </span>
-                  {preferredTime && (
-                    <span className="text-[11px] font-medium text-emerald-700 dark:text-emerald-400">
-                      {t('นศ. ขอเวลา:', 'Student requested:')} <strong>{preferredTime}</strong>
-                    </span>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5">
-                  {SUGGESTED_SLOTS.map(slot => {
-                    const isOccupied = selectedDateAppointments.some(a => a.scheduledTime.startsWith(slot))
-                    const isPreferred = preferredTime === slot
-                    const isSelected = selectedTime === slot
-
-                    return (
-                      <button
-                        key={slot}
-                        type="button"
-                        onClick={() => onSelectTime(slot)}
-                        className={`py-1.5 px-2 rounded-xl text-xs border text-center transition-all cursor-pointer ${
-                          isSelected
-                            ? 'bg-sky-600 text-white border-sky-600 font-bold shadow-xs'
-                            : isOccupied
-                            ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-900/60 font-medium'
-                            : isPreferred
-                            ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800 font-semibold hover:border-emerald-500'
-                            : 'bg-white dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-sky-600'
-                        }`}
-                      >
-                        <div className="font-bold">{slot}</div>
-                        <div className="text-[9px] font-normal truncate mt-0.5">
-                          {isOccupied
-                            ? t('ไม่ว่าง', 'Busy')
-                            : isPreferred
-                            ? t('★ นศ. ขอ', '★ Req')
-                            : t('ว่าง', 'Free')}
-                        </div>
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-            )}
-
             {/* Quick Link Banner to Switch to Google Calendar */}
             <div className="p-2.5 bg-sky-50/70 dark:bg-sky-950/40 border border-sky-100 dark:border-sky-900/50 rounded-xl flex items-center justify-between gap-2 text-xs">
               <div className="flex items-center gap-2 min-w-0">
@@ -668,57 +611,6 @@ export default function AdvisorScheduleCalendar({
               </button>
             </div>
           </div>
-
-          {/* Quick Slot Selector directly in Google Calendar view so user doesn't have to navigate away */}
-          {onSelectTime && (
-            <div className="p-3 bg-slate-50/70 dark:bg-slate-900/50 rounded-xl border border-slate-200/80 dark:border-slate-800 space-y-2">
-              <div className="flex items-center justify-between text-xs font-semibold text-slate-700 dark:text-slate-300">
-                <span className="flex items-center gap-1">
-                  <Sparkles className="h-3.5 w-3.5 text-sky-600" />
-                  <span>{t('เลือกเวลาที่สะดวกหลังตรวจสอบตารางว่างใน Google Calendar:', 'Set appointment time after checking Google Calendar:')}</span>
-                </span>
-                {preferredTime && (
-                  <span className="text-[11px] font-medium text-emerald-700 dark:text-emerald-400">
-                    {t('นศ. ขอเวลา:', 'Student requested:')} <strong>{preferredTime}</strong>
-                  </span>
-                )}
-              </div>
-
-              <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5">
-                {SUGGESTED_SLOTS.map(slot => {
-                  const isOccupied = selectedDateAppointments.some(a => a.scheduledTime.startsWith(slot))
-                  const isPreferred = preferredTime === slot
-                  const isSelected = selectedTime === slot
-
-                  return (
-                    <button
-                      key={slot}
-                      type="button"
-                      onClick={() => onSelectTime(slot)}
-                      className={`py-1.5 px-2 rounded-xl text-xs border text-center transition-all cursor-pointer ${
-                        isSelected
-                          ? 'bg-sky-600 text-white border-sky-600 font-bold shadow-xs'
-                          : isOccupied
-                          ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-900/60 font-medium'
-                          : isPreferred
-                          ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800 font-semibold hover:border-emerald-500'
-                          : 'bg-white dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-sky-600'
-                      }`}
-                    >
-                      <div className="font-bold">{slot}</div>
-                      <div className="text-[9px] font-normal truncate mt-0.5">
-                        {isOccupied
-                          ? t('ไม่ว่าง', 'Busy')
-                          : isPreferred
-                          ? t('★ นศ. ขอ', '★ Req')
-                          : t('ว่าง', 'Free')}
-                      </div>
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-          )}
 
           {/* Collision Alert if slot is occupied */}
           {collidedAppointment && (
