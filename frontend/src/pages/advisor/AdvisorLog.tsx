@@ -4,8 +4,8 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useStore } from '@/data/mock-store'
 import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { PageHeader, Card, Button, EmptyState, ConfirmDialog, DocumentViewerModal, Tabs, type DocumentViewerTarget } from '@/components/ui'
-import { ClipboardCheck, User, PlusCircle, Lightbulb, Sparkles, Check, FileText, Eye, CheckCircle2, Pencil } from 'lucide-react'
+import { PageHeader, Card, Button, EmptyState, DocumentViewerModal, Tabs, type DocumentViewerTarget } from '@/components/ui'
+import { ClipboardCheck, User, PlusCircle, FileText, Eye, CheckCircle2, Pencil } from 'lucide-react'
 
 import { isAdvisorMatch } from '@/utils/advisorUtils'
 import { getLocalDateString } from '@/utils/dateUtils'
@@ -30,8 +30,6 @@ export default function AdvisorLog() {
   const [summary, setSummary] = useState('')
   const [followUpTask, setFollowUpTask] = useState('')
   const [followUpDate, setFollowUpDate] = useState('')
-  const [activeTemplateIdx, setActiveTemplateIdx] = useState<number | null>(null)
-  const [pendingTemplate, setPendingTemplate] = useState<{ text: string; idx: number } | null>(null)
   const [previewDoc, setPreviewDoc] = useState<DocumentViewerTarget | null>(null)
   const [autoApproveDocs, setAutoApproveDocs] = useState(true)
 
@@ -101,34 +99,6 @@ export default function AdvisorLog() {
 
   if (!currentUser) return null
 
-  // Example templates for advisor guidance
-  const EXAMPLE_TEMPLATES = [
-    {
-      title: t('ผลการเรียน / แผนการเรียน', 'Academic & Study Planning'),
-      badge: t('วิชาการ', 'Academic'),
-      text: t(
-        'นักศึกษาปรึกษาเรื่องผลการเรียนและกังวลเรื่องเกรดเฉลี่ย (GPA) ต่ำกว่าเกณฑ์ ได้ร่วมกันวิเคราะห์ปัญหาพบว่าจัดสรรเวลาทบทวนบทเรียนไม่เพียงพอ ได้ให้คำแนะนำเทคนิคการจัดตารางอ่านหนังสือ (Time-blocking) วางแผนลงทะเบียนเรียนวิชาปรับเกรดในภาคการศึกษาถัดไป และนัดหมายติดตามผลหลังสอบกลางภาค',
-        'Advisee consulted regarding academic standing and GPA concerns. Identified time management issues during exam preparation. Recommended time-blocking study methods, planned prerequisite retakes for next term, and scheduled a mid-term progress follow-up.'
-      ),
-    },
-    {
-      title: t('การเพิ่ม-ถอน / แผนลงทะเบียน', 'Registration & Course Drop'),
-      badge: t('ลงทะเบียน', 'Registration'),
-      text: t(
-        'นักศึกษาขอคำปรึกษาเรื่องการถอนรายวิชาเนื่องจากภาระงานหนักและคะแนนสอบย่อยไม่เป็นไปตามเป้า ได้ให้คำแนะนำในการพิจารณาเงื่อนไขรายวิชาต่อเนื่อง (Prerequisite) และผลกระทบต่อเกรดเฉลี่ย โดยแนะนำให้ยื่นคำร้องถอนรายวิชาภายในกำหนด และวางแผนลงเรียนใหม่ในภาคฤดูร้อน',
-        'Advisee requested guidance on withdrawing from a heavy course to safeguard GPA. Reviewed prerequisite dependencies and recommended submitting the course drop petition within deadline, planning a retake in the summer session.'
-      ),
-    },
-    {
-      title: t('การปรับตัว / ปัญหาส่วนตัว', 'Adaptation & Well-being'),
-      badge: t('การใช้ชีวิต', 'Life & Well-being'),
-      text: t(
-        'นักศึกษาเข้าพบเพื่อปรึกษาเรื่องการปรับตัวเข้ากับสภาพแวดล้อมมหาวิทยาลัยและความเครียดจากการเรียน ได้รับฟัง ให้กำลังใจ และแนะนำเทคนิคการบริหารความเครียด รวมถึงแนะนำช่องทางขอรับคำปรึกษาด้านสุขภาพจิตของมหาวิทยาลัยเพิ่มเติม บรรยากาศการพูดคุยเป็นไปด้วยความเข้าใจ',
-        'Advisee shared feelings of stress and adjustment difficulties in university life. Provided active listening, supportive encouragement, and stress coping techniques, alongside university counseling resource contacts.'
-      ),
-    },
-  ]
-
   // Keep recorded requests in Saved Log only, not in the new-entry dropdown.
   const eligibleRequests = store.requests.filter(r =>
     isAdvisorMatch(r.advisorId, currentUser, store.users) &&
@@ -164,20 +134,6 @@ export default function AdvisorLog() {
     setEditingRequestId(requestId)
     setSelectedRequestId(requestId)
     setSection('entry')
-  }
-
-  function applyTemplateDirectly(templateText: string, idx: number) {
-    setSummary(templateText)
-    setActiveTemplateIdx(idx)
-    addToast('info', t('นำตัวอย่างไปใส่ในช่องสรุปแล้ว', 'Example applied to summary'), t('สามารถปรับแต่งเนื้อหาเพิ่มเติมให้ตรงกับเคสจริงได้เลย', 'You can now customize it to fit the actual session.'))
-  }
-
-  function handleApplyTemplate(templateText: string, idx: number) {
-    if (!summary.trim()) {
-      applyTemplateDirectly(templateText, idx)
-    } else {
-      setPendingTemplate({ text: templateText, idx })
-    }
   }
 
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
@@ -268,7 +224,6 @@ export default function AdvisorLog() {
     setSummary('')
     setFollowUpTask('')
     setFollowUpDate('')
-    setActiveTemplateIdx(null)
   }
 
   return (
@@ -439,7 +394,7 @@ export default function AdvisorLog() {
                   return (
                     <div className="pt-2 border-t border-sky-100 dark:border-sky-900/60 space-y-1.5">
                       <span className="text-[11px] font-bold text-sky-900 dark:text-sky-200 flex items-center gap-1.5">
-                        <Sparkles className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400" />
+                        <ClipboardCheck className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400" />
                         {t(`งานติดตามผลที่ค้างอยู่ (${studentPendingFollowUps.length} รายการ)`, `Previous Pending Tasks (${studentPendingFollowUps.length})`)}
                       </span>
                       <div className="space-y-1">
@@ -512,71 +467,6 @@ export default function AdvisorLog() {
               </div>
             )}
 
-            {/* Writing Guide & Examples Box */}
-            <div className="rounded-2xl border border-sky-100 dark:border-sky-900/60 bg-sky-50/30 dark:bg-sky-950/20 p-4 space-y-3">
-              <div className="flex items-center gap-2">
-                <div className="h-7 w-7 rounded-lg bg-sky-600 text-white flex items-center justify-center flex-shrink-0 shadow-2xs">
-                  <Lightbulb className="h-4 w-4" />
-                </div>
-                <div>
-                  <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100">
-                    {t('ตัวอย่างแนวทางการเขียนสรุป (คลิกเพื่อนำไปใช้)', 'Advising Notes Writing Guide & Examples')}
-                  </h4>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                    {t('ยุบรวมทั้งปัญหา คำแนะนำ และข้อตกลงไว้ในที่เดียว สามารถคลิกปุ่มตัวอย่างเพื่อคัดลอกลงในช่องได้ทันที', 'Combines challenges, recommendations, and agreements into one place. Click any example to use.')}
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 pt-1">
-                {EXAMPLE_TEMPLATES.map((tmpl, idx) => (
-                  <div
-                    key={idx}
-                    className={`p-3 rounded-xl border transition-all flex flex-col justify-between gap-2 shadow-2xs ${
-                      activeTemplateIdx === idx
-                        ? 'bg-sky-50/80 dark:bg-sky-950/60 border-sky-300 dark:border-sky-700 ring-1 ring-sky-400/30'
-                        : 'bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 hover:border-sky-200 dark:hover:border-sky-800'
-                    }`}
-                  >
-                    <div className="space-y-1">
-                      <div className="flex items-center justify-between gap-1">
-                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                          {tmpl.title}
-                        </span>
-                        <span className="text-[9px] font-semibold text-sky-700 dark:text-sky-300 bg-sky-100/70 dark:bg-sky-950 px-1.5 py-0.2 rounded">
-                          {tmpl.badge}
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed line-clamp-4">
-                        "{tmpl.text}"
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleApplyTemplate(tmpl.text, idx)}
-                      className={`inline-flex items-center gap-1 text-[11px] font-semibold transition-colors cursor-pointer self-start ${
-                        activeTemplateIdx === idx
-                          ? 'text-emerald-600 dark:text-emerald-400'
-                          : 'text-sky-600 hover:text-sky-700 dark:text-sky-400 dark:hover:text-sky-300'
-                      }`}
-                    >
-                      {activeTemplateIdx === idx ? (
-                        <>
-                          <Check className="h-3 w-3" />
-                          <span>{t('กำลังใช้งานตัวอย่างนี้', 'Template Applied')}</span>
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles className="h-3 w-3" />
-                          <span>{t('ใช้ตัวอย่างนี้', 'Use Example')}</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-
             {/* Unified Summary Textarea */}
             <div>
               <div className="flex items-center justify-between mb-1.5 flex-wrap gap-1">
@@ -589,10 +479,7 @@ export default function AdvisorLog() {
               </div>
               <textarea
                 value={summary}
-                onChange={e => {
-                  setSummary(e.target.value)
-                  if (activeTemplateIdx !== null) setActiveTemplateIdx(null)
-                }}
+                onChange={e => setSummary(e.target.value)}
                 rows={6}
                 placeholder={t(
                   'สรุปภาพรวมการเข้าพบ ปัญหาหรืออุปสรรคที่พบ คำแนะนำและแนวทางแก้ไขที่มอบให้แก่นักศึกษา รวมถึงข้อตกลงร่วมกัน...',
@@ -677,24 +564,6 @@ export default function AdvisorLog() {
         document={previewDoc}
       />
 
-      {/* Template Replace Confirmation Dialog */}
-      <ConfirmDialog
-        isOpen={Boolean(pendingTemplate)}
-        onClose={() => setPendingTemplate(null)}
-        onConfirm={() => {
-          if (pendingTemplate) {
-            applyTemplateDirectly(pendingTemplate.text, pendingTemplate.idx)
-            setPendingTemplate(null)
-          }
-        }}
-        title={t('ต้องการแทนที่ข้อความสรุปหรือไม่?', 'Replace Current Summary?')}
-        message={t(
-          'คุณมีข้อความที่กำลังพิมพ์อยู่ในช่องสรุปผลการให้คำปรึกษา การใช้ตัวอย่างนี้จะเขียนทับข้อความปัจจุบันทั้งหมด คุณต้องการดำเนินการต่อหรือไม่?',
-          'You have existing text in the advising summary field. Applying this template will replace your current content. Do you want to continue?'
-        )}
-        confirmLabel={t('แทนที่ข้อความ', 'Replace')}
-        cancelLabel={t('ยกเลิก', 'Cancel')}
-      />
     </div>
   )
 }
