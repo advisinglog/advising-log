@@ -392,8 +392,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (isTestEnv()) return
 
+    // Returning to the tab fires both 'focus' and 'visibilitychange'; reload at most once a minute
+    let lastRefreshAt = Date.now()
     const refreshWhenVisible = () => {
-      if (document.visibilityState === 'visible') {
+      if (document.visibilityState === 'visible' && Date.now() - lastRefreshAt > 60_000) {
+        lastRefreshAt = Date.now()
         refreshBackend()
       }
     }

@@ -20,9 +20,13 @@ export default function AdvisorDashboard() {
   const { addToast } = useToast()
   const navigate = useNavigate()
 
+  // Auto-refresh every minute while the dashboard is visible. Each refresh reloads all data
+  // (~14 API calls), so a shorter interval quickly uses up the daily Workers request quota.
   useEffect(() => {
     store.refreshBackend()
-    const refreshTimer = window.setInterval(store.refreshBackend, 10000)
+    const refreshTimer = window.setInterval(() => {
+      if (document.visibilityState === 'visible') store.refreshBackend()
+    }, 60_000)
     return () => window.clearInterval(refreshTimer)
   }, [store.refreshBackend])
 
