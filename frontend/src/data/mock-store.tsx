@@ -527,7 +527,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       return [newA, ...filtered]
     })
     setExitCases(prev => prev.map(ec => ec.id === a.exitCaseId ? { ...ec, advisorAssessment: a.assessment, status: 'under_review', updatedAt: now() } : ec))
-    api.updateExitCase(a.exitCaseId, { advisorAssessment: a.assessment, status: 'advisor_reviewed' }).catch((err) => {
+    api.updateExitCase(a.exitCaseId, { advisorAssessment: a.assessment, status: 'under_review' }).catch((err) => {
       console.error('Failed to persist advisor assessment to backend:', err)
     })
     return newA
