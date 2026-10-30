@@ -6,6 +6,7 @@ import { ToastProvider } from '@/contexts/ToastContext'
 import { LanguageProvider } from '@/contexts/LanguageContext'
 import { ThemeProvider } from '@/contexts/ThemeContext'
 import AdvisorDashboard from '@/pages/advisor/AdvisorDashboard'
+import MyAdvisees from '@/pages/advisor/MyAdvisees'
 import AdvisingSessions from '@/pages/advisor/AdvisingSessions'
 import ExitCases from '@/pages/advisor/ExitCases'
 import AdvisorLog from '@/pages/advisor/AdvisorLog'
@@ -119,5 +120,13 @@ describe('Advisor Pages Audit & Resilience Tests', () => {
     // Verify detail modal contains clean student details and requested slot
     expect(screen.getByText(/รายละเอียดคำร้องขอคำปรึกษา|Advising Request Details/i)).toBeInTheDocument()
     expect(screen.getByText(/วัน-เวลาที่ขอเข้าพบ|Requested Date & Time/i)).toBeInTheDocument()
+  })
+
+  it('renders MyAdvisees page with assigned students list and actions', () => {
+    renderWithProviders(<MyAdvisees />)
+    expect(screen.getByText(/นักศึกษาในความดูแล \(My Advisees\)|My Advisees/i)).toBeInTheDocument()
+    expect(screen.getByText(/Somchai Jaidee/i)).toBeInTheDocument()
+    expect(screen.getByText(/6631503001/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/เพิ่มนักศึกษาในความดูแล|Add Advisee/i).length).toBeGreaterThan(0)
   })
 })
