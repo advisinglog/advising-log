@@ -120,7 +120,6 @@ export default function AdvisorLog() {
     })
   }
 
-  if (!currentUser) return null
 
   // Keep recorded requests in Saved Log only, not in the new-entry dropdown.
   const eligibleRequests = store.requests.filter(r =>
@@ -142,6 +141,8 @@ export default function AdvisorLog() {
       }
     }
   }, [navStudent, completedRequests, eligibleRequests, selectedRequestId])
+
+  if (!currentUser) return null
 
   // A saved request can be selected for modification ONLY through its Edit button.
   const selectedReq = eligibleRequests.find(r =>

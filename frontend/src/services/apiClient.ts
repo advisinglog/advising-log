@@ -101,7 +101,7 @@ class ApiClient {
         return null
       }
       return (await res.json()) as T
-    } catch (_err) {
+    } catch {
       // Offline fallback: returns null if backend is unreachable
       return null
     }

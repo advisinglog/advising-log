@@ -514,7 +514,7 @@ async function requestAnalysis(req: AIAnalysisRequest): Promise<AIAnalysisRespon
       return aiError(mode, 'Default API key', 'BACKEND_ERROR', lang === 'th'
         ? `⚠️ เซิร์ฟเวอร์ตอบกลับผิดพลาด (HTTP ${res.status}) กรุณาลองใหม่อีกครั้ง`
         : `⚠️ The server returned an error (HTTP ${res.status}). Please try again.`)
-    } catch (_err) {
+    } catch {
       return aiError(mode, 'Default API key', 'BACKEND_UNREACHABLE', lang === 'th'
         ? '⚠️ ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ กรุณาตรวจสอบว่า backend กำลังทำงานอยู่'
         : '⚠️ Could not reach the server. Please check that the backend is running.')
