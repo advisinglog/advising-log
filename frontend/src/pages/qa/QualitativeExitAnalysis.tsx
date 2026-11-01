@@ -294,7 +294,7 @@ export default function QualitativeExitAnalysis({ view = 'analysis' }: { view?: 
       const aiMsg = { role: 'assistant' as const, text: res.analysis, timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
       setAiChatMessages(prev => [...prev, aiMsg])
       setAiProvider(res.provider)
-    } catch (err: any) {
+    } catch {
       const errorMsg = { role: 'assistant' as const, text: t('ขออภัย เกิดข้อผิดพลาดในการประมวลผลคำตอบ', 'Sorry, an error occurred while processing the response.'), timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
       setAiChatMessages(prev => [...prev, errorMsg])
     } finally {
