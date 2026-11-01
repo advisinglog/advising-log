@@ -10,7 +10,6 @@ import {
   Menu,
   ChevronDown,
   Check,
-  ArrowLeftRight,
   GraduationCap,
   BarChart3,
   ShieldCheck,
