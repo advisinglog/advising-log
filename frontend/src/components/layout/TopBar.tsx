@@ -1,3 +1,4 @@
+import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
 import { useStore } from '@/data/store'
 import { useLanguage } from '@/contexts/LanguageContext'
@@ -287,7 +288,7 @@ export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
           )}
         </div>
 
-        {/* User Profile Trigger Button & Role Switcher Dropdown */}
+        {/* User Profile Trigger Button & Role Switcher Dropdown (Style 3: Interactive Role Badge) */}
         <div className="relative pl-1 sm:pl-2 border-l border-slate-200/70 dark:border-slate-800">
           <button
             type="button"
@@ -295,44 +296,80 @@ export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
               setShowProfileMenu(!showProfileMenu)
               setShowNotifs(false)
             }}
-            className={`flex items-center gap-2 p-1 sm:px-2.5 sm:py-1.5 rounded-2xl border transition-all cursor-pointer group ${
+            className={cn(
+              "flex items-center gap-2 p-1.5 sm:px-3 sm:py-1.5 rounded-2xl border transition-all duration-200 cursor-pointer group shadow-2xs select-none",
               showProfileMenu
-                ? 'bg-sky-50/80 dark:bg-sky-500/15 border-sky-300 dark:border-sky-500/40 shadow-2xs'
-                : 'hover:bg-slate-100 dark:hover:bg-slate-800/70 border-transparent hover:border-slate-200/70 dark:hover:border-slate-700/60'
-            }`}
+                ? "bg-sky-50/90 dark:bg-sky-950/40 border-sky-300 dark:border-sky-600/60 ring-2 ring-sky-500/20 shadow-xs"
+                : "bg-white/70 dark:bg-slate-900/60 hover:bg-slate-100/90 dark:hover:bg-slate-800/80 border-slate-200/80 dark:border-slate-700/60 hover:border-slate-300 dark:hover:border-slate-600"
+            )}
             aria-expanded={showProfileMenu}
             aria-haspopup="menu"
             title={t('โปรไฟล์และการสลับบทบาท', 'Profile & Role Switcher')}
           >
-            <div className="relative">
+            {/* User Avatar with dynamic role badge dot */}
+            <div className="relative flex-shrink-0">
               <UserAvatar name={currentUser.name} avatar={currentUser.avatar} size="md" />
-              {canSwitchRole && (
-                <span
-                  className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full bg-sky-600 text-white flex items-center justify-center ring-2 ring-white dark:ring-[#0e1424] shadow-xs"
-                  title={t('สามารถสลับบทบาทได้', 'Multi-role enabled')}
-                >
+              <span
+                className={cn(
+                  "absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full ring-2 ring-white dark:ring-[#0e1424] flex items-center justify-center text-white shadow-xs",
+                  currentUser.role === 'advisor' ? 'bg-sky-600' :
+                  currentUser.role === 'qa_chair' ? 'bg-indigo-600' :
+                  currentUser.role === 'admin' ? 'bg-amber-600' : 'bg-emerald-600'
+                )}
+                title={language === 'th' ? currentConfig.labelTh : currentConfig.labelEn}
+              >
+                {canSwitchRole ? (
                   <ArrowLeftRight className="h-2 w-2 stroke-[2.5]" />
-                </span>
-              )}
+                ) : (
+                  <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                )}
+              </span>
             </div>
 
-            <div className="hidden sm:block text-left">
-              <p className="text-xs font-bold text-slate-900 dark:text-slate-100 leading-tight group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
-                {currentUser.name}
-              </p>
+            {/* User Name & Distinct Interactive Role Badge (Desktop & Tablet) */}
+            <div className="hidden sm:block text-left min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-extrabold text-slate-900 dark:text-slate-100 truncate max-w-[120px] lg:max-w-[160px] leading-tight group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
+                  {currentUser.name}
+                </span>
+              </div>
               <div className="flex items-center gap-1 mt-0.5">
-                <span className={`inline-flex items-center gap-1 px-1.5 py-0.2 rounded-md text-[10px] font-bold border ${currentConfig.badgeClass}`}>
+                {/* Prominent Role Badge */}
+                <span className={cn(
+                  "inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold border shadow-3xs",
+                  currentConfig.badgeClass
+                )}>
                   {getRoleIcon(currentUser.role, 'h-2.5 w-2.5')}
                   <span>{language === 'th' ? currentConfig.shortLabelTh : currentConfig.shortLabelEn}</span>
                 </span>
+                {canSwitchRole && (
+                  <span className="hidden md:inline-flex items-center gap-0.5 text-[9px] font-bold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/60 px-1.5 py-0.5 rounded border border-sky-200/80 dark:border-sky-800/80 transition-colors group-hover:border-sky-400 dark:group-hover:border-sky-600">
+                    <ArrowLeftRight className="h-2 w-2 text-sky-600 dark:text-sky-400" />
+                    <span>{t('สลับ', 'Switch')}</span>
+                  </span>
+                )}
               </div>
             </div>
 
-            <ChevronDown
-              className={`h-4 w-4 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200 transition-transform duration-200 ${
-                showProfileMenu ? 'rotate-180 text-sky-600 dark:text-sky-400' : ''
-              }`}
-            />
+            {/* Mobile-only compact role indicator */}
+            <div className="sm:hidden flex items-center">
+              <span className={cn(
+                "inline-flex items-center justify-center p-1 rounded-md text-[10px] font-bold border",
+                currentConfig.badgeClass
+              )}>
+                {getRoleIcon(currentUser.role, 'h-3 w-3')}
+              </span>
+            </div>
+
+            {/* Chevron Arrow Indicator */}
+            <div className={cn(
+              "h-5 w-5 rounded-md flex items-center justify-center transition-all duration-200 ml-0.5",
+              showProfileMenu
+                ? "text-sky-600 dark:text-sky-400 rotate-180"
+                : "text-slate-400 group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:text-slate-200"
+            )}>
+              <ChevronDown className="h-3.5 w-3.5 stroke-[2.5]" />
+            </div>
           </button>
 
           {/* Profile and Role Switcher Dropdown Modal Card */}
