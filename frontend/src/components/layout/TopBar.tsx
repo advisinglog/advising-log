@@ -287,8 +287,7 @@ export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
             </>
           )}
         </div>
-
-        {/* User Profile Trigger Button & Role Switcher Dropdown (Style 3: Interactive Role Badge) */}
+        {/* User Profile Trigger Button & Role Switcher Dropdown (Simple & Minimalist) */}
         <div className="relative pl-1 sm:pl-2 border-l border-slate-200/70 dark:border-slate-800">
           <button
             type="button"
@@ -297,105 +296,67 @@ export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
               setShowNotifs(false)
             }}
             className={cn(
-              "flex items-center gap-2 p-1.5 sm:px-3 sm:py-1.5 rounded-2xl border transition-all duration-200 cursor-pointer group shadow-2xs select-none",
+              "flex items-center gap-2 px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-xl transition-all duration-150 cursor-pointer group select-none",
               showProfileMenu
-                ? "bg-sky-50/90 dark:bg-sky-950/40 border-sky-300 dark:border-sky-600/60 ring-2 ring-sky-500/20 shadow-xs"
-                : "bg-white/70 dark:bg-slate-900/60 hover:bg-slate-100/90 dark:hover:bg-slate-800/80 border-slate-200/80 dark:border-slate-700/60 hover:border-slate-300 dark:hover:border-slate-600"
+                ? "bg-slate-100 dark:bg-slate-800/90 text-slate-900 dark:text-slate-100"
+                : "hover:bg-slate-100/70 dark:hover:bg-slate-800/50 text-slate-700 dark:text-slate-300"
             )}
             aria-expanded={showProfileMenu}
             aria-haspopup="menu"
             title={t('โปรไฟล์และการสลับบทบาท', 'Profile & Role Switcher')}
           >
-            {/* User Avatar with dynamic role badge dot */}
+            {/* Simple User Avatar with subtle role dot */}
             <div className="relative flex-shrink-0">
               <UserAvatar name={currentUser.name} avatar={currentUser.avatar} size="md" />
               <span
                 className={cn(
-                  "absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full ring-2 ring-white dark:ring-[#0e1424] flex items-center justify-center text-white shadow-xs",
-                  currentUser.role === 'advisor' ? 'bg-sky-600' :
-                  currentUser.role === 'qa_chair' ? 'bg-indigo-600' :
-                  currentUser.role === 'admin' ? 'bg-amber-600' : 'bg-emerald-600'
+                  "absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full ring-2 ring-white dark:ring-[#0e1424]",
+                  currentUser.role === 'advisor' ? 'bg-sky-500' :
+                  currentUser.role === 'qa_chair' ? 'bg-indigo-500' :
+                  currentUser.role === 'admin' ? 'bg-amber-500' : 'bg-emerald-500'
                 )}
                 title={language === 'th' ? currentConfig.labelTh : currentConfig.labelEn}
-              >
-                {canSwitchRole ? (
-                  <ArrowLeftRight className="h-2 w-2 stroke-[2.5]" />
-                ) : (
-                  <span className="h-1.5 w-1.5 rounded-full bg-white" />
-                )}
-              </span>
+              />
             </div>
 
-            {/* User Name & Distinct Interactive Role Badge (Desktop & Tablet) */}
+            {/* Simple Name and Role subtitle */}
             <div className="hidden sm:block text-left min-w-0">
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs font-extrabold text-slate-900 dark:text-slate-100 truncate max-w-[120px] lg:max-w-[160px] leading-tight group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
-                  {currentUser.name}
-                </span>
-              </div>
-              <div className="flex items-center gap-1 mt-0.5">
-                {/* Prominent Role Badge */}
-                <span className={cn(
-                  "inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold border shadow-3xs",
-                  currentConfig.badgeClass
-                )}>
-                  {getRoleIcon(currentUser.role, 'h-2.5 w-2.5')}
-                  <span>{language === 'th' ? currentConfig.shortLabelTh : currentConfig.shortLabelEn}</span>
-                </span>
-                {canSwitchRole && (
-                  <span className="hidden md:inline-flex items-center gap-0.5 text-[9px] font-bold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/60 px-1.5 py-0.5 rounded border border-sky-200/80 dark:border-sky-800/80 transition-colors group-hover:border-sky-400 dark:group-hover:border-sky-600">
-                    <ArrowLeftRight className="h-2 w-2 text-sky-600 dark:text-sky-400" />
-                    <span>{t('สลับ', 'Switch')}</span>
-                  </span>
-                )}
-              </div>
+              <p className="text-xs font-semibold text-slate-900 dark:text-slate-100 truncate max-w-[130px] leading-tight">
+                {currentUser.name}
+              </p>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 truncate leading-tight">
+                {language === 'th' ? currentConfig.shortLabelTh : currentConfig.shortLabelEn}
+              </p>
             </div>
 
-            {/* Mobile-only compact role indicator */}
-            <div className="sm:hidden flex items-center">
-              <span className={cn(
-                "inline-flex items-center justify-center p-1 rounded-md text-[10px] font-bold border",
-                currentConfig.badgeClass
-              )}>
-                {getRoleIcon(currentUser.role, 'h-3 w-3')}
-              </span>
-            </div>
-
-            {/* Chevron Arrow Indicator */}
-            <div className={cn(
-              "h-5 w-5 rounded-md flex items-center justify-center transition-all duration-200 ml-0.5",
-              showProfileMenu
-                ? "text-sky-600 dark:text-sky-400 rotate-180"
-                : "text-slate-400 group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:text-slate-200"
-            )}>
-              <ChevronDown className="h-3.5 w-3.5 stroke-[2.5]" />
-            </div>
+            {/* Subtle Chevron */}
+            <ChevronDown
+              className={cn(
+                "h-3.5 w-3.5 text-slate-400 transition-transform duration-200 ml-0.5",
+                showProfileMenu && "rotate-180 text-slate-700 dark:text-slate-200"
+              )}
+            />
           </button>
 
           {/* Profile and Role Switcher Dropdown Modal Card */}
           {showProfileMenu && (
             <>
               <div className="fixed inset-0 z-40" onClick={() => setShowProfileMenu(false)} />
-              <div className="absolute right-0 top-full mt-2.5 w-[calc(100vw-1.5rem)] max-w-88 sm:max-w-96 bg-white dark:bg-[#0e1424] border border-slate-200/90 dark:border-slate-800 rounded-2xl shadow-2xl z-50 overflow-hidden animate-[slideIn_0.15s_ease-out]">
+              <div className="absolute right-0 top-full mt-2 w-[calc(100vw-1.5rem)] max-w-80 sm:max-w-88 bg-white dark:bg-[#0e1424] border border-slate-200/90 dark:border-slate-800 rounded-2xl shadow-xl z-50 overflow-hidden animate-[slideIn_0.15s_ease-out]">
                 {/* User Identity Header */}
-                <div className="p-4 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/60 dark:bg-slate-900/60">
-                  <div className="flex items-start gap-3">
-                    <div className="relative flex-shrink-0">
-                      <UserAvatar name={currentUser.name} avatar={currentUser.avatar} size="lg" />
-                      <span className={`absolute -bottom-1 -right-1 p-1 rounded-full bg-white dark:bg-[#0e1424] shadow-xs border ${currentConfig.badgeClass}`}>
-                        {getRoleIcon(currentUser.role, 'h-3 w-3')}
-                      </span>
-                    </div>
+                <div className="p-3.5 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/40">
+                  <div className="flex items-center gap-3">
+                    <UserAvatar name={currentUser.name} avatar={currentUser.avatar} size="lg" />
                     <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 truncate">
+                      <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 truncate">
                         {currentUser.name}
                       </h4>
-                      <p className="text-[11px] font-mono text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+                      <p className="text-[11px] font-mono text-slate-500 dark:text-slate-400 truncate mt-0.5">
                         {currentUser.code} · {currentUser.email}
                       </p>
-                      <div className="flex items-center gap-1.5 mt-2">
-                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold border ${currentConfig.badgeClass}`}>
-                          {getRoleIcon(currentUser.role, 'h-3 w-3')}
+                      <div className="mt-1.5">
+                        <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold border", currentConfig.badgeClass)}>
+                          {getRoleIcon(currentUser.role, 'h-2.5 w-2.5')}
                           <span>{language === 'th' ? currentConfig.labelTh : currentConfig.labelEn}</span>
                         </span>
                       </div>
@@ -405,20 +366,17 @@ export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
 
                 {/* Role Switching Section */}
                 {canSwitchRole && (
-                  <div className="p-3 border-b border-slate-100 dark:border-slate-800/80">
-                    <div className="flex items-center justify-between px-2 pb-2">
-                      <div className="flex items-center gap-1.5">
-                        <ArrowLeftRight className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400" />
-                        <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                          {t('สลับบทบาทการทำงาน', 'Switch Role Workspace')}
-                        </span>
-                      </div>
-                      <span className="text-[10px] font-semibold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/60 border border-sky-200 dark:border-sky-800/60 px-2 py-0.5 rounded-full">
+                  <div className="p-2.5 border-b border-slate-100 dark:border-slate-800/80">
+                    <div className="flex items-center justify-between px-1.5 pb-2">
+                      <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                        {t('สลับบทบาทการทำงาน', 'Switch Role Workspace')}
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-medium">
                         {availableRoles.length} {t('บทบาท', 'roles')}
                       </span>
                     </div>
 
-                    <div className="space-y-1.5">
+                    <div className="space-y-1">
                       {availableRoles.map(r => {
                         const config = ROLE_CONFIGS[r]
                         const isActive = r === currentUser.role
@@ -427,45 +385,34 @@ export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
                             key={r}
                             type="button"
                             onClick={() => handleRoleSwitch(r)}
-                            className={`w-full text-left p-2.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-3 group ${
+                            className={cn(
+                              "w-full text-left px-2.5 py-2 rounded-xl transition-colors cursor-pointer flex items-center justify-between gap-2.5 group",
                               isActive
-                                ? `${config.activeCardClass} shadow-2xs`
-                                : 'border-slate-200/80 dark:border-slate-800 hover:border-sky-300 dark:hover:border-sky-700 hover:bg-sky-50/40 dark:hover:bg-slate-800/60'
-                            }`}
+                                ? "bg-sky-50 dark:bg-sky-950/40 text-sky-900 dark:text-sky-200"
+                                : "hover:bg-slate-100/70 dark:hover:bg-slate-800/50 text-slate-700 dark:text-slate-300"
+                            )}
                           >
-                            <div className="flex items-start gap-2.5 min-w-0">
+                            <div className="flex items-center gap-2.5 min-w-0">
                               <div
-                                className={`h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 transition-colors ${
+                                className={cn(
+                                  "h-7 w-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors",
                                   isActive
-                                    ? 'bg-sky-600 text-white shadow-xs'
-                                    : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 group-hover:bg-sky-100 dark:group-hover:bg-sky-950/60 group-hover:text-sky-700 dark:group-hover:text-sky-300'
-                                }`}
+                                    ? "bg-sky-600 text-white"
+                                    : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+                                )}
                               >
-                                {getRoleIcon(r, 'h-4 w-4')}
+                                {getRoleIcon(r, 'h-3.5 w-3.5')}
                               </div>
                               <div className="min-w-0">
-                                <p className={`text-xs font-bold leading-tight ${isActive ? 'text-sky-950 dark:text-sky-200' : 'text-slate-800 dark:text-slate-200 group-hover:text-sky-700 dark:group-hover:text-sky-300'}`}>
+                                <p className={cn("text-xs leading-tight truncate", isActive ? "font-bold text-sky-950 dark:text-sky-200" : "font-medium")}>
                                   {language === 'th' ? config.labelTh : config.labelEn}
-                                </p>
-                                <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-1 leading-snug">
-                                  {language === 'th' ? config.descTh : config.descEn}
                                 </p>
                               </div>
                             </div>
 
-                            <div className="flex-shrink-0">
-                              {isActive ? (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-sky-600 text-white shadow-xs">
-                                  <Check className="h-2.5 w-2.5 stroke-[3]" />
-                                  <span>{t('ใช้งานอยู่', 'Active')}</span>
-                                </span>
-                              ) : (
-                                <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 group-hover:text-sky-600 dark:group-hover:text-sky-400 flex items-center gap-0.5 transition-colors">
-                                  <span>{t('สลับ', 'Switch')}</span>
-                                  <span>→</span>
-                                </span>
-                              )}
-                            </div>
+                            {isActive && (
+                              <Check className="h-4 w-4 text-sky-600 dark:text-sky-400 flex-shrink-0" />
+                            )}
                           </button>
                         )
                       })}
@@ -474,8 +421,8 @@ export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
                 )}
 
                 {/* Footer Actions */}
-                <div className="p-2.5 bg-slate-50/50 dark:bg-slate-900/40 flex items-center justify-between gap-2 border-t border-slate-100 dark:border-slate-800/80">
-                  <div className="text-[10px] text-slate-500 dark:text-slate-400 px-2 truncate font-medium">
+                <div className="p-2.5 bg-slate-50/30 dark:bg-slate-900/30 flex items-center justify-between gap-2 border-t border-slate-100 dark:border-slate-800/80">
+                  <div className="text-[10px] text-slate-500 dark:text-slate-400 px-1 truncate font-medium max-w-[170px]">
                     {currentUser.department}
                   </div>
                   <button
@@ -485,7 +432,7 @@ export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
                       logout()
                       navigate('/login')
                     }}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-rose-600 hover:text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold text-rose-600 hover:text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
                   >
                     <LogOut className="h-3.5 w-3.5" />
                     <span>{t('ออกจากระบบ', 'Sign out')}</span>
