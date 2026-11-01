@@ -199,6 +199,17 @@ describe('Authentication & authorization', () => {
     expect((await authed('/api/not-a-route', { method: 'POST' })).status).toBe(403)
   })
 
+  describe('Exit Cases role authorization (PATCH /api/exit-cases/:id)', () => {
+    it('rejects unauthenticated requests with 401', async () => {
+      const res = await app.request('/api/exit-cases/EXT001', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'completed' }),
+      }, ENV)
+      expect(res.status).toBe(401)
+    })
+  })
+
   it('fails closed when the session secret is not configured', async () => {
     const res = await app.request('/api/users', { headers: { Authorization: `Bearer ${await tokenFor('super_admin')}` } }, {})
     expect(res.status).toBe(500)

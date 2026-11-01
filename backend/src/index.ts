@@ -1687,17 +1687,160 @@ app.patch('/api/exit-cases/:id', async (c) => {
   const database = db(c)
   if (!database) return c.json({ error: 'Database unavailable' }, 503)
 
+  const auth = c.get('auth')
+  if (!auth) return c.json({ success: false, error: 'UNAUTHENTICATED' }, 401)
+
   try {
     const id = c.req.param('id')
-    const body = await c.req.json()
-    const updates: Record<string, any> = { ...body, updatedAt: new Date().toISOString().split('T')[0] }
-    if (updates.status === 'open') updates.status = 'submitted'
-    else if (updates.status === 'under_review') updates.status = 'advisor_reviewed'
-    else if (updates.status === 'resolved' || updates.status === 'closed') updates.status = 'completed'
+    const existing = await database.select().from(schema.exitCases).where(eq(schema.exitCases.id, id)).get()
+    if (!existing) return c.json({ success: false, error: 'EXIT_CASE_NOT_FOUND' }, 404)
+
+    const body = await c.req.json().catch(() => ({}))
+
+    // 1. Role-specific validation & state transition authorization
+    if (auth.role === 'student') {
+      const studentAliases = aliasSet(auth.userId, auth.code, auth.email)
+      if (!studentAliases.has(norm(existing.studentId))) {
+        await writeAudit(c, {
+          userId: auth.userId,
+          userName: auth.name,
+          userRole: auth.role,
+          action: 'unauthorized_access',
+          description: `STUDENT_NOT_OWNER: PATCH /api/exit-cases/${id}`,
+          targetId: id,
+        })
+        return c.json({ success: false, error: 'FORBIDDEN', message: 'You can only manage your own exit cases.' }, 403)
+      }
+
+      if (body.advisorAssessment !== undefined) {
+        await writeAudit(c, {
+          userId: auth.userId,
+          userName: auth.name,
+          userRole: auth.role,
+          action: 'unauthorized_access',
+          description: `STUDENT_CANNOT_EDIT_ADVISOR_ASSESSMENT: PATCH /api/exit-cases/${id}`,
+          targetId: id,
+        })
+        return c.json({ success: false, error: 'FORBIDDEN', message: 'Students cannot edit advisor assessment.' }, 403)
+      }
+
+      if (body.status !== undefined) {
+        let target = body.status
+        if (target === 'open') target = 'submitted'
+        else if (target === 'under_review') target = 'advisor_reviewed'
+        else if (target === 'resolved' || target === 'closed') target = 'completed'
+
+        if (target !== 'cancelled') {
+          await writeAudit(c, {
+            userId: auth.userId,
+            userName: auth.name,
+            userRole: auth.role,
+            action: 'unauthorized_access',
+            description: `STUDENT_CANNOT_CHANGE_STATUS: PATCH /api/exit-cases/${id} attempted status=${target}`,
+            targetId: id,
+          })
+          return c.json({ success: false, error: 'FORBIDDEN', message: 'Students cannot approve or advance exit case status.' }, 403)
+        }
+      }
+
+      if (existing.status === 'completed' || existing.status === 'chair_approved') {
+        return c.json({ success: false, error: 'FORBIDDEN', message: 'Cannot modify a finalized exit case.' }, 403)
+      }
+    }
+
+    if (auth.role === 'advisor') {
+      const advisorAliases = aliasSet(auth.userId, auth.code, auth.email)
+      if (!advisorAliases.has(norm(existing.advisorId))) {
+        const viewer = await viewerFor(c, auth, 'users')
+        if (!ownsRecord(viewer, existing)) {
+          await writeAudit(c, {
+            userId: auth.userId,
+            userName: auth.name,
+            userRole: auth.role,
+            action: 'unauthorized_access',
+            description: `ADVISOR_NOT_ASSIGNED: PATCH /api/exit-cases/${id}`,
+            targetId: id,
+          })
+          return c.json({ success: false, error: 'FORBIDDEN', message: 'You are not the assigned advisor for this case.' }, 403)
+        }
+      }
+
+      if (body.status !== undefined) {
+        let target = body.status
+        if (target === 'open') target = 'submitted'
+        else if (target === 'under_review') target = 'advisor_reviewed'
+        else if (target === 'resolved' || target === 'closed') target = 'completed'
+
+        if (target === 'completed' || target === 'chair_approved') {
+          await writeAudit(c, {
+            userId: auth.userId,
+            userName: auth.name,
+            userRole: auth.role,
+            action: 'unauthorized_access',
+            description: `ADVISOR_CANNOT_FINALIZE_EXIT_CASE: PATCH /api/exit-cases/${id} attempted status=${target}`,
+            targetId: id,
+          })
+          return c.json({
+            success: false,
+            error: 'FORBIDDEN',
+            message: 'Advisors cannot approve or finalize exit cases. Approval requires Program Chair or QA Coordinator.',
+          }, 403)
+        }
+      }
+    }
+
+    // 2. Strict Whitelist of updates (Prevent Mass Assignment)
+    const updates: Record<string, any> = { updatedAt: new Date().toISOString().split('T')[0] }
+
+    if (body.status !== undefined) {
+      let mapped = body.status
+      if (mapped === 'open') mapped = 'submitted'
+      else if (mapped === 'under_review') mapped = 'advisor_reviewed'
+      else if (mapped === 'resolved' || mapped === 'closed') mapped = 'completed'
+      updates.status = mapped
+    }
+
+    if (body.advisorAssessment !== undefined && auth.role !== 'student') {
+      updates.advisorAssessment = typeof body.advisorAssessment === 'string'
+        ? body.advisorAssessment
+        : JSON.stringify(body.advisorAssessment)
+    }
+
+    if (body.details !== undefined && (auth.role === 'student' || auth.role === 'admin' || auth.role === 'super_admin')) {
+      updates.details = String(body.details)
+    }
+
+    if (body.documents !== undefined) {
+      updates.documents = typeof body.documents === 'string'
+        ? body.documents
+        : JSON.stringify(body.documents || [])
+    }
+
+    if (body.pdpaConsent !== undefined) {
+      updates.pdpaConsent = Boolean(body.pdpaConsent)
+    }
+
+    if (body.voiceSurveyCompleted !== undefined) {
+      updates.voiceSurveyCompleted = Boolean(body.voiceSurveyCompleted)
+    }
+
+    if (Object.keys(updates).length <= 1) {
+      return c.json({ success: false, error: 'NO_VALID_FIELDS_TO_UPDATE' }, 400)
+    }
 
     await database.update(schema.exitCases)
       .set(updates)
       .where(eq(schema.exitCases.id, id))
+
+    await writeAudit(c, {
+      userId: auth.userId,
+      userName: auth.name,
+      userRole: auth.role,
+      action: 'exit_case_updated',
+      description: `Updated exit case ${id}: ${Object.keys(updates).filter(k => k !== 'updatedAt').join(', ')}`,
+      targetId: id,
+    })
+
     return c.json({ success: true })
   } catch (err: any) {
     console.error('Failed to update exit case:', err)

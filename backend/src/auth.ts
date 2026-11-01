@@ -176,7 +176,7 @@ const ROUTE_RULES: Array<[method: string, path: RegExp, roles: Role[]]> = [
   ['PATCH', /^\/api\/follow-ups\/[^/]+\/status$/, ['student', 'advisor']],
   ['POST', /^\/api\/follow-up-progress$/, ['student', 'advisor']],
   ['POST', /^\/api\/exit-cases$/, ['student', 'advisor']],
-  ['PATCH', /^\/api\/exit-cases\/[^/]+$/, ['advisor', 'qa_chair', ...ADMINS]],
+  ['PATCH', /^\/api\/exit-cases\/[^/]+$/, ['student', 'advisor', 'qa_chair', ...ADMINS]],
   ['POST', /^\/api\/student-voice$/, ['student']],
   ['POST', /^\/api\/early-warnings$/, ['advisor']],
   ['POST', /^\/api\/documents$/, ['student', 'advisor']],
