@@ -286,8 +286,8 @@ export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
             </>
           )}
         </div>
-        {/* User Profile Trigger Button & Role Switcher Dropdown (Simple & Minimalist) */}
-        <div className="relative pl-1 sm:pl-2 border-l border-slate-200/70 dark:border-slate-800">
+        {/* User Profile Trigger Button & Role Switcher Dropdown (Refined Minimalist Pill) */}
+        <div className="relative pl-1 sm:pl-2.5 border-l border-slate-200/60 dark:border-slate-800/80">
           <button
             type="button"
             onClick={() => {
@@ -295,16 +295,16 @@ export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
               setShowNotifs(false)
             }}
             className={cn(
-              "flex items-center gap-2 px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-xl transition-all duration-150 cursor-pointer group select-none",
+              "flex items-center gap-2 pl-1 pr-2.5 py-1 rounded-full border transition-all duration-200 cursor-pointer group select-none shadow-2xs",
               showProfileMenu
-                ? "bg-slate-100 dark:bg-slate-800/90 text-slate-900 dark:text-slate-100"
-                : "hover:bg-slate-100/70 dark:hover:bg-slate-800/50 text-slate-700 dark:text-slate-300"
+                ? "bg-slate-100/90 dark:bg-slate-800 border-slate-300/80 dark:border-slate-700 ring-2 ring-sky-500/15"
+                : "bg-white/80 dark:bg-slate-900/60 hover:bg-slate-100/80 dark:hover:bg-slate-800/70 border-slate-200/80 dark:border-slate-700/60 hover:border-slate-300 dark:hover:border-slate-600"
             )}
             aria-expanded={showProfileMenu}
             aria-haspopup="menu"
             title={t('โปรไฟล์และการสลับบทบาท', 'Profile & Role Switcher')}
           >
-            {/* Simple User Avatar with subtle role dot */}
+            {/* Elegant User Avatar with soft status ring */}
             <div className="relative flex-shrink-0">
               <UserAvatar name={currentUser.name} avatar={currentUser.avatar} size="md" />
               <span
@@ -318,21 +318,21 @@ export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
               />
             </div>
 
-            {/* Simple Name and Role subtitle */}
-            <div className="hidden sm:block text-left min-w-0">
-              <p className="text-xs font-semibold text-slate-900 dark:text-slate-100 truncate max-w-[130px] leading-tight">
+            {/* User Name & Subtle Role */}
+            <div className="hidden sm:block text-left min-w-0 pr-0.5">
+              <p className="text-xs font-semibold text-slate-800 dark:text-slate-100 truncate max-w-[125px] leading-tight group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
                 {currentUser.name}
               </p>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 truncate leading-tight">
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 truncate leading-tight font-medium">
                 {language === 'th' ? currentConfig.shortLabelTh : currentConfig.shortLabelEn}
               </p>
             </div>
 
-            {/* Subtle Chevron */}
+            {/* Delicate Chevron */}
             <ChevronDown
               className={cn(
-                "h-3.5 w-3.5 text-slate-400 transition-transform duration-200 ml-0.5",
-                showProfileMenu && "rotate-180 text-slate-700 dark:text-slate-200"
+                "h-3.5 w-3.5 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300 transition-transform duration-200 ml-0.5",
+                showProfileMenu && "rotate-180 text-sky-600 dark:text-sky-400"
               )}
             />
           </button>
@@ -341,11 +341,19 @@ export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
           {showProfileMenu && (
             <>
               <div className="fixed inset-0 z-40" onClick={() => setShowProfileMenu(false)} />
-              <div className="absolute right-0 top-full mt-2 w-[calc(100vw-1.5rem)] max-w-80 sm:max-w-88 bg-white dark:bg-[#0e1424] border border-slate-200/90 dark:border-slate-800 rounded-2xl shadow-xl z-50 overflow-hidden animate-[slideIn_0.15s_ease-out]">
+              <div className="absolute right-0 top-full mt-2.5 w-[calc(100vw-1.5rem)] max-w-80 sm:max-w-88 bg-white/95 dark:bg-[#0c1222]/95 backdrop-blur-md border border-slate-200/90 dark:border-slate-800/90 rounded-2xl shadow-xl z-50 overflow-hidden animate-[slideIn_0.15s_ease-out]">
                 {/* User Identity Header */}
-                <div className="p-3.5 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/40">
+                <div className="p-4 border-b border-slate-100 dark:border-slate-800/80 bg-gradient-to-b from-slate-50/70 to-transparent dark:from-slate-900/60 dark:to-transparent">
                   <div className="flex items-center gap-3">
-                    <UserAvatar name={currentUser.name} avatar={currentUser.avatar} size="lg" />
+                    <div className="relative flex-shrink-0">
+                      <UserAvatar name={currentUser.name} avatar={currentUser.avatar} size="lg" />
+                      <span className={cn(
+                        "absolute -bottom-1 -right-1 p-0.5 rounded-full bg-white dark:bg-[#0c1222] shadow-xs border",
+                        currentConfig.badgeClass
+                      )}>
+                        {getRoleIcon(currentUser.role, 'h-3 w-3')}
+                      </span>
+                    </div>
                     <div className="flex-1 min-w-0">
                       <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 truncate">
                         {currentUser.name}
@@ -354,7 +362,7 @@ export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
                         {currentUser.code} · {currentUser.email}
                       </p>
                       <div className="mt-1.5">
-                        <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold border", currentConfig.badgeClass)}>
+                        <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold border shadow-3xs", currentConfig.badgeClass)}>
                           {getRoleIcon(currentUser.role, 'h-2.5 w-2.5')}
                           <span>{language === 'th' ? currentConfig.labelTh : currentConfig.labelEn}</span>
                         </span>
@@ -365,12 +373,12 @@ export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
 
                 {/* Role Switching Section */}
                 {canSwitchRole && (
-                  <div className="p-2.5 border-b border-slate-100 dark:border-slate-800/80">
-                    <div className="flex items-center justify-between px-1.5 pb-2">
-                      <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                  <div className="p-3 border-b border-slate-100 dark:border-slate-800/80">
+                    <div className="flex items-center justify-between px-1 pb-2">
+                      <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500">
                         {t('สลับบทบาทการทำงาน', 'Switch Role Workspace')}
                       </span>
-                      <span className="text-[10px] text-slate-400 font-medium">
+                      <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800/80 px-1.5 py-0.5 rounded-full">
                         {availableRoles.length} {t('บทบาท', 'roles')}
                       </span>
                     </div>
@@ -385,10 +393,10 @@ export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
                             type="button"
                             onClick={() => handleRoleSwitch(r)}
                             className={cn(
-                              "w-full text-left px-2.5 py-2 rounded-xl transition-colors cursor-pointer flex items-center justify-between gap-2.5 group",
+                              "w-full text-left px-3 py-2 rounded-xl transition-all cursor-pointer flex items-center justify-between gap-2.5 group",
                               isActive
-                                ? "bg-sky-50 dark:bg-sky-950/40 text-sky-900 dark:text-sky-200"
-                                : "hover:bg-slate-100/70 dark:hover:bg-slate-800/50 text-slate-700 dark:text-slate-300"
+                                ? "bg-sky-50/80 dark:bg-sky-950/40 border border-sky-200/80 dark:border-sky-800/60 shadow-2xs"
+                                : "hover:bg-slate-100/70 dark:hover:bg-slate-800/50 border border-transparent text-slate-700 dark:text-slate-300"
                             )}
                           >
                             <div className="flex items-center gap-2.5 min-w-0">
@@ -396,21 +404,27 @@ export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
                                 className={cn(
                                   "h-7 w-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors",
                                   isActive
-                                    ? "bg-sky-600 text-white"
-                                    : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+                                    ? "bg-sky-600 text-white shadow-xs"
+                                    : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 group-hover:bg-sky-100 dark:group-hover:bg-sky-950/60 group-hover:text-sky-600 dark:group-hover:text-sky-400"
                                 )}
                               >
                                 {getRoleIcon(r, 'h-3.5 w-3.5')}
                               </div>
                               <div className="min-w-0">
-                                <p className={cn("text-xs leading-tight truncate", isActive ? "font-bold text-sky-950 dark:text-sky-200" : "font-medium")}>
+                                <p className={cn("text-xs leading-tight truncate", isActive ? "font-bold text-sky-950 dark:text-sky-200" : "font-medium text-slate-800 dark:text-slate-200 group-hover:text-sky-600 dark:group-hover:text-sky-400")}>
                                   {language === 'th' ? config.labelTh : config.labelEn}
                                 </p>
                               </div>
                             </div>
 
-                            {isActive && (
-                              <Check className="h-4 w-4 text-sky-600 dark:text-sky-400 flex-shrink-0" />
+                            {isActive ? (
+                              <span className="h-5 w-5 rounded-full bg-sky-600/10 dark:bg-sky-400/20 text-sky-600 dark:text-sky-400 flex items-center justify-center flex-shrink-0">
+                                <Check className="h-3 w-3 stroke-[2.5]" />
+                              </span>
+                            ) : (
+                              <span className="text-[11px] text-slate-400 group-hover:text-sky-600 dark:group-hover:text-sky-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                                →
+                              </span>
                             )}
                           </button>
                         )
@@ -420,8 +434,8 @@ export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
                 )}
 
                 {/* Footer Actions */}
-                <div className="p-2.5 bg-slate-50/30 dark:bg-slate-900/30 flex items-center justify-between gap-2 border-t border-slate-100 dark:border-slate-800/80">
-                  <div className="text-[10px] text-slate-500 dark:text-slate-400 px-1 truncate font-medium max-w-[170px]">
+                <div className="p-2.5 bg-slate-50/50 dark:bg-slate-900/40 flex items-center justify-between gap-2 border-t border-slate-100 dark:border-slate-800/80">
+                  <div className="text-[10px] text-slate-500 dark:text-slate-400 px-1 truncate font-medium max-w-[170px]" title={currentUser.department}>
                     {currentUser.department}
                   </div>
                   <button
@@ -431,7 +445,7 @@ export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
                       logout()
                       navigate('/login')
                     }}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold text-rose-600 hover:text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-rose-600 hover:text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
                   >
                     <LogOut className="h-3.5 w-3.5" />
                     <span>{t('ออกจากระบบ', 'Sign out')}</span>
