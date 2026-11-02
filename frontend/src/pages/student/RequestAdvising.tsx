@@ -425,7 +425,7 @@ export default function RequestAdvising() {
         title: category === 'withdrawal_leave'
           ? t(`คำร้องขอนัดพบ: ${exitTypeLabel}`, `Meeting Request: ${exitTypeLabel}`)
           : t('คำร้องขอรับคำปรึกษาใหม่', 'New Advising Request'),
-        message: `${currentUser!.name} (${currentUser!.code}) ${t('ยื่นคำร้อง:', 'submitted a request:')} ${category === 'withdrawal_leave' ? exitTypeLabel : getCategoryLabel(category)}`,
+        message: `${currentUser!.name} (${currentUser!.code}) ${t('ยื่นคำร้อง:', 'submitted a request:')} ${category === 'withdrawal_leave' ? exitTypeLabel : getCategoryLabel(category)} | วัน-เวลาที่นักศึกษาขอนัดหมาย: ${preferredDate} เวลา ${preferredTime} น.`,
         relatedId: newRequest.id,
         isRead: false,
       })

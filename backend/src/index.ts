@@ -523,9 +523,9 @@ async function sendWorkspaceEmail(
   const tokenData = await tokenResponse.json() as { access_token?: string }
   if (!tokenData.access_token) return { sent: false, error: 'GOOGLE_ACCESS_TOKEN_MISSING' }
 
-  const targetUrl = relatedId
-    ? (relatedId.startsWith('REQ') ? 'https://advising-log.pages.dev/advisor/requests' : 'https://advising-log.pages.dev/advisor/followups')
-    : 'https://advising-log.pages.dev/login'
+  const targetUrl = 'https://advising-log.pages.dev/login'
+
+
 
   const boundary = `====_AdvisingLog_${Date.now()}====`
   const formattedTime = new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })
