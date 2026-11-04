@@ -9,7 +9,7 @@ import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useNavigate } from 'react-router-dom'
 import { PageHeader, StatCard, Card, StatusBadge, EmptyState, Button, Modal, AdvisorCohortBanner } from '@/components/ui'
-import { FileEdit, CalendarClock, ListChecks, UserX, AlertTriangle, Clock, ArrowRight, UserPlus, CheckCircle2, Search, Users, RefreshCw, Upload } from 'lucide-react'
+import { FileEdit, CalendarClock, ListChecks, UserX, AlertTriangle, Clock, ArrowRight, UserPlus, CheckCircle2, Search, Users, RefreshCw, Upload, Eye } from 'lucide-react'
 import { isAdvisorMatch } from '@/utils/advisorUtils'
 import { getLocalDateString } from '@/utils/dateUtils'
 
@@ -555,7 +555,27 @@ export default function AdvisorDashboard() {
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Button
+                      {a.requestId && store.sessions.some(s => s.requestId === a.requestId) ? (
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => {
+                            const ses = store.sessions.find(s => s.requestId === a.requestId)
+                            navigate('/advisor/log', {
+                              state: {
+                                appointmentId: a.id,
+                                requestId: a.requestId,
+                                sessionId: ses?.id,
+                                studentId: a.studentId,
+                              },
+                            })
+                          }}
+                        >
+                          <Eye className="h-3.5 w-3.5 mr-1" />
+                          {t('ดูรายละเอียด', 'View Details')}
+                        </Button>
+                      ) : (
+                        <Button
                           size="sm"
                           onClick={() => navigate('/advisor/log', {
                             state: {
@@ -565,8 +585,9 @@ export default function AdvisorDashboard() {
                             },
                           })}
                         >
-                        {t('บันทึกผล', 'Record Log')}
-                      </Button>
+                          {t('บันทึกผล', 'Record Log')}
+                        </Button>
+                      )}
                     </div>
                   </div>
                 )

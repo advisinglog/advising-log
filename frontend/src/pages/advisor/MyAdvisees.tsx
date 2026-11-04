@@ -657,6 +657,21 @@ export default function MyAdvisees() {
                           {t('คำแนะนำ', 'Advice')}: {sess.advice}
                         </p>
                       )}
+                      <div className="pt-1 flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const sessId = sess.id
+                            const reqId = sess.requestId
+                            setSelectedStudentHistory(null)
+                            navigate('/advisor/log', { state: { sessionId: sessId, requestId: reqId } })
+                          }}
+                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-sky-600 dark:text-sky-400 hover:underline cursor-pointer"
+                        >
+                          <Eye className="h-3 w-3" />
+                          {t('ดูรายละเอียดบันทึก', 'View Full Log Details')}
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>

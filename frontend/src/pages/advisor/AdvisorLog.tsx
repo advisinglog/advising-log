@@ -1,11 +1,11 @@
-import { useState, useEffect, type FormEvent } from 'react'
+import { useState, useEffect, useRef, type FormEvent } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { useStore } from '@/data/store'
 import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { cn } from '@/lib/utils'
-import { PageHeader, Card, Button, EmptyState, DocumentViewerModal, Modal, Tabs, type DocumentViewerTarget } from '@/components/ui'
+import { PageHeader, Card, Button, EmptyState, DocumentViewerModal, Modal, Tabs, StatusBadge, type DocumentViewerTarget } from '@/components/ui'
 import {
   ClipboardCheck,
   User,
@@ -17,6 +17,8 @@ import {
   Trash2,
   CalendarClock,
   ChevronDown,
+  Clock,
+  Paperclip,
 } from 'lucide-react'
 
 import { isAdvisorMatch } from '@/utils/advisorUtils'
@@ -30,7 +32,7 @@ export default function AdvisorLog() {
   const { t, getCategoryLabel } = useLanguage()
   const location = useLocation()
 
-  type LogNavigationState = { appointmentId?: string; requestId?: string; studentId?: string }
+  type LogNavigationState = { appointmentId?: string; requestId?: string; studentId?: string; sessionId?: string; edit?: boolean; viewOnly?: boolean }
   const navState = location.state as LogNavigationState | null
 
   // Preselected student if navigated from My Advisees, Appointments, or Dashboard
@@ -67,12 +69,35 @@ export default function AdvisorLog() {
     : undefined
   const linkedRequestId = linkedAppointment?.requestId || navState?.requestId || ''
 
+  const hasInitializedFromNav = useRef(false)
+
   useEffect(() => {
+    if (hasInitializedFromNav.current) return
     if (linkedRequestId) {
       setSelectedRequestId(linkedRequestId)
-      setSection('entry')
+      const existing = store.sessions.find(session => session.requestId === linkedRequestId)
+      if (existing) {
+        if (navState?.edit) {
+          setEditingRequestId(linkedRequestId)
+          setSection('entry')
+        } else {
+          setViewingSessionId(existing.id)
+          setSection('saved')
+        }
+        hasInitializedFromNav.current = true
+      } else if (store.requests.length > 0) {
+        setSection('entry')
+        hasInitializedFromNav.current = true
+      }
+    } else if (navState?.sessionId) {
+      const existing = store.sessions.find(session => session.id === navState.sessionId)
+      if (existing) {
+        setViewingSessionId(existing.id)
+        setSection('saved')
+        hasInitializedFromNav.current = true
+      }
     }
-  }, [linkedRequestId])
+  }, [linkedRequestId, navState?.sessionId, navState?.edit, store.sessions, store.requests])
 
   useEffect(() => {
     const existing = store.sessions.find(session => session.requestId === selectedRequestId)
@@ -375,6 +400,7 @@ export default function AdvisorLog() {
     setSummary('')
     setFollowUpTask('')
     setFollowUpDate('')
+    setViewingSessionId(session.id)
   }
 
   return (
@@ -461,7 +487,11 @@ export default function AdvisorLog() {
                   appointmentItem.requestId === session.requestId
               )
               return (
-                <Card key={session.id} className="border-emerald-100 dark:border-emerald-900/60">
+                <Card
+                  key={session.id}
+                  className="border-emerald-100 dark:border-emerald-900/60 hover:shadow-md transition-shadow cursor-pointer"
+                  onClick={() => setViewingSessionId(session.id)}
+                >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 space-y-1.5">
                       <div className="flex items-center gap-2 flex-wrap">
@@ -488,14 +518,14 @@ export default function AdvisorLog() {
                         {session.summary || t('ไม่มีสรุปบันทึก', 'No summary recorded')}
                       </p>
                     </div>
-                    <div className="flex items-center gap-3 shrink-0 pt-0.5">
+                    <div className="flex items-center gap-2 shrink-0 pt-0.5" onClick={e => e.stopPropagation()}>
                       <button
                         type="button"
                         onClick={() => setViewingSessionId(session.id)}
-                        className="inline-flex items-center gap-1 text-xs font-semibold text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors cursor-pointer"
+                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/60 hover:bg-sky-100 dark:hover:bg-sky-900/60 px-2.5 py-1.5 rounded-lg border border-sky-200/80 dark:border-sky-800 transition-colors cursor-pointer"
                       >
                         <Eye className="h-3.5 w-3.5" />
-                        {t('ดู', 'View')}
+                        {t('ดูรายละเอียด', 'View Details')}
                       </button>
                       <button
                         type="button"
@@ -503,18 +533,20 @@ export default function AdvisorLog() {
                           if (requestId) editSavedLog(requestId)
                         }}
                         disabled={!requestId}
-                        className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed p-1.5 rounded hover:bg-blue-50 dark:hover:bg-blue-950/50"
+                        title={t('แก้ไข', 'Edit')}
                       >
                         <Pencil className="h-3.5 w-3.5" />
-                        {t('แก้ไข', 'Edit')}
+                        <span className="hidden sm:inline">{t('แก้ไข', 'Edit')}</span>
                       </button>
                       <button
                         type="button"
                         onClick={() => deleteSavedLog(session.id)}
-                        className="inline-flex items-center gap-1 text-xs font-semibold text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors cursor-pointer"
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors cursor-pointer p-1.5 rounded hover:bg-red-50 dark:hover:bg-red-950/50"
+                        title={t('ลบ', 'Delete')}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
-                        {t('ลบ', 'Delete')}
+                        <span className="hidden sm:inline">{t('ลบ', 'Delete')}</span>
                       </button>
                     </div>
                   </div>
@@ -888,9 +920,19 @@ export default function AdvisorLog() {
             {existingSession && (
               <div className="p-3.5 bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-800/60 rounded-xl">
                 <div className="flex items-center justify-between gap-2 mb-2">
-                  <h3 className="text-xs sm:text-sm font-bold text-emerald-900 dark:text-emerald-200">
-                    {t('บันทึกผลการเข้าพบที่บันทึกไว้แล้ว', 'Saved Session Log')}
-                  </h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-xs sm:text-sm font-bold text-emerald-900 dark:text-emerald-200">
+                      {t('บันทึกผลการเข้าพบที่บันทึกไว้แล้ว', 'Saved Session Log')}
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={() => setViewingSessionId(existingSession.id)}
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300 hover:underline cursor-pointer"
+                    >
+                      <Eye className="h-3.5 w-3.5" />
+                      {t('ดูรายละเอียดเต็ม', 'View Full Details')}
+                    </button>
+                  </div>
                   <span className="text-[10px] font-medium text-right">
                     <span className="block text-emerald-700 dark:text-emerald-300">
                       {t('วันที่บันทึก:', 'Entry date:')} {existingSession.createdAt.split('T')[0]}
@@ -962,36 +1004,199 @@ export default function AdvisorLog() {
         if (!viewingSession) return null
         const viewingRequest = store.requests.find(request => request.id === viewingSession.requestId)
         const viewingStudent = store.users.find(user => user.id === viewingSession.studentId)
+        const viewingAppointment = store.appointments.find(
+          a => a.id === viewingSession.appointmentId || (viewingRequest && a.requestId === viewingRequest.id)
+        )
+        const sessionFollowUps = store.followUps.filter(
+          f => f.sessionId === viewingSession.id || (viewingRequest && f.requestId === viewingRequest.id)
+        )
+        const attachments = viewingRequest ? getAttachments(viewingRequest) : []
+
         return (
           <Modal
             isOpen={!!viewingSession}
             onClose={() => setViewingSessionId(null)}
             title={t('รายละเอียดบันทึกการให้คำปรึกษา', 'Advising Log Details')}
-            size="md"
+            size="lg"
           >
             <div className="space-y-4">
+              {/* Student & Session Meta Info */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
-                  <span className="text-slate-400 block mb-1">{t('นักศึกษา', 'Student')}</span>
-                  <p className="font-bold">{viewingStudent?.name || viewingSession.studentId}</p>
-                  {viewingStudent?.code && <p className="text-[11px] text-slate-500 font-mono mt-0.5">{viewingStudent.code}</p>}
+                <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/70 dark:border-slate-800 space-y-1">
+                  <span className="text-slate-400 font-medium block">{t('ข้อมูลนักศึกษา', 'Student Information')}</span>
+                  <p className="font-bold text-sm text-slate-900 dark:text-slate-100">{viewingStudent?.name || viewingSession.studentId}</p>
+                  {viewingStudent?.code && (
+                    <p className="text-xs text-slate-600 dark:text-slate-300 font-mono">
+                      {t('รหัสนักศึกษา:', 'Student ID:')} {viewingStudent.code}
+                    </p>
+                  )}
+                  {viewingStudent?.department && (
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      {t('สำนักวิชา / สาขา:', 'Department:')} {viewingStudent.department}
+                    </p>
+                  )}
+                  {viewingStudent?.email && (
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      {t('อีเมล:', 'Email:')} {viewingStudent.email}
+                    </p>
+                  )}
                 </div>
-                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
-                  <span className="text-slate-400 block mb-1">{t('วันที่เข้าพบ', 'Session Date')}</span>
-                  <p className="font-bold">{viewingSession.sessionDate}</p>
-                  <p className="text-[11px] text-slate-500 mt-0.5">{viewingRequest ? getCategoryLabel(viewingRequest.category) : '-'}</p>
+
+                <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/70 dark:border-slate-800 space-y-1">
+                  <span className="text-slate-400 font-medium block">{t('ข้อมูลการเข้าพบ', 'Session Information')}</span>
+                  <p className="font-semibold text-slate-800 dark:text-slate-200">
+                    <span className="text-slate-400 font-normal mr-1">{t('วันที่บันทึก:', 'Recorded Date:')}</span>
+                    {viewingSession.sessionDate}
+                  </p>
+                  {viewingAppointment?.scheduledDate && (
+                    <p className="text-xs text-slate-600 dark:text-slate-300">
+                      <span className="text-slate-400 mr-1">{t('วัน-เวลานัดหมาย:', 'Scheduled Slot:')}</span>
+                      {viewingAppointment.scheduledDate} {viewingAppointment.scheduledTime || ''}
+                    </p>
+                  )}
+                  {viewingAppointment?.location && (
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      <span className="text-slate-400 mr-1">{t('สถานที่ / รูปแบบ:', 'Location / Mode:')}</span>
+                      {viewingAppointment.location}
+                    </p>
+                  )}
+                  <div className="pt-1">
+                    <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-sky-100 dark:bg-sky-900/60 text-sky-800 dark:text-sky-200">
+                      {viewingRequest ? getCategoryLabel(viewingRequest.category) : t('การให้คำปรึกษาทั่วไป', 'General Advising')}
+                    </span>
+                  </div>
                 </div>
               </div>
+
+              {/* Student Request Topic / Reason if available */}
+              {viewingRequest?.details && (
+                <div className="p-3.5 rounded-xl bg-sky-50/60 dark:bg-sky-950/20 border border-sky-100 dark:border-sky-900/40 space-y-1">
+                  <span className="text-xs font-bold text-sky-900 dark:text-sky-300 flex items-center gap-1.5">
+                    <FileText className="h-3.5 w-3.5 text-sky-600" />
+                    {t('รายละเอียดที่นักศึกษาแจ้งขอเข้าพบ', 'Student Consultation Request Notes')}
+                  </span>
+                  <p className="text-xs text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">
+                    {viewingRequest.details}
+                  </p>
+                </div>
+              )}
+
+              {/* Advising Summary */}
               <div>
-                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 block mb-1">{t('สรุปผลการให้คำปรึกษา', 'Session Summary')}</span>
-                <p className="text-sm leading-relaxed whitespace-pre-wrap p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1.5 flex items-center gap-1.5">
+                  <ClipboardCheck className="h-4 w-4 text-emerald-600" />
+                  {t('สรุปผลการให้คำปรึกษาและข้อตกลงร่วมกัน', 'Session Summary & Discussion')}
+                </span>
+                <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/70 dark:border-slate-800 text-sm text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-wrap">
                   {viewingSession.summary || t('ไม่มีสรุปบันทึก', 'No summary recorded')}
-                </p>
+                </div>
               </div>
-              <div className="flex justify-end">
-                <Button type="button" variant="secondary" onClick={() => setViewingSessionId(null)}>
-                  {t('ปิด', 'Close')}
+
+              {/* Advice Given if distinct */}
+              {viewingSession.advice && viewingSession.advice !== viewingSession.summary && (
+                <div>
+                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1.5">
+                    {t('คำแนะนำและแนวทางแก้ไขจากอาจารย์', 'Advisor Guidance & Advice')}
+                  </span>
+                  <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/70 dark:border-slate-800 text-xs sm:text-sm text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-wrap">
+                    {viewingSession.advice}
+                  </div>
+                </div>
+              )}
+
+              {/* Follow-up Tasks */}
+              {sessionFollowUps.length > 0 && (
+                <div>
+                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1.5 flex items-center gap-1.5">
+                    <Clock className="h-4 w-4 text-amber-600" />
+                    {t('งานติดตามผลที่มอบหมาย', 'Assigned Follow-up Tasks')} ({sessionFollowUps.length})
+                  </span>
+                  <div className="space-y-2">
+                    {sessionFollowUps.map(fu => (
+                      <div
+                        key={fu.id}
+                        className="flex items-center justify-between gap-3 p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800"
+                      >
+                        <div className="min-w-0">
+                          <p className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100">
+                            {fu.task}
+                          </p>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                            {t('กำหนดส่ง:', 'Due Date:')} {fu.dueDate || '-'}
+                          </p>
+                        </div>
+                        <StatusBadge status={fu.status} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Attachments */}
+              {attachments.length > 0 && (
+                <div>
+                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1.5 flex items-center gap-1.5">
+                    <Paperclip className="h-4 w-4 text-slate-500" />
+                    {t('เอกสารแนบ', 'Attached Documents')} ({attachments.length})
+                  </span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {attachments.map(doc => (
+                      <button
+                        key={doc.id}
+                        type="button"
+                        onClick={() => setPreviewDoc(doc)}
+                        className="flex items-center justify-between p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-800 hover:border-sky-300 dark:hover:border-sky-700 bg-white dark:bg-slate-900 text-left transition-colors cursor-pointer"
+                      >
+                        <div className="min-w-0 flex items-center gap-2">
+                          <FileText className="h-4 w-4 text-sky-600 shrink-0" />
+                          <span className="text-xs font-medium text-slate-800 dark:text-slate-200 truncate">
+                            {doc.title || doc.fileName}
+                          </span>
+                        </div>
+                        <span className="text-[11px] text-sky-600 dark:text-sky-400 shrink-0 ml-2">
+                          {t('เปิดดู', 'View')}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Modal Actions */}
+              <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                  onClick={() => {
+                    deleteSavedLog(viewingSession.id)
+                    setViewingSessionId(null)
+                  }}
+                >
+                  <Trash2 className="h-4 w-4 mr-1.5" />
+                  {t('ลบบันทึก', 'Delete Log')}
                 </Button>
+                <div className="flex items-center gap-2">
+                  {viewingSession.requestId && (
+                    <Button
+                      type="button"
+                      variant="primary"
+                      onClick={() => {
+                        const reqId = viewingSession.requestId
+                        if (reqId) {
+                          setViewingSessionId(null)
+                          editSavedLog(reqId)
+                        }
+                      }}
+                    >
+                      <Pencil className="h-4 w-4 mr-1.5" />
+                      {t('แก้ไขบันทึก', 'Edit Log')}
+                    </Button>
+                  )}
+                  <Button type="button" variant="secondary" onClick={() => setViewingSessionId(null)}>
+                    {t('ปิด', 'Close')}
+                  </Button>
+                </div>
               </div>
             </div>
           </Modal>

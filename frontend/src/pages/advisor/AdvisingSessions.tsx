@@ -380,12 +380,13 @@ export default function AdvisingSessions() {
         )
       },
     },
-    ...(tab === 'pending' || tab === 'upcoming' || tab === 'ongoing'
+    ...(tab === 'pending' || tab === 'upcoming' || tab === 'ongoing' || tab === 'completed'
       ? [
           {
             key: 'actions',
             header: t('การจัดการ', 'Actions'),
             render: (r: AdvisingRequest) => {
+              const session = store.sessions.find(s => s.requestId === r.id)
               return (
                 <div className="flex items-center gap-2 flex-wrap" onClick={e => e.stopPropagation()}>
                   {(r.status === 'requested' || r.status === 'pending') && (
@@ -431,6 +432,24 @@ export default function AdvisingSessions() {
                         </Button>
                       )}
                     </>
+                  )}
+
+                  {(r.status === 'completed' || r.status === 'closed' || session) && (
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="border-sky-200 text-sky-700 dark:text-sky-300 dark:border-sky-800 hover:bg-sky-50 dark:hover:bg-sky-950/40"
+                      onClick={() => {
+                        markRequestViewed(r.id)
+                        if (session) {
+                          navigate('/advisor/log', { state: { requestId: r.id, sessionId: session.id } })
+                        } else {
+                          setDetailReq(r)
+                        }
+                      }}
+                    >
+                      <Eye className="h-3 w-3 mr-1" /> {t('ดูรายละเอียด', 'View Details')}
+                    </Button>
                   )}
 
                   {r.status !== 'completed' && r.status !== 'cancelled' && r.status !== 'closed' && (
@@ -484,9 +503,25 @@ export default function AdvisingSessions() {
               if (!session) return null
               return (
                 <div className="p-3.5 bg-emerald-50/70 dark:bg-emerald-950/30 rounded-xl border border-emerald-200/80 dark:border-emerald-800/60">
-                  <h4 className="text-xs font-bold text-emerald-900 dark:text-emerald-200 mb-2">
-                    {t('บันทึกผลการเข้าพบ', 'Advising Session Log')}
-                  </h4>
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <h4 className="text-xs font-bold text-emerald-900 dark:text-emerald-200">
+                      {t('บันทึกผลการเข้าพบ', 'Advising Session Log')}
+                    </h4>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 text-xs text-sky-700 dark:text-sky-300 hover:bg-sky-100/60 px-2"
+                      onClick={() => {
+                        const targetReqId = detailReq.id
+                        const targetSessId = session.id
+                        setDetailReq(null)
+                        navigate('/advisor/log', { state: { requestId: targetReqId, sessionId: targetSessId } })
+                      }}
+                    >
+                      <Eye className="h-3.5 w-3.5 mr-1" />
+                      {t('ดูรายละเอียดเต็มในระบบบันทึก', 'View Full Log')}
+                    </Button>
+                  </div>
                   <div className="space-y-2 text-xs text-slate-700 dark:text-slate-200">
                     <div>
                       <span className="font-semibold text-emerald-800 dark:text-emerald-300">{t('สรุปผล:', 'Summary:')}</span>

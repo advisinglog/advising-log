@@ -148,4 +148,44 @@ describe('Advisor Pages Audit & Resilience Tests', () => {
     expect(screen.getAllByText(/Tanawat Rungroj/i).length).toBeGreaterThan(0)
     expect(screen.getByText(/งานที่มอบหมายไว้จากครั้งก่อนหน้า|Previous Assigned Follow-up Tasks/i)).toBeInTheDocument()
   })
+  it('allows advisor to view full details of saved advising logs and switch to edit mode', () => {
+    renderWithProviders(<AdvisorLog />)
+
+    // Switch to Saved Log tab
+    const savedTab = screen.getByRole('button', { name: /บันทึกที่จัดเก็บแล้ว|Saved Log/i })
+    fireEvent.click(savedTab)
+
+    // Verify saved session cards and View Details buttons appear
+    const viewButtons = screen.getAllByRole('button', { name: /ดูรายละเอียด|View Details/i })
+    expect(viewButtons.length).toBeGreaterThan(0)
+
+    // Click View Details
+    fireEvent.click(viewButtons[0])
+
+    // Should open comprehensive details modal
+    expect(screen.getByText(/รายละเอียดบันทึกการให้คำปรึกษา|Advising Log Details/i)).toBeInTheDocument()
+    expect(screen.getByText(/ข้อมูลนักศึกษา|Student Information/i)).toBeInTheDocument()
+    expect(screen.getByText(/ข้อมูลการเข้าพบ|Session Information/i)).toBeInTheDocument()
+    expect(screen.getByText(/สรุปผลการให้คำปรึกษาและข้อตกลงร่วมกัน|Session Summary & Discussion/i)).toBeInTheDocument()
+
+    // Can switch to Edit Log from inside modal
+    const editBtn = screen.getByRole('button', { name: /แก้ไขบันทึก|Edit Log/i })
+    expect(editBtn).toBeInTheDocument()
+    fireEvent.click(editBtn)
+
+    // Modal closes and entry edit form opens
+    expect(screen.getByRole('button', { name: /บันทึกการแก้ไข|Update Log/i })).toBeInTheDocument()
+  })
+
+  it('renders View Details button for completed sessions in AdvisingSessions', () => {
+    renderWithProviders(<AdvisingSessions />)
+
+    // Click Completed tab
+    const completedTab = screen.getByRole('button', { name: /เสร็จสิ้นแล้ว|Completed/i })
+    fireEvent.click(completedTab)
+
+    // Should display View Details action buttons
+    const viewDetailsBtns = screen.getAllByRole('button', { name: /ดูรายละเอียด|View Details/i })
+    expect(viewDetailsBtns.length).toBeGreaterThan(0)
+  })
 })
