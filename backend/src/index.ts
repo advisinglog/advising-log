@@ -575,18 +575,18 @@ async function sendWorkspaceEmail(
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${escapeHtml(subject)}</title>
 </head>
-<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Sarabun', sans-serif; background-color: #f1f5f9; color: #1e293b;">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f1f5f9; padding: 24px 12px;">
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Sarabun', sans-serif; background-color: #ffffff; color: #1e293b;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #ffffff; padding: 24px 12px;">
     <tr>
       <td align="center">
         <table role="presentation" width="100%" style="max-width: 620px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05); border: 1px solid #e2e8f0;" cellspacing="0" cellpadding="0">
           
-          <!-- Header Banner -->
+          <!-- Header Banner (Clean White Theme) -->
           <tr>
-            <td style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); padding: 32px 32px 28px 32px; text-align: left; border-bottom: 3px solid #0284c7;">
-              <span style="font-size: 11px; font-weight: 700; color: #38bdf8; text-transform: uppercase; letter-spacing: 1.5px; display: block; margin-bottom: 4px;">Mae Fah Luang University</span>
-              <h1 style="margin: 0; font-size: 20px; font-weight: 800; color: #ffffff; line-height: 1.3;">ระบบบริหารการให้คำปรึกษาทางวิชาการ (AdvisingLog)</h1>
-              <p style="margin: 4px 0 0 0; font-size: 13px; color: #94a3b8;">School of Applied Digital Technology • สำนักวิชาเทคโนโลยีดิจิทัลประยุกต์</p>
+            <td style="background-color: #ffffff; padding: 32px 32px 24px 32px; text-align: left; border-bottom: 2px solid #0284c7;">
+              <span style="font-size: 11px; font-weight: 700; color: #0284c7; text-transform: uppercase; letter-spacing: 1.5px; display: block; margin-bottom: 4px;">Mae Fah Luang University</span>
+              <h1 style="margin: 0; font-size: 20px; font-weight: 800; color: #0f172a; line-height: 1.3;">ระบบบริหารการให้คำปรึกษาทางวิชาการ (AdvisingLog)</h1>
+              <p style="margin: 4px 0 0 0; font-size: 13px; color: #64748b;">School of Applied Digital Technology • สำนักวิชาเทคโนโลยีดิจิทัลประยุกต์</p>
             </td>
           </tr>
           
@@ -600,7 +600,7 @@ async function sendWorkspaceEmail(
                 ระบบบริหารการให้คำปรึกษาทางวิชาการ (AdvisingLog) มหาวิทยาลัยแม่ฟ้าหลวง ขอแจ้งเตือนรายการใหม่ที่เกี่ยวข้องกับนักศึกษาในความดูแลของท่าน ดังนี้:
               </p>
               
-              <table role="presentation" width="100%" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 22px;" cellspacing="0" cellpadding="0">
+              <table role="presentation" width="100%" style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 22px;" cellspacing="0" cellpadding="0">
                 <tr>
                   <td style="padding: 18px 20px;">
                     <div style="font-size: 11px; font-weight: 700; color: #0284c7; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px;">
@@ -661,7 +661,7 @@ async function sendWorkspaceEmail(
                 The Student Academic Advising System (AdvisingLog), Mae Fah Luang University, would like to notify you of an advising update regarding your advisee:
               </p>
 
-              <table role="presentation" width="100%" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 22px;" cellspacing="0" cellpadding="0">
+              <table role="presentation" width="100%" style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 22px;" cellspacing="0" cellpadding="0">
                 <tr>
                   <td style="padding: 18px 20px;">
                     <div style="font-size: 11px; font-weight: 700; color: #0284c7; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px;">
@@ -697,7 +697,7 @@ async function sendWorkspaceEmail(
 
           <!-- Institutional Footer (Bilingual) -->
           <tr>
-            <td style="background-color: #f8fafc; padding: 24px 32px; border-top: 1px solid #e2e8f0; text-align: left;">
+            <td style="background-color: #ffffff; padding: 24px 32px; border-top: 1px solid #e2e8f0; text-align: left;">
               <p style="margin: 0 0 4px 0; font-size: 12px; font-weight: 700; color: #475569;">
                 ระบบบริหารการให้คำปรึกษาทางวิชาการและการประกันคุณภาพการศึกษา (AdvisingLog)
               </p>
