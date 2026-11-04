@@ -150,19 +150,19 @@ export default function RequestAdvising() {
       r =>
         r.isActive &&
         (r.studentId === currentUser?.id ||
-         (currentUser?.code && r.studentId?.toUpperCase() === currentUser.code.toUpperCase()) ||
-         (currentUser?.email && r.studentId?.toLowerCase() === currentUser.email.toLowerCase()))
+          (currentUser?.code && r.studentId?.toUpperCase() === currentUser.code.toUpperCase()) ||
+          (currentUser?.email && r.studentId?.toLowerCase() === currentUser.email.toLowerCase()))
     )
     .sort((a, b) => (b.assignedAt || '').localeCompare(a.assignedAt || ''))
 
   const rosterEntry = matchingAssignments[0] || null
   const assignedAdvisor = rosterEntry
     ? store.users.find(
-        u =>
-          u.id === rosterEntry.advisorId ||
-          (u.code && rosterEntry.advisorId && u.code.toUpperCase() === rosterEntry.advisorId.toUpperCase()) ||
-          (u.email && rosterEntry.advisorId && u.email.toLowerCase() === rosterEntry.advisorId.toLowerCase())
-      )
+      u =>
+        u.id === rosterEntry.advisorId ||
+        (u.code && rosterEntry.advisorId && u.code.toUpperCase() === rosterEntry.advisorId.toUpperCase()) ||
+        (u.email && rosterEntry.advisorId && u.email.toLowerCase() === rosterEntry.advisorId.toLowerCase())
+    )
     : null
 
   // Requests are always routed to the student's assigned advisor (via the roster)
@@ -320,8 +320,8 @@ export default function RequestAdvising() {
 
     const studentUser = store.users.find(
       u => u.id === currentUser?.id ||
-           (currentUser?.code && u.code?.toUpperCase() === currentUser.code.toUpperCase()) ||
-           (currentUser?.email && u.email?.toLowerCase() === currentUser.email.toLowerCase())
+        (currentUser?.code && u.code?.toUpperCase() === currentUser.code.toUpperCase()) ||
+        (currentUser?.email && u.email?.toLowerCase() === currentUser.email.toLowerCase())
     )
     const effectiveStudentId = studentUser?.id || currentUser!.id
 
@@ -416,8 +416,8 @@ export default function RequestAdvising() {
       const exitTypeLabel = exitType === 'withdrawal'
         ? t('ขอลาออก', 'Withdrawal')
         : exitType === 'leave_of_absence'
-        ? t('ลาพักการศึกษา', 'Leave of Absence')
-        : t('ย้ายสาขาวิชา', 'Transfer')
+          ? t('ลาพักการศึกษา', 'Leave of Absence')
+          : t('ย้ายสาขาวิชา', 'Transfer')
 
       store.addNotification({
         userId: advisor.id,
@@ -452,13 +452,13 @@ export default function RequestAdvising() {
   // Active pending follow-ups from earlier sessions for this student
   const effectiveStudent = store.users.find(
     u => u.id === currentUser?.id ||
-         (currentUser?.code && u.code?.toUpperCase() === currentUser.code.toUpperCase()) ||
-         (currentUser?.email && u.email?.toLowerCase() === currentUser.email.toLowerCase())
+      (currentUser?.code && u.code?.toUpperCase() === currentUser.code.toUpperCase()) ||
+      (currentUser?.email && u.email?.toLowerCase() === currentUser.email.toLowerCase())
   ) || currentUser
 
   const pendingTasks = (store.followUps || []).filter(
     f => (f.studentId === effectiveStudent?.id || (currentUser?.code && f.studentId?.toUpperCase() === currentUser.code.toUpperCase())) &&
-         f.status !== 'completed'
+      f.status !== 'completed'
   )
 
   return (
@@ -485,17 +485,15 @@ export default function RequestAdvising() {
                   if (s.step === 1) setCurrentStep(1)
                   if (s.step === 2 && validateStep1() && validateStep2()) setCurrentStep(2)
                 }}
-                className={`flex items-center justify-center gap-1.5 sm:gap-2 py-2 px-2 sm:px-3 rounded-xl text-xs transition-all cursor-pointer ${
-                  isActive
+                className={`flex items-center justify-center gap-1.5 sm:gap-2 py-2 px-2 sm:px-3 rounded-xl text-xs transition-all cursor-pointer ${isActive
                     ? 'bg-sky-600 text-white shadow-xs font-extrabold'
                     : isCompleted
-                    ? 'bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 hover:bg-sky-100/90 font-bold border border-sky-200/60 dark:border-sky-800/50'
-                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200/60 dark:hover:bg-slate-700/60 font-medium'
-                }`}
+                      ? 'bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 hover:bg-sky-100/90 font-bold border border-sky-200/60 dark:border-sky-800/50'
+                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200/60 dark:hover:bg-slate-700/60 font-medium'
+                  }`}
               >
-                <div className={`h-5 w-5 rounded-full flex items-center justify-center text-[10px] ${
-                  isActive ? 'bg-white/25 text-white font-extrabold' : isCompleted ? 'bg-sky-600 text-white font-bold' : 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 font-medium'
-                }`}>
+                <div className={`h-5 w-5 rounded-full flex items-center justify-center text-[10px] ${isActive ? 'bg-white/25 text-white font-extrabold' : isCompleted ? 'bg-sky-600 text-white font-bold' : 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 font-medium'
+                  }`}>
                   {isCompleted ? <Check className="h-3 w-3" /> : s.step}
                 </div>
                 <span className="truncate hidden sm:inline">{s.label}</span>
@@ -621,7 +619,7 @@ export default function RequestAdvising() {
                 tabIndex={-1}
                 aria-label={t('อาจารย์ผู้รับคำร้อง / นัดหมายเข้าพบ', 'Select Advising Faculty / Advisor')}
                 value={advisor?.id || ''}
-                onChange={() => {}}
+                onChange={() => { }}
                 className="sr-only"
               >
                 {assignedAdvisor && (
@@ -669,17 +667,15 @@ export default function RequestAdvising() {
                             setOtherSubCategory('')
                           }
                         }}
-                        className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex items-center gap-3 relative select-none group ${
-                          isSelected
+                        className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex items-center gap-3 relative select-none group ${isSelected
                             ? 'border-sky-500 bg-sky-50/80 dark:bg-sky-950/50 shadow-xs ring-2 ring-sky-500/20'
                             : 'border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-sky-400 dark:hover:border-sky-500/50 hover:bg-slate-50/80 dark:hover:bg-slate-800/80 shadow-2xs hover:shadow-xs'
-                        }`}
+                          }`}
                       >
-                        <div className={`h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all ${
-                          isSelected
+                        <div className={`h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all ${isSelected
                             ? 'bg-sky-500 text-white shadow-xs'
                             : 'bg-slate-100 dark:bg-slate-800 group-hover:bg-sky-100/90 dark:group-hover:bg-slate-700/90 shadow-2xs'
-                        }`}>
+                          }`}>
                           {getCategoryIcon(c.value, isSelected)}
                         </div>
                         <div className="min-w-0 flex-1 pr-2">
@@ -781,11 +777,10 @@ export default function RequestAdvising() {
                           key={item.value}
                           type="button"
                           onClick={() => setExitType(item.value as ExitType)}
-                          className={`py-2 px-3 rounded-xl text-xs font-medium border text-center transition-colors cursor-pointer ${
-                            exitType === item.value
+                          className={`py-2 px-3 rounded-xl text-xs font-medium border text-center transition-colors cursor-pointer ${exitType === item.value
                               ? 'border-sky-600 bg-sky-50/80 text-sky-700 dark:bg-sky-950/50 dark:text-sky-300 dark:border-sky-700 font-semibold'
                               : 'border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
-                          }`}
+                            }`}
                         >
                           {item.label}
                         </button>
@@ -819,11 +814,10 @@ export default function RequestAdvising() {
                                   setExitReasonCode(r.value as ExitReasonCode)
                                   setShowExitReasonDropdown(false)
                                 }}
-                                className={`w-full text-left px-3.5 py-2 text-xs sm:text-sm transition-colors cursor-pointer flex items-center justify-between gap-2 ${
-                                  exitReasonCode === r.value
+                                className={`w-full text-left px-3.5 py-2 text-xs sm:text-sm transition-colors cursor-pointer flex items-center justify-between gap-2 ${exitReasonCode === r.value
                                     ? 'bg-sky-50/80 dark:bg-sky-950/50 text-sky-700 dark:text-sky-300 font-semibold'
                                     : 'text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/60'
-                                }`}
+                                  }`}
                               >
                                 <span>{getExitReasonLabel(r.value)}</span>
                                 {exitReasonCode === r.value && (
@@ -941,11 +935,10 @@ export default function RequestAdvising() {
                       type="time"
                       value={preferredTime}
                       onChange={e => setPreferredTime(e.target.value)}
-                      className={`w-full px-3.5 py-2.5 text-xs sm:text-sm border rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 transition-colors shadow-xs ${
-                        isCurrentTimeSlotTaken
+                      className={`w-full px-3.5 py-2.5 text-xs sm:text-sm border rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 transition-colors shadow-xs ${isCurrentTimeSlotTaken
                           ? 'border-rose-400 dark:border-rose-600 focus:ring-rose-500/20 focus:border-rose-500'
                           : 'border-slate-200/90 dark:border-slate-800 focus:ring-sky-500/20 focus:border-sky-500'
-                      }`}
+                        }`}
                     />
                     {isCurrentTimeSlotTaken && (
                       <p className="text-[11px] text-rose-500 dark:text-rose-400 mt-1 font-semibold flex items-center gap-1">
@@ -1010,8 +1003,8 @@ export default function RequestAdvising() {
                       {category === 'scholarship_document'
                         ? t('การรับรองเอกสารทุนการศึกษา', 'Scholarship Document Endorsement')
                         : category === 'withdrawal_leave'
-                        ? t('เอกสารประกอบคำร้องขอลาพัก / ลาออก', 'Exit Petition Supporting Files')
-                        : t('เอกสารการลงทะเบียน / เพิ่ม-ถอน', 'Registration & Petition Documents')}
+                          ? t('เอกสารประกอบคำร้องขอลาพัก / ลาออก', 'Exit Petition Supporting Files')
+                          : t('เอกสารการลงทะเบียน / เพิ่ม-ถอน', 'Registration & Petition Documents')}
                     </p>
                     <p className="text-slate-600 dark:text-slate-300 text-[11px] leading-relaxed">
                       {t(
@@ -1293,22 +1286,20 @@ export default function RequestAdvising() {
                 <button
                   type="button"
                   onClick={() => setCalendarTab('google')}
-                  className={`px-3 py-1 rounded-lg font-semibold transition-all cursor-pointer ${
-                    calendarTab === 'google'
+                  className={`px-3 py-1 rounded-lg font-semibold transition-all cursor-pointer ${calendarTab === 'google'
                       ? 'bg-white dark:bg-slate-900 text-sky-600 dark:text-sky-400 shadow-2xs'
                       : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-                  }`}
+                    }`}
                 >
                   📅 {t('Google Calendar ของอาจารย์', "Advisor's Google Calendar")}
                 </button>
                 <button
                   type="button"
                   onClick={() => setCalendarTab('system')}
-                  className={`px-3 py-1 rounded-lg font-semibold transition-all cursor-pointer ${
-                    calendarTab === 'system'
+                  className={`px-3 py-1 rounded-lg font-semibold transition-all cursor-pointer ${calendarTab === 'system'
                       ? 'bg-white dark:bg-slate-900 text-sky-600 dark:text-sky-400 shadow-2xs'
                       : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-                  }`}
+                    }`}
                 >
                   📋 {t('คิวนัดหมายในระบบ AdvisingLog', 'AdvisingLog Queue')} ({advisorAppointments.length})
                 </button>

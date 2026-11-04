@@ -96,7 +96,7 @@ async function writeAudit(c: any, entry: {
       timestamp: new Date().toISOString(),
       ipAddress: clientIp(c),
     })
-  } catch {}
+  } catch { }
 }
 
 /** True if the request is within the limit (or no limiter is configured) */
@@ -524,32 +524,49 @@ async function sendWorkspaceEmail(
   if (!tokenData.access_token) return { sent: false, error: 'GOOGLE_ACCESS_TOKEN_MISSING' }
 
   const targetUrl = 'https://advising-log.pages.dev/login'
-
-
-
   const boundary = `====_AdvisingLog_${Date.now()}====`
-  const formattedTime = new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })
+  const formattedTimeTh = new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })
+  const formattedTimeEn = new Date().toLocaleString('en-US', { timeZone: 'Asia/Bangkok', dateStyle: 'medium', timeStyle: 'short' })
 
   const textBody = [
     `เรื่อง: ${subject}`,
-    `ถึง: อาจารย์ที่ปรึกษา (${recipient})`,
+    `Subject: [AdvisingLog] ${subject}`,
+    `ถึง / To: อาจารย์ที่ปรึกษา / Academic Advisor (${recipient})`,
     '',
     'เรียน อาจารย์ที่ปรึกษาที่เคารพ,',
     '',
     'ระบบบริหารการให้คำปรึกษาทางวิชาการ (AdvisingLog) มหาวิทยาลัยแม่ฟ้าหลวง ขอแจ้งเตือนรายการใหม่ ดังนี้:',
     '',
     `• รายละเอียด: ${message}`,
-    `• วันที่และเวลาแจ้งเตือน: ${formattedTime}`,
+    `• วันที่และเวลาแจ้งเตือน: ${formattedTimeTh}`,
     '',
     'ท่านสามารถเข้าสู่ระบบเพื่อตรวจสอบข้อมูลและดำเนินการได้ที่:',
-    targetUrl,
+    `👉 ${targetUrl}`,
     '',
     'ขอแสดงความนับถือ',
     'ระบบบริหารการให้คำปรึกษาทางวิชาการและการประกันคุณภาพการศึกษา (AdvisingLog)',
     'สำนักวิชาเทคโนโลยีดิจิทัลประยุกต์ มหาวิทยาลัยแม่ฟ้าหลวง',
+    '',
+    '================================================================================',
+    '                              ENGLISH VERSION BELOW                             ',
+    '================================================================================',
+    '',
+    'Dear Academic Advisor,',
+    '',
+    'The Student Academic Advising System (AdvisingLog), Mae Fah Luang University, would like to notify you of an advising update regarding your advisee:',
+    '',
+    `• Details: ${message}`,
+    `• Notification Timestamp: ${formattedTimeEn}`,
+    '',
+    'Please sign in to the AdvisingLog system to review and manage this request:',
+    `👉 ${targetUrl}`,
+    '',
+    'Sincerely yours,',
+    'Academic Advising & Quality Assurance System (AdvisingLog)',
+    'School of Applied Digital Technology, Mae Fah Luang University',
     '--------------------------------------------------------------------------------',
-    'หมายเหตุ: อีเมลฉบับนี้เป็นการแจ้งเตือนอัตโนมัติจากระบบรักษาความปลอดภัยและการคุ้มครองข้อมูลส่วนบุคคล (PDPA) มหาวิทยาลัยแม่ฟ้าหลวง กรุณาอย่าตอบกลับอีเมลนี้โดยตรง',
-  ].join('\r\n')
+    'Note: This is an automated notification in compliance with the Personal Data Protection Act (PDPA), Mae Fah Luang University. Please do not reply directly to this email.',
+  ].join('\r\r\n')
 
   const htmlBody = `<!DOCTYPE html>
 <html lang="th">
@@ -562,65 +579,140 @@ async function sendWorkspaceEmail(
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f1f5f9; padding: 24px 12px;">
     <tr>
       <td align="center">
-        <table role="presentation" width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05); border: 1px solid #e2e8f0;" cellspacing="0" cellpadding="0">
+        <table role="presentation" width="100%" style="max-width: 620px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05); border: 1px solid #e2e8f0;" cellspacing="0" cellpadding="0">
+          
+          <!-- Header Banner -->
           <tr>
             <td style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); padding: 32px 32px 28px 32px; text-align: left; border-bottom: 3px solid #0284c7;">
-              <span style="font-size: 11px; font-weight: 700; color: #38bdf8; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 4px;">Mae Fah Luang University</span>
+              <span style="font-size: 11px; font-weight: 700; color: #38bdf8; text-transform: uppercase; letter-spacing: 1.5px; display: block; margin-bottom: 4px;">Mae Fah Luang University</span>
               <h1 style="margin: 0; font-size: 20px; font-weight: 800; color: #ffffff; line-height: 1.3;">ระบบบริหารการให้คำปรึกษาทางวิชาการ (AdvisingLog)</h1>
-              <p style="margin: 4px 0 0 0; font-size: 13px; color: #94a3b8;">สำนักวิชาเทคโนโลยีดิจิทัลประยุกต์ (School of Applied Digital Technology)</p>
+              <p style="margin: 4px 0 0 0; font-size: 13px; color: #94a3b8;">School of Applied Digital Technology • สำนักวิชาเทคโนโลยีดิจิทัลประยุกต์</p>
             </td>
           </tr>
+          
+          <!-- Section 1: ภาษาไทย (Thai Version) -->
           <tr>
-            <td style="padding: 32px;">
-              <p style="margin: 0 0 16px 0; font-size: 15px; line-height: 1.6; color: #334155;">
+            <td style="padding: 32px 32px 20px 32px;">
+              <p style="margin: 0 0 14px 0; font-size: 15px; line-height: 1.6; color: #1e293b;">
                 <strong>เรียน อาจารย์ที่ปรึกษาที่เคารพ,</strong>
               </p>
-              <p style="margin: 0 0 20px 0; font-size: 14px; line-height: 1.6; color: #475569;">
-                ระบบบริหารการให้คำปรึกษาทางวิชาการ (AdvisingLog) ขอแจ้งให้ท่านทราบว่า มีรายการแจ้งเตือนใหม่ที่เกี่ยวข้องกับนักศึกษาในความดูแลของท่าน ดังนี้:
+              <p style="margin: 0 0 18px 0; font-size: 14px; line-height: 1.6; color: #475569;">
+                ระบบบริหารการให้คำปรึกษาทางวิชาการ (AdvisingLog) มหาวิทยาลัยแม่ฟ้าหลวง ขอแจ้งเตือนรายการใหม่ที่เกี่ยวข้องกับนักศึกษาในความดูแลของท่าน ดังนี้:
               </p>
-              <table role="presentation" width="100%" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 24px;" cellspacing="0" cellpadding="0">
+              
+              <table role="presentation" width="100%" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 22px;" cellspacing="0" cellpadding="0">
                 <tr>
-                  <td style="padding: 20px;">
-                    <div style="font-size: 12px; font-weight: 700; color: #0284c7; text-transform: uppercase; margin-bottom: 8px;">
+                  <td style="padding: 18px 20px;">
+                    <div style="font-size: 11px; font-weight: 700; color: #0284c7; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px;">
                       หัวข้อการแจ้งเตือน
                     </div>
-                    <div style="font-size: 16px; font-weight: 700; color: #0f172a; margin-bottom: 12px; line-height: 1.4;">
+                    <div style="font-size: 15px; font-weight: 700; color: #0f172a; margin-bottom: 10px; line-height: 1.4;">
                       ${escapeHtml(subject)}
                     </div>
-                    <div style="border-top: 1px solid #e2e8f0; padding-top: 12px; font-size: 14px; line-height: 1.6; color: #334155;">
+                    <div style="border-top: 1px solid #e2e8f0; padding-top: 10px; font-size: 13.5px; line-height: 1.6; color: #334155;">
                       ${escapeHtml(message)}
+                    </div>
+                    <div style="margin-top: 8px; font-size: 12px; color: #64748b;">
+                      ⏱️ วันที่แจ้งเตือน: ${formattedTimeTh}
                     </div>
                   </td>
                 </tr>
               </table>
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 28px;">
+              
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 20px;">
                 <tr>
                   <td align="center">
-                    <a href="${targetUrl}" target="_blank" style="display: inline-block; background-color: #0284c7; color: #ffffff; text-decoration: none; font-size: 14px; font-weight: 700; padding: 12px 28px; border-radius: 8px; box-shadow: 0 2px 4px rgba(2, 132, 199, 0.25);">
+                    <a href="${targetUrl}" target="_blank" style="display: inline-block; background-color: #0284c7; color: #ffffff; text-decoration: none; font-size: 13.5px; font-weight: 700; padding: 11px 26px; border-radius: 8px; box-shadow: 0 2px 4px rgba(2, 132, 199, 0.25);">
                       เข้าสู่ระบบเพื่อตรวจสอบคำร้อง &rarr;
                     </a>
                   </td>
                 </tr>
               </table>
-              <p style="margin: 0 0 4px 0; font-size: 13px; color: #64748b;">
+              <p style="margin: 0; font-size: 12px; color: #64748b; text-align: center;">
                 หรือเปิดลิงก์: <a href="${targetUrl}" style="color: #0284c7; word-break: break-all;">${targetUrl}</a>
               </p>
             </td>
           </tr>
+
+          <!-- Section Divider: English Version Below -->
           <tr>
-            <td style="background-color: #f8fafc; padding: 24px 32px; border-top: 1px solid #e2e8f0; text-align: left;">
-              <p style="margin: 0 0 6px 0; font-size: 12px; font-weight: 700; color: #475569;">
-                ระบบบริหารการให้คำปรึกษาทางวิชาการและการประกันคุณภาพการศึกษา (AdvisingLog)
+            <td style="padding: 10px 32px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td style="border-bottom: 1.5px dashed #cbd5e1; text-align: center; height: 1px;"></td>
+                  <td style="width: 1px; padding: 0 12px; white-space: nowrap; text-align: center;">
+                    <span style="display: inline-block; background-color: #e2e8f0; color: #475569; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; padding: 3px 12px; border-radius: 9999px;">
+                      English Version Below
+                    </span>
+                  </td>
+                  <td style="border-bottom: 1.5px dashed #cbd5e1; text-align: center; height: 1px;"></td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Section 2: ภาษาอังกฤษ (English Version) -->
+          <tr>
+            <td style="padding: 20px 32px 32px 32px;">
+              <p style="margin: 0 0 14px 0; font-size: 15px; line-height: 1.6; color: #1e293b;">
+                <strong>Dear Academic Advisor,</strong>
               </p>
-              <p style="margin: 0 0 12px 0; font-size: 12px; color: #64748b; line-height: 1.5;">
-                สำนักวิชาเทคโนโลยีดิจิทัลประยุกต์ มหาวิทยาลัยแม่ฟ้าหลวง<br>
-                333 หมู่ 1 ต.ท่าสุด อ.เมือง จ.เชียงราย 57100
+              <p style="margin: 0 0 18px 0; font-size: 14px; line-height: 1.6; color: #475569;">
+                The Student Academic Advising System (AdvisingLog), Mae Fah Luang University, would like to notify you of an advising update regarding your advisee:
               </p>
-              <p style="margin: 0; font-size: 11px; color: #94a3b8; line-height: 1.5; border-top: 1px dashed #cbd5e1; padding-top: 10px;">
-                * อีเมลนี้เป็นการแจ้งเตือนอัตโนมัติจากระบบรักษาความปลอดภัยและการคุ้มครองข้อมูลส่วนบุคคล (PDPA) มหาวิทยาลัยแม่ฟ้าหลวง กรุณาอย่าตอบกลับอีเมลนี้โดยตรง
+
+              <table role="presentation" width="100%" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 22px;" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td style="padding: 18px 20px;">
+                    <div style="font-size: 11px; font-weight: 700; color: #0284c7; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px;">
+                      Notification Summary
+                    </div>
+                    <div style="font-size: 15px; font-weight: 700; color: #0f172a; margin-bottom: 10px; line-height: 1.4;">
+                      ${escapeHtml(subject)}
+                    </div>
+                    <div style="border-top: 1px solid #e2e8f0; padding-top: 10px; font-size: 13.5px; line-height: 1.6; color: #334155;">
+                      ${escapeHtml(message)}
+                    </div>
+                    <div style="margin-top: 8px; font-size: 12px; color: #64748b;">
+                      ⏱️ Timestamp: ${formattedTimeEn}
+                    </div>
+                  </td>
+                </tr>
+              </table>
+
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 20px;">
+                <tr>
+                  <td align="center">
+                    <a href="${targetUrl}" target="_blank" style="display: inline-block; background-color: #0f172a; color: #ffffff; text-decoration: none; font-size: 13.5px; font-weight: 700; padding: 11px 26px; border-radius: 8px; box-shadow: 0 2px 4px rgba(15, 23, 42, 0.25);">
+                      Sign in to Review Request &rarr;
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin: 0; font-size: 12px; color: #64748b; text-align: center;">
+                Or open URL: <a href="${targetUrl}" style="color: #0284c7; word-break: break-all;">${targetUrl}</a>
               </p>
             </td>
           </tr>
+
+          <!-- Institutional Footer (Bilingual) -->
+          <tr>
+            <td style="background-color: #f8fafc; padding: 24px 32px; border-top: 1px solid #e2e8f0; text-align: left;">
+              <p style="margin: 0 0 4px 0; font-size: 12px; font-weight: 700; color: #475569;">
+                ระบบบริหารการให้คำปรึกษาทางวิชาการและการประกันคุณภาพการศึกษา (AdvisingLog)
+              </p>
+              <p style="margin: 0 0 10px 0; font-size: 11.5px; color: #64748b; line-height: 1.5;">
+                สำนักวิชาเทคโนโลยีดิจิทัลประยุกต์ มหาวิทยาลัยแม่ฟ้าหลวง<br>
+                School of Applied Digital Technology, Mae Fah Luang University<br>
+                333 Moo 1, Thasud, Mueang, Chiang Rai 57100 Thailand
+              </p>
+              <p style="margin: 0; font-size: 11px; color: #94a3b8; line-height: 1.5; border-top: 1px dashed #cbd5e1; padding-top: 10px;">
+                * อีเมลนี้เป็นการแจ้งเตือนอัตโนมัติจากระบบรักษาความปลอดภัยและการคุ้มครองข้อมูลส่วนบุคคล (PDPA) มหาวิทยาลัยแม่ฟ้าหลวง กรุณาอย่าตอบกลับอีเมลนี้โดยตรง<br>
+                * This is an automated notification in compliance with the Personal Data Protection Act (PDPA), Mae Fah Luang University. Please do not reply directly to this email.
+              </p>
+            </td>
+          </tr>
+
         </table>
       </td>
     </tr>
@@ -648,7 +740,7 @@ async function sendWorkspaceEmail(
     htmlBody,
     '',
     `--${boundary}--`,
-  ].join('\r\n')
+  ].join('\r\r\n')
 
   const gmailResponse = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
     method: 'POST',
@@ -911,7 +1003,7 @@ app.post('/api/auth/google', async (c) => {
       try {
         await database.update(schema.users).set({ name }).where(eq(schema.users.id, user.id))
         user = { ...user, name }
-      } catch (_e) {}
+      } catch (_e) { }
     }
 
     const sessionToken = await signSession(
@@ -941,7 +1033,7 @@ app.post('/api/auth/google', async (c) => {
 app.get('/api/users', async (c) => {
   const database = db(c)
   if (!database) return c.json({ error: 'Database unavailable' }, 503)
-  
+
   const superEmail = superAdminEmail(c)
   const role = c.req.query('role')
   const list = role
@@ -966,7 +1058,7 @@ app.get('/api/users', async (c) => {
 app.get('/api/users/:id', async (c) => {
   const database = db(c)
   if (!database) return c.json({ error: 'Database unavailable' }, 503)
-  
+
   const id = c.req.param('id')
   const user = await database.select().from(schema.users).where(eq(schema.users.id, id)).get()
   if (!user) return c.json({ error: 'User not found' }, 404)
@@ -1165,7 +1257,7 @@ app.get('/api/roster', async (c) => {
   const database = db(c)
   if (!database) return c.json({ error: 'Database unavailable' }, 503)
   const list = await database.select().from(schema.studentAdvisorAssignments).orderBy(desc(schema.studentAdvisorAssignments.assignedAt))
-  
+
   // Deduplicate by studentId so each student only has their latest assignment
   const seenStudents = new Set<string>()
   const deduplicated = []
@@ -1349,8 +1441,8 @@ app.post('/api/requests', async (c) => {
     const allUsers = await database.select().from(schema.users)
     const matchedAdvisor = allUsers.find(
       u => u.id === advisorId ||
-           (u.code && advisorId && (u.code.toUpperCase() === advisorId.toUpperCase() || advisorId.includes(u.code))) ||
-           (u.email && advisorId && (u.email.toLowerCase() === advisorId.toLowerCase() || advisorId.toLowerCase().includes(u.email.toLowerCase())))
+        (u.code && advisorId && (u.code.toUpperCase() === advisorId.toUpperCase() || advisorId.includes(u.code))) ||
+        (u.email && advisorId && (u.email.toLowerCase() === advisorId.toLowerCase() || advisorId.toLowerCase().includes(u.email.toLowerCase())))
     )
     if (matchedAdvisor) {
       resolvedAdvisor = matchedAdvisor
@@ -2061,7 +2153,7 @@ app.get('/api/early-warnings', async (c) => {
     let extra: any = {}
     try {
       extra = JSON.parse(item.indicators || '{}')
-    } catch {}
+    } catch { }
     return {
       id: item.id,
       studentId: item.studentId,
@@ -2223,7 +2315,7 @@ app.get('/api/ai/keys', async (c) => {
   const database = db(c)
   if (!database) return c.json({ keys: [] })
   const list = await database.select().from(schema.aiApiKeys).orderBy(desc(schema.aiApiKeys.createdAt))
-  
+
   // Return masked keys for security
   const safeList = list.map(item => ({
     id: item.id,
@@ -2234,7 +2326,7 @@ app.get('/api/ai/keys', async (c) => {
     status: item.status,
     createdAt: item.createdAt,
     lastTestedAt: item.lastTestedAt,
-    maskedKey: item.key.length > 8 
+    maskedKey: item.key.length > 8
       ? `${item.key.substring(0, 6)}...${item.key.substring(item.key.length - 4)}`
       : '••••••••',
   }))
@@ -2292,7 +2384,7 @@ app.patch('/api/ai/keys/:id/default', async (c) => {
   if (!database) return c.json({ error: 'Database unavailable' }, 503)
 
   const id = c.req.param('id')
-  
+
   // 1. Reset all keys to isDefault = false
   await database.update(schema.aiApiKeys).set({ isDefault: false })
 
@@ -2327,7 +2419,7 @@ app.delete('/api/ai/keys/:id', async (c) => {
 app.post('/api/ai/keys/:id/test', async (c) => {
   const database = db(c)
   const id = c.req.param('id')
-  
+
   let keyString = ''
   if (database) {
     const record = await database.select().from(schema.aiApiKeys).where(eq(schema.aiApiKeys.id, id)).get()
@@ -2426,7 +2518,7 @@ app.post('/api/ai/keys/:id/test', async (c) => {
             activeModelName = `Google Gemini (${match ? match[1] : 'flash'})`
             break
           }
-        } catch (_err) {}
+        } catch (_err) { }
       }
     }
 
@@ -2495,7 +2587,7 @@ app.post('/api/qa/ai-analyze', async (c) => {
 - Student Stated Reason: "${item.details || 'N/A'}"
 - Advisor Assessment: "${item.advisorAssessment || 'N/A'}"
 - Student Survey Voice: "${item.studentVoiceFeedback || 'N/A'}"`
-    }).join('\n\n')
+    }).join('\r\n\r\n')
 
     // If a Gemini API key is available, call Google Gemini (newest available model)
     if (apiKey && apiKey.trim().length > 10) {
@@ -2551,7 +2643,7 @@ Provide a concise, evidence-based academic response with clear takeaways for cur
       ]
 
       const payload = {
-        contents: [{ parts: [{ text: `${systemInstruction}\n\n${userPrompt}` }] }],
+        contents: [{ parts: [{ text: `${systemInstruction}\r\n\r\n${userPrompt}` }] }],
         generationConfig: {
           temperature: 0.2,
           maxOutputTokens: 2048,
@@ -2602,10 +2694,10 @@ Provide a concise, evidence-based academic response with clear takeaways for cur
         if (!listRes.ok) await readGeminiError(listRes)
         if (listRes.ok) {
           const listData = await listRes.json() as any
-          const models = (listData?.models || []).filter((m: any) => 
+          const models = (listData?.models || []).filter((m: any) =>
             Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes('generateContent')
           )
-          
+
           const sortedModels = [...models].sort((a: any, b: any) => {
             const getScore = (name: string) => {
               if (name.includes('3.6-flash')) return 100
@@ -2654,8 +2746,8 @@ Provide a concise, evidence-based academic response with clear takeaways for cur
         provider: 'Google Gemini (Default API key)',
         mode,
         analysis: lang === 'th'
-          ? `⚠️ เรียกใช้ Gemini ด้วยคีย์ API เริ่มต้นไม่สำเร็จ: ${safeError}\n\nกรุณาแจ้งผู้ดูแลระบบให้ตรวจสอบคีย์ API ในหน้า AI Governance`
-          : `⚠️ The default API key failed with Gemini: ${safeError}\n\nPlease ask the Admin to check the API key in AI Governance.`,
+          ? `⚠️ เรียกใช้ Gemini ด้วยคีย์ API เริ่มต้นไม่สำเร็จ: ${safeError}\r\n\r\nกรุณาแจ้งผู้ดูแลระบบให้ตรวจสอบคีย์ API ในหน้า AI Governance`
+          : `⚠️ The default API key failed with Gemini: ${safeError}\r\n\r\nPlease ask the Admin to check the API key in AI Governance.`,
         error: 'GEMINI_API_ERROR',
         timestamp: new Date().toISOString(),
       })
@@ -2815,7 +2907,7 @@ app.get('/api/document-types', async (c) => {
         const foundPid = parsed.find((item: string) => typeof item === 'string' && item.startsWith('tplPid:'))
         if (foundPid) templatePublicId = foundPid.replace('tplPid:', '')
       }
-    } catch {}
+    } catch { }
     return {
       id: d.id,
       name: d.name,
@@ -2863,17 +2955,17 @@ app.post('/api/document-types', async (c) => {
       set: newDt,
     })
   }
-  return c.json({ 
-    success: true, 
-    documentType: { 
-      id: newDt.id, 
-      name: newDt.name, 
-      signatureMethod: sig, 
+  return c.json({
+    success: true,
+    documentType: {
+      id: newDt.id,
+      name: newDt.name,
+      signatureMethod: sig,
       templateFileUrl: body.templateFileUrl,
       templateFileName: body.templateFileName,
       templatePublicId: body.templatePublicId,
-      isActive: newDt.isActive 
-    } 
+      isActive: newDt.isActive
+    }
   }, 201)
 })
 
