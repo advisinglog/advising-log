@@ -278,6 +278,28 @@ async function sendTest() {
 </body>
 </html>`;
 
+  const rawMessage = [
+    `From: ${GOOGLE_WORKSPACE_SENDER}`,
+    `To: ${recipient}`,
+    `Subject: ${encodeMimeHeader(subject)}`,
+    'MIME-Version: 1.0',
+    `Content-Type: multipart/alternative; boundary="${boundary}"`,
+    '',
+    `--${boundary}`,
+    'Content-Type: text/plain; charset=UTF-8',
+    'Content-Transfer-Encoding: 8bit',
+    '',
+    textBody,
+    '',
+    `--${boundary}`,
+    'Content-Type: text/html; charset=UTF-8',
+    'Content-Transfer-Encoding: 8bit',
+    '',
+    htmlBody,
+    '',
+    `--${boundary}--`,
+  ].join('\r\n');
+
   // 3. Send via Gmail API
   const gmailResponse = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
     method: 'POST',
