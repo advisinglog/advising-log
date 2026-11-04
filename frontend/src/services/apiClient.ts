@@ -242,6 +242,12 @@ class ApiClient {
     })
   }
 
+  async deleteSession(id: string) {
+    return this.request<{ success: boolean }>(`/api/sessions/${id}`, {
+      method: 'DELETE',
+    })
+  }
+
   // --- Follow-ups & Progress ---
   async getFollowUps(studentId?: string) {
     const query = studentId ? `?studentId=${studentId}` : ''

@@ -5,7 +5,7 @@ import { useStore } from '@/data/store'
 import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { cn } from '@/lib/utils'
-import { PageHeader, Card, Button, EmptyState, DocumentViewerModal, Tabs, type DocumentViewerTarget } from '@/components/ui'
+import { PageHeader, Card, Button, EmptyState, DocumentViewerModal, Modal, Tabs, type DocumentViewerTarget } from '@/components/ui'
 import {
   ClipboardCheck,
   User,
@@ -14,6 +14,7 @@ import {
   Eye,
   CheckCircle2,
   Pencil,
+  Trash2,
   CalendarClock,
   ChevronDown,
 } from 'lucide-react'
@@ -51,6 +52,9 @@ export default function AdvisorLog() {
   const [followUpTask, setFollowUpTask] = useState('')
   const [followUpDate, setFollowUpDate] = useState('')
   const [previewDoc, setPreviewDoc] = useState<DocumentViewerTarget | null>(null)
+  const [viewingSessionId, setViewingSessionId] = useState<string | null>(null)
+  const [savedCategoryFilter, setSavedCategoryFilter] = useState('')
+  const [savedStudentIdSearch, setSavedStudentIdSearch] = useState('')
   const [autoApproveDocs, setAutoApproveDocs] = useState(true)
 
   // Auto-pull previous follow-ups interactive state
@@ -170,6 +174,19 @@ export default function AdvisorLog() {
       return bySessionDate || b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id)
     })
 
+  const filteredAdvisorSessions = advisorSessions.filter(session => {
+    const request = store.requests.find(r => r.id === session.requestId)
+    const sessionStudent = store.users.find(u => u.id === session.studentId)
+    const studentQuery = savedStudentIdSearch.trim().toLowerCase()
+    const matchesCategory = !savedCategoryFilter || request?.category === savedCategoryFilter
+    const matchesStudent = !studentQuery ||
+      session.studentId.toLowerCase().includes(studentQuery) ||
+      (sessionStudent?.id || '').toLowerCase().includes(studentQuery) ||
+      (sessionStudent?.code || '').toLowerCase().includes(studentQuery) ||
+      (sessionStudent?.name || '').toLowerCase().includes(studentQuery)
+    return matchesCategory && matchesStudent
+  })
+
   // Previous follow-up tasks for this student
   const studentFollowUps = student
     ? store.followUps.filter(
@@ -209,6 +226,17 @@ export default function AdvisorLog() {
     setEditingRequestId(requestId)
     setSelectedRequestId(requestId)
     setSection('entry')
+  }
+
+  function deleteSavedLog(sessionId: string) {
+    const confirmed = window.confirm(t('ต้องการลบบันทึกนี้หรือไม่?', 'Delete this saved log?'))
+    if (!confirmed) return
+    store.deleteSession(sessionId)
+    addToast(
+      'success',
+      t('ลบบันทึกแล้ว', 'Log Deleted'),
+      t('ลบบันทึกผลการให้คำปรึกษาเรียบร้อยแล้ว', 'The advising log was deleted successfully.')
+    )
   }
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
@@ -378,8 +406,52 @@ export default function AdvisorLog() {
             />
           </Card>
         ) : (
-          <div className="space-y-3">
-            {advisorSessions.map(session => {
+          <div className="space-y-4">
+            <Card className="border-slate-200/80 dark:border-slate-800/80">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label htmlFor="saved-log-category-filter" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                    {t('กรองตามหมวดหมู่', 'Filter by Category')}
+                  </label>
+                  <select
+                    id="saved-log-category-filter"
+                    value={savedCategoryFilter}
+                    onChange={e => setSavedCategoryFilter(e.target.value)}
+                    className="w-full min-h-[40px] px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs sm:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
+                  >
+                    <option value="">{t('ทุกหมวดหมู่', 'All categories')}</option>
+                    {store.categoryConfigs.filter(c => c.isActive !== false).map(config => (
+                      <option key={config.value} value={config.value}>{getCategoryLabel(config.value)}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="saved-log-student-id-search" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                    {t('ค้นหาชื่อนักศึกษาหรือรหัส', 'Search Student Name or ID')}
+                  </label>
+                  <input
+                    id="saved-log-student-id-search"
+                    type="search"
+                    value={savedStudentIdSearch}
+                    onChange={e => setSavedStudentIdSearch(e.target.value)}
+                    placeholder={t('พิมพ์ชื่อนักศึกษาหรือรหัส', 'Enter student name or ID')}
+                    className="w-full min-h-[40px] px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs sm:text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
+                  />
+                </div>
+              </div>
+            </Card>
+
+            {filteredAdvisorSessions.length === 0 ? (
+              <Card>
+                <EmptyState
+                  icon={<FileText className="h-6 w-6 text-slate-400" />}
+                  title={t('ไม่พบบันทึกที่ตรงกับตัวกรอง', 'No matching saved logs')}
+                  description={t('ลองเปลี่ยนหมวดหมู่หรือตรวจสอบรหัสนักศึกษาอีกครั้ง', 'Try changing the category or student ID search.')}
+                />
+              </Card>
+            ) : (
+            <div className="space-y-3">
+            {filteredAdvisorSessions.map(session => {
               const request = store.requests.find(r => r.id === session.requestId)
               const sessionStudent = store.users.find(u => u.id === session.studentId)
               const requestId = session.requestId
@@ -416,23 +488,41 @@ export default function AdvisorLog() {
                         {session.summary || t('ไม่มีสรุปบันทึก', 'No summary recorded')}
                       </p>
                     </div>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="secondary"
-                      onClick={() => {
-                        if (requestId) editSavedLog(requestId)
-                      }}
-                      disabled={!requestId}
-                      className="shrink-0"
-                    >
-                      <Pencil className="h-3.5 w-3.5 mr-1" />
-                      {t('แก้ไข', 'Edit')}
-                    </Button>
+                    <div className="flex items-center gap-3 shrink-0 pt-0.5">
+                      <button
+                        type="button"
+                        onClick={() => setViewingSessionId(session.id)}
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors cursor-pointer"
+                      >
+                        <Eye className="h-3.5 w-3.5" />
+                        {t('ดู', 'View')}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (requestId) editSavedLog(requestId)
+                        }}
+                        disabled={!requestId}
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                        {t('แก้ไข', 'Edit')}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => deleteSavedLog(session.id)}
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors cursor-pointer"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        {t('ลบ', 'Delete')}
+                      </button>
+                    </div>
                   </div>
                 </Card>
               )
             })}
+            </div>
+            )}
           </div>
         )
       ) : completedRequests.length === 0 && !selectedReq && !student ? (
@@ -866,6 +956,47 @@ export default function AdvisorLog() {
           </form>
         </Card>
       )}
+
+      {(() => {
+        const viewingSession = viewingSessionId ? store.sessions.find(session => session.id === viewingSessionId) : null
+        if (!viewingSession) return null
+        const viewingRequest = store.requests.find(request => request.id === viewingSession.requestId)
+        const viewingStudent = store.users.find(user => user.id === viewingSession.studentId)
+        return (
+          <Modal
+            isOpen={!!viewingSession}
+            onClose={() => setViewingSessionId(null)}
+            title={t('รายละเอียดบันทึกการให้คำปรึกษา', 'Advising Log Details')}
+            size="md"
+          >
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                  <span className="text-slate-400 block mb-1">{t('นักศึกษา', 'Student')}</span>
+                  <p className="font-bold">{viewingStudent?.name || viewingSession.studentId}</p>
+                  {viewingStudent?.code && <p className="text-[11px] text-slate-500 font-mono mt-0.5">{viewingStudent.code}</p>}
+                </div>
+                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                  <span className="text-slate-400 block mb-1">{t('วันที่เข้าพบ', 'Session Date')}</span>
+                  <p className="font-bold">{viewingSession.sessionDate}</p>
+                  <p className="text-[11px] text-slate-500 mt-0.5">{viewingRequest ? getCategoryLabel(viewingRequest.category) : '-'}</p>
+                </div>
+              </div>
+              <div>
+                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 block mb-1">{t('สรุปผลการให้คำปรึกษา', 'Session Summary')}</span>
+                <p className="text-sm leading-relaxed whitespace-pre-wrap p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                  {viewingSession.summary || t('ไม่มีสรุปบันทึก', 'No summary recorded')}
+                </p>
+              </div>
+              <div className="flex justify-end">
+                <Button type="button" variant="secondary" onClick={() => setViewingSessionId(null)}>
+                  {t('ปิด', 'Close')}
+                </Button>
+              </div>
+            </div>
+          </Modal>
+        )
+      })()}
 
       {/* Document Viewer Modal */}
       {previewDoc && (

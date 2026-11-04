@@ -191,6 +191,7 @@ const AUDIT_ACTIONS: Array<[method: string, path: RegExp, action: string]> = [
   ['POST', /^\/api\/appointments$/, 'appointment_scheduled'],
   ['PATCH', /^\/api\/appointments\/[^/]+\/status$/, 'appointment_updated'],
   ['POST', /^\/api\/sessions$/, 'log_created'],
+  ['DELETE', /^\/api\/sessions\/[^/]+$/, 'log_deleted'],
   ['POST', /^\/api\/follow-ups$/, 'followup_created'],
   ['PATCH', /^\/api\/follow-ups\/[^/]+\/status$/, 'followup_updated'],
   ['POST', /^\/api\/follow-up-progress$/, 'followup_progress_added'],
@@ -1459,6 +1460,22 @@ app.patch('/api/sessions/:id', async (c) => {
   await database.update(schema.advisingSessions).set(updates).where(eq(schema.advisingSessions.id, id))
   const session = await database.select().from(schema.advisingSessions).where(eq(schema.advisingSessions.id, id)).get()
   return session ? c.json({ success: true, session }) : c.json({ error: 'Session not found.' }, 404)
+})
+
+app.delete('/api/sessions/:id', async (c) => {
+  const database = db(c)
+  if (!database) return c.json({ error: 'Database unavailable' }, 503)
+
+  const id = c.req.param('id')
+  const session = await database.select({ id: schema.advisingSessions.id })
+    .from(schema.advisingSessions)
+    .where(eq(schema.advisingSessions.id, id))
+    .get()
+  if (!session) return c.json({ error: 'Session not found.' }, 404)
+
+  await database.delete(schema.followUps).where(eq(schema.followUps.sessionId, id))
+  await database.delete(schema.advisingSessions).where(eq(schema.advisingSessions.id, id))
+  return c.json({ success: true })
 })
 
 // ============================================================

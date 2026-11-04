@@ -114,6 +114,7 @@ interface StoreActions {
   // Sessions
   addSession: (ses: Omit<AdvisingSession, 'id' | 'createdAt'>) => AdvisingSession
   updateSession: (id: string, updates: Partial<AdvisingSession>) => void
+  deleteSession: (id: string) => void
 
   // Follow-ups
   addFollowUp: (fu: Omit<FollowUp, 'id' | 'createdAt'>) => FollowUp
@@ -465,6 +466,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const updateSession = useCallback((id: string, updates: Partial<AdvisingSession>) => {
     setSessions(prev => prev.map(session => session.id === id ? { ...session, ...updates } : session))
     api.updateSession(id, updates).catch(() => {})
+  }, [])
+
+  const deleteSession = useCallback((id: string) => {
+    setSessions(prev => prev.filter(session => session.id !== id))
+    setFollowUps(prev => prev.filter(followUp => followUp.sessionId !== id))
+    api.deleteSession(id).catch(() => {})
   }, [])
 
   const addFollowUp = useCallback((fu: Omit<FollowUp, 'id' | 'createdAt'>): FollowUp => {
@@ -1146,7 +1153,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     addRequest, updateRequestStatus,
     addAppointment, updateAppointmentStatus,
     confirmAppointment, declineAppointment,
-    addSession, updateSession,
+    addSession, updateSession, deleteSession,
     addFollowUp, updateFollowUpStatus,
     addFollowUpProgress, updateFollowUpProgress,
     addRequestProgress, updateRequestProgress,
