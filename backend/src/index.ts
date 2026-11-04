@@ -497,12 +497,22 @@ function encodeMimeHeader(value: string): string {
   return `=?UTF-8?B?${btoa(binary)}?=`
 }
 
+function toMimeBase64(value: string): string {
+  const bytes = new TextEncoder().encode(value)
+  let binary = ''
+  bytes.forEach(byte => { binary += String.fromCharCode(byte) })
+  const b64 = btoa(binary)
+  return b64.replace(/(.{76})/g, '$1\r\n')
+}
+
 async function sendWorkspaceEmail(
   env: Bindings,
   recipient: string,
   subject: string,
   message: string,
   relatedId?: string,
+  recipientRole: string = 'advisor',
+  recipientName?: string,
 ): Promise<{ sent: boolean; error?: string }> {
   const { GOOGLE_WORKSPACE_CLIENT_ID, GOOGLE_WORKSPACE_CLIENT_SECRET, GOOGLE_WORKSPACE_REFRESH_TOKEN, GOOGLE_WORKSPACE_SENDER } = env
   if (!GOOGLE_WORKSPACE_CLIENT_ID || !GOOGLE_WORKSPACE_CLIENT_SECRET || !GOOGLE_WORKSPACE_REFRESH_TOKEN || !GOOGLE_WORKSPACE_SENDER) {
@@ -528,14 +538,71 @@ async function sendWorkspaceEmail(
   const formattedTimeTh = new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })
   const formattedTimeEn = new Date().toLocaleString('en-US', { timeZone: 'Asia/Bangkok', dateStyle: 'medium', timeStyle: 'short' })
 
+  const isStudent = recipientRole === 'student'
+  const isAdvisor = recipientRole === 'advisor'
+
+  // Subject translation mapping for bilingual notification
+  const englishSubjectMap: Record<string, string> = {
+    'ยืนยันนัดหมายเวลาเข้าพบอาจารย์แล้ว': 'Advising Appointment Confirmed',
+    'คำร้องขอรับคำปรึกษาใหม่': 'New Advising Request Submitted',
+    'คำร้องขอคำปรึกษาถูกยกเลิก': 'Advising Request Cancelled',
+    'งานติดตามผลใหม่จากอาจารย์': 'New Follow-up Task Assigned',
+    'นักศึกษารายงานผลงานมอบหมายแล้ว': 'Student Submitted Follow-up Task Report',
+  }
+  const englishSubject = englishSubjectMap[subject] || subject
+
+  // Role-specific Thai texts
+  const thaiSalutation = isStudent
+    ? (recipientName ? `เรียน คุณ${recipientName} (นักศึกษา),` : 'เรียน นักศึกษา,')
+    : isAdvisor
+      ? (recipientName ? `เรียน อาจารย์${recipientName} ที่เคารพ,` : 'เรียน อาจารย์ที่ปรึกษาที่เคารพ,')
+      : (recipientName ? `เรียน คุณ${recipientName},` : 'เรียน คณะกรรมการ / ผู้ดูแลระบบ,')
+
+  const thaiRecipientRoleLabel = isStudent
+    ? `นักศึกษา / Student (${recipient})`
+    : isAdvisor
+      ? `อาจารย์ที่ปรึกษา / Academic Advisor (${recipient})`
+      : `ผู้ใช้งานระบบ / AdvisingLog User (${recipient})`
+
+  const thaiIntro = isStudent
+    ? 'ระบบบริหารการให้คำปรึกษาทางวิชาการ (AdvisingLog) มหาวิทยาลัยแม่ฟ้าหลวง ขอแจ้งเตือนความคืบหน้าเกี่ยวกับการเข้าพบอาจารย์ที่ปรึกษา / คำร้องของท่าน ดังนี้:'
+    : isAdvisor
+      ? 'ระบบบริหารการให้คำปรึกษาทางวิชาการ (AdvisingLog) มหาวิทยาลัยแม่ฟ้าหลวง ขอแจ้งเตือนรายการใหม่ที่เกี่ยวข้องกับนักศึกษาในความดูแลของท่าน ดังนี้:'
+      : 'ระบบบริหารการให้คำปรึกษาทางวิชาการ (AdvisingLog) มหาวิทยาลัยแม่ฟ้าหลวง ขอแจ้งเตือนรายการใหม่ในระบบ ดังนี้:'
+
+  const thaiButtonText = isStudent
+    ? 'เข้าสู่ระบบเพื่อดูรายละเอียดนัดหมาย →'
+    : isAdvisor
+      ? 'เข้าสู่ระบบเพื่อตรวจสอบคำร้อง →'
+      : 'เข้าสู่ระบบเพื่อตรวจสอบข้อมูล →'
+
+  // Role-specific English texts
+  const englishSalutation = isStudent
+    ? (recipientName ? `Dear ${recipientName},` : 'Dear Student,')
+    : isAdvisor
+      ? (recipientName ? `Dear Ajarn ${recipientName},` : 'Dear Academic Advisor,')
+      : (recipientName ? `Dear ${recipientName},` : 'Dear Committee / Administrator,')
+
+  const englishIntro = isStudent
+    ? 'The Student Academic Advising System (AdvisingLog), Mae Fah Luang University, would like to notify you of an advising appointment update regarding your request:'
+    : isAdvisor
+      ? 'The Student Academic Advising System (AdvisingLog), Mae Fah Luang University, would like to notify you of an advising update regarding your advisee:'
+      : 'The Student Academic Advising System (AdvisingLog), Mae Fah Luang University, would like to notify you of an advising system notification:'
+
+  const englishButtonText = isStudent
+    ? 'Sign in to View Appointment Details →'
+    : isAdvisor
+      ? 'Sign in to Review Request →'
+      : 'Sign in to Review Details →'
+
   const textBody = [
     `เรื่อง: ${subject}`,
-    `Subject: [AdvisingLog] ${subject}`,
-    `ถึง / To: อาจารย์ที่ปรึกษา / Academic Advisor (${recipient})`,
+    `Subject: [AdvisingLog] ${englishSubject}`,
+    `ถึง / To: ${thaiRecipientRoleLabel}`,
     '',
-    'เรียน อาจารย์ที่ปรึกษาที่เคารพ,',
+    thaiSalutation,
     '',
-    'ระบบบริหารการให้คำปรึกษาทางวิชาการ (AdvisingLog) มหาวิทยาลัยแม่ฟ้าหลวง ขอแจ้งเตือนรายการใหม่ ดังนี้:',
+    thaiIntro,
     '',
     `• รายละเอียด: ${message}`,
     `• วันที่และเวลาแจ้งเตือน: ${formattedTimeTh}`,
@@ -551,14 +618,15 @@ async function sendWorkspaceEmail(
     '                              ENGLISH VERSION BELOW                             ',
     '================================================================================',
     '',
-    'Dear Academic Advisor,',
+    englishSalutation,
     '',
-    'The Student Academic Advising System (AdvisingLog), Mae Fah Luang University, would like to notify you of an advising update regarding your advisee:',
+    englishIntro,
     '',
+    `• Topic: ${englishSubject}`,
     `• Details: ${message}`,
     `• Notification Timestamp: ${formattedTimeEn}`,
     '',
-    'Please sign in to the AdvisingLog system to review and manage this request:',
+    'Please sign in to the AdvisingLog system to view your details:',
     `👉 ${targetUrl}`,
     '',
     'Sincerely yours,',
@@ -566,7 +634,7 @@ async function sendWorkspaceEmail(
     'School of Applied Digital Technology, Mae Fah Luang University',
     '--------------------------------------------------------------------------------',
     'Note: This is an automated notification in compliance with the Personal Data Protection Act (PDPA), Mae Fah Luang University. Please do not reply directly to this email.',
-  ].join('\r\r\n')
+  ].join('\r\n')
 
   const htmlBody = `<!DOCTYPE html>
 <html lang="th">
@@ -594,10 +662,10 @@ async function sendWorkspaceEmail(
           <tr>
             <td style="padding: 32px 32px 20px 32px;">
               <p style="margin: 0 0 14px 0; font-size: 15px; line-height: 1.6; color: #1e293b;">
-                <strong>เรียน อาจารย์ที่ปรึกษาที่เคารพ,</strong>
+                <strong>${escapeHtml(thaiSalutation)}</strong>
               </p>
               <p style="margin: 0 0 18px 0; font-size: 14px; line-height: 1.6; color: #475569;">
-                ระบบบริหารการให้คำปรึกษาทางวิชาการ (AdvisingLog) มหาวิทยาลัยแม่ฟ้าหลวง ขอแจ้งเตือนรายการใหม่ที่เกี่ยวข้องกับนักศึกษาในความดูแลของท่าน ดังนี้:
+                ${escapeHtml(thaiIntro)}
               </p>
               
               <table role="presentation" width="100%" style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 22px;" cellspacing="0" cellpadding="0">
@@ -623,7 +691,7 @@ async function sendWorkspaceEmail(
                 <tr>
                   <td align="center">
                     <a href="${targetUrl}" target="_blank" style="display: inline-block; background-color: #0284c7; color: #ffffff; text-decoration: none; font-size: 13.5px; font-weight: 700; padding: 11px 26px; border-radius: 8px; box-shadow: 0 2px 4px rgba(2, 132, 199, 0.25);">
-                      เข้าสู่ระบบเพื่อตรวจสอบคำร้อง &rarr;
+                      ${escapeHtml(thaiButtonText)}
                     </a>
                   </td>
                 </tr>
@@ -655,10 +723,10 @@ async function sendWorkspaceEmail(
           <tr>
             <td style="padding: 20px 32px 32px 32px;">
               <p style="margin: 0 0 14px 0; font-size: 15px; line-height: 1.6; color: #1e293b;">
-                <strong>Dear Academic Advisor,</strong>
+                <strong>${escapeHtml(englishSalutation)}</strong>
               </p>
               <p style="margin: 0 0 18px 0; font-size: 14px; line-height: 1.6; color: #475569;">
-                The Student Academic Advising System (AdvisingLog), Mae Fah Luang University, would like to notify you of an advising update regarding your advisee:
+                ${escapeHtml(englishIntro)}
               </p>
 
               <table role="presentation" width="100%" style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 22px;" cellspacing="0" cellpadding="0">
@@ -668,7 +736,7 @@ async function sendWorkspaceEmail(
                       Notification Summary
                     </div>
                     <div style="font-size: 15px; font-weight: 700; color: #0f172a; margin-bottom: 10px; line-height: 1.4;">
-                      ${escapeHtml(subject)}
+                      ${escapeHtml(englishSubject)}
                     </div>
                     <div style="border-top: 1px solid #e2e8f0; padding-top: 10px; font-size: 13.5px; line-height: 1.6; color: #334155;">
                       ${escapeHtml(message)}
@@ -684,7 +752,7 @@ async function sendWorkspaceEmail(
                 <tr>
                   <td align="center">
                     <a href="${targetUrl}" target="_blank" style="display: inline-block; background-color: #0f172a; color: #ffffff; text-decoration: none; font-size: 13.5px; font-weight: 700; padding: 11px 26px; border-radius: 8px; box-shadow: 0 2px 4px rgba(15, 23, 42, 0.25);">
-                      Sign in to Review Request &rarr;
+                      ${escapeHtml(englishButtonText)}
                     </a>
                   </td>
                 </tr>
@@ -729,18 +797,18 @@ async function sendWorkspaceEmail(
     '',
     `--${boundary}`,
     'Content-Type: text/plain; charset=UTF-8',
-    'Content-Transfer-Encoding: 8bit',
+    'Content-Transfer-Encoding: base64',
     '',
-    textBody,
+    toMimeBase64(textBody),
     '',
     `--${boundary}`,
     'Content-Type: text/html; charset=UTF-8',
-    'Content-Transfer-Encoding: 8bit',
+    'Content-Transfer-Encoding: base64',
     '',
-    htmlBody,
+    toMimeBase64(htmlBody),
     '',
     `--${boundary}--`,
-  ].join('\r\r\n')
+  ].join('\r\n')
 
   const gmailResponse = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
     method: 'POST',
@@ -795,7 +863,7 @@ app.post('/api/notifications', async (c) => {
   const parsed = notificationInput.safeParse(await c.req.json())
   if (!parsed.success) return c.json({ success: false, error: 'INVALID_NOTIFICATION', details: parsed.error.flatten() }, 400)
   const input = parsed.data
-  const recipient = await database.select({ id: schema.users.id, code: schema.users.code, email: schema.users.email, role: schema.users.role }).from(schema.users)
+  const recipient = await database.select({ id: schema.users.id, code: schema.users.code, email: schema.users.email, role: schema.users.role, name: schema.users.name }).from(schema.users)
     .where(eq(schema.users.id, input.userId)).get()
   if (!recipient) return c.json({ success: false, error: 'RECIPIENT_NOT_FOUND' }, 404)
   if (!(await canNotify(c, c.get('auth')!, recipient))) {
@@ -807,7 +875,7 @@ app.post('/api/notifications', async (c) => {
   let emailStatus: 'not_requested' | 'pending' | 'sent' | 'failed' = input.sendEmail ? 'pending' : 'not_requested'
   let emailError: string | null = null
   if (input.sendEmail) {
-    const result = await sendWorkspaceEmail(c.env, recipient.email, input.title, input.message, input.relatedId)
+    const result = await sendWorkspaceEmail(c.env, recipient.email, input.title, input.message, input.relatedId, recipient.role, recipient.name)
     emailStatus = result.sent ? 'sent' : 'failed'
     emailError = result.error || null
   }
