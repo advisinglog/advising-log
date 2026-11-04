@@ -116,7 +116,7 @@ class ApiClient {
     return this.request<{ notifications: Notification[] }>(`/api/notifications?userId=${encodeURIComponent(userId)}`)
   }
 
-  async createNotification(notification: Omit<Notification, 'id' | 'createdAt' | 'isRead'> & { sendEmail?: boolean }) {
+  async createNotification(notification: Omit<Notification, 'id' | 'createdAt' | 'isRead'> & { sendEmail?: boolean; lang?: 'th' | 'en' }) {
     return this.request<{ success: boolean; notification: Notification }>('/api/notifications', {
       method: 'POST',
       body: JSON.stringify(notification),

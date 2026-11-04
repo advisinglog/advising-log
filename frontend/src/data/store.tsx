@@ -511,7 +511,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const addNotification = useCallback((n: Omit<Notification, 'id' | 'createdAt'>) => {
     const optimistic: Notification = { ...n, id: nextId('NOT'), createdAt: now() }
     setNotifications(prev => [optimistic, ...prev])
-    api.createNotification({ ...n, sendEmail: true }).then(result => {
+    const currentLang = (typeof localStorage !== 'undefined' && localStorage.getItem('advising_log_lang') === 'en') ? 'en' : 'th'
+    api.createNotification({ ...n, lang: currentLang, sendEmail: true }).then(result => {
       if (result?.notification) {
         setNotifications(prev => prev.map(item => item.id === optimistic.id ? result.notification : item))
       }

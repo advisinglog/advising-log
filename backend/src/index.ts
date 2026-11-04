@@ -513,6 +513,7 @@ async function sendWorkspaceEmail(
   relatedId?: string,
   recipientRole: string = 'advisor',
   recipientName?: string,
+  lang: 'th' | 'en' = 'th',
 ): Promise<{ sent: boolean; error?: string }> {
   const { GOOGLE_WORKSPACE_CLIENT_ID, GOOGLE_WORKSPACE_CLIENT_SECRET, GOOGLE_WORKSPACE_REFRESH_TOKEN, GOOGLE_WORKSPACE_SENDER } = env
   if (!GOOGLE_WORKSPACE_CLIENT_ID || !GOOGLE_WORKSPACE_CLIENT_SECRET || !GOOGLE_WORKSPACE_REFRESH_TOKEN || !GOOGLE_WORKSPACE_SENDER) {
@@ -540,8 +541,9 @@ async function sendWorkspaceEmail(
 
   const isStudent = recipientRole === 'student'
   const isAdvisor = recipientRole === 'advisor'
+  const isEn = lang === 'en'
 
-  // Subject translation mapping for bilingual notification
+  // Subject translation mapping for English
   const englishSubjectMap: Record<string, string> = {
     'ยืนยันนัดหมายเวลาเข้าพบอาจารย์แล้ว': 'Advising Appointment Confirmed',
     'คำร้องขอรับคำปรึกษาใหม่': 'New Advising Request Submitted',
@@ -549,139 +551,140 @@ async function sendWorkspaceEmail(
     'งานติดตามผลใหม่จากอาจารย์': 'New Follow-up Task Assigned',
     'นักศึกษารายงานผลงานมอบหมายแล้ว': 'Student Submitted Follow-up Task Report',
   }
-  const englishSubject = englishSubjectMap[subject] || subject
+  const displaySubject = isEn ? (englishSubjectMap[subject] || subject) : subject
 
-  // Role-specific Thai texts
-  const thaiSalutation = isStudent
-    ? (recipientName ? `เรียน คุณ${recipientName} (นักศึกษา),` : 'เรียน นักศึกษา,')
-    : isAdvisor
-      ? (recipientName ? `เรียน อาจารย์${recipientName} ที่เคารพ,` : 'เรียน อาจารย์ที่ปรึกษาที่เคารพ,')
-      : (recipientName ? `เรียน คุณ${recipientName},` : 'เรียน คณะกรรมการ / ผู้ดูแลระบบ,')
+  // Salutations and Text based on Role & Language
+  const salutation = isEn
+    ? (isStudent
+        ? (recipientName ? `Dear ${recipientName},` : 'Dear Student,')
+        : isAdvisor
+          ? (recipientName ? `Dear Ajarn ${recipientName},` : 'Dear Academic Advisor,')
+          : (recipientName ? `Dear ${recipientName},` : 'Dear Committee / Administrator,'))
+    : (isStudent
+        ? (recipientName ? `เรียน คุณ${recipientName} (นักศึกษา),` : 'เรียน นักศึกษา,')
+        : isAdvisor
+          ? (recipientName ? `เรียน อาจารย์${recipientName} ที่เคารพ,` : 'เรียน อาจารย์ที่ปรึกษาที่เคารพ,')
+          : (recipientName ? `เรียน คุณ${recipientName},` : 'เรียน คณะกรรมการ / ผู้ดูแลระบบ,'))
 
-  const thaiRecipientRoleLabel = isStudent
-    ? `นักศึกษา / Student (${recipient})`
-    : isAdvisor
-      ? `อาจารย์ที่ปรึกษา / Academic Advisor (${recipient})`
-      : `ผู้ใช้งานระบบ / AdvisingLog User (${recipient})`
+  const recipientRoleLabel = isEn
+    ? (isStudent ? `Student (${recipient})` : isAdvisor ? `Academic Advisor (${recipient})` : `User (${recipient})`)
+    : (isStudent ? `นักศึกษา (${recipient})` : isAdvisor ? `อาจารย์ที่ปรึกษา (${recipient})` : `ผู้ใช้งานระบบ (${recipient})`)
 
-  const thaiIntro = isStudent
-    ? 'ระบบบริหารการให้คำปรึกษาทางวิชาการ (AdvisingLog) มหาวิทยาลัยแม่ฟ้าหลวง ขอแจ้งเตือนความคืบหน้าเกี่ยวกับการเข้าพบอาจารย์ที่ปรึกษา / คำร้องของท่าน ดังนี้:'
-    : isAdvisor
-      ? 'ระบบบริหารการให้คำปรึกษาทางวิชาการ (AdvisingLog) มหาวิทยาลัยแม่ฟ้าหลวง ขอแจ้งเตือนรายการใหม่ที่เกี่ยวข้องกับนักศึกษาในความดูแลของท่าน ดังนี้:'
-      : 'ระบบบริหารการให้คำปรึกษาทางวิชาการ (AdvisingLog) มหาวิทยาลัยแม่ฟ้าหลวง ขอแจ้งเตือนรายการใหม่ในระบบ ดังนี้:'
+  const introText = isEn
+    ? (isStudent
+        ? 'The Student Academic Advising System (AdvisingLog), Mae Fah Luang University, would like to notify you of an advising appointment update regarding your request:'
+        : isAdvisor
+          ? 'The Student Academic Advising System (AdvisingLog), Mae Fah Luang University, would like to notify you of an advising update regarding your advisee:'
+          : 'The Student Academic Advising System (AdvisingLog), Mae Fah Luang University, would like to notify you of a system update:')
+    : (isStudent
+        ? 'ระบบบริหารการให้คำปรึกษาทางวิชาการ (AdvisingLog) มหาวิทยาลัยแม่ฟ้าหลวง ขอแจ้งเตือนความคืบหน้าเกี่ยวกับการนัดหมายเข้าพบอาจารย์ที่ปรึกษา / คำร้องของท่าน ดังนี้:'
+        : isAdvisor
+          ? 'ระบบบริหารการให้คำปรึกษาทางวิชาการ (AdvisingLog) มหาวิทยาลัยแม่ฟ้าหลวง ขอแจ้งเตือนรายการใหม่ที่เกี่ยวข้องกับนักศึกษาในความดูแลของท่าน ดังนี้:'
+          : 'ระบบบริหารการให้คำปรึกษาทางวิชาการ (AdvisingLog) มหาวิทยาลัยแม่ฟ้าหลวง ขอแจ้งเตือนรายการใหม่ในระบบ ดังนี้:')
 
-  const thaiButtonText = isStudent
-    ? 'เข้าสู่ระบบเพื่อดูรายละเอียดนัดหมาย →'
-    : isAdvisor
-      ? 'เข้าสู่ระบบเพื่อตรวจสอบคำร้อง →'
-      : 'เข้าสู่ระบบเพื่อตรวจสอบข้อมูล →'
+  const buttonText = isEn
+    ? (isStudent ? 'Sign in to View Appointment Details →' : isAdvisor ? 'Sign in to Review Request →' : 'Sign in to Review Details →')
+    : (isStudent ? 'เข้าสู่ระบบเพื่อดูรายละเอียดนัดหมาย →' : isAdvisor ? 'เข้าสู่ระบบเพื่อตรวจสอบคำร้อง →' : 'เข้าสู่ระบบเพื่อตรวจสอบข้อมูล →')
 
-  // Role-specific English texts
-  const englishSalutation = isStudent
-    ? (recipientName ? `Dear ${recipientName},` : 'Dear Student,')
-    : isAdvisor
-      ? (recipientName ? `Dear Ajarn ${recipientName},` : 'Dear Academic Advisor,')
-      : (recipientName ? `Dear ${recipientName},` : 'Dear Committee / Administrator,')
+  const formattedTime = isEn ? formattedTimeEn : formattedTimeTh
+  const boxTitle = isEn ? 'Notification Summary' : 'หัวข้อการแจ้งเตือน'
+  const timeLabel = isEn ? 'Timestamp' : 'วันที่แจ้งเตือน'
+  const linkHelp = isEn ? 'Or open link directly:' : 'หรือเปิดลิงก์:'
 
-  const englishIntro = isStudent
-    ? 'The Student Academic Advising System (AdvisingLog), Mae Fah Luang University, would like to notify you of an advising appointment update regarding your request:'
-    : isAdvisor
-      ? 'The Student Academic Advising System (AdvisingLog), Mae Fah Luang University, would like to notify you of an advising update regarding your advisee:'
-      : 'The Student Academic Advising System (AdvisingLog), Mae Fah Luang University, would like to notify you of an advising system notification:'
-
-  const englishButtonText = isStudent
-    ? 'Sign in to View Appointment Details →'
-    : isAdvisor
-      ? 'Sign in to Review Request →'
-      : 'Sign in to Review Details →'
-
-  const textBody = [
-    `เรื่อง: ${subject}`,
-    `Subject: [AdvisingLog] ${englishSubject}`,
-    `ถึง / To: ${thaiRecipientRoleLabel}`,
-    '',
-    thaiSalutation,
-    '',
-    thaiIntro,
-    '',
-    `• รายละเอียด: ${message}`,
-    `• วันที่และเวลาแจ้งเตือน: ${formattedTimeTh}`,
-    '',
-    'ท่านสามารถเข้าสู่ระบบเพื่อตรวจสอบข้อมูลและดำเนินการได้ที่:',
-    `👉 ${targetUrl}`,
-    '',
-    'ขอแสดงความนับถือ',
-    'ระบบบริหารการให้คำปรึกษาทางวิชาการและการประกันคุณภาพการศึกษา (AdvisingLog)',
-    'สำนักวิชาเทคโนโลยีดิจิทัลประยุกต์ มหาวิทยาลัยแม่ฟ้าหลวง',
-    '',
-    '================================================================================',
-    '                              ENGLISH VERSION BELOW                             ',
-    '================================================================================',
-    '',
-    englishSalutation,
-    '',
-    englishIntro,
-    '',
-    `• Topic: ${englishSubject}`,
-    `• Details: ${message}`,
-    `• Notification Timestamp: ${formattedTimeEn}`,
-    '',
-    'Please sign in to the AdvisingLog system to view your details:',
-    `👉 ${targetUrl}`,
-    '',
-    'Sincerely yours,',
-    'Academic Advising & Quality Assurance System (AdvisingLog)',
-    'School of Applied Digital Technology, Mae Fah Luang University',
-    '--------------------------------------------------------------------------------',
-    'Note: This is an automated notification in compliance with the Personal Data Protection Act (PDPA), Mae Fah Luang University. Please do not reply directly to this email.',
-  ].join('\r\n')
+  const textBody = isEn
+    ? [
+        `Subject: [AdvisingLog] ${displaySubject}`,
+        `To: ${recipientRoleLabel}`,
+        '',
+        salutation,
+        '',
+        introText,
+        '',
+        `• Topic: ${displaySubject}`,
+        `• Details: ${message}`,
+        `• ${timeLabel}: ${formattedTime}`,
+        '',
+        'You can sign in to the AdvisingLog system at:',
+        `👉 ${targetUrl}`,
+        '',
+        'Sincerely yours,',
+        'Academic Advising & Quality Assurance System (AdvisingLog)',
+        'School of Applied Digital Technology, Mae Fah Luang University',
+        '--------------------------------------------------------------------------------',
+        'Note: This is an automated notification in compliance with the Personal Data Protection Act (PDPA), Mae Fah Luang University. Please do not reply directly to this email.',
+      ].join('\r\n')
+    : [
+        `เรื่อง: ${displaySubject}`,
+        `ถึง: ${recipientRoleLabel}`,
+        '',
+        salutation,
+        '',
+        introText,
+        '',
+        `• หัวข้อ: ${displaySubject}`,
+        `• รายละเอียด: ${message}`,
+        `• ${timeLabel}: ${formattedTime}`,
+        '',
+        'ท่านสามารถเข้าสู่ระบบเพื่อตรวจสอบข้อมูลและดำเนินการได้ที่:',
+        `👉 ${targetUrl}`,
+        '',
+        'ขอแสดงความนับถือ',
+        'ระบบบริหารการให้คำปรึกษาทางวิชาการและการประกันคุณภาพการศึกษา (AdvisingLog)',
+        'สำนักวิชาเทคโนโลยีดิจิทัลประยุกต์ มหาวิทยาลัยแม่ฟ้าหลวง',
+        '--------------------------------------------------------------------------------',
+        'หมายเหตุ: อีเมลฉบับนี้เป็นการแจ้งเตือนอัตโนมัติจากระบบรักษาความปลอดภัยและการคุ้มครองข้อมูลส่วนบุคคล (PDPA) มหาวิทยาลัยแม่ฟ้าหลวง กรุณาอย่าตอบกลับอีเมลนี้โดยตรง',
+      ].join('\r\n')
 
   const htmlBody = `<!DOCTYPE html>
-<html lang="th">
+<html lang="${isEn ? 'en' : 'th'}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${escapeHtml(subject)}</title>
+  <title>${escapeHtml(displaySubject)}</title>
 </head>
 <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Sarabun', sans-serif; background-color: #ffffff; color: #1e293b;">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #ffffff; padding: 24px 12px;">
     <tr>
       <td align="center">
-        <table role="presentation" width="100%" style="max-width: 620px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05); border: 1px solid #e2e8f0;" cellspacing="0" cellpadding="0">
+        <table role="presentation" width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05); border: 1px solid #e2e8f0;" cellspacing="0" cellpadding="0">
           
           <!-- Header Banner (Clean White Theme) -->
           <tr>
             <td style="background-color: #ffffff; padding: 32px 32px 24px 32px; text-align: left; border-bottom: 2px solid #0284c7;">
               <span style="font-size: 11px; font-weight: 700; color: #0284c7; text-transform: uppercase; letter-spacing: 1.5px; display: block; margin-bottom: 4px;">Mae Fah Luang University</span>
-              <h1 style="margin: 0; font-size: 20px; font-weight: 800; color: #0f172a; line-height: 1.3;">ระบบบริหารการให้คำปรึกษาทางวิชาการ (AdvisingLog)</h1>
-              <p style="margin: 4px 0 0 0; font-size: 13px; color: #64748b;">School of Applied Digital Technology • สำนักวิชาเทคโนโลยีดิจิทัลประยุกต์</p>
+              <h1 style="margin: 0; font-size: 20px; font-weight: 800; color: #0f172a; line-height: 1.3;">
+                ${isEn ? 'Student Academic Advising System (AdvisingLog)' : 'ระบบบริหารการให้คำปรึกษาทางวิชาการ (AdvisingLog)'}
+              </h1>
+              <p style="margin: 4px 0 0 0; font-size: 13px; color: #64748b;">
+                ${isEn ? 'School of Applied Digital Technology' : 'สำนักวิชาเทคโนโลยีดิจิทัลประยุกต์ • School of Applied Digital Technology'}
+              </p>
             </td>
           </tr>
           
-          <!-- Section 1: ภาษาไทย (Thai Version) -->
+          <!-- Main Body -->
           <tr>
-            <td style="padding: 32px 32px 20px 32px;">
+            <td style="padding: 32px;">
               <p style="margin: 0 0 14px 0; font-size: 15px; line-height: 1.6; color: #1e293b;">
-                <strong>${escapeHtml(thaiSalutation)}</strong>
+                <strong>${escapeHtml(salutation)}</strong>
               </p>
               <p style="margin: 0 0 18px 0; font-size: 14px; line-height: 1.6; color: #475569;">
-                ${escapeHtml(thaiIntro)}
+                ${escapeHtml(introText)}
               </p>
               
               <table role="presentation" width="100%" style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 22px;" cellspacing="0" cellpadding="0">
                 <tr>
                   <td style="padding: 18px 20px;">
                     <div style="font-size: 11px; font-weight: 700; color: #0284c7; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px;">
-                      หัวข้อการแจ้งเตือน
+                      ${escapeHtml(boxTitle)}
                     </div>
                     <div style="font-size: 15px; font-weight: 700; color: #0f172a; margin-bottom: 10px; line-height: 1.4;">
-                      ${escapeHtml(subject)}
+                      ${escapeHtml(displaySubject)}
                     </div>
                     <div style="border-top: 1px solid #e2e8f0; padding-top: 10px; font-size: 13.5px; line-height: 1.6; color: #334155;">
                       ${escapeHtml(message)}
                     </div>
                     <div style="margin-top: 8px; font-size: 12px; color: #64748b;">
-                      ⏱️ วันที่แจ้งเตือน: ${formattedTimeTh}
+                      ⏱️ ${escapeHtml(timeLabel)}: ${formattedTime}
                     </div>
                   </td>
                 </tr>
@@ -691,92 +694,32 @@ async function sendWorkspaceEmail(
                 <tr>
                   <td align="center">
                     <a href="${targetUrl}" target="_blank" style="display: inline-block; background-color: #0284c7; color: #ffffff; text-decoration: none; font-size: 13.5px; font-weight: 700; padding: 11px 26px; border-radius: 8px; box-shadow: 0 2px 4px rgba(2, 132, 199, 0.25);">
-                      ${escapeHtml(thaiButtonText)}
+                      ${escapeHtml(buttonText)}
                     </a>
                   </td>
                 </tr>
               </table>
               <p style="margin: 0; font-size: 12px; color: #64748b; text-align: center;">
-                หรือเปิดลิงก์: <a href="${targetUrl}" style="color: #0284c7; word-break: break-all;">${targetUrl}</a>
+                ${escapeHtml(linkHelp)} <a href="${targetUrl}" style="color: #0284c7; word-break: break-all;">${targetUrl}</a>
               </p>
             </td>
           </tr>
 
-          <!-- Section Divider: English Version Below -->
-          <tr>
-            <td style="padding: 10px 32px;">
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
-                <tr>
-                  <td style="border-bottom: 1.5px dashed #cbd5e1; text-align: center; height: 1px;"></td>
-                  <td style="width: 1px; padding: 0 12px; white-space: nowrap; text-align: center;">
-                    <span style="display: inline-block; background-color: #e2e8f0; color: #475569; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; padding: 3px 12px; border-radius: 9999px;">
-                      English Version Below
-                    </span>
-                  </td>
-                  <td style="border-bottom: 1.5px dashed #cbd5e1; text-align: center; height: 1px;"></td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-
-          <!-- Section 2: ภาษาอังกฤษ (English Version) -->
-          <tr>
-            <td style="padding: 20px 32px 32px 32px;">
-              <p style="margin: 0 0 14px 0; font-size: 15px; line-height: 1.6; color: #1e293b;">
-                <strong>${escapeHtml(englishSalutation)}</strong>
-              </p>
-              <p style="margin: 0 0 18px 0; font-size: 14px; line-height: 1.6; color: #475569;">
-                ${escapeHtml(englishIntro)}
-              </p>
-
-              <table role="presentation" width="100%" style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 22px;" cellspacing="0" cellpadding="0">
-                <tr>
-                  <td style="padding: 18px 20px;">
-                    <div style="font-size: 11px; font-weight: 700; color: #0284c7; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px;">
-                      Notification Summary
-                    </div>
-                    <div style="font-size: 15px; font-weight: 700; color: #0f172a; margin-bottom: 10px; line-height: 1.4;">
-                      ${escapeHtml(englishSubject)}
-                    </div>
-                    <div style="border-top: 1px solid #e2e8f0; padding-top: 10px; font-size: 13.5px; line-height: 1.6; color: #334155;">
-                      ${escapeHtml(message)}
-                    </div>
-                    <div style="margin-top: 8px; font-size: 12px; color: #64748b;">
-                      ⏱️ Timestamp: ${formattedTimeEn}
-                    </div>
-                  </td>
-                </tr>
-              </table>
-
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 20px;">
-                <tr>
-                  <td align="center">
-                    <a href="${targetUrl}" target="_blank" style="display: inline-block; background-color: #0f172a; color: #ffffff; text-decoration: none; font-size: 13.5px; font-weight: 700; padding: 11px 26px; border-radius: 8px; box-shadow: 0 2px 4px rgba(15, 23, 42, 0.25);">
-                      ${escapeHtml(englishButtonText)}
-                    </a>
-                  </td>
-                </tr>
-              </table>
-              <p style="margin: 0; font-size: 12px; color: #64748b; text-align: center;">
-                Or open URL: <a href="${targetUrl}" style="color: #0284c7; word-break: break-all;">${targetUrl}</a>
-              </p>
-            </td>
-          </tr>
-
-          <!-- Institutional Footer (Bilingual) -->
+          <!-- Footer -->
           <tr>
             <td style="background-color: #ffffff; padding: 24px 32px; border-top: 1px solid #e2e8f0; text-align: left;">
               <p style="margin: 0 0 4px 0; font-size: 12px; font-weight: 700; color: #475569;">
-                ระบบบริหารการให้คำปรึกษาทางวิชาการและการประกันคุณภาพการศึกษา (AdvisingLog)
+                ${isEn ? 'Academic Advising & Quality Assurance System (AdvisingLog)' : 'ระบบบริหารการให้คำปรึกษาทางวิชาการและการประกันคุณภาพการศึกษา (AdvisingLog)'}
               </p>
               <p style="margin: 0 0 10px 0; font-size: 11.5px; color: #64748b; line-height: 1.5;">
-                สำนักวิชาเทคโนโลยีดิจิทัลประยุกต์ มหาวิทยาลัยแม่ฟ้าหลวง<br>
-                School of Applied Digital Technology, Mae Fah Luang University<br>
-                333 Moo 1, Thasud, Mueang, Chiang Rai 57100 Thailand
+                ${isEn
+                  ? 'School of Applied Digital Technology, Mae Fah Luang University<br>333 Moo 1, Thasud, Mueang, Chiang Rai 57100 Thailand'
+                  : 'สำนักวิชาเทคโนโลยีดิจิทัลประยุกต์ มหาวิทยาลัยแม่ฟ้าหลวง<br>333 หมู่ 1 ต.ท่าสุด อ.เมือง จ.เชียงราย 57100'}
               </p>
               <p style="margin: 0; font-size: 11px; color: #94a3b8; line-height: 1.5; border-top: 1px dashed #cbd5e1; padding-top: 10px;">
-                * อีเมลนี้เป็นการแจ้งเตือนอัตโนมัติจากระบบรักษาความปลอดภัยและการคุ้มครองข้อมูลส่วนบุคคล (PDPA) มหาวิทยาลัยแม่ฟ้าหลวง กรุณาอย่าตอบกลับอีเมลนี้โดยตรง<br>
-                * This is an automated notification in compliance with the Personal Data Protection Act (PDPA), Mae Fah Luang University. Please do not reply directly to this email.
+                ${isEn
+                  ? '* This is an automated notification in compliance with the Personal Data Protection Act (PDPA), Mae Fah Luang University. Please do not reply directly to this email.'
+                  : '* อีเมลนี้เป็นการแจ้งเตือนอัตโนมัติจากระบบรักษาความปลอดภัยและการคุ้มครองข้อมูลส่วนบุคคล (PDPA) มหาวิทยาลัยแม่ฟ้าหลวง กรุณาอย่าตอบกลับอีเมลนี้โดยตรง'}
               </p>
             </td>
           </tr>
@@ -791,7 +734,7 @@ async function sendWorkspaceEmail(
   const rawMessage = [
     `From: ${GOOGLE_WORKSPACE_SENDER}`,
     `To: ${recipient}`,
-    `Subject: ${encodeMimeHeader(subject)}`,
+    `Subject: ${encodeMimeHeader(displaySubject)}`,
     'MIME-Version: 1.0',
     `Content-Type: multipart/alternative; boundary="${boundary}"`,
     '',
@@ -829,6 +772,7 @@ const notificationInput = z.object({
   message: z.string().min(1).max(5000),
   relatedId: z.string().optional(),
   sendEmail: z.boolean().optional().default(false),
+  lang: z.enum(['th', 'en']).optional(),
 })
 
 /**
@@ -875,7 +819,8 @@ app.post('/api/notifications', async (c) => {
   let emailStatus: 'not_requested' | 'pending' | 'sent' | 'failed' = input.sendEmail ? 'pending' : 'not_requested'
   let emailError: string | null = null
   if (input.sendEmail) {
-    const result = await sendWorkspaceEmail(c.env, recipient.email, input.title, input.message, input.relatedId, recipient.role, recipient.name)
+    const emailLang = input.lang || (!/[\u0E00-\u0E7F]/.test(input.title + input.message) ? 'en' : 'th')
+    const result = await sendWorkspaceEmail(c.env, recipient.email, input.title, input.message, input.relatedId, recipient.role, recipient.name, emailLang)
     emailStatus = result.sent ? 'sent' : 'failed'
     emailError = result.error || null
   }
