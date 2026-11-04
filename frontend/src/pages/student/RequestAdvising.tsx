@@ -1,5 +1,5 @@
 // ============================================================
-// Student — Request Advising Form (3-Step Interactive Wizard)
+// Student — Request Advising Form (2-Step Interactive Wizard)
 // ============================================================
 
 import { useState, useRef } from 'react'
@@ -52,6 +52,8 @@ interface UploadedAttachment {
   size?: number
 }
 
+const OTHER_SUBCATEGORY = '__other__'
+
 export default function RequestAdvising() {
   const { currentUser } = useAuth()
   const store = useStore()
@@ -63,11 +65,12 @@ export default function RequestAdvising() {
   const initialCategory = (searchParams.get('category') as AdvisingCategory) || ''
   const initialType = (searchParams.get('type') as ExitType) || 'withdrawal'
 
-  // Wizard Step state: 1: Topic & Advisor, 2: Schedule & Details, 3: Review & Submit
-  const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1)
+  // Wizard Step state: 1: Topic, Advisor, Schedule & Details, 2: Review & Submit
+  const [currentStep, setCurrentStep] = useState<1 | 2>(1)
 
   const [category, setCategory] = useState<AdvisingCategory | ''>(initialCategory)
   const [subCategory, setSubCategory] = useState('')
+  const [otherSubCategory, setOtherSubCategory] = useState('')
   const [exitType, setExitType] = useState<ExitType>(initialType)
   const [exitReasonCode, setExitReasonCode] = useState<ExitReasonCode>('academic')
   const [details, setDetails] = useState('')
@@ -198,6 +201,10 @@ export default function RequestAdvising() {
     }
     if (!category) {
       addToast('error', t('กรุณาเลือกหมวดหมู่', 'Category Required'), t('กรุณาเลือกหมวดหมู่คำปรึกษาที่ต้องการ', 'Please select an advising category.'))
+      return false
+    }
+    if (subCategory === OTHER_SUBCATEGORY && !otherSubCategory.trim()) {
+      addToast('error', t('กรุณาระบุหัวข้อที่ต้องการปรึกษา', 'Specific Topic Required'), t('กรุณาเขียนหัวข้อที่ต้องการปรึกษา', 'Please describe the specific topic you want to discuss.'))
       return false
     }
     if (category === 'withdrawal_leave' && !hasVoiceResponse) {
@@ -354,7 +361,9 @@ export default function RequestAdvising() {
         studentId: effectiveStudentId,
         advisorId: advisor.id,
         category: category as AdvisingCategory,
-        subCategory: category === 'withdrawal_leave' ? exitType : (subCategory || undefined),
+        subCategory: category === 'withdrawal_leave'
+          ? exitType
+          : (subCategory === OTHER_SUBCATEGORY ? otherSubCategory.trim() : (subCategory || undefined)),
         details,
         preferredDate,
         preferredTime,
@@ -456,16 +465,15 @@ export default function RequestAdvising() {
     <div className="max-w-3xl mx-auto pb-16">
       <PageHeader
         title={t('ยื่นคำร้องขอรับคำปรึกษา', 'Request Advising Session')}
-        description={t('ขั้นตอนการขอนัดหมายเข้าพบอาจารย์ที่ปรึกษาอย่างเป็นระบบและสะดวกรวดเร็ว', 'Schedule a meeting with your academic advisor through a simple, guided 3-step process.')}
+        description={t('ขั้นตอนการขอนัดหมายเข้าพบอาจารย์ที่ปรึกษาอย่างเป็นระบบและสะดวกรวดเร็ว', 'Schedule a meeting with your academic advisor through a simple, guided 2-step process.')}
       />
 
-      {/* 3-Step Wizard Navigation Indicator */}
+      {/* 2-Step Wizard Navigation Indicator */}
       <div className="mb-6 bg-slate-100 dark:bg-slate-800/80 p-1 sm:p-1.5 rounded-2xl border border-slate-200/70 dark:border-slate-700/60 shadow-2xs">
-        <div className="grid grid-cols-3 gap-1 sm:gap-1.5">
+        <div className="grid grid-cols-2 gap-1 sm:gap-1.5">
           {[
-            { step: 1, label: t('1. หัวข้อและอาจารย์', '1. Topic & Advisor'), icon: <Tag className="h-4 w-4" /> },
-            { step: 2, label: t('2. วันเวลาและรายละเอียด', '2. Schedule & Details'), icon: <Calendar className="h-4 w-4" /> },
-            { step: 3, label: t('3. ตรวจสอบและยืนยัน', '3. Review & Submit'), icon: <ShieldCheck className="h-4 w-4" /> },
+            { step: 1, label: t('1. รายละเอียดการนัดหมาย', '1. Appointment Details'), icon: <Calendar className="h-4 w-4" /> },
+            { step: 2, label: t('2. ตรวจสอบและยืนยัน', '2. Review & Submit'), icon: <ShieldCheck className="h-4 w-4" /> },
           ].map(s => {
             const isActive = currentStep === s.step
             const isCompleted = currentStep > s.step
@@ -475,8 +483,7 @@ export default function RequestAdvising() {
                 type="button"
                 onClick={() => {
                   if (s.step === 1) setCurrentStep(1)
-                  if (s.step === 2 && validateStep1()) setCurrentStep(2)
-                  if (s.step === 3 && validateStep1() && validateStep2()) setCurrentStep(3)
+                  if (s.step === 2 && validateStep1() && validateStep2()) setCurrentStep(2)
                 }}
                 className={`flex items-center justify-center gap-1.5 sm:gap-2 py-2 px-2 sm:px-3 rounded-xl text-xs transition-all cursor-pointer ${
                   isActive
@@ -501,7 +508,7 @@ export default function RequestAdvising() {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* ============================================================ */}
-        {/* STEP 1: Advisor & Category Selection */}
+        {/* STEP 1: Appointment Details */}
         {/* ============================================================ */}
         {currentStep === 1 && (
           <div className="space-y-5 animate-[fadeIn_0.15s_ease-out]">
@@ -630,9 +637,6 @@ export default function RequestAdvising() {
                   <label htmlFor="category-select" className="block text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200">
                     {t('เลือกหมวดหมู่เรื่องที่ต้องการปรึกษา', 'Choose Advising Topic')} <span className="text-rose-500">*</span>
                   </label>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                    {t('คลิกเลือกหัวข้อที่ตรงกับความต้องการของคุณมากที่สุด', 'Select the category that best matches your concern.')}
-                  </p>
                 </div>
               </div>
 
@@ -655,12 +659,14 @@ export default function RequestAdvising() {
                         onClick={() => {
                           setCategory(c.value as AdvisingCategory)
                           setSubCategory('')
+                          setOtherSubCategory('')
                         }}
                         onKeyDown={e => {
                           if (e.key === 'Enter' || e.key === ' ') {
                             e.preventDefault()
                             setCategory(c.value as AdvisingCategory)
                             setSubCategory('')
+                            setOtherSubCategory('')
                           }
                         }}
                         className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex items-center gap-3 relative select-none group ${
@@ -680,19 +686,17 @@ export default function RequestAdvising() {
                           <p className={`text-xs sm:text-sm font-semibold ${isSelected ? 'text-sky-900 dark:text-sky-200' : 'text-slate-800 dark:text-slate-200'}`}>
                             {catLabel}
                           </p>
-                          <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5">
-                            {c.value === 'withdrawal_leave'
-                              ? t('แบบคำร้องขอพ้นสภาพหรือพักการศึกษา', 'Exit, leave or major transfer form')
-                              : c.value === 'scholarship_document'
-                              ? t('ลงนามรับรองทุนและเอกสารราชการ', 'Scholarship & Petitions')
-                              : t('ปรึกษาและขอคำแนะนำทางวิชาการ', 'Advising & Guidance')}
-                          </p>
                         </div>
-                        {isSelected && (
-                          <div className="h-5 w-5 rounded-full bg-sky-500 text-white flex items-center justify-center flex-shrink-0 self-center">
-                            <Check className="h-3 w-3" />
-                          </div>
-                        )}
+                        <div
+                          aria-hidden="true"
+                          className={`h-5 w-5 rounded-md border flex items-center justify-center flex-shrink-0 self-center transition-colors ${
+                            isSelected
+                              ? 'border-sky-500 bg-sky-500 text-white'
+                              : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-transparent group-hover:border-sky-400'
+                          }`}
+                        >
+                          <Check className="h-3.5 w-3.5" />
+                        </div>
                       </div>
                     )
                   })
@@ -713,6 +717,7 @@ export default function RequestAdvising() {
                 onChange={e => {
                   setCategory(e.target.value as AdvisingCategory)
                   setSubCategory('')
+                  setOtherSubCategory('')
                 }}
                 className="sr-only"
               >
@@ -731,48 +736,31 @@ export default function RequestAdvising() {
                   <label htmlFor="subcategory-select" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                     {t('หัวข้อย่อยเฉพาะด้าน', 'Specific Sub-topic')} <span className="text-slate-400 font-normal">({t('ไม่บังคับ', 'Optional')})</span>
                   </label>
-                  <div className="flex flex-wrap gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => setSubCategory('')}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
-                        !subCategory
-                          ? 'border-sky-500 bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 font-semibold'
-                          : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50'
-                      }`}
-                    >
-                      {t('ทั่วไป / ไม่ระบุ', 'General / None')}
-                    </button>
-                    {subCategories.map(sc => (
-                      <button
-                        key={sc}
-                        type="button"
-                        onClick={() => setSubCategory(sc)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
-                          subCategory === sc
-                            ? 'border-sky-500 bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 font-semibold'
-                            : 'border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
-                        }`}
-                      >
-                        {getSubCategoryLabel(sc)}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Hidden select for test compatibility */}
                   <select
                     id="subcategory-select"
-                    aria-hidden="true"
-                    tabIndex={-1}
+                    aria-label={t('หัวข้อย่อยเฉพาะด้าน', 'Specific Sub-topic')}
                     value={subCategory}
-                    onChange={e => setSubCategory(e.target.value)}
-                    className="sr-only"
+                    onChange={e => {
+                      setSubCategory(e.target.value)
+                      if (e.target.value !== OTHER_SUBCATEGORY) setOtherSubCategory('')
+                    }}
+                    className="w-full min-h-[42px] px-3.5 py-2 border border-slate-200/90 dark:border-slate-800 rounded-xl text-xs sm:text-sm font-medium bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-colors shadow-2xs"
                   >
-                    <option value="">{t('-- เลือกหัวข้อย่อย --', 'Select specific topic')}</option>
+                    <option value="">{t('ทั่วไป / ไม่ระบุ', 'General / None')}</option>
                     {subCategories.map(sc => (
                       <option key={sc} value={sc}>{getSubCategoryLabel(sc)}</option>
                     ))}
+                    <option value={OTHER_SUBCATEGORY}>{t('อื่น ๆ', 'Other')}</option>
                   </select>
+                  {subCategory === OTHER_SUBCATEGORY && (
+                    <input
+                      type="text"
+                      value={otherSubCategory}
+                      onChange={e => setOtherSubCategory(e.target.value)}
+                      placeholder={t('เขียนหัวข้อที่ต้องการปรึกษา', 'Describe the specific topic you want to discuss')}
+                      className="w-full mt-2 min-h-[42px] px-3.5 py-2 border border-slate-200/90 dark:border-slate-800 rounded-xl text-xs sm:text-sm bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-colors shadow-2xs"
+                    />
+                  )}
                 </div>
               )}
 
@@ -902,36 +890,11 @@ export default function RequestAdvising() {
               )}
             </Card>
 
-            {/* Step 1 Footer Controls */}
-            <div className="flex items-center justify-between pt-2">
-              <Button variant="secondary" onClick={() => navigate(-1)} type="button">
-                {t('ยกเลิก', 'Cancel')}
-              </Button>
-              <div className="flex items-center gap-2">
-                <Button
-                  type="button"
-                  variant="primary"
-                  disabled={category === 'withdrawal_leave' && !hasVoiceResponse}
-                  onClick={() => {
-                    if (validateStep1()) {
-                      setCurrentStep(2)
-                      window.scrollTo({ top: 0, behavior: 'smooth' })
-                    }
-                  }}
-                  className="gap-1.5 font-bold"
-                >
-                  <span>{t('ถัดไป', 'Next')}</span>
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
           </div>
         )}
 
-        {/* ============================================================ */}
-        {/* STEP 2: Schedule & Details */}
-        {/* ============================================================ */}
-        {currentStep === 2 && (
+        {/* Schedule & Details are part of the first step. */}
+        {currentStep === 1 && (
           <div className="space-y-5 animate-[fadeIn_0.15s_ease-out]">
             <Card className="space-y-5">
               {/* Date & Time Selection */}
@@ -1127,18 +1090,18 @@ export default function RequestAdvising() {
               </div>
             </Card>
 
-            {/* Step 2 Footer Controls */}
+            {/* Step 1 Footer Controls */}
             <div className="flex items-center justify-between pt-2">
-              <Button variant="secondary" onClick={() => setCurrentStep(1)} type="button" className="gap-1.5">
-                <ArrowLeft className="h-4 w-4" />
-                <span>{t('ย้อนกลับ', 'Back')}</span>
+              <Button variant="secondary" onClick={() => navigate(-1)} type="button">
+                {t('ยกเลิก', 'Cancel')}
               </Button>
               <Button
                 type="button"
                 variant="primary"
+                disabled={category === 'withdrawal_leave' && !hasVoiceResponse}
                 onClick={() => {
-                  if (validateStep2()) {
-                    setCurrentStep(3)
+                  if (validateStep1() && validateStep2()) {
+                    setCurrentStep(2)
                     window.scrollTo({ top: 0, behavior: 'smooth' })
                   }
                 }}
@@ -1152,9 +1115,9 @@ export default function RequestAdvising() {
         )}
 
         {/* ============================================================ */}
-        {/* STEP 3: Review & Submit */}
+        {/* STEP 2: Review & Submit */}
         {/* ============================================================ */}
-        {currentStep === 3 && (
+        {currentStep === 2 && (
           <div className="space-y-5 animate-[fadeIn_0.15s_ease-out]">
             {/* Visual Review Summary Card */}
             <Card className="space-y-4">
@@ -1199,7 +1162,9 @@ export default function RequestAdvising() {
                     <span>{category ? getCategoryLabel(category) : '-'}</span>
                   </p>
                   {subCategory && (
-                    <p className="text-[11px] text-sky-600 dark:text-sky-400 mt-0.5">{getSubCategoryLabel(subCategory)}</p>
+                    <p className="text-[11px] text-sky-600 dark:text-sky-400 mt-0.5">
+                      {subCategory === OTHER_SUBCATEGORY ? (otherSubCategory || t('อื่น ๆ', 'Other')) : getSubCategoryLabel(subCategory)}
+                    </p>
                   )}
                   {category === 'withdrawal_leave' && (
                     <p className="text-[11px] text-orange-600 dark:text-orange-400 mt-0.5">
@@ -1262,9 +1227,9 @@ export default function RequestAdvising() {
               </div>
             </Card>
 
-            {/* Step 3 Footer Controls */}
+            {/* Step 2 Footer Controls */}
             <div className="flex items-center justify-between pt-2">
-              <Button variant="secondary" onClick={() => setCurrentStep(2)} type="button" className="gap-1.5">
+              <Button variant="secondary" onClick={() => setCurrentStep(1)} type="button" className="gap-1.5">
                 <ArrowLeft className="h-4 w-4" />
                 <span>{t('ย้อนกลับ', 'Back')}</span>
               </Button>
