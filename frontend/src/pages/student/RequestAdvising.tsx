@@ -776,96 +776,23 @@ export default function RequestAdvising() {
               </select>
             </div>
 
-                        {/* Category Selection Cards */}
+            {/* Advising Topic Dropdown */}
             <Card className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <label htmlFor="category-select" className="block text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200">
-                    {t('เลือกหมวดหมู่เรื่องที่ต้องการปรึกษา', 'Choose Advising Topic')} <span className="text-rose-500">*</span>
-                  </label>
-                </div>
-              </div>
-
-              {/* Grid of Interactive Visual Category Cards (ARIA Radio Group) */}
-              <div
-                role="radiogroup"
-                aria-label={t('หมวดหมู่คำปรึกษา', 'Advising Category')}
-                className="grid grid-cols-1 sm:grid-cols-2 gap-2.5"
-              >
-                {store.categoryConfigs.filter(c => c.isActive !== false).length > 0 ? (
-                  store.categoryConfigs.filter(c => c.isActive !== false).map(c => {
-                    const isSelected = category === c.value
-                    const catLabel = getCategoryLabel(c.value)
-                    return (
-                      <div
-                        key={c.value}
-                        role="radio"
-                        aria-checked={isSelected}
-                        tabIndex={0}
-                        onClick={() => {
-                          setCategory(c.value as AdvisingCategory)
-                          setSubCategory('')
-                          setOtherSubCategory('')
-                        }}
-                        onKeyDown={e => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault()
-                            setCategory(c.value as AdvisingCategory)
-                            setSubCategory('')
-                            setOtherSubCategory('')
-                          }
-                        }}
-                        className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex items-center gap-3 relative select-none group ${isSelected
-                            ? 'border-sky-500 bg-sky-50/80 dark:bg-sky-950/50 shadow-xs ring-2 ring-sky-500/20'
-                            : 'border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-sky-400 dark:hover:border-sky-500/50 hover:bg-slate-50/80 dark:hover:bg-slate-800/80 shadow-2xs hover:shadow-xs'
-                          }`}
-                      >
-                        <div className={`h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all ${isSelected
-                            ? 'bg-sky-500 text-white shadow-xs'
-                            : 'bg-slate-100 dark:bg-slate-800 group-hover:bg-sky-100/90 dark:group-hover:bg-slate-700/90 shadow-2xs'
-                          }`}>
-                          {getCategoryIcon(c.value, isSelected)}
-                        </div>
-                        <div className="min-w-0 flex-1 pr-2">
-                          <p className={`text-xs sm:text-sm font-semibold ${isSelected ? 'text-sky-900 dark:text-sky-200' : 'text-slate-800 dark:text-slate-200'}`}>
-                            {catLabel}
-                          </p>
-                        </div>
-                        <div
-                          aria-hidden="true"
-                          className={`h-5 w-5 rounded-md border flex items-center justify-center flex-shrink-0 self-center transition-colors ${
-                            isSelected
-                              ? 'border-sky-500 bg-sky-500 text-white'
-                              : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-transparent group-hover:border-sky-400'
-                          }`}
-                        >
-                          <Check className="h-3.5 w-3.5" />
-                        </div>
-                      </div>
-                    )
-                  })
-                ) : (
-                  <div className="col-span-full py-8 text-center border border-dashed border-slate-200 dark:border-slate-800 rounded-xl p-4">
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                      {t('ยังไม่มีการตั้งค่าหมวดหมู่ในฐานข้อมูล โปรดติดต่อผู้ดูแลระบบ', 'No advising categories configured in the database yet. Please contact an administrator.')}
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {/* Native select for test automation & accessibility */}
+              <h3 className="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-200">
+                {t('เลือกหัวข้อการขอคำปรึกษา', 'Choose an advising topic')}
+              </h3>
               <select
                 id="category-select"
-                aria-label={t('หมวดหมู่คำปรึกษา', 'Advising Category')}
+                aria-label={t('หมวดหมู่คำปรึกษา / เลือกหัวข้อที่ต้องการปรึกษา', 'Advising Category / Choose Advising Topic')}
                 value={category}
                 onChange={e => {
                   setCategory(e.target.value as AdvisingCategory)
                   setSubCategory('')
                   setOtherSubCategory('')
                 }}
-                className="sr-only"
+                className="w-full min-h-[42px] px-3.5 py-2 border border-slate-200/90 dark:border-slate-800 rounded-xl text-xs sm:text-sm font-medium bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-colors shadow-2xs"
               >
-                <option value="">{t('-- กรุณาเลือกหมวดหมู่ --', 'Select a category')}</option>
+                <option value="">{t('-- กรุณาเลือกหมวดหมู่ --', '--Select a category--')}</option>
                 {store.categoryConfigs.filter(c => c.isActive !== false).map(c => {
                   const catLabel = getCategoryLabel(c.value)
                   return (
@@ -1043,12 +970,9 @@ export default function RequestAdvising() {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <label className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200">
+                    <label className="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-200">
                       {t('วันและเวลาที่ประสงค์ขอเข้าพบ', 'Requested Date & Time')} <span className="text-rose-500">*</span>
                     </label>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                      {t('ระบุวันและเวลาที่สะดวกเข้าพบ', 'Select your preferred day and time slot.')}
-                    </p>
                   </div>
                   {advisor?.email && (
                     <button
@@ -1120,7 +1044,7 @@ export default function RequestAdvising() {
 
               {/* Details */}
               <div>
-                <label className="block text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 mb-1.5">
+                <label className="block text-sm sm:text-base font-bold text-slate-800 dark:text-slate-200 mb-1.5">
                   {t('รายละเอียดหรือประเด็นที่ต้องการปรึกษา', 'Consultation Details & Questions')} <span className="text-rose-500">*</span>
                 </label>
                 <textarea
@@ -1135,7 +1059,7 @@ export default function RequestAdvising() {
               {/* Attachments */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="block text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200">
+                  <label className="block text-sm sm:text-base font-bold text-slate-800 dark:text-slate-200">
                     {t('เอกสารประกอบและแบบคำร้อง (ถ้ามี)', 'Supporting Documents & Forms')}
                   </label>
                   <span className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">
