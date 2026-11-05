@@ -603,7 +603,7 @@ export default function AdvisorLog() {
             ) : (
               <div>
                 <label className="block text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 mb-1.5">
-                  {t('เลือกนัดหมายที่ต้องการบันทึกผล', 'Select Advising Session')} <span className="text-rose-500">*</span>
+                  {t('เลือกนัดหมายที่ต้องการบันทึกผล', 'Select Advising Session')} <span className="text-red-500 font-bold ml-0.5">*</span>
                 </label>
                 <select
                   value={selectedRequestId}
@@ -899,7 +899,7 @@ export default function AdvisorLog() {
             <div>
               <div className="flex items-center justify-between mb-1.5 flex-wrap gap-1">
                 <label className="text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200">
-                  {t('สรุปผลการให้คำปรึกษาและคำแนะนำ', 'Advising Notes & Summary')} <span className="text-rose-500">*</span>
+                  {t('สรุปผลการให้คำปรึกษาและคำแนะนำ', 'Advising Notes & Summary')} <span className="text-red-500 font-bold ml-0.5">*</span>
                 </label>
                 <span className="text-[11px] text-slate-400 dark:text-slate-500">
                   {t('ครอบคลุมทั้งประเด็นปัญหา คำแนะนำทางวิชาการ และข้อตกลงร่วมกัน', 'Encompasses issues, advice, and next steps in one note')}

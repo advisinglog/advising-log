@@ -462,7 +462,7 @@ export default function Documents() {
           {/* 1. Document Type Dropdown */}
           <div className="space-y-1.5">
             <label htmlFor="doctype-select" className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-              {t('ประเภทเอกสาร / แบบฟอร์ม', 'Document Type')} <span className="text-rose-500">*</span>
+              {t('ประเภทเอกสาร / แบบฟอร์ม', 'Document Type')} <span className="text-red-500 font-bold ml-0.5">*</span>
             </label>
 
             {/* Custom Document Type Dropdown Trigger */}
@@ -601,7 +601,7 @@ export default function Documents() {
           {/* 3. Uploading Document */}
           <div className="space-y-1.5">
             <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-              {t('ไฟล์เอกสารที่ต้องการอัปโหลด', 'Upload Document File')} <span className="text-rose-500">*</span>
+              {t('ไฟล์เอกสารที่ต้องการอัปโหลด', 'Upload Document File')} <span className="text-red-500 font-bold ml-0.5">*</span>
             </label>
 
             {/* Hidden native input */}

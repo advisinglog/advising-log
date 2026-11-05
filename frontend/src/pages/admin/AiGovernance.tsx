@@ -890,7 +890,7 @@ export default function AiGovernance() {
 
           <div>
             <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-              {t('กุญแจ Gemini API Key', 'Gemini API Key')} <span className="text-rose-500">*</span>
+              {t('กุญแจ Gemini API Key', 'Gemini API Key')} <span className="text-red-500 font-bold ml-0.5">*</span>
             </label>
             <div className="relative">
               <input

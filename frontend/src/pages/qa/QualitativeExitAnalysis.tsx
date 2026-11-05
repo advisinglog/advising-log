@@ -2132,7 +2132,7 @@ export default function QualitativeExitAnalysis({ view = 'analysis' }: { view?: 
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1">
                       <span>{t('2. วางคีย์ API ของคุณ', '2. Paste your API key')}</span>
-                      <span className="text-rose-500">*</span>
+                      <span className="text-red-500 font-bold ml-0.5">*</span>
                     </label>
                     <a
                       href={currentPreset.studioUrl}
