@@ -35,7 +35,7 @@ export const advisingRequests = sqliteTable('advising_requests', {
   preferredTime: text('preferred_time').notNull(),
   attachments: text('attachments').notNull().default('[]'), // JSON array of file public_ids/names
   pdpaConsent: integer('pdpa_consent', { mode: 'boolean' }).notNull().default(true),
-  status: text('status', { enum: ['requested', 'pending', 'scheduled', 'completed', 'cancelled', 'closed'] }).notNull().default('requested'),
+  status: text('status', { enum: ['requested', 'pending', 'scheduled', 'rescheduled_pending_student', 'completed', 'cancelled', 'closed'] }).notNull().default('requested'),
   cancellationReason: text('cancellation_reason'),
   cancelledBy: text('cancelled_by'),
   cancelledAt: text('cancelled_at'),

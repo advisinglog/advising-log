@@ -18,6 +18,8 @@ export default function StudentDashboard() {
   const store = useStore()
   const navigate = useNavigate()
   const [timeTab, setTimeTab] = useState<'today' | 'upcoming' | 'all'>('today')
+  const [decliningAptId, setDecliningAptId] = useState<string | null>(null)
+  const [declineReason, setDeclineReason] = useState('')
 
   if (!currentUser) return null
 
@@ -102,6 +104,7 @@ export default function StudentDashboard() {
     const req = store.requests.find(r => r.id === apt.requestId)
     const adv = store.users.find(u => u.id === apt.advisorId)
     const isToday = apt.scheduledDate === todayStr
+    const isPendingConfirmation = apt.studentConfirmed === false && !apt.studentDeclined
 
     const containerStyle =
       highlightTone === 'emerald'
@@ -120,6 +123,11 @@ export default function StudentDashboard() {
             <div>
               <div className="flex flex-wrap items-center gap-2">
                 <p className="text-sm font-bold text-slate-900 dark:text-slate-100">{apt.scheduledDate}</p>
+                {isPendingConfirmation && (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-amber-100 dark:bg-amber-950/80 border border-amber-300 dark:border-amber-700 rounded-full text-[10px] font-bold text-amber-800 dark:text-amber-300 animate-pulse">
+                    ⚠️ {t('อาจารย์เสนอเวลาใหม่ (รอยืนยัน)', 'New Time Proposed (Pending Your Confirmation)')}
+                  </span>
+                )}
                 {isToday && (
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-rose-100 dark:bg-rose-950/80 border border-rose-300 dark:border-rose-800 rounded-full text-[10px] font-bold text-rose-700 dark:text-rose-300 animate-pulse">
                     {t('วันนี้ (Today)', 'Today')}
@@ -146,18 +154,44 @@ export default function StudentDashboard() {
             </div>
           </div>
           <div className="flex items-center gap-2 self-end sm:self-center flex-wrap">
-            <GoogleCalendarButton
-              event={{
-                title: `Advising Meeting: ${currentUser.name} & ${adv?.name || 'Advisor'}`,
-                description: `Advising Topic: ${req ? getCategoryLabel(req.category) : 'Academic Consultation'}\nLocation: ${apt.location}\nDate: ${apt.scheduledDate} ${apt.scheduledTime}`,
-                location: apt.location,
-                date: apt.scheduledDate,
-                time: apt.scheduledTime,
-                attendeeEmails: [currentUser.email, adv?.email || ''],
-              }}
-              size="sm"
-              variant="secondary"
-            />
+            {isPendingConfirmation ? (
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="primary"
+                  className="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold shadow-xs"
+                  onClick={() => store.confirmAppointment(apt.id)}
+                >
+                  <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
+                  {t('ยอมรับเวลานี้', 'Accept Proposed Slot')}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="border-rose-300 text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                  onClick={() => {
+                    setDecliningAptId(apt.id)
+                    setDeclineReason('')
+                  }}
+                >
+                  <XCircle className="h-3.5 w-3.5 mr-1" />
+                  {t('ไม่สะดวก / ยกเลิก', 'Decline / Cancel')}
+                </Button>
+              </div>
+            ) : (
+              <GoogleCalendarButton
+                event={{
+                  title: `Advising Meeting: ${currentUser.name} & ${adv?.name || 'Advisor'}`,
+                  description: `Advising Topic: ${req ? getCategoryLabel(req.category) : 'Academic Consultation'}\nLocation: ${apt.location}\nDate: ${apt.scheduledDate} ${apt.scheduledTime}`,
+                  location: apt.location,
+                  date: apt.scheduledDate,
+                  time: apt.scheduledTime,
+                  attendeeEmails: [currentUser.email, adv?.email || ''],
+                }}
+                size="sm"
+                variant="secondary"
+              />
+            )}
             <Button
               size="sm"
               variant="secondary"
@@ -446,6 +480,62 @@ export default function StudentDashboard() {
 
         </div>
       </div>
+      {/* Decline Appointment Modal */}
+      {decliningAptId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-[fadeIn_0.15s_ease-out]">
+          <div className="w-full max-w-md bg-white dark:bg-[#0e1424] border border-slate-200/90 dark:border-slate-800 rounded-2xl p-5 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                {t('ระบุเหตุผลที่ไม่สะดวกเข้าพบ', 'Decline Proposed Slot')}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setDecliningAptId(null)}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm font-bold p-1 cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+            <p className="text-xs text-slate-600 dark:text-slate-400">
+              {t('หากท่านไม่สะดวกในวันเวลาดังกล่าว ระบบจะยกเลิกเวลานี้และแจ้งอาจารย์ที่ปรึกษา เพื่อให้ท่านสามารถยื่นขอนัดหมายในวันเวลาใหม่ได้', 'If you decline this proposed slot, the appointment will be cancelled and your advisor notified so that a new suitable time can be arranged.')}
+            </p>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                {t('เหตุผลเพิ่มเติม (ถ้ามี)', 'Reason / Note (Optional)')}
+              </label>
+              <textarea
+                value={declineReason}
+                onChange={e => setDeclineReason(e.target.value)}
+                placeholder={t('เช่น ติดเรียนวิชา..., ติดสอบ..., ขอเปลี่ยนเป็นช่วงเวลา...', 'e.g. Class conflict, exam schedule, prefer another slot...')}
+                rows={3}
+                className="w-full px-3 py-2 text-xs border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 resize-none"
+              />
+            </div>
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => setDecliningAptId(null)}
+              >
+                {t('ปิด', 'Cancel')}
+              </Button>
+              <Button
+                size="sm"
+                variant="primary"
+                className="bg-rose-600 hover:bg-rose-700 text-white font-bold"
+                onClick={() => {
+                  if (decliningAptId) {
+                    store.declineAppointment(decliningAptId, declineReason)
+                    setDecliningAptId(null)
+                  }
+                }}
+              >
+                {t('ยืนยันไม่สะดวกและยกเลิก', 'Confirm Decline')}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

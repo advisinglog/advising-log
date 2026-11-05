@@ -217,10 +217,10 @@ class ApiClient {
     })
   }
 
-  async updateAppointmentStatus(id: string, status: Appointment['status']) {
+  async updateAppointmentStatus(id: string, status?: Appointment['status'], extra?: { studentConfirmed?: boolean; studentDeclined?: boolean; studentDeclineReason?: string }) {
     return this.request<{ success: boolean }>(`/api/appointments/${id}/status`, {
       method: 'PATCH',
-      body: JSON.stringify({ status }),
+      body: JSON.stringify({ status, ...extra }),
     })
   }
 

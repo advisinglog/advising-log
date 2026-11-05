@@ -437,7 +437,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const addAppointment = useCallback((apt: Omit<Appointment, 'id' | 'createdAt'>): Appointment => {
-    const newApt: Appointment = { studentConfirmed: true, ...apt, id: nextId('APT'), createdAt: now() }
+    const newApt: Appointment = { studentConfirmed: apt.studentConfirmed ?? true, ...apt, id: nextId('APT'), createdAt: now() }
     setAppointments(prev => [newApt, ...prev])
     api.createAppointment(newApt).catch(() => {})
     return newApt
@@ -449,12 +449,22 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const confirmAppointment = useCallback((appointmentId: string) => {
-    setAppointments(prev => prev.map(a => a.id === appointmentId ? { ...a, studentConfirmed: true } : a))
-  }, [])
+    setAppointments(prev => prev.map(a => a.id === appointmentId ? { ...a, studentConfirmed: true, studentDeclined: false } : a))
+    const apt = appointments.find(a => a.id === appointmentId)
+    if (apt?.requestId) {
+      updateRequestStatus(apt.requestId, 'scheduled')
+    }
+    api.updateAppointmentStatus(appointmentId, undefined, { studentConfirmed: true, studentDeclined: false }).catch(() => {})
+  }, [appointments, updateRequestStatus])
 
   const declineAppointment = useCallback((appointmentId: string, reason?: string) => {
-    setAppointments(prev => prev.map(a => a.id === appointmentId ? { ...a, studentDeclined: true, studentDeclineReason: reason } : a))
-  }, [])
+    setAppointments(prev => prev.map(a => a.id === appointmentId ? { ...a, studentDeclined: true, studentConfirmed: false, studentDeclineReason: reason } : a))
+    const apt = appointments.find(a => a.id === appointmentId)
+    if (apt?.requestId) {
+      updateRequestStatus(apt.requestId, 'cancelled', { reason: reason || 'Student declined proposed rescheduled slot', cancelledBy: 'student' })
+    }
+    api.updateAppointmentStatus(appointmentId, 'cancelled', { studentDeclined: true, studentConfirmed: false, studentDeclineReason: reason }).catch(() => {})
+  }, [appointments, updateRequestStatus])
 
   const addSession = useCallback((ses: Omit<AdvisingSession, 'id' | 'createdAt'>): AdvisingSession => {
     const newSes: AdvisingSession = { ...ses, id: nextId('SES'), createdAt: now() }

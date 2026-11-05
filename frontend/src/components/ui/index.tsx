@@ -139,6 +139,7 @@ type BadgeStatus = RequestStatus | FollowUpStatus | ReferralStatus | ExitCaseSta
 const statusLabelsTh: Record<string, string> = {
   requested: 'รอการตอบรับ',
   scheduled: 'นัดหมายแล้ว',
+  rescheduled_pending_student: 'อาจารย์เสนอเวลาใหม่ (รอนักศึกษายืนยัน)',
   active: 'เปิดใช้งาน',
   in_progress: 'กำลังดำเนินการ',
   open: 'รอดำเนินการ',
@@ -172,6 +173,7 @@ const statusLabelsTh: Record<string, string> = {
 const statusLabelsEn: Record<string, string> = {
   requested: 'Awaiting Response',
   scheduled: 'Scheduled',
+  rescheduled_pending_student: 'New Time Proposed (Pending Student)',
   active: 'Active',
   in_progress: 'In Progress',
   open: 'Open',
@@ -206,6 +208,7 @@ const statusConfig: Record<string, { bg: string; text: string; border: string; d
   // Sky Blue for active, open, requested, scheduled, submitted
   requested: { bg: 'bg-sky-50/80 dark:bg-sky-500/12', text: 'text-sky-700 dark:text-sky-300', border: 'border-sky-200/60 dark:border-sky-500/25', dot: 'bg-sky-500 dark:bg-sky-400' },
   scheduled: { bg: 'bg-sky-50/80 dark:bg-sky-500/12', text: 'text-sky-700 dark:text-sky-300', border: 'border-sky-200/60 dark:border-sky-500/25', dot: 'bg-sky-500 dark:bg-sky-400' },
+  rescheduled_pending_student: { bg: 'bg-amber-50/80 dark:bg-amber-500/15', text: 'text-amber-800 dark:text-amber-300', border: 'border-amber-300 dark:border-amber-500/30', dot: 'bg-amber-500 dark:bg-amber-400' },
   active: { bg: 'bg-sky-50/80 dark:bg-sky-500/12', text: 'text-sky-700 dark:text-sky-300', border: 'border-sky-200/60 dark:border-sky-500/25', dot: 'bg-sky-500 dark:bg-sky-400' },
   in_progress: { bg: 'bg-sky-50/80 dark:bg-sky-500/12', text: 'text-sky-700 dark:text-sky-300', border: 'border-sky-200/60 dark:border-sky-500/25', dot: 'bg-sky-500 dark:bg-sky-400' },
   open: { bg: 'bg-sky-50/80 dark:bg-sky-500/12', text: 'text-sky-700 dark:text-sky-300', border: 'border-sky-200/60 dark:border-sky-500/25', dot: 'bg-sky-500 dark:bg-sky-400' },

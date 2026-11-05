@@ -162,8 +162,8 @@ export default function AdvisingSessions() {
 
   const tabs = [
     { value: 'pending', label: t('คำขอนัดหมายใหม่', 'Pending Requests'), count: myRequests.filter(r => ['requested', 'pending'].includes(r.status)).length },
-    { value: 'upcoming', label: t('นัดหมายที่ยืนยันแล้ว', 'Upcoming Appointments'), count: myRequests.filter(r => r.status === 'scheduled').length },
-    { value: 'ongoing', label: t('การให้คำปรึกษาที่กำลังดำเนินอยู่', 'Ongoing Sessions'), count: myRequests.filter(r => r.status === 'scheduled').length },
+    { value: 'upcoming', label: t('นัดหมายที่ยืนยันแล้ว', 'Upcoming Appointments'), count: myRequests.filter(r => r.status === 'scheduled' || r.status === 'rescheduled_pending_student').length },
+    { value: 'ongoing', label: t('การให้คำปรึกษาที่กำลังดำเนินอยู่', 'Ongoing Sessions'), count: myRequests.filter(r => r.status === 'scheduled' || r.status === 'rescheduled_pending_student').length },
     { value: 'completed', label: t('เสร็จสิ้นแล้ว', 'Completed'), count: myRequests.filter(r => ['completed', 'closed'].includes(r.status)).length },
     { value: 'cancelled', label: t('ยกเลิก', 'Cancelled'), count: myRequests.filter(r => r.status === 'cancelled').length },
   ]
@@ -217,6 +217,9 @@ export default function AdvisingSessions() {
     }
 
     markRequestViewed(selectedReq.id)
+    const isRescheduled = selectedReq.preferredDate !== schedDate || selectedReq.preferredTime !== schedTime
+    const newStatus = isRescheduled ? 'rescheduled_pending_student' : 'scheduled'
+
     const apt = store.addAppointment({
       requestId: selectedReq.id,
       studentId: selectedReq.studentId,
@@ -225,13 +228,19 @@ export default function AdvisingSessions() {
       scheduledTime: schedTime,
       location: finalLocation,
       status: 'scheduled',
+      studentConfirmed: !isRescheduled,
+      studentDeclined: false,
     })
-    store.updateRequestStatus(selectedReq.id, 'scheduled')
+    store.updateRequestStatus(selectedReq.id, newStatus)
     store.addNotification({
       userId: selectedReq.studentId,
       type: 'info',
-      title: t('ยืนยันนัดหมายเวลาเข้าพบอาจารย์แล้ว', 'Appointment Confirmed'),
-      message: `${t('อาจารย์ที่ปรึกษายืนยันการนัดหมายเข้าพบในวันที่', 'Your advising appointment has been confirmed for')} ${schedDate} ${schedTime} (${finalLocation})`,
+      title: isRescheduled
+        ? t('อาจารย์ที่ปรึกษาเสนอปรับเปลี่ยนเวลานัดหมายใหม่', 'Advisor Proposed Rescheduled Slot')
+        : t('ยืนยันนัดหมายเวลาเข้าพบอาจารย์แล้ว', 'Appointment Confirmed'),
+      message: isRescheduled
+        ? `${t('อาจารย์ที่ปรึกษาเสนอเวลานัดหมายใหม่ในวันที่', 'Your advisor proposed a new meeting time on')} ${schedDate} ${schedTime} (${finalLocation}) ${t('กรุณาเข้าไปตรวจสอบและกดยืนยันหรือปฏิเสธ', 'Please review and confirm or decline the proposed slot.')}`
+        : `${t('อาจารย์ที่ปรึกษายืนยันการนัดหมายเข้าพบในวันที่', 'Your advising appointment has been confirmed for')} ${schedDate} ${schedTime} (${finalLocation})`,
       relatedId: apt.id,
       isRead: false,
     })
@@ -409,7 +418,7 @@ export default function AdvisingSessions() {
                     </Button>
                   )}
 
-                  {r.status === 'scheduled' && (
+                  {(r.status === 'scheduled' || r.status === 'rescheduled_pending_student') && (
                     <>
                       <Button
                         size="sm"

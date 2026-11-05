@@ -1599,12 +1599,18 @@ app.patch('/api/appointments/:id/status', async (c) => {
   const id = c.req.param('id')
   const body = await c.req.json()
   const allowedStatuses = ['scheduled', 'completed', 'cancelled']
-  if (!allowedStatuses.includes(body.status)) {
+  if (body.status && !allowedStatuses.includes(body.status)) {
     return c.json({ error: 'Invalid appointment status.' }, 400)
   }
 
+  const updates: Record<string, any> = {}
+  if (body.status !== undefined) updates.status = body.status
+  if (body.studentConfirmed !== undefined) updates.studentConfirmed = Boolean(body.studentConfirmed)
+  if (body.studentDeclined !== undefined) updates.studentDeclined = Boolean(body.studentDeclined)
+  if (body.studentDeclineReason !== undefined) updates.studentDeclineReason = body.studentDeclineReason
+
   await database.update(schema.appointments)
-    .set({ status: body.status })
+    .set(updates)
     .where(eq(schema.appointments.id, id))
   return c.json({ success: true })
 })

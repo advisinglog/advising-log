@@ -6,7 +6,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useStore } from '@/data/store'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useAuth } from '@/contexts/AuthContext'
-import { PageHeader, Card, StatusBadge, EmptyState, GoogleCalendarButton, DocumentViewerModal, type DocumentViewerTarget } from '@/components/ui'
+import { PageHeader, Card, StatusBadge, EmptyState, GoogleCalendarButton, Button, DocumentViewerModal, type DocumentViewerTarget } from '@/components/ui'
 import { ArrowLeft, Calendar, Paperclip, FileText, CheckCircle, Eye, XCircle } from 'lucide-react'
 import { useState } from 'react'
 
@@ -17,6 +17,8 @@ export default function AdvisingDetail() {
   const navigate = useNavigate()
   const { currentUser } = useAuth()
   const [previewDoc, setPreviewDoc] = useState<DocumentViewerTarget | null>(null)
+  const [showDeclineModal, setShowDeclineModal] = useState(false)
+  const [declineReason, setDeclineReason] = useState('')
 
   const request = store.requests.find(r => r.id === id)
   if (!request) return <EmptyState title={t('ไม่พบข้อมูลคำร้อง', 'Request not found')} description={t('ไม่พบข้อมูลคำร้องขอรับคำปรึกษาที่ต้องการ', 'The requested advising record could not be located.')} />
@@ -164,9 +166,16 @@ export default function AdvisingDetail() {
         {appointment && (
           <Card>
             <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-sky-600 dark:text-sky-400" /> {t('การนัดหมาย', 'Appointment')}
-              </h3>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-sky-600 dark:text-sky-400" /> {t('การนัดหมาย', 'Appointment')}
+                </h3>
+                {appointment.studentConfirmed === false && !appointment.studentDeclined && (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-amber-100 dark:bg-amber-950/80 border border-amber-300 dark:border-amber-700 rounded-full text-[10px] font-bold text-amber-800 dark:text-amber-300 animate-pulse">
+                    ⚠️ {t('อาจารย์เสนอเวลาใหม่ (รอยืนยัน)', 'New Time Proposed (Pending Your Confirmation)')}
+                  </span>
+                )}
+              </div>
             </div>
 
             <div className="p-4 bg-sky-50/80 dark:bg-sky-950/40 border border-sky-100 dark:border-sky-800 rounded-xl mb-4">
@@ -187,18 +196,44 @@ export default function AdvisingDetail() {
             </div>
 
             <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5">
-              <GoogleCalendarButton
-                event={{
-                  title: `Advising Meeting: ${currentUser?.name || 'Student'} & ${advisor?.name || 'Advisor'}`,
-                  description: `Advising Topic: ${catLabel}\nLocation: ${appointment.location}\nDetails: ${request.details}`,
-                  location: appointment.location,
-                  date: appointment.scheduledDate,
-                  time: appointment.scheduledTime,
-                  attendeeEmails: [currentUser?.email || '', advisor?.email || ''],
-                }}
-                size="sm"
-                variant="secondary"
-              />
+              {appointment.studentConfirmed === false && !appointment.studentDeclined ? (
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant="primary"
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-xs"
+                    onClick={() => store.confirmAppointment(appointment.id)}
+                  >
+                    <CheckCircle className="h-3.5 w-3.5 mr-1" />
+                    {t('ยอมรับเวลานี้', 'Accept Proposed Slot')}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    className="border-rose-300 text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                    onClick={() => {
+                      setShowDeclineModal(true)
+                      setDeclineReason('')
+                    }}
+                  >
+                    <XCircle className="h-3.5 w-3.5 mr-1" />
+                    {t('ไม่สะดวก / ยกเลิก', 'Decline / Cancel')}
+                  </Button>
+                </div>
+              ) : (
+                <GoogleCalendarButton
+                  event={{
+                    title: `Advising Meeting: ${currentUser?.name || 'Student'} & ${advisor?.name || 'Advisor'}`,
+                    description: `Advising Topic: ${catLabel}\nLocation: ${appointment.location}\nDetails: ${request.details}`,
+                    location: appointment.location,
+                    date: appointment.scheduledDate,
+                    time: appointment.scheduledTime,
+                    attendeeEmails: [currentUser?.email || '', advisor?.email || ''],
+                  }}
+                  size="sm"
+                  variant="secondary"
+                />
+              )}
             </div>
           </Card>
         )}
@@ -287,6 +322,61 @@ export default function AdvisingDetail() {
           </Card>
         )}
       </div>
+
+      {/* Decline Proposed Slot Modal */}
+      {showDeclineModal && appointment && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-[fadeIn_0.15s_ease-out]">
+          <div className="w-full max-w-md bg-white dark:bg-[#0e1424] border border-slate-200/90 dark:border-slate-800 rounded-2xl p-5 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                {t('ระบุเหตุผลที่ไม่สะดวกเข้าพบ', 'Decline Proposed Slot')}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowDeclineModal(false)}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm font-bold p-1 cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+            <p className="text-xs text-slate-600 dark:text-slate-400">
+              {t('หากท่านไม่สะดวกในวันเวลาดังกล่าว ระบบจะยกเลิกเวลานี้และแจ้งอาจารย์ที่ปรึกษา เพื่อให้ท่านสามารถยื่นขอนัดหมายในวันเวลาใหม่ได้', 'If you decline this proposed slot, the appointment will be cancelled and your advisor notified so that a new suitable time can be arranged.')}
+            </p>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                {t('เหตุผลเพิ่มเติม (ถ้ามี)', 'Reason / Note (Optional)')}
+              </label>
+              <textarea
+                value={declineReason}
+                onChange={e => setDeclineReason(e.target.value)}
+                placeholder={t('เช่น ติดเรียนวิชา..., ติดสอบ..., ขอเปลี่ยนเป็นช่วงเวลา...', 'e.g. Class conflict, exam schedule, prefer another slot...')}
+                rows={3}
+                className="w-full px-3 py-2 text-xs border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 resize-none"
+              />
+            </div>
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => setShowDeclineModal(false)}
+              >
+                {t('ปิด', 'Cancel')}
+              </Button>
+              <Button
+                size="sm"
+                variant="primary"
+                className="bg-rose-600 hover:bg-rose-700 text-white font-bold"
+                onClick={() => {
+                  store.declineAppointment(appointment.id, declineReason)
+                  setShowDeclineModal(false)
+                }}
+              >
+                {t('ยืนยันไม่สะดวกและยกเลิก', 'Confirm Decline')}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Document Viewer Modal */}
       <DocumentViewerModal

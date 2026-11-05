@@ -31,6 +31,7 @@ export type RequestStatus =
   | 'requested'
   | 'pending'
   | 'scheduled'
+  | 'rescheduled_pending_student'
   | 'completed'
   | 'cancelled'
   | 'closed'
