@@ -86,6 +86,25 @@ export default function RequestAdvising() {
   const [advisorSearch, setAdvisorSearch] = useState('')
   const advisorDropdownRef = useRef<HTMLDivElement>(null)
 
+  const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false)
+  const categoryDropdownRef = useRef<HTMLDivElement>(null)
+
+  const [isSubCategoryDropdownOpen, setIsSubCategoryDropdownOpen] = useState(false)
+  const subCategoryDropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(e.target as Node)) {
+        setIsCategoryDropdownOpen(false)
+      }
+      if (subCategoryDropdownRef.current && !subCategoryDropdownRef.current.contains(e.target as Node)) {
+        setIsSubCategoryDropdownOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
   useEffect(() => {
     if (!isAdvisorDropdownOpen) return
     const handleClickOutside = (e: MouseEvent) => {
@@ -776,11 +795,89 @@ export default function RequestAdvising() {
               </select>
             </div>
 
-            {/* Advising Topic Dropdown */}
+            {/* Advising Topic Dropdown (Custom Web Styled) */}
             <Card className="space-y-4">
               <label htmlFor="category-select" className="block text-sm sm:text-base font-bold text-slate-800 dark:text-slate-200">
                 {t('เลือกหัวข้อการขอคำปรึกษา', 'Choose an advising topic')} <span className="text-red-500 font-bold ml-0.5">*</span>
               </label>
+
+              {/* Custom Web-Styled Category Dropdown */}
+              <div ref={categoryDropdownRef} className="relative">
+                <button
+                  type="button"
+                  id="category-dropdown-btn" aria-label={t("เลือกหัวข้อการขอคำปรึกษา", "Choose an advising topic")}
+                  onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
+                  className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl border text-left transition-all cursor-pointer shadow-xs ${
+                    isCategoryDropdownOpen
+                      ? 'border-sky-500 ring-2 ring-sky-500/20 bg-sky-50/40 dark:bg-sky-950/30'
+                      : category
+                        ? 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-sky-400 dark:hover:border-sky-500'
+                        : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700'
+                  }`}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={`h-9 w-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${
+                      category
+                        ? 'bg-sky-500 text-white shadow-xs'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500'
+                    }`}>
+                      {category ? getCategoryIcon(category, true) : <Tag className="h-4 w-4" />}
+                    </div>
+                    <div className="min-w-0">
+                      <p className={`text-xs sm:text-sm font-semibold truncate ${category ? 'text-slate-900 dark:text-slate-100' : 'text-slate-400 dark:text-slate-500'}`}>
+                        {`${t('หมวดหมู่:', 'Category:')} ${category ? getCategoryLabel(category) : t('-- กรุณาเลือกหมวดหมู่เรื่องที่ต้องการปรึกษา --', '-- Select Advising Category --')}`}
+                      </p>
+                      {category && (
+                        <p className="text-[11px] text-slate-400 dark:text-slate-500 truncate">
+                          {t('หมวดหมู่ที่เลือกสำหรับการนัดหมาย', 'Selected advising consultation category')}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <ChevronDown className={`h-4.5 w-4.5 text-slate-400 transition-transform flex-shrink-0 ${isCategoryDropdownOpen ? 'rotate-180 text-sky-600 dark:text-sky-400' : ''}`} />
+                </button>
+
+                {/* Floating Menu */}
+                {isCategoryDropdownOpen && (
+                  <div className="absolute left-0 right-0 top-full mt-1.5 bg-white dark:bg-[#0e1424] border border-slate-200/90 dark:border-slate-800 rounded-2xl shadow-xl z-50 p-1.5 max-h-72 overflow-y-auto space-y-1 animate-[fadeIn_0.12s_ease-out]">
+                    {store.categoryConfigs.filter(c => c.isActive !== false).map(c => {
+                      const isSelected = category === c.value
+                      const catLabel = getCategoryLabel(c.value)
+                      return (
+                        <button
+                          key={c.value}
+                          type="button"
+                          onClick={() => {
+                            setCategory(c.value as AdvisingCategory)
+                            setSubCategory('')
+                            setOtherSubCategory('')
+                            setIsCategoryDropdownOpen(false)
+                          }}
+                          className={`w-full flex items-center justify-between p-2.5 rounded-xl text-left text-xs sm:text-sm transition-all cursor-pointer ${
+                            isSelected
+                              ? 'bg-sky-50/90 dark:bg-sky-950/60 text-sky-950 dark:text-sky-100 border border-sky-200 dark:border-sky-800 font-bold'
+                              : 'hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className={`h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                              isSelected
+                                ? 'bg-sky-500 text-white'
+                                : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                            }`}>
+                              {getCategoryIcon(c.value, isSelected)}
+                            </div>
+                            <span className="truncate">{catLabel}</span>
+                          </div>
+                          {isSelected && <Check className="h-4 w-4 text-sky-600 dark:text-sky-400 flex-shrink-0 ml-2" />}
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Native select for accessibility & automation tests */}
               <select
                 id="category-select"
                 aria-label={t('หมวดหมู่คำปรึกษา / เลือกหัวข้อที่ต้องการปรึกษา', 'Advising Category / Choose Advising Topic')}
@@ -790,23 +887,105 @@ export default function RequestAdvising() {
                   setSubCategory('')
                   setOtherSubCategory('')
                 }}
-                className="w-full min-h-[42px] px-3.5 py-2 border border-slate-200/90 dark:border-slate-800 rounded-xl text-xs sm:text-sm font-medium bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-colors shadow-2xs"
+                className="sr-only"
+                tabIndex={-1}
               >
                 <option value="">{t('-- กรุณาเลือกหมวดหมู่ --', '--Select a category--')}</option>
-                {store.categoryConfigs.filter(c => c.isActive !== false).map(c => {
-                  const catLabel = getCategoryLabel(c.value)
-                  return (
-                    <option key={c.value} value={c.value}>{catLabel}</option>
-                  )
-                })}
+                {store.categoryConfigs.filter(c => c.isActive !== false).map(c => (
+                  <option key={c.value} value={c.value}>{getCategoryLabel(c.value)}</option>
+                ))}
               </select>
 
-              {/* Sub-category for regular categories */}
+              {/* Sub-category for regular categories (Custom Web Styled) */}
               {category && category !== 'withdrawal_leave' && subCategories.length > 0 && (
-                <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
-                  <label htmlFor="subcategory-select" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2">
+                  <label htmlFor="subcategory-select" className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
                     {t('หัวข้อย่อยเฉพาะด้าน', 'Specific Sub-topic')} <span className="text-slate-400 font-normal">({t('ไม่บังคับ', 'Optional')})</span>
                   </label>
+
+                  <div ref={subCategoryDropdownRef} className="relative">
+                    <button
+                      type="button"
+                      id="subcategory-dropdown-btn"
+                      onClick={() => setIsSubCategoryDropdownOpen(!isSubCategoryDropdownOpen)}
+                      className={`w-full flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-xl border text-left transition-all cursor-pointer shadow-2xs ${
+                        isSubCategoryDropdownOpen
+                          ? 'border-sky-500 ring-2 ring-sky-500/20 bg-sky-50/40 dark:bg-sky-950/30'
+                          : subCategory
+                            ? 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-sky-400'
+                            : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700'
+                      }`}
+                    >
+                      <span className={`text-xs sm:text-sm truncate ${subCategory ? 'font-semibold text-slate-900 dark:text-slate-100' : 'text-slate-400 dark:text-slate-500'}`}>
+                        {subCategory
+                          ? subCategory === OTHER_SUBCATEGORY
+                            ? t('อื่น ๆ (ระบุเอง)', 'Other (Specify)')
+                            : getSubCategoryLabel(subCategory)
+                          : t('ทั่วไป / ไม่ระบุ', 'General / None')}
+                      </span>
+                      <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform flex-shrink-0 ${isSubCategoryDropdownOpen ? 'rotate-180 text-sky-600 dark:text-sky-400' : ''}`} />
+                    </button>
+
+                    {isSubCategoryDropdownOpen && (
+                      <div className="absolute left-0 right-0 top-full mt-1.5 bg-white dark:bg-[#0e1424] border border-slate-200/90 dark:border-slate-800 rounded-xl shadow-xl z-50 p-1 max-h-56 overflow-y-auto space-y-0.5 animate-[fadeIn_0.12s_ease-out]">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSubCategory('')
+                            setOtherSubCategory('')
+                            setIsSubCategoryDropdownOpen(false)
+                          }}
+                          className={`w-full flex items-center justify-between p-2 rounded-lg text-left text-xs transition-all cursor-pointer ${
+                            !subCategory
+                              ? 'bg-sky-50 dark:bg-sky-950/60 text-sky-800 dark:text-sky-200 font-bold'
+                              : 'hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200'
+                          }`}
+                        >
+                          <span>{t('ทั่วไป / ไม่ระบุ', 'General / None')}</span>
+                          {!subCategory && <Check className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400" />}
+                        </button>
+                        {subCategories.map(sc => {
+                          const isSelected = subCategory === sc
+                          return (
+                            <button
+                              key={sc}
+                              type="button"
+                              onClick={() => {
+                                setSubCategory(sc)
+                                setOtherSubCategory('')
+                                setIsSubCategoryDropdownOpen(false)
+                              }}
+                              className={`w-full flex items-center justify-between p-2 rounded-lg text-left text-xs transition-all cursor-pointer ${
+                                isSelected
+                                  ? 'bg-sky-50 dark:bg-sky-950/60 text-sky-800 dark:text-sky-200 font-bold'
+                                  : 'hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200'
+                              }`}
+                            >
+                              <span className="truncate">{getSubCategoryLabel(sc)}</span>
+                              {isSelected && <Check className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400" />}
+                            </button>
+                          )
+                        })}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSubCategory(OTHER_SUBCATEGORY)
+                            setIsSubCategoryDropdownOpen(false)
+                          }}
+                          className={`w-full flex items-center justify-between p-2 rounded-lg text-left text-xs transition-all cursor-pointer border-t border-slate-100 dark:border-slate-800/80 mt-1 ${
+                            subCategory === OTHER_SUBCATEGORY
+                              ? 'bg-sky-50 dark:bg-sky-950/60 text-sky-800 dark:text-sky-200 font-bold'
+                              : 'hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200'
+                          }`}
+                        >
+                          <span>{t('อื่น ๆ (ระบุเอง)', 'Other (Specify)')}</span>
+                          {subCategory === OTHER_SUBCATEGORY && <Check className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400" />}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Native select for accessibility */}
                   <select
                     id="subcategory-select"
                     aria-label={t('หัวข้อย่อยเฉพาะด้าน', 'Specific Sub-topic')}
@@ -815,7 +994,8 @@ export default function RequestAdvising() {
                       setSubCategory(e.target.value)
                       if (e.target.value !== OTHER_SUBCATEGORY) setOtherSubCategory('')
                     }}
-                    className="w-full min-h-[42px] px-3.5 py-2 border border-slate-200/90 dark:border-slate-800 rounded-xl text-xs sm:text-sm font-medium bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-colors shadow-2xs"
+                    className="sr-only"
+                    tabIndex={-1}
                   >
                     <option value="">{t('ทั่วไป / ไม่ระบุ', 'General / None')}</option>
                     {subCategories.map(sc => (
@@ -823,14 +1003,17 @@ export default function RequestAdvising() {
                     ))}
                     <option value={OTHER_SUBCATEGORY}>{t('อื่น ๆ', 'Other')}</option>
                   </select>
+
                   {subCategory === OTHER_SUBCATEGORY && (
-                    <input
-                      type="text"
-                      value={otherSubCategory}
-                      onChange={e => setOtherSubCategory(e.target.value)}
-                      placeholder={t('เขียนหัวข้อที่ต้องการปรึกษา', 'Describe the specific topic you want to discuss')}
-                      className="w-full mt-2 min-h-[42px] px-3.5 py-2 border border-slate-200/90 dark:border-slate-800 rounded-xl text-xs sm:text-sm bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-colors shadow-2xs"
-                    />
+                    <div className="pt-1.5 animate-[fadeIn_0.15s_ease-out]">
+                      <input
+                        type="text"
+                        value={otherSubCategory}
+                        onChange={e => setOtherSubCategory(e.target.value)}
+                        placeholder={t('เขียนหัวข้อที่ต้องการปรึกษา...', 'Describe the specific topic you want to discuss...')}
+                        className="w-full min-h-[42px] px-3.5 py-2 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-colors shadow-2xs"
+                      />
+                    </div>
                   )}
                 </div>
               )}

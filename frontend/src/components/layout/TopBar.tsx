@@ -231,23 +231,22 @@ export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
         {/* Notification bell */}
         <div className="relative">
           <button
+            type="button"
             onClick={() => {
               setShowNotifs(!showNotifs)
               setShowProfileMenu(false)
             }}
-            className={`relative p-2.5 rounded-xl border transition-all duration-200 cursor-pointer flex items-center justify-center ${
+            className={`relative h-10 w-10 rounded-xl transition-all duration-150 cursor-pointer flex items-center justify-center ${
               showNotifs
-                ? 'bg-sky-50 dark:bg-sky-950/60 border-sky-400 dark:border-sky-600 text-sky-600 dark:text-sky-400 ring-2 ring-sky-500/30 shadow-sm'
-                : unreadCount > 0
-                  ? 'bg-amber-50 dark:bg-amber-950/60 border-amber-400 dark:border-amber-600 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/60 shadow-sm ring-2 ring-amber-400/40'
-                  : 'bg-white dark:bg-slate-800/90 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 hover:border-slate-400 dark:hover:border-slate-600 shadow-xs'
+                ? 'bg-sky-50 dark:bg-sky-950/70 text-sky-600 dark:text-sky-400 ring-2 ring-sky-500/25'
+                : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800/70'
             }`}
             title={unreadCount > 0 ? t(`การแจ้งเตือน (${unreadCount} รายการใหม่)`, `Notifications (${unreadCount} unread)`) : t('การแจ้งเตือน', 'Notifications')}
             aria-label="Notifications"
           >
-            <Bell className={`h-5 w-5 transition-transform duration-200 ${unreadCount > 0 ? 'text-amber-600 dark:text-amber-400 animate-[bounce_2s_infinite]' : 'hover:scale-110'}`} />
+            <Bell className="h-5 w-5" />
             {unreadCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 bg-red-600 text-white text-[11px] font-black rounded-full min-w-[20px] h-5 px-1 flex items-center justify-center ring-2 ring-white dark:ring-slate-900 shadow-sm animate-pulse">
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center ring-2 ring-white dark:ring-slate-900 shadow-xs select-none">
                 {unreadCount > 9 ? '9+' : unreadCount}
               </span>
             )}
