@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useStore } from '@/data/store'
 import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { PageHeader, DataTable, StatusBadge, Button, Modal, DocumentViewerModal, type DocumentViewerTarget } from '@/components/ui'
+import { PageHeader, DataTable, StatusBadge, Button, Modal, DocumentViewerModal, type DocumentViewerTarget, RequiredMark } from '@/components/ui'
 import type { ExitCase } from '@/types'
 import { Eye, MessageSquareHeart, FileText, FileUp } from 'lucide-react'
 
@@ -234,7 +234,7 @@ export default function ExitCases() {
       <Modal isOpen={showAssessment} onClose={() => { setShowAssessment(false); setSelectedCase(null) }} title={t('บันทึกผลการประเมินคำร้องโดยอาจารย์ที่ปรึกษา', 'Advisor Exit Assessment')} size="md">
         <div className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">{t('ความเห็นและบันทึกการสัมภาษณ์นักศึกษา', 'Advisor Evaluation & Notes')} *</label>
+            <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">{t('ความเห็นและบันทึกการสัมภาษณ์นักศึกษา', 'Advisor Evaluation & Notes')} <RequiredMark /></label>
             <textarea
               value={assessment}
               onChange={e => setAssessment(e.target.value)}
@@ -264,7 +264,7 @@ export default function ExitCases() {
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">{t('ข้อเสนอแนะต่อประธานหลักสูตร / ประกันคุณภาพ', 'Recommendation to QA & Chair')} *</label>
+            <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">{t('ข้อเสนอแนะต่อประธานหลักสูตร / ประกันคุณภาพ', 'Recommendation to QA & Chair')} <RequiredMark /></label>
             <textarea
               value={recommendation}
               onChange={e => setRecommendation(e.target.value)}

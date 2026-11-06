@@ -20,7 +20,7 @@ import {
   UserX,
   Activity,
 } from 'lucide-react'
-import { PageHeader, Button, UserAvatar, Modal } from '@/components/ui'
+import { PageHeader, Button, UserAvatar, Modal, RequiredMark } from '@/components/ui'
 import { useStore } from '@/data/store'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/contexts/ToastContext'
@@ -890,7 +890,7 @@ export default function AiGovernance() {
 
           <div>
             <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-              {t('กุญแจ Gemini API Key', 'Gemini API Key')} <span className="text-red-500 font-bold ml-0.5">*</span>
+              {t('กุญแจ Gemini API Key', 'Gemini API Key')} <RequiredMark />
             </label>
             <div className="relative">
               <input

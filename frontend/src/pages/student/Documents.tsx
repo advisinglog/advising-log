@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useStore } from '@/data/store'
 import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { PageHeader, DataTable, StatusBadge, Button, Modal, ConfirmDialog, DocumentViewerModal, type DocumentViewerTarget } from '@/components/ui'
+import { PageHeader, DataTable, StatusBadge, Button, Modal, ConfirmDialog, DocumentViewerModal, type DocumentViewerTarget, RequiredMark } from '@/components/ui'
 import type { StudentDocument } from '@/types'
 import { FileText, Upload, AlertCircle, FileUp, X, ShieldCheck, Trash2, PenTool, Fingerprint, Eye, Download, Loader2, ChevronDown, Check } from 'lucide-react'
 import { uploadFileToCloudinary, getCloudinaryViewUrl, getCloudinaryDownloadUrl, getUploadErrorMessage } from '@/services/cloudinaryService'
@@ -445,7 +445,7 @@ export default function Documents() {
           {/* 1. Document Type Dropdown */}
           <div className="space-y-1.5">
             <label htmlFor="doctype-select" className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-              {t('ประเภทเอกสาร / แบบฟอร์ม', 'Document Type')} <span className="text-red-500 font-bold ml-0.5">*</span>
+              {t('ประเภทเอกสาร / แบบฟอร์ม', 'Document Type')} <RequiredMark />
             </label>
 
             {/* Custom Document Type Dropdown Trigger */}
@@ -584,7 +584,7 @@ export default function Documents() {
           {/* 3. Uploading Document */}
           <div className="space-y-1.5">
             <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-              {t('ไฟล์เอกสารที่ต้องการอัปโหลด', 'Upload Document File')} <span className="text-red-500 font-bold ml-0.5">*</span>
+              {t('ไฟล์เอกสารที่ต้องการอัปโหลด', 'Upload Document File')} <RequiredMark />
             </label>
 
             {/* Hidden native input */}

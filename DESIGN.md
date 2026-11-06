@@ -401,6 +401,7 @@ Light / Dark mode is managed by `ThemeContext` and Tailwind `dark:` classes.
 | `LoadingSpinner` | Centered loading indicator |
 | `ToastContainer` | Top-right notification toasts |
 | `ThemeToggle` | Dark / Light mode switch button |
+| `RequiredMark` | Red `*` after a required field's label — always use this, never a plain `*` |
 | `FontSizeControl` | User text size picker (100–130%, saved per device); `variant="inline"` for menus |
 | `DocumentViewerModal` | In-app preview for Cloudinary documents and images |
 

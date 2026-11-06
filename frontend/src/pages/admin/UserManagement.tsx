@@ -6,7 +6,7 @@ import { useStore } from '@/data/store'
 import { useAuth } from '@/contexts/AuthContext'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useToast } from '@/contexts/ToastContext'
-import { PageHeader, DataTable, StatusBadge, Button, SearchInput, Modal } from '@/components/ui'
+import { PageHeader, DataTable, StatusBadge, Button, SearchInput, Modal, RequiredMark } from '@/components/ui'
 import type { User, UserRole } from '@/types'
 import { ChevronDown, Bot, ExternalLink, UserPlus, ShieldCheck, User as UserIcon, Users, Info, Trash2, AlertTriangle, ShieldAlert, Upload } from 'lucide-react'
 import { getLocalDateString } from '@/utils/dateUtils'
@@ -572,7 +572,7 @@ export default function UserManagement() {
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
-                  {t('อีเมล (Google Email) *', 'Email Address *')}
+                  {t('อีเมล (Google Email)', 'Email Address')} <RequiredMark />
                 </label>
                 <input
                   type="email"
@@ -588,7 +588,7 @@ export default function UserManagement() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
-                      {t('บทบาทในระบบ *', 'System Role *')}
+                      {t('บทบาทในระบบ', 'System Role')} <RequiredMark />
                     </label>
                     <select
                       value={newRole}
@@ -681,7 +681,7 @@ export default function UserManagement() {
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-200">
-                    {t('วางรายชื่ออีเมล (เพียงแค่วางอีเมล 1 บรรทัดต่อ 1 คน หรือรูปแบบ CSV) *', 'Paste Emails (1 email per line or CSV) *')}
+                    {t('วางรายชื่ออีเมล (เพียงแค่วางอีเมล 1 บรรทัดต่อ 1 คน หรือรูปแบบ CSV)', 'Paste Emails (1 email per line or CSV)')} <RequiredMark />
                   </label>
                   <div className="flex items-center gap-2">
                     <input

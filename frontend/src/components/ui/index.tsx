@@ -269,6 +269,15 @@ export function StatusBadge({ status, className }: { status: BadgeStatus; classN
 
 // --- Page Header ---
 
+/** Red asterisk marking a required form field. Sized relative to its label so it stays visible. */
+export function RequiredMark() {
+  return (
+    <span aria-hidden="true" className="ml-0.5 align-baseline text-[1.15em] leading-none font-bold text-red-600 dark:text-red-400">
+      *
+    </span>
+  )
+}
+
 export function PageHeader({ title, description, actions }: { title: string; description?: string; actions?: ReactNode }) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4 sm:mb-6 pb-3 sm:pb-4 border-b border-slate-200/60 dark:border-slate-800/80">

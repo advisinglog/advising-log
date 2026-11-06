@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useStore } from '@/data/store'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useToast } from '@/contexts/ToastContext'
-import { PageHeader, DataTable, StatusBadge, Button, SearchInput, Modal } from '@/components/ui'
+import { PageHeader, DataTable, StatusBadge, Button, SearchInput, Modal, RequiredMark } from '@/components/ui'
 import type { AdvisingCategoryConfig } from '@/types'
 import { Tag, Plus, Edit2, Trash2, X, CheckCircle2, Sparkles, BookOpen, Briefcase, HeartHandshake, Award, Globe, FlaskConical, LogOut, Settings2, ChevronDown, ChevronUp } from 'lucide-react'
 
@@ -421,7 +421,7 @@ export default function Categories() {
 
           <div>
             <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
-              {t('ชื่อหมวดหมู่การให้คำปรึกษา *', 'Category Name *')}
+              {t('ชื่อหมวดหมู่การให้คำปรึกษา', 'Category Name')} <RequiredMark />
             </label>
             <input
               type="text"

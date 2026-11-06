@@ -8,7 +8,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useStore } from '@/data/store'
 import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { PageHeader, Button, Card, Modal } from '@/components/ui'
+import { PageHeader, Button, Card, Modal, RequiredMark } from '@/components/ui'
 import { EXIT_REASON_CODES } from '@/types'
 import type { AdvisingCategory, ExitType, ExitReasonCode } from '@/types'
 import {
@@ -488,7 +488,7 @@ export default function RequestAdvising() {
                 <label className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                   <User className="h-4 w-4 text-sky-600 dark:text-sky-400" />
                   <span>{t('อาจารย์ที่ปรึกษาผู้รับคำร้อง', 'Faculty Advisor')}</span>
-                  <span className="text-red-500 font-bold ml-0.5">*</span>
+                  <RequiredMark />
                 </label>
                 {selectedAdvisorId && assignedAdvisor && selectedAdvisorId !== assignedAdvisor.id && (
                   <button
@@ -691,7 +691,7 @@ export default function RequestAdvising() {
             {/* Advising Topic Dropdown (Custom Web Styled) */}
             <Card className="space-y-4">
               <label htmlFor="category-select" className="block text-sm sm:text-base font-bold text-slate-800 dark:text-slate-200">
-                {t('เลือกหัวข้อการขอคำปรึกษา', 'Choose an advising topic')} <span className="text-red-500 font-bold ml-0.5">*</span>
+                {t('เลือกหัวข้อการขอคำปรึกษา', 'Choose an advising topic')} <RequiredMark />
               </label>
 
               {/* Custom Web-Styled Category Dropdown */}
@@ -916,7 +916,7 @@ export default function RequestAdvising() {
                 <div className="space-y-4 pt-3 border-t border-slate-100 dark:border-slate-800 bg-amber-50/30 dark:bg-amber-950/10 p-4 rounded-xl border border-amber-200/60 dark:border-amber-900/40">
                   <div>
                     <label className="block text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 mb-1.5">
-                      {t('ประเภทคำร้อง', 'Request Type')} <span className="text-red-500 font-bold ml-0.5">*</span>
+                      {t('ประเภทคำร้อง', 'Request Type')} <RequiredMark />
                     </label>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                       {[
@@ -941,7 +941,7 @@ export default function RequestAdvising() {
 
                   <div>
                     <label htmlFor="exit-reason-select" className="block text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 mb-1.5">
-                      {t('สาเหตุหลัก', 'Primary Reason')} <span className="text-red-500 font-bold ml-0.5">*</span>
+                      {t('สาเหตุหลัก', 'Primary Reason')} <RequiredMark />
                     </label>
                     <div className="relative">
                       <button
@@ -1042,7 +1042,7 @@ export default function RequestAdvising() {
                 <div className="flex items-center justify-between">
                   <div>
                     <label className="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-200">
-                      {t('วันและเวลาที่ประสงค์ขอเข้าพบ', 'Requested Date & Time')} <span className="text-red-500 font-bold ml-0.5">*</span>
+                      {t('วันและเวลาที่ประสงค์ขอเข้าพบ', 'Requested Date & Time')} <RequiredMark />
                     </label>
                   </div>
                   {advisor?.email && (
@@ -1060,7 +1060,7 @@ export default function RequestAdvising() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[0.6875rem] font-medium text-slate-500 dark:text-slate-400 mb-1">
-                      {t('วันที่ต้องการเข้าพบ', 'Meeting Date')} <span className="text-red-500 font-bold ml-0.5">*</span>
+                      {t('วันที่ต้องการเข้าพบ', 'Meeting Date')} <RequiredMark />
                     </label>
                     <input
                       type="date"
@@ -1072,7 +1072,7 @@ export default function RequestAdvising() {
                   </div>
                   <div>
                     <label className="block text-[0.6875rem] font-medium text-slate-500 dark:text-slate-400 mb-1">
-                      {t('เวลาที่ต้องการเข้าพบ', 'Meeting Time')} <span className="text-red-500 font-bold ml-0.5">*</span>
+                      {t('เวลาที่ต้องการเข้าพบ', 'Meeting Time')} <RequiredMark />
                     </label>
                     <input
                       type="time"
@@ -1116,7 +1116,7 @@ export default function RequestAdvising() {
               {/* Details */}
               <div>
                 <label className="block text-sm sm:text-base font-bold text-slate-800 dark:text-slate-200 mb-1.5">
-                  {t('รายละเอียดหรือประเด็นที่ต้องการปรึกษา', 'Consultation Details & Questions')} <span className="text-red-500 font-bold ml-0.5">*</span>
+                  {t('รายละเอียดหรือประเด็นที่ต้องการปรึกษา', 'Consultation Details & Questions')} <RequiredMark />
                 </label>
                 <textarea
                   value={details}
@@ -1237,7 +1237,7 @@ export default function RequestAdvising() {
                 />
                 <span className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                   <span className="font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-1">
-                    <ShieldCheck className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400 inline" /> {t('ความยินยอมข้อมูลส่วนบุคคล (PDPA Consent)', 'PDPA / Privacy & Advising Consent')} <span className="text-red-500 font-bold ml-0.5">*</span>
+                    <ShieldCheck className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400 inline" /> {t('ความยินยอมข้อมูลส่วนบุคคล (PDPA Consent)', 'PDPA / Privacy & Advising Consent')} <RequiredMark />
                   </span>
                   {t(
                     'ข้าพเจ้ายินยอมให้อาจารย์ที่ปรึกษาและมหาวิทยาลัยเก็บรวบรวมและใช้ข้อมูลทางการศึกษาเพื่อประโยชน์ในการให้คำปรึกษาทางวิชาการตามนโยบายคุ้มครองข้อมูลส่วนบุคคล',

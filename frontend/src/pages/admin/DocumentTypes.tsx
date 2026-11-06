@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useStore } from '@/data/store'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useToast } from '@/contexts/ToastContext'
-import { PageHeader, DataTable, StatusBadge, Button, SearchInput, Modal } from '@/components/ui'
+import { PageHeader, DataTable, StatusBadge, Button, SearchInput, Modal, RequiredMark } from '@/components/ui'
 import type { DocumentType } from '@/types'
 import { FileText, PenTool, Fingerprint, Plus, Edit2, Trash2, CheckCircle2, Sparkles, FileCheck, ArrowRightLeft, Clock, GraduationCap, AlertCircle, Upload, Loader2, X, FileDown } from 'lucide-react'
 import { uploadFileToCloudinary, getUploadErrorMessage } from '@/services/cloudinaryService'
@@ -445,7 +445,7 @@ export default function DocumentTypes() {
 
           <div>
             <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
-              {t('ชื่อแบบฟอร์ม / เอกสาร *', 'Document Name *')}
+              {t('ชื่อแบบฟอร์ม / เอกสาร', 'Document Name')} <RequiredMark />
             </label>
             <input
               type="text"

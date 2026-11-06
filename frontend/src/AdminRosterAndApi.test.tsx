@@ -382,7 +382,7 @@ describe('Admin API Control & Roster Management', () => {
     act(() => {
       fireEvent.change(emailInput, { target: { value: 'prasit.k@mfu.ac.th' } })
     })
-    expect(screen.getByText(/บทบาทในระบบ \*/i)).toBeInTheDocument()
+    expect(screen.getByText(/บทบาทในระบบ/i, { selector: 'label' })).toBeInTheDocument()
   })
 
   it('allows changing batch default role and overriding individual roles in bulk import preview', () => {

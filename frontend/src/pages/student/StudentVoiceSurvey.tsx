@@ -9,7 +9,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useStore } from '@/data/store'
 import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { PageHeader, Button, Card } from '@/components/ui'
+import { PageHeader, Button, Card, RequiredMark } from '@/components/ui'
 import type { ExitType } from '@/types'
 import {
   MessageSquareHeart,
@@ -345,7 +345,7 @@ export default function StudentVoiceSurvey() {
             {/* 1. Case Category Dropdown */}
             <div>
               <label htmlFor="exit-type-select" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                {t('กรณีที่เกิดขึ้น', 'Case Category')} <span className="text-red-500 font-bold ml-0.5">*</span>
+                {t('กรณีที่เกิดขึ้น', 'Case Category')} <RequiredMark />
               </label>
 
               <div className="relative">
@@ -424,7 +424,7 @@ export default function StudentVoiceSurvey() {
             {/* 2. Academic Year Dropdown */}
             <div>
               <label htmlFor="academic-year-select" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                {t('ชั้นปีการศึกษาปัจจุบัน', 'Academic Year')} <span className="text-red-500 font-bold ml-0.5">*</span>
+                {t('ชั้นปีการศึกษาปัจจุบัน', 'Academic Year')} <RequiredMark />
               </label>
 
               <div className="relative">
@@ -507,7 +507,7 @@ export default function StudentVoiceSurvey() {
             <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
               <span className="h-6 w-6 rounded-lg bg-sky-100 dark:bg-sky-900 text-sky-700 dark:text-sky-300 flex items-center justify-center text-xs font-black">2</span>
               {t('ปัจจัยสำคัญที่มีผลต่อการตัดสินใจ', 'Primary Factors Influencing Your Decision')}
-              <span className="text-red-500 font-bold ml-0.5">*</span>
+              <RequiredMark />
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               {t('เลือกได้มากกว่า 1 ข้อตามความเป็นจริง', 'Select all that apply to your actual circumstances')}

@@ -10,7 +10,7 @@ import { useStore } from '@/data/store'
 import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useTheme } from '@/contexts/ThemeContext'
-import { Card, Button, Modal, StatusBadge } from '@/components/ui'
+import { Card, Button, Modal, StatusBadge, RequiredMark } from '@/components/ui'
 import { EXIT_REASON_CODES } from '@/types'
 import type { ExitCase, ExitType } from '@/types'
 import {
@@ -2132,7 +2132,7 @@ export default function QualitativeExitAnalysis({ view = 'analysis' }: { view?: 
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1">
                       <span>{t('2. วางคีย์ API ของคุณ', '2. Paste your API key')}</span>
-                      <span className="text-red-500 font-bold ml-0.5">*</span>
+                      <RequiredMark />
                     </label>
                     <a
                       href={currentPreset.studioUrl}

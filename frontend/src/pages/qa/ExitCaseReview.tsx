@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useStore } from '@/data/store'
 import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { PageHeader, DataTable, StatusBadge, Button, Modal, SearchInput, DocumentViewerModal, type DocumentViewerTarget } from '@/components/ui'
+import { PageHeader, DataTable, StatusBadge, Button, Modal, SearchInput, DocumentViewerModal, type DocumentViewerTarget, RequiredMark } from '@/components/ui'
 import {
   Eye,
   CheckCircle2,
@@ -737,7 +737,7 @@ export default function ExitCaseReview() {
             {/* Decision Selection */}
             <div>
               <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1.5">
-                {t('มติผลการพิจารณาของคณะกรรมการ', 'Committee Official Decision')} *
+                {t('มติผลการพิจารณาของคณะกรรมการ', 'Committee Official Decision')} <RequiredMark />
               </label>
               <div className="space-y-2">
                 {[
@@ -825,9 +825,9 @@ export default function ExitCaseReview() {
             <div>
               <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">
                 {t(
-                  'บันทึกมติคณะกรรมการและข้อเสนอแนะเชิงกลยุทธ์ (CQI Notes) *',
-                  'Committee Resolution & CQI Action Notes *'
-                )}
+                  'บันทึกมติคณะกรรมการและข้อเสนอแนะเชิงกลยุทธ์ (CQI Notes)',
+                  'Committee Resolution & CQI Action Notes'
+                )} <RequiredMark />
               </label>
               <textarea
                 value={resolutionNotes}

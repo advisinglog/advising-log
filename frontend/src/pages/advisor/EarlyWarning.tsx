@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useStore } from '@/data/store'
 import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { PageHeader, DataTable, StatusBadge, Button, Modal, Card, CustomSelect } from '@/components/ui'
+import { PageHeader, DataTable, StatusBadge, Button, Modal, Card, CustomSelect, RequiredMark } from '@/components/ui'
 import { EARLY_WARNING_TYPES, REFERRAL_DESTINATIONS } from '@/types'
 import type { EarlyWarningCase, EarlyWarningType, EarlyWarningSeverity, EarlyWarningFollowUp, ReferralDestination } from '@/types'
 import { Plus, FileText, Clock, CheckCircle2 } from 'lucide-react'
@@ -264,7 +264,7 @@ export default function EarlyWarning() {
       <Modal isOpen={showCreate} onClose={() => setShowCreate(false)} title={t('สร้างเคสเตือนภัยวิชาการใหม่', 'Create Early Warning Case')} size="md">
         <div className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1.5">{t('เลือกนักศึกษาในความดูแล', 'Select Advisee Student')} *</label>
+            <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1.5">{t('เลือกนักศึกษาในความดูแล', 'Select Advisee Student')} <RequiredMark /></label>
             <CustomSelect
               value={studentId}
               onChange={setStudentId}
@@ -275,7 +275,7 @@ export default function EarlyWarning() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1.5">{t('ประเภทปัจจัยเสี่ยง', 'Warning Factor')} *</label>
+              <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1.5">{t('ประเภทปัจจัยเสี่ยง', 'Warning Factor')} <RequiredMark /></label>
               <CustomSelect
                 value={warningType}
                 onChange={val => setWarningType(val as EarlyWarningType)}
@@ -285,7 +285,7 @@ export default function EarlyWarning() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1.5">{t('ระดับความรุนแรง', 'Severity Level')} *</label>
+              <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1.5">{t('ระดับความรุนแรง', 'Severity Level')} <RequiredMark /></label>
               <CustomSelect
                 value={severity}
                 onChange={val => setSeverity(val as EarlyWarningSeverity)}
@@ -296,7 +296,7 @@ export default function EarlyWarning() {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">{t('ข้อสังเกตและคำอธิบายความเสี่ยง', 'Observations & Risk Description')} *</label>
+            <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">{t('ข้อสังเกตและคำอธิบายความเสี่ยง', 'Observations & Risk Description')} <RequiredMark /></label>
             <textarea
               value={description}
               onChange={e => setDescription(e.target.value)}
@@ -344,7 +344,7 @@ export default function EarlyWarning() {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">{t('รายละเอียดการติดตามผลและข้อสังเกต', 'Follow-up Notes')} *</label>
+            <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">{t('รายละเอียดการติดตามผลและข้อสังเกต', 'Follow-up Notes')} <RequiredMark /></label>
             <textarea
               value={followUpNotes}
               onChange={e => setFollowUpNotes(e.target.value)}

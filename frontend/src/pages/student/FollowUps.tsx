@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useStore } from '@/data/store'
 import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { PageHeader, StatusBadge, Button, GoogleCalendarButton, Modal, DocumentViewerModal, type DocumentViewerTarget } from '@/components/ui'
+import { PageHeader, StatusBadge, Button, GoogleCalendarButton, Modal, DocumentViewerModal, type DocumentViewerTarget, RequiredMark } from '@/components/ui'
 import type { FollowUp } from '@/types'
 import {
   CheckCircle2,
@@ -459,7 +459,7 @@ export default function FollowUps() {
             <div className="space-y-1.5">
               <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
                 {t('บันทึกสิ่งที่ได้ดำเนินการ / ผลการปฏิบัติ', 'Actions Taken & Summary of Results')}{' '}
-                <span className="text-red-500 font-bold ml-0.5">*</span>
+                <RequiredMark />
               </label>
               <textarea
                 value={submissionNotes}

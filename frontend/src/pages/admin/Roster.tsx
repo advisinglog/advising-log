@@ -9,7 +9,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useStore } from '@/data/store'
 import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { PageHeader, DataTable, Button, SearchInput, Modal } from '@/components/ui'
+import { PageHeader, DataTable, Button, SearchInput, Modal, RequiredMark } from '@/components/ui'
 import {
   Plus,
 } from 'lucide-react'
@@ -166,7 +166,7 @@ export default function Roster() {
         <div className="space-y-4">
           <div>
             <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">
-              {t('นักศึกษา', 'Student')} *
+              {t('นักศึกษา', 'Student')} <RequiredMark />
             </label>
             <select
               value={selectedStudent}
@@ -183,7 +183,7 @@ export default function Roster() {
           </div>
           <div>
             <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">
-              {t('อาจารย์ที่ปรึกษา', 'Assigned Faculty Advisor')} *
+              {t('อาจารย์ที่ปรึกษา', 'Assigned Faculty Advisor')} <RequiredMark />
             </label>
             <select
               value={selectedAdvisor}

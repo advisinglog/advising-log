@@ -8,7 +8,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useStore } from '@/data/store'
 import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { PageHeader, Tabs, DataTable, Button, Modal, DocumentViewerModal, SearchInput, type DocumentViewerTarget } from '@/components/ui'
+import { PageHeader, Tabs, DataTable, Button, Modal, DocumentViewerModal, SearchInput, type DocumentViewerTarget, RequiredMark } from '@/components/ui'
 import type { AdvisingRequest } from '@/types'
 import { Calendar, Eye, FileText, Sparkles, Building2, Video, CheckCircle2, MapPin, Link2, ClipboardList, AlertTriangle, XCircle, X, ExternalLink, ChevronDown } from 'lucide-react'
 import { isAdvisorMatch } from '@/utils/advisorUtils'
@@ -722,7 +722,7 @@ export default function AdvisingSessions() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">
-                  {t('วันที่นัดหมาย', 'Scheduled Date')} *
+                  {t('วันที่นัดหมาย', 'Scheduled Date')} <RequiredMark />
                 </label>
                 <input
                   type="date"
@@ -734,7 +734,7 @@ export default function AdvisingSessions() {
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">
-                  {t('เวลานัดหมาย', 'Scheduled Time')} *
+                  {t('เวลานัดหมาย', 'Scheduled Time')} <RequiredMark />
                 </label>
                 <input
                   type="time"
@@ -859,12 +859,12 @@ export default function AdvisingSessions() {
                 {meetingMode === 'in_person' ? (
                   <span className="flex items-center gap-1.5">
                     <MapPin className="h-3.5 w-3.5 text-sky-600" />
-                    {t('สถานที่ / ห้องเข้าพบ', 'Room / Location')} *
+                    {t('สถานที่ / ห้องเข้าพบ', 'Room / Location')} <RequiredMark />
                   </span>
                 ) : (
                   <span className="flex items-center gap-1.5">
                     <Link2 className="h-3.5 w-3.5 text-indigo-600" />
-                    {t('ลิงก์ห้องประชุม', 'Meeting Link')} *
+                    {t('ลิงก์ห้องประชุม', 'Meeting Link')} <RequiredMark />
                   </span>
                 )}
               </label>
@@ -963,7 +963,7 @@ export default function AdvisingSessions() {
               {/* Reason textarea with RED accent focus */}
               <div className="mb-5">
                 <label className="block text-xs font-bold text-rose-900 dark:text-rose-300 mb-1.5 flex items-center justify-between">
-                  <span>{t('เหตุผลการยกเลิก', 'Reason')} *</span>
+                  <span>{t('เหตุผลการยกเลิก', 'Reason')} <RequiredMark /></span>
                   <span className="text-[0.625rem] font-normal text-slate-400">{t('จำเป็นต้องระบุ', 'Required')}</span>
                 </label>
                 <textarea
