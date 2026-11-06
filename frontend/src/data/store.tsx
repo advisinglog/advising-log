@@ -500,23 +500,63 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     api.updateAppointmentStatus(id, status).catch(() => {})
   }, [])
 
+  const addNotification = useCallback((n: Omit<Notification, 'id' | 'createdAt'>) => {
+    const optimistic: Notification = { ...n, id: nextId('NOT'), createdAt: now() }
+    setNotifications(prev => [optimistic, ...prev])
+    const currentLang = (typeof localStorage !== 'undefined' && localStorage.getItem('advising_log_lang') === 'en') ? 'en' : 'th'
+    api.createNotification({ ...n, lang: currentLang, sendEmail: true }).then(result => {
+      if (result?.notification) {
+        setNotifications(prev => prev.map(item => item.id === optimistic.id ? result.notification : item))
+      }
+    }).catch(() => {
+      setNotifications(prev => prev.filter(item => item.id !== optimistic.id))
+    })
+  }, [])
+
   const confirmAppointment = useCallback((appointmentId: string) => {
     setAppointments(prev => prev.map(a => a.id === appointmentId ? { ...a, studentConfirmed: true, studentDeclined: false } : a))
     const apt = appointments.find(a => a.id === appointmentId)
     if (apt?.requestId) {
       updateRequestStatus(apt.requestId, 'scheduled')
     }
+    if (apt) {
+      const student = users.find(u => u.id === apt.studentId)
+      const studentLabel = student ? `${student.name} (${student.code})` : 'นักศึกษา'
+      addNotification({
+        userId: apt.advisorId,
+        type: 'info',
+        title: 'นักศึกษายืนยันเวลานัดหมายใหม่แล้ว',
+        message: `${studentLabel} ได้ยืนยันเข้าร่วมการนัดหมายตามวันและเวลาที่เลื่อนแล้ว (${apt.scheduledDate} ${apt.scheduledTime})`,
+        relatedId: apt.requestId || appointmentId,
+        isRead: false,
+      })
+    }
     api.updateAppointmentStatus(appointmentId, undefined, { studentConfirmed: true, studentDeclined: false }).catch(() => {})
-  }, [appointments, updateRequestStatus])
+  }, [appointments, updateRequestStatus, addNotification, users])
 
   const declineAppointment = useCallback((appointmentId: string, reason?: string) => {
     setAppointments(prev => prev.map(a => a.id === appointmentId ? { ...a, studentDeclined: true, studentConfirmed: false, studentDeclineReason: reason } : a))
     const apt = appointments.find(a => a.id === appointmentId)
     if (apt?.requestId) {
-      updateRequestStatus(apt.requestId, 'cancelled', { reason: reason || 'Student declined proposed rescheduled slot', cancelledBy: 'student' })
+      updateRequestStatus(apt.requestId, 'cancelled', {
+        reason: reason || 'นักศึกษาไม่สะดวกในวันเวลาที่เสนอและขอยกเลิกนัดหมาย',
+        cancelledBy: apt.studentId,
+      })
+    }
+    if (apt) {
+      const student = users.find(u => u.id === apt.studentId)
+      const studentLabel = student ? `${student.name} (${student.code})` : 'นักศึกษา'
+      addNotification({
+        userId: apt.advisorId,
+        type: 'warning',
+        title: 'นักศึกษายกเลิกนัดหมายเนื่องจากไม่สะดวกในเวลาใหม่',
+        message: `${studentLabel} ไม่สะดวกเข้าร่วมการนัดหมายในเวลาที่เสนอ (${apt.scheduledDate} ${apt.scheduledTime}) และได้ขอยกเลิกนัดหมาย${reason ? `: "${reason}"` : ''}`,
+        relatedId: apt.requestId || appointmentId,
+        isRead: false,
+      })
     }
     api.updateAppointmentStatus(appointmentId, 'cancelled', { studentDeclined: true, studentConfirmed: false, studentDeclineReason: reason }).catch(() => {})
-  }, [appointments, updateRequestStatus])
+  }, [appointments, updateRequestStatus, addNotification, users])
 
   const addSession = useCallback((ses: Omit<AdvisingSession, 'id' | 'createdAt'>): AdvisingSession => {
     const newSes: AdvisingSession = { ...ses, id: nextId('SES'), createdAt: now() }
@@ -568,19 +608,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const updateRequestProgress = useCallback((id: string, progress: number, notes: string) => {
     setRequestProgress(prev => prev.map(rp => rp.id === id ? { ...rp, progress, notes } : rp))
-  }, [])
-
-  const addNotification = useCallback((n: Omit<Notification, 'id' | 'createdAt'>) => {
-    const optimistic: Notification = { ...n, id: nextId('NOT'), createdAt: now() }
-    setNotifications(prev => [optimistic, ...prev])
-    const currentLang = (typeof localStorage !== 'undefined' && localStorage.getItem('advising_log_lang') === 'en') ? 'en' : 'th'
-    api.createNotification({ ...n, lang: currentLang, sendEmail: true }).then(result => {
-      if (result?.notification) {
-        setNotifications(prev => prev.map(item => item.id === optimistic.id ? result.notification : item))
-      }
-    }).catch(() => {
-      setNotifications(prev => prev.filter(item => item.id !== optimistic.id))
-    })
   }, [])
 
   const markNotificationRead = useCallback((id: string) => {

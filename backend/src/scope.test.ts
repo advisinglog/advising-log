@@ -39,8 +39,8 @@ describe('Record-level scoping', () => {
     expect(scopeResponse('/api/exit-cases', { exitCases }, student1).exitCases).toEqual([])
   })
 
-  it('students only see themselves and their own advisor in the user list', () => {
-    expect(ids(scopeResponse('/api/users', { users }, student1).users)).toEqual(['ADV1', 'STU1'])
+  it('students only see themselves and active faculty advisors in the user list', () => {
+    expect(ids(scopeResponse('/api/users', { users }, student1).users)).toEqual(['ADV1', 'ADV2', 'STU1'])
   })
 
   it('advisors only see their advisees (matched by id or code)', () => {

@@ -433,7 +433,9 @@ export default function StudentDashboard() {
 
                 <div className="space-y-3">
                   {cancelledRequests.slice(0, 5).map(req => {
-                    const adv = (req.cancelledBy ? store.users.find(u => u.id === req.cancelledBy) : null) || store.users.find(u => u.id === req.advisorId) || advisor
+                    const cancelledUser = req.cancelledBy ? store.users.find(u => u.id === req.cancelledBy) : null
+                    const isCancelledByStudent = cancelledUser ? cancelledUser.role === 'student' : req.cancelledBy === req.studentId
+                    const assignedAdvisor = store.users.find(u => u.id === req.advisorId) || advisor
                     const apt = store.appointments.find(a => a.requestId === req.id)
                     const dateFormatted = apt
                       ? `${apt.scheduledDate} ${apt.scheduledTime || ''}`
@@ -459,10 +461,14 @@ export default function StudentDashboard() {
 
                         {/* Details grid */}
                         <div className="space-y-1.5 text-[0.6875rem]">
-                          {/* Advisor Name */}
+                          {/* Cancelled By */}
                           <div className="flex items-start gap-1.5">
-                            <span className="text-slate-400 dark:text-slate-500 font-medium shrink-0">{t('อาจารย์ที่ปรึกษา:', 'Advisor:')}</span>
-                            <span className="text-slate-700 dark:text-slate-200 font-semibold">{adv?.name || t('ไม่ระบุ', 'N/A')}</span>
+                            <span className="text-slate-400 dark:text-slate-500 font-medium shrink-0">
+                              {isCancelledByStudent ? t('ผู้ยกเลิก (นักศึกษา):', 'Cancelled by (Student):') : t('ผู้ยกเลิก (อาจารย์):', 'Cancelled by (Advisor):')}
+                            </span>
+                            <span className="text-slate-700 dark:text-slate-200 font-semibold">
+                              {cancelledUser?.name || (isCancelledByStudent ? currentUser.name : assignedAdvisor?.name) || t('ไม่ระบุ', 'N/A')}
+                            </span>
                           </div>
 
                           {/* Date set for appointment */}

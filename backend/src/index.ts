@@ -533,7 +533,11 @@ async function sendWorkspaceEmail(
       grant_type: 'refresh_token',
     }),
   })
-  if (!tokenResponse.ok) return { sent: false, error: 'GOOGLE_TOKEN_REQUEST_FAILED' }
+  if (!tokenResponse.ok) {
+    const errorDetails = await tokenResponse.text()
+    console.error(`[Google OAuth Error] Token refresh failed (${tokenResponse.status}): ${errorDetails}`)
+    return { sent: false, error: `GOOGLE_TOKEN_REQUEST_FAILED: ${errorDetails}` }
+  }
   const tokenData = await tokenResponse.json() as { access_token?: string }
   if (!tokenData.access_token) return { sent: false, error: 'GOOGLE_ACCESS_TOKEN_MISSING' }
 
@@ -780,16 +784,17 @@ const notificationInput = z.object({
 
 /**
  * Who may notify (and email, from the official sender) whom:
- * students -> only their own advisor; advisors -> their advisees and staff;
- * QA -> staff; admins -> anyone.
+ * - Admins and QA can notify anyone
+ * - Advisors can notify any student (advisee, walk-in, meeting participant) or staff
+ * - Students can notify any active advisor or staff (not other students)
  */
 export async function canNotify(c: any, auth: AuthContext, recipient: { id: string; code: string | null; email: string; role: string }) {
+  if (!auth) return false
   if (auth.role === 'admin' || auth.role === 'super_admin') return true
-  if (auth.role === 'qa_chair') return recipient.role !== 'student'
-  const viewer = await viewerFor(c, auth, 'users')
-  const isLinked = [recipient.id, recipient.code, recipient.email].some(a => a && viewer.linkedAliases.has(norm(a)))
-  if (auth.role === 'advisor') return isLinked || recipient.role !== 'student'
-  return isLinked // student -> own advisor only
+  if (auth.role === 'qa_chair') return true
+  if (auth.role === 'advisor') return true
+  if (auth.role === 'student') return recipient.role !== 'student'
+  return false
 }
 
 app.get('/api/notifications', async (c) => {
@@ -826,6 +831,11 @@ app.post('/api/notifications', async (c) => {
     const result = await sendWorkspaceEmail(c.env, recipient.email, input.title, input.message, input.relatedId, recipient.role, recipient.name, emailLang)
     emailStatus = result.sent ? 'sent' : 'failed'
     emailError = result.error || null
+    if (result.sent) {
+      console.log(`[Notification Email] Successfully sent to ${recipient.email}`)
+    } else {
+      console.warn(`[Notification Email Warning] Failed to send email to ${recipient.email}: ${result.error}`)
+    }
   }
 
   const notification = {
@@ -842,7 +852,7 @@ app.post('/api/notifications', async (c) => {
     readAt: null,
   }
   await database.insert(schema.notifications).values(notification)
-  return c.json({ success: emailStatus !== 'failed', notification }, emailStatus === 'failed' ? 207 : 201)
+  return c.json({ success: true, emailSent: emailStatus === 'sent', notification }, 201)
 })
 
 app.patch('/api/notifications/:id/read', async (c) => {

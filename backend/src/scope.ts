@@ -104,7 +104,16 @@ function scopeList(kind: Kind, items: any[], v: Viewer): any[] {
   switch (kind) {
     case 'users':
       if (isAdmin) return items
-      if (v.role === 'student') return items.filter(u => isSelfOrIn(v.aliases, u) || isSelfOrIn(v.linkedAliases, u))
+      if (v.role === 'student') {
+        // Students see themselves, their linked advisors, and all active faculty advisors / staff (without phone numbers)
+        return items.filter(u => isSelfOrIn(v.aliases, u) || (u.role !== 'student' && u.isActive)).map(u => {
+          if (u.role !== 'student') {
+            const { phone: _phone, ...advisorProfile } = u
+            return advisorProfile
+          }
+          return u
+        })
+      }
       if (v.role === 'advisor') return items.filter(u => u.role !== 'student' || isSelfOrIn(v.linkedAliases, u))
       // QA: staff profiles; students only when they have an exit case (C8 case-level access)
       return items.map((u, i) => {

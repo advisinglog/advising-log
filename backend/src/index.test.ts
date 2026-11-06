@@ -385,21 +385,21 @@ describe('Notifications: who may notify whom', () => {
     expect(await canNotify(ctx, as('admin'), student)).toBe(true)
   })
 
-  it('QA may notify staff but not students', async () => {
+  it('QA and admins may notify anyone', async () => {
     const { canNotify } = await import('./index')
     expect(await canNotify(ctx, as('qa_chair'), advisor)).toBe(true)
-    expect(await canNotify(ctx, as('qa_chair'), student)).toBe(false)
+    expect(await canNotify(ctx, as('qa_chair'), student)).toBe(true)
   })
 
-  it('advisors may notify staff but not students outside their advisees', async () => {
+  it('advisors may notify students and staff', async () => {
     const { canNotify } = await import('./index')
     expect(await canNotify(ctx, as('advisor'), advisor)).toBe(true)
-    expect(await canNotify(ctx, as('advisor'), student)).toBe(false)
+    expect(await canNotify(ctx, as('advisor'), student)).toBe(true)
   })
 
-  it('students may not notify (or email) anyone except their own advisor', async () => {
+  it('students may notify active advisors and staff but not other students', async () => {
     const { canNotify } = await import('./index')
-    expect(await canNotify(ctx, as('student'), advisor)).toBe(false) // not their advisor
+    expect(await canNotify(ctx, as('student'), advisor)).toBe(true)
     expect(await canNotify(ctx, as('student'), student)).toBe(false)
   })
 })

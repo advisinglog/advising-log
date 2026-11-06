@@ -63,10 +63,20 @@ export default function AdvisingDetail() {
                 <p className="font-bold text-rose-950 dark:text-rose-100 mt-0.5">{catLabel}</p>
               </div>
               <div>
-                <span className="text-rose-600/80 dark:text-rose-400/80 font-medium block">{t('อาจารย์ที่ปรึกษาผู้ทำการยกเลิก', 'Advisor')}</span>
-                <p className="font-bold text-rose-950 dark:text-rose-100 mt-0.5">
-                  {(request.cancelledBy ? store.users.find(u => u.id === request.cancelledBy)?.name : null) || advisor?.name || '-'}
-                </p>
+                {(() => {
+                  const cancelledUser = request.cancelledBy ? store.users.find(u => u.id === request.cancelledBy) : null
+                  const isCancelledByStudent = cancelledUser ? cancelledUser.role === 'student' : request.cancelledBy === request.studentId
+                  const cancelRoleLabel = isCancelledByStudent
+                    ? t('นักศึกษาผู้ทำการยกเลิก', 'Cancelled by Student')
+                    : t('อาจารย์ที่ปรึกษาผู้ทำการยกเลิก', 'Cancelled by Advisor')
+                  const cancelName = cancelledUser?.name || (isCancelledByStudent ? store.users.find(u => u.id === request.studentId)?.name : advisor?.name) || '-'
+                  return (
+                    <>
+                      <span className="text-rose-600/80 dark:text-rose-400/80 font-medium block">{cancelRoleLabel}</span>
+                      <p className="font-bold text-rose-950 dark:text-rose-100 mt-0.5">{cancelName}</p>
+                    </>
+                  )
+                })()}
               </div>
               <div>
                 <span className="text-rose-600/80 dark:text-rose-400/80 font-medium block">{t('วันและเวลานัดหมาย', 'Date set for appointment')}</span>
