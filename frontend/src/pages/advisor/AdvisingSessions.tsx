@@ -283,7 +283,9 @@ export default function AdvisingSessions() {
 
   function handleComplete(req: AdvisingRequest) {
     if (!currentUser) return
-    store.updateRequestStatus(req.id, 'closed')
+    markRequestViewed(req.id)
+    store.updateRequestStatus(req.id, 'completed')
+    const linkedAppt = store.appointments.find(a => a.requestId === req.id && a.status === 'scheduled')
     store.appointments
       .filter(a => a.requestId === req.id && a.status === 'scheduled')
       .forEach(a => store.updateAppointmentStatus(a.id, 'completed'))
@@ -295,7 +297,18 @@ export default function AdvisingSessions() {
       description: `Completed advising session for ${store.users.find(u => u.id === req.studentId)?.name || req.studentId}`,
       targetId: req.id,
     })
-    addToast('success', t('เสร็จสิ้นการให้คำปรึกษาแล้ว', 'Advising Session Completed'))
+    addToast(
+      'success',
+      t('เสร็จสิ้นการนัดหมายแล้ว', 'Appointment Completed'),
+      t('นำท่านไปยังหน้าบันทึกผลการเข้าพบเพื่อสรุปผลการให้คำปรึกษา', 'Redirecting to Advisor Log to record session summary & agreements.')
+    )
+    navigate('/advisor/log', {
+      state: {
+        requestId: req.id,
+        studentId: req.studentId,
+        appointmentId: linkedAppt?.id,
+      },
+    })
   }
 
   function handleSubmitCancel() {
@@ -437,7 +450,7 @@ export default function AdvisingSessions() {
                           className="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 focus:ring-emerald-500/15"
                           onClick={() => handleComplete(r)}
                         >
-                          <CheckCircle2 className="h-3 w-3 mr-1" /> {t('เสร็จสิ้น', 'Complete')}
+                          <CheckCircle2 className="h-3 w-3 mr-1" /> {t('เสร็จสิ้นและบันทึกผล', 'Complete & Log Notes')}
                         </Button>
                       )}
                     </>
