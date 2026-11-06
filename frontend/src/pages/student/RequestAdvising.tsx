@@ -1,5 +1,5 @@
 // ============================================================
-// Student — Request Advising Form (2-Step Interactive Wizard)
+// Student — Request Advising Form (Single-page Form)
 // ============================================================
 
 import { useState, useRef, useEffect } from 'react'
@@ -12,7 +12,6 @@ import { PageHeader, Button, Card, Modal } from '@/components/ui'
 import { EXIT_REASON_CODES } from '@/types'
 import type { AdvisingCategory, ExitType, ExitReasonCode } from '@/types'
 import {
-  Paperclip,
   User,
   ShieldCheck,
   MessageSquareHeart,
@@ -29,10 +28,7 @@ import {
   HeartHandshake,
   LogOut,
   Tag,
-  ArrowRight,
-  ArrowLeft,
   Sparkles,
-  Edit3,
   Upload,
   FileText,
   Loader2,
@@ -65,9 +61,6 @@ export default function RequestAdvising() {
 
   const initialCategory = (searchParams.get('category') as AdvisingCategory) || ''
   const initialType = (searchParams.get('type') as ExitType) || 'withdrawal'
-
-  // Wizard Step state: 1: Topic, Advisor, Schedule & Details, 2: Review & Submit
-  const [currentStep, setCurrentStep] = useState<1 | 2>(1)
 
   const [category, setCategory] = useState<AdvisingCategory | ''>(initialCategory)
   const [subCategory, setSubCategory] = useState('')
@@ -235,66 +228,9 @@ export default function RequestAdvising() {
       localStorage.getItem(`student_voice_completed_${currentUser.id}`) === 'true'
     ))
 
-  function validateStep1(): boolean {
-    if (!advisor) {
-      addToast('error', t('กรุณาเลือกอาจารย์', 'Advisor Required'), t('กรุณาเลือกอาจารย์ที่ปรึกษาเพื่อรับคำร้อง', 'Please select a faculty advisor.'))
-      return false
-    }
-    if (!category) {
-      addToast('error', t('กรุณาเลือกหมวดหมู่', 'Category Required'), t('กรุณาเลือกหมวดหมู่คำปรึกษาที่ต้องการ', 'Please select an advising category.'))
-      return false
-    }
-    if (subCategory === OTHER_SUBCATEGORY && !otherSubCategory.trim()) {
-      addToast('error', t('กรุณาระบุหัวข้อที่ต้องการปรึกษา', 'Specific Topic Required'), t('กรุณาเขียนหัวข้อที่ต้องการปรึกษา', 'Please describe the specific topic you want to discuss.'))
-      return false
-    }
-    if (category === 'withdrawal_leave' && !hasVoiceResponse) {
-      addToast('warning', t('กรุณาทำแบบสำรวจก่อน', 'Survey Required'), t('กรุณาทำแบบสำรวจเสียงสะท้อนนักศึกษา (Student Voice) ก่อนดำเนินการต่อ', 'Please complete the Student Voice survey first.'))
-      navigate('/student/voice?return=/student/request?category=withdrawal_leave')
-      return false
-    }
-    return true
-  }
+  
 
-  function validateStep2(): boolean {
-    if (!details.trim()) {
-      addToast('error', t('กรุณาระบุรายละเอียด', 'Details Required'), t('กรุณากรอกรายละเอียดหรือประเด็นที่ต้องการปรึกษาอาจารย์', 'Please describe the topics or questions to discuss.'))
-      return false
-    }
-    if (!preferredDate) {
-      addToast('error', t('กรุณาเลือกวันที่', 'Date Required'), t('กรุณาเลือกวันที่ต้องการเข้าพบอาจารย์', 'Please choose a preferred meeting date.'))
-      return false
-    }
-    const todayStr = getLocalDateString()
-    if (preferredDate < todayStr) {
-      addToast('error', t('วันที่ไม่ถูกต้อง', 'Invalid Date'), t('ไม่สามารถเลือกวันที่ในอดีตได้', 'Cannot select a past date.'))
-      return false
-    }
-    if (!preferredTime) {
-      addToast('error', t('กรุณาเลือกเวลา', 'Time Required'), t('กรุณาระบุเวลาที่ต้องการเข้าพบ', 'Please specify a preferred meeting time.'))
-      return false
-    }
-    if (preferredDate === todayStr) {
-      const now = new Date()
-      const currentHours = String(now.getHours()).padStart(2, '0')
-      const currentMinutes = String(now.getMinutes()).padStart(2, '0')
-      const currentTimeStr = `${currentHours}:${currentMinutes}`
-      if (preferredTime < currentTimeStr) {
-        addToast('error', t('เวลาไม่ถูกต้อง', 'Invalid Time'), t('ไม่สามารถเลือกเวลาที่ผ่านมาแล้วในวันนี้ได้', 'Cannot select a past time for today.'))
-        return false
-      }
-    }
-    const isSlotTaken = sameDateAppointments.some(a => a.scheduledTime === preferredTime && a.status === 'scheduled')
-    if (isSlotTaken) {
-      addToast(
-        'error',
-        t('ช่วงเวลานี้มีนัดหมายแล้ว', 'Time Slot Collision'),
-        t(`อาจารย์มีนัดหมายในเวลา ${preferredTime} วันที่ ${preferredDate} แล้ว กรุณาเลือกช่วงเวลาอื่น`, `Advisor already has an appointment scheduled at ${preferredTime} on ${preferredDate}. Please select another time.`)
-      )
-      return false
-    }
-    return true
-  }
+  
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -506,51 +442,11 @@ export default function RequestAdvising() {
     <div className="max-w-3xl mx-auto pb-16">
       <PageHeader
         title={t('ยื่นคำร้องขอรับคำปรึกษา', 'Request Advising Session')}
-        description={t('ขั้นตอนการขอนัดหมายเข้าพบอาจารย์ที่ปรึกษาอย่างเป็นระบบและสะดวกรวดเร็ว', 'Schedule a meeting with your academic advisor through a simple, guided 2-step process.')}
+        description={t('ขั้นตอนการขอนัดหมายเข้าพบอาจารย์ที่ปรึกษาอย่างเป็นระบบและสะดวกรวดเร็วในหน้าเดียว', 'Schedule a meeting with your academic advisor quickly and easily in a single page.')}
       />
 
-      {/* 2-Step Wizard Navigation Indicator */}
-      <div className="mb-6 bg-slate-100 dark:bg-slate-800/80 p-1 sm:p-1.5 rounded-2xl border border-slate-200/70 dark:border-slate-700/60 shadow-2xs">
-        <div className="grid grid-cols-2 gap-1 sm:gap-1.5">
-          {[
-            { step: 1, label: t('1. รายละเอียดการนัดหมาย', '1. Appointment Details'), icon: <Calendar className="h-4 w-4" /> },
-            { step: 2, label: t('2. ตรวจสอบและยืนยัน', '2. Review & Submit'), icon: <ShieldCheck className="h-4 w-4" /> },
-          ].map(s => {
-            const isActive = currentStep === s.step
-            const isCompleted = currentStep > s.step
-            return (
-              <button
-                key={s.step}
-                type="button"
-                onClick={() => {
-                  if (s.step === 1) setCurrentStep(1)
-                  if (s.step === 2 && validateStep1() && validateStep2()) setCurrentStep(2)
-                }}
-                className={`flex items-center justify-center gap-1.5 sm:gap-2 py-2 px-2 sm:px-3 rounded-xl text-xs transition-all cursor-pointer ${isActive
-                    ? 'bg-sky-600 text-white shadow-xs font-extrabold'
-                    : isCompleted
-                      ? 'bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 hover:bg-sky-100/90 font-bold border border-sky-200/60 dark:border-sky-800/50'
-                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200/60 dark:hover:bg-slate-700/60 font-medium'
-                  }`}
-              >
-                <div className={`h-5 w-5 rounded-full flex items-center justify-center text-[10px] ${isActive ? 'bg-white/25 text-white font-extrabold' : isCompleted ? 'bg-sky-600 text-white font-bold' : 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 font-medium'
-                  }`}>
-                  {isCompleted ? <Check className="h-3 w-3" /> : s.step}
-                </div>
-                <span className="truncate hidden sm:inline">{s.label}</span>
-                <span className="truncate sm:hidden">{s.step}</span>
-              </button>
-            )
-          })}
-        </div>
-      </div>
-
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* ============================================================ */}
-        {/* STEP 1: Appointment Details */}
-        {/* ============================================================ */}
-        {currentStep === 1 && (
-          <div className="space-y-5 animate-[fadeIn_0.15s_ease-out]">
+        <div className="space-y-5">
             {/* Gentle Reminder for Open Tasks from Previous Sessions */}
             {pendingTasks.length > 0 && (
               <div className="bg-gradient-to-br from-sky-50/90 via-sky-50/40 to-slate-50/80 dark:from-sky-950/40 dark:via-slate-900/40 dark:to-slate-900/60 border border-sky-200/80 dark:border-sky-800/60 rounded-2xl p-4 sm:p-5 text-xs sm:text-sm shadow-xs">
@@ -1142,12 +1038,7 @@ export default function RequestAdvising() {
               )}
             </Card>
 
-          </div>
-        )}
-
-        {/* Schedule & Details are part of the first step. */}
-        {currentStep === 1 && (
-          <div className="space-y-5 animate-[fadeIn_0.15s_ease-out]">
+            {/* Schedule & Details */}
             <Card className="space-y-5">
               {/* Date & Time Selection */}
               <div className="space-y-3">
@@ -1338,153 +1229,36 @@ export default function RequestAdvising() {
               </div>
             </Card>
 
-            {/* Step 1 Footer Controls */}
-            <div className="flex items-center justify-between pt-2">
+                        {/* PDPA Consent Checkbox */}
+            <div className="p-4 bg-sky-50/60 dark:bg-sky-950/30 border border-sky-100 dark:border-sky-900/40 rounded-xl">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={pdpaConsent}
+                  onChange={e => setPdpaConsent(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 text-sky-600 border-slate-300 dark:border-slate-600 rounded focus:ring-sky-500/30 accent-sky-600 cursor-pointer"
+                />
+                <span className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                  <span className="font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-1">
+                    <ShieldCheck className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400 inline" /> {t('ความยินยอมข้อมูลส่วนบุคคล (PDPA Consent)', 'PDPA / Privacy & Advising Consent')} <span className="text-red-500 font-bold ml-0.5">*</span>
+                  </span>
+                  {t(
+                    'ข้าพเจ้ายินยอมให้อาจารย์ที่ปรึกษาและมหาวิทยาลัยเก็บรวบรวมและใช้ข้อมูลทางการศึกษาเพื่อประโยชน์ในการให้คำปรึกษาทางวิชาการตามนโยบายคุ้มครองข้อมูลส่วนบุคคล',
+                    'I consent to the collection and processing of my academic and personal information by assigned university advisors in accordance with the institution\'s privacy policy.'
+                  )}
+                </span>
+              </label>
+            </div>
+
+            {/* Single Page Form Actions */}
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
               <Button variant="secondary" onClick={() => navigate(-1)} type="button">
                 {t('ยกเลิก', 'Cancel')}
               </Button>
               <Button
-                type="button"
-                variant="primary"
-                disabled={category === 'withdrawal_leave' && !hasVoiceResponse}
-                onClick={() => {
-                  if (validateStep1() && validateStep2()) {
-                    setCurrentStep(2)
-                    window.scrollTo({ top: 0, behavior: 'smooth' })
-                  }
-                }}
-                className="gap-1.5 font-bold"
-              >
-                <span>{t('ถัดไป', 'Next')}</span>
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {/* ============================================================ */}
-        {/* STEP 2: Review & Submit */}
-        {/* ============================================================ */}
-        {currentStep === 2 && (
-          <div className="space-y-5 animate-[fadeIn_0.15s_ease-out]">
-            {/* Visual Review Summary Card */}
-            <Card className="space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-                <div className="flex items-center gap-2">
-                  <div className="h-7 w-7 rounded-lg bg-sky-500 text-white flex items-center justify-center">
-                    <Sparkles className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                      {t('สรุปรายละเอียดคำร้องขอนัดหมาย', 'Summary & Confirmation')}
-                    </h3>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                      {t('กรุณาตรวจสอบความถูกต้องของข้อมูลก่อนยืนยันส่งคำร้อง', 'Please review all information before final submission.')}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setCurrentStep(1)}
-                  className="text-xs font-semibold text-sky-600 dark:text-sky-400 hover:underline flex items-center gap-1 cursor-pointer"
-                >
-                  <Edit3 className="h-3 w-3" />
-                  {t('แก้ไขข้อมูล', 'Edit')}
-                </button>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">
-                <div className="p-3 bg-slate-50/80 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
-                  <span className="text-slate-400 block mb-1">{t('อาจารย์ที่ปรึกษา', 'Advisor')}</span>
-                  <p className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
-                    <User className="h-3.5 w-3.5 text-sky-500" />
-                    <span>{advisor?.name}</span>
-                  </p>
-                  <p className="text-[11px] text-slate-500 mt-0.5">{advisor?.department || 'ADT'}</p>
-                </div>
-
-                <div className="p-3 bg-slate-50/80 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
-                  <span className="text-slate-400 block mb-1">{t('หมวดหมู่คำปรึกษา', 'Category')}</span>
-                  <p className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
-                    {getCategoryIcon(category)}
-                    <span>{category ? getCategoryLabel(category) : '-'}</span>
-                  </p>
-                  {subCategory && (
-                    <p className="text-[11px] text-sky-600 dark:text-sky-400 mt-0.5">
-                      {subCategory === OTHER_SUBCATEGORY ? (otherSubCategory || t('อื่น ๆ', 'Other')) : getSubCategoryLabel(subCategory)}
-                    </p>
-                  )}
-                  {category === 'withdrawal_leave' && (
-                    <p className="text-[11px] text-orange-600 dark:text-orange-400 mt-0.5">
-                      {exitType === 'withdrawal' ? t('ขอลาออก', 'Withdrawal') : exitType === 'leave_of_absence' ? t('ลาพักการศึกษา', 'Leave') : t('ย้ายสาขา', 'Transfer')}
-                      {` · ${getExitReasonLabel(exitReasonCode)}`}
-                    </p>
-                  )}
-                </div>
-
-                <div className="p-3 bg-slate-50/80 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
-                  <span className="text-slate-400 block mb-1">{t('วันและเวลานัดหมาย', 'Proposed Schedule')}</span>
-                  <p className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
-                    <Calendar className="h-3.5 w-3.5 text-sky-500" />
-                    <span>{preferredDate} {preferredTime ? `· ${preferredTime}` : ''}</span>
-                  </p>
-                  <p className="text-[11px] text-slate-500 mt-0.5">
-                    {t('รออาจารย์ตอบรับและระบุสถานที่/ช่องทางเข้าพบ', 'Pending advisor confirmation of location / channel')}
-                  </p>
-                </div>
-
-                <div className="p-3 bg-slate-50/80 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
-                  <span className="text-slate-400 block mb-1">{t('เอกสารแนบ', 'Attachments')}</span>
-                  <p className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
-                    <Paperclip className="h-3.5 w-3.5 text-sky-500" />
-                    <span>{attachments.length > 0 ? `${attachments.length} ${t('ไฟล์', 'file(s)')}` : t('ไม่มีเอกสารแนบ', 'None')}</span>
-                  </p>
-                  {attachments.length > 0 && (
-                    <p className="text-[11px] text-slate-500 truncate mt-0.5">{attachments.map(a => a.fileName).join(', ')}</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Consultation Details Excerpt */}
-              <div className="p-3.5 bg-slate-50/80 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
-                <span className="text-slate-400 text-xs block mb-1 font-medium">{t('รายละเอียดที่ระบุ', 'Consultation Details')}</span>
-                <p className="text-xs text-slate-800 dark:text-slate-200 whitespace-pre-wrap leading-relaxed">
-                  {details || '-'}
-                </p>
-              </div>
-
-              {/* PDPA Consent Checkbox */}
-              <div className="p-4 bg-sky-50/60 dark:bg-sky-950/30 border border-sky-100 dark:border-sky-900/40 rounded-xl">
-                <label className="flex items-start gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={pdpaConsent}
-                    onChange={e => setPdpaConsent(e.target.checked)}
-                    className="mt-0.5 h-4 w-4 text-sky-600 border-slate-300 dark:border-slate-600 rounded focus:ring-sky-500/30 accent-sky-600 cursor-pointer"
-                  />
-                  <span className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                    <span className="font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-1">
-                      <ShieldCheck className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400 inline" /> {t('ความยินยอมข้อมูลส่วนบุคคล (PDPA Consent)', 'PDPA / Privacy & Advising Consent')} <span className="text-red-500 font-bold ml-0.5">*</span>
-                    </span>
-                    {t(
-                      'ข้าพเจ้ายินยอมให้อาจารย์ที่ปรึกษาและมหาวิทยาลัยเก็บรวบรวมและใช้ข้อมูลทางการศึกษาเพื่อประโยชน์ในการให้คำปรึกษาทางวิชาการตามนโยบายคุ้มครองข้อมูลส่วนบุคคล',
-                      'I consent to the collection and processing of my academic and personal information by assigned university advisors in accordance with the institution\'s privacy policy.'
-                    )}
-                  </span>
-                </label>
-              </div>
-            </Card>
-
-            {/* Step 2 Footer Controls */}
-            <div className="flex items-center justify-between pt-2">
-              <Button variant="secondary" onClick={() => setCurrentStep(1)} type="button" className="gap-1.5">
-                <ArrowLeft className="h-4 w-4" />
-                <span>{t('ย้อนกลับ', 'Back')}</span>
-              </Button>
-              <Button
                 type="submit"
                 variant="primary"
-                disabled={isSubmitting || !pdpaConsent || (category === 'withdrawal_leave' && !hasVoiceResponse)}
+                disabled={isSubmitting || (category === 'withdrawal_leave' && !hasVoiceResponse)}
                 className="gap-2 font-bold px-6 py-2.5 shadow-sm"
               >
                 {isSubmitting ? (
@@ -1495,13 +1269,12 @@ export default function RequestAdvising() {
                 ) : (
                   <>
                     <Check className="h-4 w-4" />
-                    <span>{t('ยืนยันนัดพบอาจารย์', 'Confirm Meeting')}</span>
+                    <span>{t('ยืนยันส่งคำร้อง', 'Submit Request')}</span>
                   </>
                 )}
               </Button>
             </div>
           </div>
-        )}
       </form>
 
       {/* Advisor Calendar Viewer Modal */}
