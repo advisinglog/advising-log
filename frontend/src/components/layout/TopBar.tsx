@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useStore } from '@/data/store'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useToast } from '@/contexts/ToastContext'
-import { ThemeToggle, UserAvatar } from '@/components/ui'
+import { ThemeToggle, FontSizeControl, UserAvatar } from '@/components/ui'
 import {
   Bell,
   LogOut,
@@ -200,7 +200,7 @@ export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
       {/* Right: Language + Theme + Notifications + User */}
       <div className="flex items-center gap-1 sm:gap-2.5">
         {/* Language switch (TH/EN) */}
-        <div className="flex items-center text-[11px] font-bold bg-slate-100 dark:bg-slate-800/80 p-0.5 rounded-xl border border-slate-200/70 dark:border-slate-700/60 shadow-2xs">
+        <div className="flex items-center text-[0.6875rem] font-bold bg-slate-100 dark:bg-slate-800/80 p-0.5 rounded-xl border border-slate-200/70 dark:border-slate-700/60 shadow-2xs">
           <button
             type="button"
             onClick={() => setLanguage('th')}
@@ -225,6 +225,9 @@ export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
           </button>
         </div>
 
+        {/* Text size (hidden on phones; available in the profile menu there) */}
+        <FontSizeControl className="hidden sm:inline-flex" />
+
         {/* Theme Toggle (Light / Dark / System) */}
         <ThemeToggle />
 
@@ -246,7 +249,7 @@ export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
           >
             <Bell className="h-5 w-5" />
             {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center ring-2 ring-white dark:ring-slate-900 shadow-xs select-none">
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[0.625rem] font-bold rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center ring-2 ring-white dark:ring-slate-900 shadow-xs select-none">
                 {unreadCount > 9 ? '9+' : unreadCount}
               </span>
             )}
@@ -262,7 +265,7 @@ export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
                   {unreadCount > 0 && (
                     <button
                       onClick={() => { store.markAllNotificationsRead(currentUser.id); setShowNotifs(false) }}
-                      className="text-[11px] text-sky-600 dark:text-sky-400 hover:text-sky-800 dark:hover:text-sky-300 font-bold transition-colors cursor-pointer"
+                      className="text-[0.6875rem] text-sky-600 dark:text-sky-400 hover:text-sky-800 dark:hover:text-sky-300 font-bold transition-colors cursor-pointer"
                     >
                       {t('อ่านทั้งหมดแล้ว', 'Mark all as read')}
                     </button>
@@ -283,7 +286,7 @@ export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
                           <p className={`text-xs ${n.isRead ? 'text-slate-600 dark:text-slate-400' : 'text-slate-900 dark:text-slate-100 font-bold'}`}>{translated?.title ?? n.title}</p>
                           {!n.isRead && <span className="h-2 w-2 rounded-full bg-sky-500 flex-shrink-0 mt-1 ring-2 ring-sky-100 dark:ring-sky-900" />}
                         </div>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 line-clamp-2 leading-relaxed">{translated?.message ?? n.message}</p>
+                        <p className="text-[0.6875rem] text-slate-500 dark:text-slate-400 mt-1 line-clamp-2 leading-relaxed">{translated?.message ?? n.message}</p>
                       </div>
                     )
                   })
@@ -329,7 +332,7 @@ export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
               <p className="text-xs font-semibold text-slate-800 dark:text-slate-100 truncate max-w-[125px] leading-tight group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
                 {currentUser.name}
               </p>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 truncate leading-tight font-medium">
+              <p className="text-[0.625rem] text-slate-500 dark:text-slate-400 mt-0.5 truncate leading-tight font-medium">
                 {language === 'th' ? currentConfig.shortLabelTh : currentConfig.shortLabelEn}
               </p>
             </div>
@@ -364,11 +367,11 @@ export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
                       <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 truncate">
                         {currentUser.name}
                       </h4>
-                      <p className="text-[11px] font-mono text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                      <p className="text-[0.6875rem] font-mono text-slate-500 dark:text-slate-400 truncate mt-0.5">
                         {currentUser.code} · {currentUser.email}
                       </p>
                       <div className="mt-1.5">
-                        <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold border shadow-3xs", currentConfig.badgeClass)}>
+                        <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[0.625rem] font-semibold border shadow-3xs", currentConfig.badgeClass)}>
                           {getRoleIcon(currentUser.role, 'h-2.5 w-2.5')}
                           <span>{language === 'th' ? currentConfig.labelTh : currentConfig.labelEn}</span>
                         </span>
@@ -377,14 +380,22 @@ export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
                   </div>
                 </div>
 
+                {/* Text size (phones only; the top bar shows it on larger screens) */}
+                <div className="sm:hidden p-3 border-b border-slate-100 dark:border-slate-800/80">
+                  <span className="block px-1 pb-2 text-[0.625rem] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500">
+                    {t('ขนาดตัวอักษร', 'Text Size')}
+                  </span>
+                  <FontSizeControl variant="inline" />
+                </div>
+
                 {/* Role Switching Section */}
                 {canSwitchRole && (
                   <div className="p-3 border-b border-slate-100 dark:border-slate-800/80">
                     <div className="flex items-center justify-between px-1 pb-2">
-                      <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500">
+                      <span className="text-[0.625rem] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500">
                         {t('สลับบทบาทการทำงาน', 'Switch Role Workspace')}
                       </span>
-                      <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800/80 px-1.5 py-0.5 rounded-full">
+                      <span className="text-[0.625rem] font-semibold text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800/80 px-1.5 py-0.5 rounded-full">
                         {availableRoles.length} {t('บทบาท', 'roles')}
                       </span>
                     </div>
@@ -428,7 +439,7 @@ export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
                                 <Check className="h-3 w-3 stroke-[2.5]" />
                               </span>
                             ) : (
-                              <span className="text-[11px] text-slate-400 group-hover:text-sky-600 dark:group-hover:text-sky-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <span className="text-[0.6875rem] text-slate-400 group-hover:text-sky-600 dark:group-hover:text-sky-400 opacity-0 group-hover:opacity-100 transition-opacity">
                                 →
                               </span>
                             )}
@@ -441,7 +452,7 @@ export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
 
                 {/* Footer Actions */}
                 <div className="p-2.5 bg-slate-50/50 dark:bg-slate-900/40 flex items-center justify-between gap-2 border-t border-slate-100 dark:border-slate-800/80">
-                  <div className="text-[10px] text-slate-500 dark:text-slate-400 px-1 truncate font-medium max-w-[170px]" title={currentUser.department}>
+                  <div className="text-[0.625rem] text-slate-500 dark:text-slate-400 px-1 truncate font-medium max-w-[170px]" title={currentUser.department}>
                     {currentUser.department}
                   </div>
                   <button

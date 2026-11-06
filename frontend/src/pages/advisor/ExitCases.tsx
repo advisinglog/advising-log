@@ -38,7 +38,7 @@ export default function ExitCases() {
         return (
           <div>
             <p className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100">{s?.name}</p>
-            <p className="text-[11px] font-mono text-slate-400 dark:text-slate-400">{s?.code}</p>
+            <p className="text-[0.6875rem] font-mono text-slate-400 dark:text-slate-400">{s?.code}</p>
           </div>
         )
       },
@@ -134,7 +134,7 @@ export default function ExitCases() {
           <div className="space-y-4">
             {/* Student Name */}
             <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
-              <span className="text-[11px] text-slate-400 block font-medium">{t('นักศึกษาผู้ยื่นคำร้อง', 'Student')}</span>
+              <span className="text-[0.6875rem] text-slate-400 block font-medium">{t('นักศึกษาผู้ยื่นคำร้อง', 'Student')}</span>
               <p className="text-sm font-bold text-slate-900 dark:text-slate-100 mt-0.5">
                 {store.users.find(u => u.id === selectedCase.studentId)?.name || '-'}
                 <span className="text-xs font-mono font-normal text-slate-500 ml-2">
@@ -163,7 +163,7 @@ export default function ExitCases() {
                   <div className="p-3 bg-sky-50/60 dark:bg-sky-950/40 rounded-xl border border-sky-100 dark:border-sky-900/40 text-xs space-y-2">
                     <div className="flex flex-wrap gap-1">
                       {(Array.isArray(svr.primaryFactors) ? svr.primaryFactors : []).map((fac, idx) => (
-                        <span key={idx} className="px-2 py-0.5 rounded-md text-[10px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-medium">
+                        <span key={idx} className="px-2 py-0.5 rounded-md text-[0.625rem] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-medium">
                           {fac}
                         </span>
                       ))}
@@ -197,7 +197,7 @@ export default function ExitCases() {
                         <div className="flex items-center gap-2 min-w-0">
                           <FileUp className="h-3.5 w-3.5 text-sky-600 flex-shrink-0" />
                           <span className="font-semibold text-slate-800 dark:text-slate-200 truncate">{doc.documentName}</span>
-                          {doc.fileName && <span className="text-[11px] font-mono text-slate-400 truncate">({doc.fileName})</span>}
+                          {doc.fileName && <span className="text-[0.6875rem] font-mono text-slate-400 truncate">({doc.fileName})</span>}
                         </div>
                         <div className="flex items-center gap-1 flex-shrink-0">
                           <Button
@@ -215,7 +215,7 @@ export default function ExitCases() {
                                 signatureMethod: doc.signatureMethod,
                               })
                             }
-                            className="text-[11px] h-7 px-2"
+                            className="text-[0.6875rem] h-7 px-2"
                           >
                             <Eye className="h-3 w-3 mr-1" /> {t('ดูเอกสาร', 'View')}
                           </Button>

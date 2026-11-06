@@ -10,7 +10,7 @@ import { useNavigate } from 'react-router-dom'
 import { useGoogleLogin } from '@react-oauth/google'
 import { useAuth } from '@/contexts/AuthContext'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { ThemeToggle } from '@/components/ui'
+import { ThemeToggle, FontSizeControl } from '@/components/ui'
 import { InteractiveVideoHero } from '@/components/InteractiveVideoHero'
 import { isGoogleAuthConfigured } from '@/utils/googleAuth'
 import {
@@ -153,7 +153,7 @@ export default function LoginPage() {
               <span className="text-xl font-bold tracking-tight text-white block leading-tight">
                 Advising<span className="text-sky-200">Log</span>
               </span>
-              <span className="text-[10px] text-sky-100/90 font-semibold uppercase tracking-wider block">
+              <span className="text-[0.625rem] text-sky-100/90 font-semibold uppercase tracking-wider block">
                 Academic Advisory & QA Portal
               </span>
             </div>
@@ -196,7 +196,7 @@ export default function LoginPage() {
               <h3 className="text-xs font-bold text-white tracking-wide truncate drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]">
                 {t('คำปรึกษารายบุคคล', 'SIS Advising')}
               </h3>
-              <p className="text-[10px] text-sky-100/75 truncate mt-0.5">
+              <p className="text-[0.625rem] text-sky-100/75 truncate mt-0.5">
                 {t('บันทึกและติดตาม', 'Session Logs')}
               </p>
             </div>
@@ -210,7 +210,7 @@ export default function LoginPage() {
               <h3 className="text-xs font-bold text-white tracking-wide truncate drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]">
                 {t('ส่งต่อช่วยเหลือ', 'Early Support')}
               </h3>
-              <p className="text-[10px] text-emerald-100/75 truncate mt-0.5">
+              <p className="text-[0.625rem] text-emerald-100/75 truncate mt-0.5">
                 {t('แจ้งเตือนภาวะเสี่ยง', 'Case Referrals')}
               </p>
             </div>
@@ -224,7 +224,7 @@ export default function LoginPage() {
               <h3 className="text-xs font-bold text-white tracking-wide truncate drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]">
                 {t('ประกันคุณภาพ', 'AUN-QA Audit')}
               </h3>
-              <p className="text-[10px] text-amber-100/75 truncate mt-0.5">
+              <p className="text-[0.625rem] text-amber-100/75 truncate mt-0.5">
                 {t('เกณฑ์มาตรฐาน 3.0', 'Criteria 3.0')}
               </p>
             </div>
@@ -234,7 +234,7 @@ export default function LoginPage() {
         {/* Bottom: Institutional Compliance Note */}
         <div className="pt-6 border-t border-white/20 flex items-center justify-between text-xs text-sky-100 relative z-10">
           <span className="font-semibold text-white/90">Mae Fah Luang University</span>
-          <div className="flex items-center gap-1.5 text-[11px] font-semibold text-white">
+          <div className="flex items-center gap-1.5 text-[0.6875rem] font-semibold text-white">
             <ShieldCheck className="h-4 w-4 text-emerald-300" />
             <span>PDPA & SIS Compliant</span>
           </div>
@@ -262,7 +262,7 @@ export default function LoginPage() {
           {/* Controls: Language switch & Theme toggle */}
           <div className="flex items-center gap-2 ml-auto">
             {/* Language switch */}
-            <div className="flex items-center text-[11px] font-bold bg-slate-100 dark:bg-slate-800/80 p-0.5 rounded-xl border border-slate-200/70 dark:border-slate-700/60 shadow-2xs">
+            <div className="flex items-center text-[0.6875rem] font-bold bg-slate-100 dark:bg-slate-800/80 p-0.5 rounded-xl border border-slate-200/70 dark:border-slate-700/60 shadow-2xs">
               <button
                 type="button"
                 onClick={() => setLanguage('th')}
@@ -286,6 +286,9 @@ export default function LoginPage() {
                 EN
               </button>
             </div>
+
+            {/* Text size */}
+            <FontSizeControl />
 
             {/* Theme toggle */}
             <div className="bg-slate-100 dark:bg-slate-800/80 rounded-xl border border-slate-200/70 dark:border-slate-700/60 p-0.5">
@@ -321,7 +324,7 @@ export default function LoginPage() {
                 </p>
               </div>
 
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-sky-50 dark:bg-sky-500/10 border border-sky-100 dark:border-sky-500/25 text-[11px] font-semibold text-sky-700 dark:text-sky-300">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-sky-50 dark:bg-sky-500/10 border border-sky-100 dark:border-sky-500/25 text-[0.6875rem] font-semibold text-sky-700 dark:text-sky-300">
                 <Building2 className="h-3 w-3 text-sky-600 dark:text-sky-400" />
                 <span>Mae Fah Luang University</span>
               </div>
@@ -356,7 +359,7 @@ export default function LoginPage() {
                   <AlertCircle className="h-4 w-4 text-rose-600 dark:text-rose-400 mt-0.5 flex-shrink-0" />
                   <div className="space-y-0.5">
                     <p className="font-semibold">{t('ไม่สามารถเข้าสู่ระบบได้', 'Authentication Failed')}</p>
-                    <p className="text-[11px] text-rose-700 dark:text-rose-300/90 leading-relaxed">{getErrorMessage()}</p>
+                    <p className="text-[0.6875rem] text-rose-700 dark:text-rose-300/90 leading-relaxed">{getErrorMessage()}</p>
                   </div>
                 </div>
               )}
@@ -364,7 +367,7 @@ export default function LoginPage() {
 
             {/* Allowed Domains Section */}
             <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 space-y-2">
-              <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+              <div className="flex items-center justify-between text-[0.6875rem] text-slate-500 dark:text-slate-400 font-medium">
                 <span>{t('บัญชีอีเมลที่รองรับ', 'Authorized University Accounts')}</span>
                 <span className="flex items-center gap-1 text-sky-600 dark:text-sky-400 font-semibold">
                   <ShieldCheck className="h-3.5 w-3.5" />
@@ -374,19 +377,19 @@ export default function LoginPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                 <div className="p-2.5 rounded-xl bg-sky-50/70 dark:bg-sky-950/30 border border-sky-100 dark:border-sky-800/60">
-                  <span className="text-[10px] uppercase font-bold text-sky-800 dark:text-sky-300 block tracking-wider">
+                  <span className="text-[0.625rem] uppercase font-bold text-sky-800 dark:text-sky-300 block tracking-wider">
                     {t('นักศึกษา', 'Student')}
                   </span>
-                  <span className="font-mono text-[11px] text-sky-900 dark:text-sky-200 block font-semibold mt-0.5">
+                  <span className="font-mono text-[0.6875rem] text-sky-900 dark:text-sky-200 block font-semibold mt-0.5">
                     @lamduan.mfu.ac.th
                   </span>
                 </div>
 
                 <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/70 dark:border-slate-800">
-                  <span className="text-[10px] uppercase font-bold text-slate-600 dark:text-slate-400 block tracking-wider">
+                  <span className="text-[0.625rem] uppercase font-bold text-slate-600 dark:text-slate-400 block tracking-wider">
                     {t('อาจารย์ / บุคลากร', 'Faculty / Staff')}
                   </span>
-                  <span className="font-mono text-[11px] text-slate-700 dark:text-slate-300 block font-semibold mt-0.5">
+                  <span className="font-mono text-[0.6875rem] text-slate-700 dark:text-slate-300 block font-semibold mt-0.5">
                     @mfu.ac.th
                   </span>
                 </div>
@@ -394,7 +397,7 @@ export default function LoginPage() {
             </div>
 
             {/* Policy badge */}
-            <div className="pt-1 flex items-center justify-between text-[11px] text-slate-400 dark:text-slate-500 border-t border-slate-100 dark:border-slate-800/80">
+            <div className="pt-1 flex items-center justify-between text-[0.6875rem] text-slate-400 dark:text-slate-500 border-t border-slate-100 dark:border-slate-800/80">
               <span className="flex items-center gap-1.5">
                 <Lock className="h-3 w-3 text-slate-400" />
                 {t('ระบบความปลอดภัยระดับสถาบัน', 'Secure Encrypted SSO')}
@@ -420,7 +423,7 @@ export default function LoginPage() {
           <p className="font-medium">
             © 2026 School of Applied Digital Technology · Mae Fah Luang University
           </p>
-          <p className="text-[11px]">
+          <p className="text-[0.6875rem]">
             {t(
               'ระบบงานให้คำปรึกษาทางวิชาการและระบบสารสนเทศเพื่อการประกันคุณภาพ',
               'Academic Advisory Management and Quality Assurance Information System'

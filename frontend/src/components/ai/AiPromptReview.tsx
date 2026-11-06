@@ -175,7 +175,7 @@ function AiPromptReviewModal({
               <Pencil className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400" />
               {t('คำสั่งถึง AI (แก้ไขได้)', 'Instructions for the AI (editable)')}
               {isEdited && (
-                <span className="px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800 text-[10px] font-semibold">
+                <span className="px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800 text-[0.625rem] font-semibold">
                   {t('แก้ไขแล้ว', 'Edited')}
                 </span>
               )}
@@ -184,7 +184,7 @@ function AiPromptReviewModal({
               <button
                 type="button"
                 onClick={() => setInstructions(defaultInstructions)}
-                className="inline-flex items-center gap-1 text-[11px] font-semibold text-sky-700 dark:text-sky-400 hover:underline cursor-pointer"
+                className="inline-flex items-center gap-1 text-[0.6875rem] font-semibold text-sky-700 dark:text-sky-400 hover:underline cursor-pointer"
               >
                 <RotateCcw className="h-3 w-3" />
                 {t('คืนค่าเริ่มต้น', 'Reset to default')}
@@ -196,9 +196,9 @@ function AiPromptReviewModal({
             value={instructions}
             onChange={e => setInstructions(e.target.value.slice(0, MAX_AI_INSTRUCTIONS_CHARS))}
             rows={7}
-            className="w-full px-3 py-2.5 text-[11px] leading-relaxed font-mono border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900/60 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all resize-y"
+            className="w-full px-3 py-2.5 text-[0.6875rem] leading-relaxed font-mono border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900/60 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all resize-y"
           />
-          <div className="flex items-center justify-between text-[10px] text-slate-400 mt-0.5">
+          <div className="flex items-center justify-between text-[0.625rem] text-slate-400 mt-0.5">
             <span>
               {isEmpty
                 ? t('ช่องนี้ว่าง จะใช้คำสั่งเริ่มต้นแทน', 'Empty: the default instructions will be used.')
@@ -230,21 +230,21 @@ function AiPromptReviewModal({
             </p>
 
             <div>
-              <div className="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 mb-1">
+              <div className="text-[0.6875rem] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 mb-1">
                 {t('กฎของระบบ', 'System Rules')}
                 {lockedLabel}
               </div>
-              <pre className="max-h-32 overflow-auto whitespace-pre-wrap break-words rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50 dark:bg-[#0b1020] p-3 text-[11px] leading-relaxed text-slate-700 dark:text-slate-300 font-mono">
+              <pre className="max-h-32 overflow-auto whitespace-pre-wrap break-words rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50 dark:bg-[#0b1020] p-3 text-[0.6875rem] leading-relaxed text-slate-700 dark:text-slate-300 font-mono">
                 {prompt.systemInstruction}
               </pre>
             </div>
 
             <div>
-              <div className="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 mb-1">
+              <div className="text-[0.6875rem] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 mb-1">
                 {t('ข้อมูลเคส', 'Case Data')}
                 {lockedLabel}
               </div>
-              <pre className="max-h-72 overflow-auto whitespace-pre-wrap break-words rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50 dark:bg-[#0b1020] p-3 text-[11px] leading-relaxed text-slate-700 dark:text-slate-300 font-mono">
+              <pre className="max-h-72 overflow-auto whitespace-pre-wrap break-words rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50 dark:bg-[#0b1020] p-3 text-[0.6875rem] leading-relaxed text-slate-700 dark:text-slate-300 font-mono">
                 {caseData || t('(ไม่มีเคส)', '(no cases)')}
               </pre>
             </div>

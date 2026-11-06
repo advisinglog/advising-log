@@ -417,12 +417,12 @@ export default function StudentForms() {
                         </Button>
                       </>
                     ) : isNone ? (
-                      <span className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1 italic">
+                      <span className="text-[0.6875rem] text-slate-500 dark:text-slate-400 flex items-center gap-1 italic">
                         <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
                         <span>{t('เป็นเอกสารของนักศึกษาเอง (ไม่ต้องดาวน์โหลดฟอร์ม)', 'Student provides own document (No template needed)')}</span>
                       </span>
                     ) : (
-                      <span className="text-[11px] text-amber-700 dark:text-amber-400 flex items-center gap-1">
+                      <span className="text-[0.6875rem] text-amber-700 dark:text-amber-400 flex items-center gap-1">
                         <AlertCircle className="h-3.5 w-3.5" />
                         <span>{t('ติดต่อสำนักวิชาเพื่อรับแบบฟอร์มฉบับจริง', 'Contact department office for official paper form')}</span>
                       </span>

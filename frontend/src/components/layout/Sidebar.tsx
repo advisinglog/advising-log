@@ -110,7 +110,7 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
               <span className="text-sm font-extrabold tracking-tight text-slate-900 dark:text-slate-100 block leading-tight">
                 Advising<span className="text-sky-600 dark:text-sky-400">Log</span>
               </span>
-              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider leading-tight">
+              <span className="text-[0.625rem] text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider leading-tight">
                 Academic Advisory
               </span>
             </div>

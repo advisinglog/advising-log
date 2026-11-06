@@ -112,7 +112,7 @@ export default function AdvisingHistory() {
     { key: 'date', header: t('วันที่ยื่น', 'Date'), render: (r: AdvisingRequest) => (
       <div className="flex items-center gap-2 flex-wrap">
         <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">{r.createdAt}</span>
-        {isNewRequest(r) && <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-sky-100 dark:bg-sky-950/70 text-[10px] font-bold text-sky-700 dark:text-sky-300"><Sparkles className="h-3 w-3" />{t('ใหม่', 'New')}</span>}
+        {isNewRequest(r) && <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-sky-100 dark:bg-sky-950/70 text-[0.625rem] font-bold text-sky-700 dark:text-sky-300"><Sparkles className="h-3 w-3" />{t('ใหม่', 'New')}</span>}
       </div>
     ) },
     {
@@ -122,7 +122,7 @@ export default function AdvisingHistory() {
         <div>
           <span className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100 block">{getCategoryLabel(r.category)}</span>
           {r.subCategory && (
-            <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+            <span className="text-[0.6875rem] text-slate-500 dark:text-slate-400 font-medium">
               {getSubCategoryLabel(r.subCategory)}
             </span>
           )}

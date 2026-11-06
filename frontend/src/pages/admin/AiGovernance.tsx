@@ -321,7 +321,7 @@ export default function AiGovernance() {
             <div className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
               <Cpu className="h-4 w-4 text-sky-600 dark:text-sky-400 flex-shrink-0" />
               <div className="min-w-0">
-                <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400 truncate">{t('โมเดลหลัก', 'Engine')}</p>
+                <p className="text-[0.625rem] font-medium text-slate-500 dark:text-slate-400 truncate">{t('โมเดลหลัก', 'Engine')}</p>
                 <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">Google Gemini</p>
               </div>
             </div>
@@ -329,7 +329,7 @@ export default function AiGovernance() {
             <div className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
               <KeyRound className="h-4 w-4 text-sky-600 dark:text-sky-400 flex-shrink-0" />
               <div className="min-w-0">
-                <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400 truncate">{t('กุญแจในระบบ', 'Active Key')}</p>
+                <p className="text-[0.625rem] font-medium text-slate-500 dark:text-slate-400 truncate">{t('กุญแจในระบบ', 'Active Key')}</p>
                 <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate font-mono">
                   {activeKey ? activeKey.name : t('ไม่มีกุญแจ', 'None')}
                 </p>
@@ -339,7 +339,7 @@ export default function AiGovernance() {
             <div className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
               <Users className="h-4 w-4 text-sky-600 dark:text-sky-400 flex-shrink-0" />
               <div className="min-w-0">
-                <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400 truncate">{t('บุคลากรมีสิทธิ์', 'Authorized')}</p>
+                <p className="text-[0.625rem] font-medium text-slate-500 dark:text-slate-400 truncate">{t('บุคลากรมีสิทธิ์', 'Authorized')}</p>
                 <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
                   {authorizedPersonnelCount} / {totalPersonnelCount} {t('คน', 'users')}
                 </p>
@@ -349,7 +349,7 @@ export default function AiGovernance() {
             <div className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
               <Activity className="h-4 w-4 text-sky-600 dark:text-sky-400 flex-shrink-0" />
               <div className="min-w-0">
-                <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400 truncate">{t('ประวัติความปลอดภัย', 'Audit Logs')}</p>
+                <p className="text-[0.625rem] font-medium text-slate-500 dark:text-slate-400 truncate">{t('ประวัติความปลอดภัย', 'Audit Logs')}</p>
                 <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
                   {aiAuditLogs.length} {t('รายการ', 'events')}
                 </p>
@@ -374,7 +374,7 @@ export default function AiGovernance() {
         >
           <KeyRound className="h-4 w-4" />
           <span>{t('การตั้งค่าระบบหลัก & API Key', 'System & API Config')}</span>
-          <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+          <span className="text-[0.625rem] font-bold px-1.5 py-0.2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
             {store.aiKeys.length}
           </span>
         </button>
@@ -390,7 +390,7 @@ export default function AiGovernance() {
         >
           <Users className="h-4 w-4" />
           <span>{t('กำหนดสิทธิ์บุคลากร (อาจารย์ / QA)', 'Personnel Access (Faculty & QA)')}</span>
-          <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-sky-100 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300">
+          <span className="text-[0.625rem] font-bold px-1.5 py-0.2 rounded-full bg-sky-100 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300">
             {authorizedPersonnelCount}/{totalPersonnelCount}
           </span>
         </button>
@@ -407,7 +407,7 @@ export default function AiGovernance() {
           <ScrollText className="h-4 w-4" />
           <span>{t('ประวัติความปลอดภัย AI (AI Audit)', 'AI Security Logs')}</span>
           {aiAuditLogs.length > 0 && (
-            <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+            <span className="text-[0.625rem] font-bold px-1.5 py-0.2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
               {aiAuditLogs.length}
             </span>
           )}
@@ -426,7 +426,7 @@ export default function AiGovernance() {
                 <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                   <KeyRound className="h-4 w-4 text-sky-600 dark:text-sky-400" />
                   <span>{t('รายการ Gemini API Key ในระบบ', 'Gemini API Credentials')}</span>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border border-sky-100 dark:border-sky-800">
+                  <span className="text-[0.625rem] font-bold px-2 py-0.5 rounded-full bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border border-sky-100 dark:border-sky-800">
                     {store.aiKeys.length} {t('กุญแจ', 'keys')}
                   </span>
                 </h3>
@@ -500,28 +500,28 @@ export default function AiGovernance() {
                                 {k.name}
                               </span>
                               {k.isDefault ? (
-                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/60 px-2 py-0.5 rounded-full border border-sky-200 dark:border-sky-800">
+                                <span className="inline-flex items-center gap-1 text-[0.625rem] font-bold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/60 px-2 py-0.5 rounded-full border border-sky-200 dark:border-sky-800">
                                   <Sparkles className="h-3 w-3 text-sky-500" />
                                   {t('กุญแจหลักที่ใช้งานอยู่ (Active Default)', 'Active Default')}
                                 </span>
                               ) : (
-                                <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
+                                <span className="text-[0.625rem] font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
                                   {t('กุญแจสำรอง', 'Secondary')}
                                 </span>
                               )}
 
                               {typeof latency === 'number' && (
-                                <span className="text-[10px] font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full border border-emerald-200/60 dark:border-emerald-800/40">
+                                <span className="text-[0.625rem] font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full border border-emerald-200/60 dark:border-emerald-800/40">
                                   ⚡ {latency}ms
                                 </span>
                               )}
                             </div>
 
                             <div className="flex flex-wrap items-center gap-2 text-xs">
-                              <span className="font-mono text-[11px] text-slate-600 dark:text-slate-300 font-semibold bg-slate-50 dark:bg-slate-800/80 px-2 py-0.5 rounded border border-slate-200/80 dark:border-slate-700">
+                              <span className="font-mono text-[0.6875rem] text-slate-600 dark:text-slate-300 font-semibold bg-slate-50 dark:bg-slate-800/80 px-2 py-0.5 rounded border border-slate-200/80 dark:border-slate-700">
                                 {k.maskedKey}
                               </span>
-                              <span className="text-[11px] text-slate-400">• {k.model || 'gemini-2.5-flash'}</span>
+                              <span className="text-[0.6875rem] text-slate-400">• {k.model || 'gemini-2.5-flash'}</span>
                             </div>
                           </div>
                         </div>
@@ -533,7 +533,7 @@ export default function AiGovernance() {
                               variant="secondary"
                               size="sm"
                               onClick={() => handleSetDefaultKey(k)}
-                              className="text-[11px] font-semibold px-2.5 py-1 text-sky-600 dark:text-sky-400 cursor-pointer"
+                              className="text-[0.6875rem] font-semibold px-2.5 py-1 text-sky-600 dark:text-sky-400 cursor-pointer"
                             >
                               <Star className="h-3.5 w-3.5 mr-1" />
                               {t('ตั้งเป็นกุญแจหลัก', 'Use as Default')}
@@ -545,7 +545,7 @@ export default function AiGovernance() {
                             size="sm"
                             onClick={() => handleTestKey(k)}
                             disabled={isTesting}
-                            className="text-[11px] font-semibold px-2.5 py-1 cursor-pointer"
+                            className="text-[0.6875rem] font-semibold px-2.5 py-1 cursor-pointer"
                           >
                             <Zap className={`h-3.5 w-3.5 mr-1 text-sky-500 ${isTesting ? 'animate-spin' : ''}`} />
                             {isTesting ? t('ทดสอบ...', 'Testing...') : t('ทดสอบ', 'Test')}
@@ -555,7 +555,7 @@ export default function AiGovernance() {
                             variant="secondary"
                             size="sm"
                             onClick={() => handleDeleteKey(k)}
-                            className="text-[11px] font-semibold p-1.5 text-rose-600 hover:text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer"
+                            className="text-[0.6875rem] font-semibold p-1.5 text-rose-600 hover:text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer"
                             aria-label={t('ลบกุญแจ', 'Delete Key')}
                           >
                             <Trash2 className="h-3.5 w-3.5" />
@@ -644,7 +644,7 @@ export default function AiGovernance() {
                 <div>
                   <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                     <span>{t('ระบบกำหนดสิทธิ์เฉพาะบุคลากร (Faculty & QA Staff Only)', 'Faculty & QA Staff Delegation')}</span>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-100 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300">
+                    <span className="text-[0.625rem] font-bold px-2 py-0.5 rounded-full bg-sky-100 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300">
                       {authorizedPersonnelCount} / {totalPersonnelCount} {t('ได้รับอนุมัติ', 'authorized')}
                     </span>
                   </h3>
@@ -776,14 +776,14 @@ export default function AiGovernance() {
                           {u.name}
                         </p>
                         <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
-                          <span className="text-[10px] font-semibold px-2 py-0.2 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                          <span className="text-[0.625rem] font-semibold px-2 py-0.2 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
                             {t(r.th, r.en)}
                           </span>
-                          <span className="text-[11px] font-mono text-slate-400 dark:text-slate-400">
+                          <span className="text-[0.6875rem] font-mono text-slate-400 dark:text-slate-400">
                             {u.code}
                           </span>
                         </div>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                        <p className="text-[0.6875rem] text-slate-500 dark:text-slate-400 truncate mt-0.5">
                           {u.department || 'School of Applied Digital Technology (ADT)'}
                         </p>
                       </div>
@@ -848,14 +848,14 @@ export default function AiGovernance() {
                       <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100">
                         {log.description}
                       </p>
-                      <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-400">
+                      <div className="flex items-center gap-2 mt-1 text-[0.6875rem] text-slate-400">
                         <span>{log.userName} ({log.userRole})</span>
                         <span>•</span>
                         <span>{log.createdAt || ''}</span>
                       </div>
                     </div>
                   </div>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex-shrink-0">
+                  <span className="text-[0.625rem] font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex-shrink-0">
                     {log.action}
                   </span>
                 </div>
@@ -909,7 +909,7 @@ export default function AiGovernance() {
                 {showKeyPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
-            <p className="text-[11px] text-slate-400 mt-1">
+            <p className="text-[0.6875rem] text-slate-400 mt-1">
               {t('สร้างกุญแจได้ฟรีจาก Google AI Studio (ai.google.dev)', 'Generate free keys from Google AI Studio (ai.google.dev)')}
             </p>
           </div>

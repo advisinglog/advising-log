@@ -2,16 +2,34 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 
 export type Theme = 'light' | 'dark' | 'system'
 
+// User-adjustable text size, as a percentage of the default root font size.
+// Users can only enlarge text; the last option is the hard maximum so layouts
+// (sidebar, tables, cards) don't break from oversizing.
+export const FONT_SCALE_OPTIONS = [100, 110, 120, 130] as const
+export const DEFAULT_FONT_SCALE = FONT_SCALE_OPTIONS[0]
+export const MAX_FONT_SCALE = FONT_SCALE_OPTIONS[FONT_SCALE_OPTIONS.length - 1]
+
+/** Snap any value to the nearest allowed option (so 500 → 130, 90 → 100). */
+function clampFontScale(value: number): number {
+  if (!Number.isFinite(value)) return DEFAULT_FONT_SCALE
+  return FONT_SCALE_OPTIONS.reduce((best, option) =>
+    Math.abs(option - value) < Math.abs(best - value) ? option : best
+  , DEFAULT_FONT_SCALE as number)
+}
+
 interface ThemeContextType {
   theme: Theme
   setTheme: (theme: Theme) => void
   isDark: boolean
   toggleTheme: () => void
+  fontScale: number
+  setFontScale: (scale: number) => void
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
 
 const THEME_STORAGE_KEY = 'advising_log_theme'
+const FONT_SCALE_STORAGE_KEY = 'advising_log_font_scale'
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<Theme>(() => {
@@ -25,6 +43,32 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     }
     return 'system'
   })
+
+  const [fontScale, setFontScaleState] = useState<number>(() => {
+    try {
+      const stored = localStorage.getItem(FONT_SCALE_STORAGE_KEY)
+      if (stored !== null) return clampFontScale(Number(stored))
+    } catch {
+      // Ignore localStorage read errors in restricted contexts
+    }
+    return DEFAULT_FONT_SCALE
+  })
+
+  // Scale the root font size; Tailwind sizes are rem-based, so the whole UI follows
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+    document.documentElement.style.fontSize = fontScale === DEFAULT_FONT_SCALE ? '' : `${fontScale}%`
+  }, [fontScale])
+
+  const setFontScale = (scale: number) => {
+    const next = clampFontScale(scale)
+    setFontScaleState(next)
+    try {
+      localStorage.setItem(FONT_SCALE_STORAGE_KEY, String(next))
+    } catch {
+      // Ignore localStorage write errors
+    }
+  }
 
   const [systemPrefersDark, setSystemPrefersDark] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false
@@ -93,7 +137,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, isDark, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, setTheme, isDark, toggleTheme, fontScale, setFontScale }}>
       {children}
     </ThemeContext.Provider>
   )

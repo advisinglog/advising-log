@@ -499,9 +499,9 @@ export default function AdvisorLog() {
                           {sessionStudent?.name || session.studentId}
                         </h3>
                         {sessionStudent?.code && (
-                          <span className="font-mono text-[11px] text-slate-500">{sessionStudent.code}</span>
+                          <span className="font-mono text-[0.6875rem] text-slate-500">{sessionStudent.code}</span>
                         )}
-                        <div className="text-[11px]">
+                        <div className="text-[0.6875rem]">
                           <span className="mr-3 text-emerald-700 dark:text-emerald-300">
                             {t('วันที่บันทึก:', 'Entry date:')} {session.createdAt.split('T')[0]}
                           </span>
@@ -511,7 +511,7 @@ export default function AdvisorLog() {
                           </span>
                         </div>
                       </div>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      <p className="text-[0.6875rem] text-slate-500 dark:text-slate-400">
                         {request ? getCategoryLabel(request.category) : t('บันทึกการให้คำปรึกษา', 'Advising session')}
                       </p>
                       <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed whitespace-pre-wrap">
@@ -593,7 +593,7 @@ export default function AdvisorLog() {
                     ? ` · ${t('วันนัดหมาย:', 'Appointment date:')} ${appointment.scheduledDate}`
                     : ''}
                 </p>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 pt-0.5">
+                <p className="text-[0.6875rem] text-slate-500 dark:text-slate-400 pt-0.5">
                   {t(
                     'ข้อมูลนักศึกษาและคำร้องถูกเลือกให้อัตโนมัติ ไม่ต้องค้นหาใหม่',
                     'Student profile loaded automatically from the active selection.'
@@ -640,7 +640,7 @@ export default function AdvisorLog() {
                       <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100">
                         {t('งานที่มอบหมายไว้จากครั้งก่อนหน้า (การบ้าน/สิ่งที่ต้องทำต่อ)', 'Previous Assigned Follow-up Tasks')}
                       </h4>
-                      <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                      <p className="text-[0.6875rem] text-slate-600 dark:text-slate-400">
                         {t(
                           'ดึงงานเดิมของนักศึกษามาแสดงอัตโนมัติ ติ๊กเสร็จสิ้น หรือขยายกำหนดส่งได้ทันที',
                           'Auto-pulled from previous sessions. Check off done or extend due date.'
@@ -687,7 +687,7 @@ export default function AdvisorLog() {
                                 <div className="flex items-center gap-2 mt-1.5 text-xs flex-wrap">
                                   <span
                                     className={cn(
-                                      'font-mono text-[11px] px-2 py-0.5 rounded font-semibold',
+                                      'font-mono text-[0.6875rem] px-2 py-0.5 rounded font-semibold',
                                       isOverdue
                                         ? 'bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800'
                                         : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
@@ -781,7 +781,7 @@ export default function AdvisorLog() {
                                 {cfu.task}
                               </span>
                             </span>
-                            <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-mono shrink-0">
+                            <span className="text-[0.625rem] text-emerald-700 dark:text-emerald-400 font-mono shrink-0">
                               {t('เสร็จเมื่อ', 'Completed')}: {cfu.completedAt || '-'}
                             </span>
                           </div>
@@ -800,9 +800,9 @@ export default function AdvisorLog() {
                   <p className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
                     <User className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400" />
                     <span>{student?.name}</span>
-                    <span className="text-slate-500 font-mono text-[11px]">({student?.code})</span>
+                    <span className="text-slate-500 font-mono text-[0.6875rem]">({student?.code})</span>
                   </p>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-sky-100 dark:bg-sky-900 text-sky-700 dark:text-sky-300">
+                  <span className="px-2 py-0.5 rounded-full text-[0.625rem] font-semibold bg-sky-100 dark:bg-sky-900 text-sky-700 dark:text-sky-300">
                     {getCategoryLabel(selectedReq.category)}
                   </span>
                 </div>
@@ -820,7 +820,7 @@ export default function AdvisorLog() {
                       (d.status === 'uploaded' || d.status === 'required')
                   )) && (
                   <div className="pt-2 border-t border-sky-100 dark:border-sky-900/60 space-y-2">
-                    <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
+                    <span className="text-[0.6875rem] font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
                       <FileText className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400" />
                       {t('เอกสารประกอบคำร้องและแบบฟอร์มแนบ', 'Attached Documents & Submitted Forms')}
                     </span>
@@ -836,7 +836,7 @@ export default function AdvisorLog() {
                             variant="secondary"
                             type="button"
                             onClick={() => setPreviewDoc(att)}
-                            className="h-7 text-[11px] px-2"
+                            className="h-7 text-[0.6875rem] px-2"
                           >
                             <Eye className="h-3 w-3 mr-1" /> {t('เปิดดู', 'View')}
                           </Button>
@@ -869,7 +869,7 @@ export default function AdvisorLog() {
                                   cloudinaryPublicId: doc.cloudinaryPublicId,
                                 })
                               }
-                              className="h-7 text-[11px] px-2"
+                              className="h-7 text-[0.6875rem] px-2"
                             >
                               <Eye className="h-3 w-3 mr-1" /> {t('เปิดดู', 'View')}
                             </Button>
@@ -885,7 +885,7 @@ export default function AdvisorLog() {
                         onChange={e => setAutoApproveDocs(e.target.checked)}
                         className="rounded border-slate-300 text-sky-600 focus:ring-sky-500 h-3.5 w-3.5"
                       />
-                      <span className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
+                      <span className="text-[0.6875rem] font-semibold text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
                         <CheckCircle2 className="h-3.5 w-3.5" />
                         {t('รับรองและลงนามเอกสารแนบพร้อมบันทึกการให้คำปรึกษานี้', 'Endorse & approve attached documents with this advising log')}
                       </span>
@@ -901,7 +901,7 @@ export default function AdvisorLog() {
                 <label className="text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200">
                   {t('สรุปผลการให้คำปรึกษาและคำแนะนำ', 'Advising Notes & Summary')} <span className="text-red-500 font-bold ml-0.5">*</span>
                 </label>
-                <span className="text-[11px] text-slate-400 dark:text-slate-500">
+                <span className="text-[0.6875rem] text-slate-400 dark:text-slate-500">
                   {t('ครอบคลุมทั้งประเด็นปัญหา คำแนะนำทางวิชาการ และข้อตกลงร่วมกัน', 'Encompasses issues, advice, and next steps in one note')}
                 </span>
               </div>
@@ -933,7 +933,7 @@ export default function AdvisorLog() {
                       {t('ดูรายละเอียดเต็ม', 'View Full Details')}
                     </button>
                   </div>
-                  <span className="text-[10px] font-medium text-right">
+                  <span className="text-[0.625rem] font-medium text-right">
                     <span className="block text-emerald-700 dark:text-emerald-300">
                       {t('วันที่บันทึก:', 'Entry date:')} {existingSession.createdAt.split('T')[0]}
                     </span>
@@ -955,7 +955,7 @@ export default function AdvisorLog() {
                 <PlusCircle className="h-4 w-4 text-sky-600 dark:text-sky-400" />
                 <span>{t('มอบหมายงานติดตามผล (ไม่บังคับ)', 'Assign Follow-up Task (Optional)')}</span>
               </h3>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-3">
+              <p className="text-[0.6875rem] text-slate-500 dark:text-slate-400 mb-3">
                 {t(
                   'หากมีสิ่งที่นักศึกษาต้องดำเนินการส่งต่อในภายหลัง สามารถระบุเพื่อแจ้งเตือนในระบบได้',
                   'Assign an action item if the student needs to submit documents or report progress.'
@@ -1031,12 +1031,12 @@ export default function AdvisorLog() {
                     </p>
                   )}
                   {viewingStudent?.department && (
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    <p className="text-[0.6875rem] text-slate-500 dark:text-slate-400">
                       {t('สำนักวิชา / สาขา:', 'Department:')} {viewingStudent.department}
                     </p>
                   )}
                   {viewingStudent?.email && (
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    <p className="text-[0.6875rem] text-slate-500 dark:text-slate-400">
                       {t('อีเมล:', 'Email:')} {viewingStudent.email}
                     </p>
                   )}
@@ -1055,13 +1055,13 @@ export default function AdvisorLog() {
                     </p>
                   )}
                   {viewingAppointment?.location && (
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    <p className="text-[0.6875rem] text-slate-500 dark:text-slate-400">
                       <span className="text-slate-400 mr-1">{t('สถานที่ / รูปแบบ:', 'Location / Mode:')}</span>
                       {viewingAppointment.location}
                     </p>
                   )}
                   <div className="pt-1">
-                    <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-sky-100 dark:bg-sky-900/60 text-sky-800 dark:text-sky-200">
+                    <span className="inline-block px-2.5 py-0.5 rounded-full text-[0.6875rem] font-semibold bg-sky-100 dark:bg-sky-900/60 text-sky-800 dark:text-sky-200">
                       {viewingRequest ? getCategoryLabel(viewingRequest.category) : t('การให้คำปรึกษาทั่วไป', 'General Advising')}
                     </span>
                   </div>
@@ -1121,7 +1121,7 @@ export default function AdvisorLog() {
                           <p className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100">
                             {fu.task}
                           </p>
-                          <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                          <p className="text-[0.6875rem] text-slate-500 dark:text-slate-400 mt-0.5">
                             {t('กำหนดส่ง:', 'Due Date:')} {fu.dueDate || '-'}
                           </p>
                         </div>
@@ -1153,7 +1153,7 @@ export default function AdvisorLog() {
                             {doc.title || doc.fileName}
                           </span>
                         </div>
-                        <span className="text-[11px] text-sky-600 dark:text-sky-400 shrink-0 ml-2">
+                        <span className="text-[0.6875rem] text-sky-600 dark:text-sky-400 shrink-0 ml-2">
                           {t('เปิดดู', 'View')}
                         </span>
                       </button>

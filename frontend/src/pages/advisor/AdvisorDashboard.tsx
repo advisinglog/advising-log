@@ -381,7 +381,7 @@ export default function AdvisorDashboard() {
             <div key={student.id} className="flex items-center justify-between gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700">
               <div className="min-w-0">
                 <p className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate">{student.name}</p>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 font-mono mt-0.5">{student.code}</p>
+                <p className="text-[0.6875rem] text-slate-500 dark:text-slate-400 font-mono mt-0.5">{student.code}</p>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 truncate max-w-[48%]">{student.email}</p>
             </div>
@@ -462,7 +462,7 @@ export default function AdvisorDashboard() {
               ))}
             </div>
           )}
-          <p className="text-[11px] text-slate-400 dark:text-slate-500">
+          <p className="text-[0.6875rem] text-slate-400 dark:text-slate-500">
             {csvImportMode === 'replace'
               ? t('โหมดแทนที่จะนำออกเฉพาะนักศึกษาที่อยู่ในความดูแลของคุณและไม่มีในไฟล์นี้', 'Replace mode removes only your current advisees that are missing from this file.')
               : t('นักศึกษาที่มีรหัสอยู่แล้วจะไม่สร้างซ้ำ ระบบจะอัปเดตชื่อและจับคู่กับคุณ', 'Existing student IDs are not duplicated; their name is updated and they are assigned to you.')}
@@ -518,7 +518,7 @@ export default function AdvisorDashboard() {
                   >
                     <div>
                       <p className="text-xs font-bold text-slate-900 dark:text-slate-100">{student?.name || r.studentId} <span className="font-mono text-slate-400 font-normal">({student?.code})</span></p>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400">{catLabel} · <span className="text-slate-400 dark:text-slate-500">{t('วันที่สะดวก:', 'Pref:')} {r.preferredDate}</span></p>
+                      <p className="text-[0.6875rem] text-slate-500 dark:text-slate-400">{catLabel} · <span className="text-slate-400 dark:text-slate-500">{t('วันที่สะดวก:', 'Pref:')} {r.preferredDate}</span></p>
                     </div>
                     <StatusBadge status={r.status} />
                   </div>
@@ -550,7 +550,7 @@ export default function AdvisorDashboard() {
                   <div key={a.id} className="flex items-center justify-between p-3 bg-slate-50/80 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/60 rounded-xl">
                     <div>
                       <p className="text-xs font-bold text-slate-900 dark:text-slate-100">{student?.name || a.studentId} <span className="font-mono text-slate-400 font-normal">({student?.code})</span></p>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mt-0.5">
+                      <p className="text-[0.6875rem] text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mt-0.5">
                         <Clock className="h-3 w-3 text-sky-600 dark:text-sky-400" /> {a.scheduledDate} {a.scheduledTime} · {a.location}
                       </p>
                     </div>
@@ -620,7 +620,7 @@ export default function AdvisorDashboard() {
                       <p className="text-xs font-bold text-slate-900 dark:text-slate-100">{f.task}</p>
                       <StatusBadge status={f.status} />
                     </div>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    <p className="text-[0.6875rem] text-slate-500 dark:text-slate-400">
                       {t('นักศึกษา:', 'Student:')} {student?.name || f.studentId} · <span className="font-semibold text-slate-600 dark:text-slate-300">{t('กำหนด:', 'Due:')} {f.dueDate}</span>
                     </p>
                   </div>
@@ -652,9 +652,9 @@ export default function AdvisorDashboard() {
                   <div key={s.id} className="p-3 bg-slate-50/80 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/60 rounded-xl space-y-1">
                     <div className="flex items-center justify-between">
                       <p className="text-xs font-bold text-slate-900 dark:text-slate-100">{student?.name || s.studentId}</p>
-                      <span className="text-[11px] text-slate-400 font-medium">{s.sessionDate}</span>
+                      <span className="text-[0.6875rem] text-slate-400 font-medium">{s.sessionDate}</span>
                     </div>
-                    <p className="text-[11px] text-slate-600 dark:text-slate-300 line-clamp-1">{s.summary}</p>
+                    <p className="text-[0.6875rem] text-slate-600 dark:text-slate-300 line-clamp-1">{s.summary}</p>
                   </div>
                 )
               })}
@@ -722,10 +722,10 @@ export default function AdvisorDashboard() {
                   >
                     <div>
                       <span className="font-semibold block">{student.name}</span>
-                      <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">{student.code} · {student.email}</span>
+                      <span className="text-[0.625rem] text-slate-500 dark:text-slate-400 font-mono">{student.code} · {student.email}</span>
                     </div>
                     {isCurrentAdvisee ? (
-                      <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded">
+                      <span className="text-[0.625rem] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded">
                         {t('อยู่ในความดูแลแล้ว', 'Already Advisee')}
                       </span>
                     ) : isSelected ? (

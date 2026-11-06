@@ -250,7 +250,7 @@ export default function AdvisorScheduleCalendar({
                 <button
                   type="button"
                   onClick={goToPreferred}
-                  className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 px-2 py-1 rounded-lg border border-emerald-200 dark:border-emerald-800/60 transition-colors flex items-center gap-1 cursor-pointer"
+                  className="text-[0.6875rem] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 px-2 py-1 rounded-lg border border-emerald-200 dark:border-emerald-800/60 transition-colors flex items-center gap-1 cursor-pointer"
                   title={t('ไปยังวันที่นักศึกษาขอเข้าพบ', 'Jump to requested date')}
                 >
                   <Sparkles className="h-3 w-3" />
@@ -261,7 +261,7 @@ export default function AdvisorScheduleCalendar({
               <button
                 type="button"
                 onClick={goToToday}
-                className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 px-2 py-1 rounded-lg transition-colors cursor-pointer"
+                className="text-[0.6875rem] font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 px-2 py-1 rounded-lg transition-colors cursor-pointer"
               >
                 {t('วันนี้', 'Today')}
               </button>
@@ -292,7 +292,7 @@ export default function AdvisorScheduleCalendar({
           </div>
 
           {/* Calendar Days Header */}
-          <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-bold text-slate-500 dark:text-slate-400 pb-1">
+          <div className="grid grid-cols-7 gap-1 text-center text-[0.6875rem] font-bold text-slate-500 dark:text-slate-400 pb-1">
             {(language === 'th' ? DAY_NAMES_TH : DAY_NAMES_EN).map((dayName, idx) => (
               <div key={dayName} className={idx === 0 || idx === 6 ? 'text-rose-500' : ''}>
                 {dayName}
@@ -342,7 +342,7 @@ export default function AdvisorScheduleCalendar({
                   <div className="flex items-center gap-1 w-full truncate">
                     {hasAppointments ? (
                       <span
-                        className={`text-[9px] px-1 py-0.2 rounded font-bold truncate ${cell.isSelected
+                        className={`text-[0.5625rem] px-1 py-0.2 rounded font-bold truncate ${cell.isSelected
                           ? 'bg-white/20 text-white'
                           : 'bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300 border border-rose-200/60 dark:border-rose-900/60'
                           }`}
@@ -350,7 +350,7 @@ export default function AdvisorScheduleCalendar({
                         {cell.appointmentsCount} {t('นัด', 'apt')}
                       </span>
                     ) : cell.isPreferred && !cell.isSelected ? (
-                      <span className="text-[9px] font-semibold text-emerald-700 dark:text-emerald-300 truncate">
+                      <span className="text-[0.5625rem] font-semibold text-emerald-700 dark:text-emerald-300 truncate">
                         {t('ขอเข้าพบ', 'Req')}
                       </span>
                     ) : null}
@@ -370,7 +370,7 @@ export default function AdvisorScheduleCalendar({
                   <span className="text-sky-600 dark:text-sky-400 font-mono">{selectedDate || todayStr}</span>
                 </span>
               </h4>
-              <span className="text-[10px] font-semibold text-slate-500">
+              <span className="text-[0.625rem] font-semibold text-slate-500">
                 {selectedDateAppointments.length} {t('รายการ', 'scheduled')}
               </span>
             </div>
@@ -391,7 +391,7 @@ export default function AdvisorScheduleCalendar({
                           <span>·</span>
                           <span className="truncate">{student?.name || apt.studentId}</span>
                         </div>
-                        <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-2 mt-0.5 truncate">
+                        <div className="text-[0.6875rem] text-slate-500 dark:text-slate-400 flex items-center gap-2 mt-0.5 truncate">
                           {req?.category && <span>{getCategoryLabel(req.category)}</span>}
                           {apt.location && (
                             <span className="flex items-center gap-1 truncate">
@@ -405,7 +405,7 @@ export default function AdvisorScheduleCalendar({
                           )}
                         </div>
                       </div>
-                      <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-100 dark:bg-rose-900/60 text-rose-700 dark:text-rose-300 shrink-0">
+                      <span className="px-2 py-0.5 rounded-md text-[0.625rem] font-bold bg-rose-100 dark:bg-rose-900/60 text-rose-700 dark:text-rose-300 shrink-0">
                         {t('มีนัดหมายแล้ว', 'Booked')}
                       </span>
                     </div>
@@ -426,7 +426,7 @@ export default function AdvisorScheduleCalendar({
                 <AlertTriangle className="h-4 w-4 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
                 <div>
                   <p className="font-bold">{t('ช่วงเวลานี้มีนัดหมายอื่นแล้ว', 'Time Slot Collision Warning')}</p>
-                  <p className="text-[11px] mt-0.5">
+                  <p className="text-[0.6875rem] mt-0.5">
                     {t(
                       `ท่านมีนัดกับนักศึกษาอื่น (${store.users.find(u => u.id === collidedAppointment.studentId)?.name || collidedAppointment.studentId}) ในเวลานี้แล้ว กรุณาเลือกช่วงเวลาอื่น`,
                       `You already have an appointment with another student (${store.users.find(u => u.id === collidedAppointment.studentId)?.name || collidedAppointment.studentId}) at this slot. Please choose another slot.`
@@ -445,7 +445,7 @@ export default function AdvisorScheduleCalendar({
               <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
                 {advisorEmail ? `${t('บัญชี Google:', 'Google Account:')} ${advisorEmail}` : t('Google Calendar ของอาจารย์', 'Advisor Google Calendar')}
               </span>
-              <p className="text-[11px] text-slate-600 dark:text-slate-400">
+              <p className="text-[0.6875rem] text-slate-600 dark:text-slate-400">
                 {t('ตรวจสอบตารางสอน ประชุมคณะ และเวลาว่างของอาจารย์', 'Review teaching classes, faculty meetings, and availability.')}
               </p>
             </div>
@@ -455,7 +455,7 @@ export default function AdvisorScheduleCalendar({
                 <button
                   type="button"
                   onClick={() => setGoogleCalendarMode('WEEK')}
-                  className={`px-2 py-1 rounded font-semibold cursor-pointer text-[11px] ${googleCalendarMode === 'WEEK' ? 'bg-sky-600 text-white font-bold' : 'text-slate-600 dark:text-slate-400'
+                  className={`px-2 py-1 rounded font-semibold cursor-pointer text-[0.6875rem] ${googleCalendarMode === 'WEEK' ? 'bg-sky-600 text-white font-bold' : 'text-slate-600 dark:text-slate-400'
                     }`}
                 >
                   {t('สัปดาห์', 'Week')}
@@ -463,7 +463,7 @@ export default function AdvisorScheduleCalendar({
                 <button
                   type="button"
                   onClick={() => setGoogleCalendarMode('MONTH')}
-                  className={`px-2 py-1 rounded font-semibold cursor-pointer text-[11px] ${googleCalendarMode === 'MONTH' ? 'bg-sky-600 text-white font-bold' : 'text-slate-600 dark:text-slate-400'
+                  className={`px-2 py-1 rounded font-semibold cursor-pointer text-[0.6875rem] ${googleCalendarMode === 'MONTH' ? 'bg-sky-600 text-white font-bold' : 'text-slate-600 dark:text-slate-400'
                     }`}
                 >
                   {t('เดือน', 'Month')}

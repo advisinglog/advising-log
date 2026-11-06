@@ -248,7 +248,7 @@ export default function AdminDashboard() {
             <div className="h-11 w-11 rounded-xl bg-sky-50 dark:bg-sky-500/12 text-sky-600 dark:text-sky-300 flex items-center justify-center ring-1 ring-sky-200/60 dark:ring-sky-500/25 shadow-2xs group-hover:scale-105 transition-transform">
               <Users className="h-5 w-5" />
             </div>
-            <span className="text-[10px] font-bold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-500/12 px-2 py-0.5 rounded-full border border-sky-100 dark:border-sky-500/25">
+            <span className="text-[0.625rem] font-bold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-500/12 px-2 py-0.5 rounded-full border border-sky-100 dark:border-sky-500/25">
               {activeUserPct}% {t('เปิดใช้งาน', 'Active')}
             </span>
           </div>
@@ -256,7 +256,7 @@ export default function AdminDashboard() {
             <p className="text-3xl font-black tracking-tight text-slate-900 dark:text-slate-100 font-sans">{totalUsers}</p>
             <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">{t('ผู้ใช้งานทั้งหมดในระบบ', 'Total Registered Users')}</p>
           </div>
-          <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400">
+          <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[0.6875rem] text-slate-400">
             <span>{totalStudents} {t('นักศึกษา', 'Students')}</span>
             <span>·</span>
             <span>{totalAdvisors} {t('อาจารย์', 'Advisors')}</span>
@@ -268,7 +268,7 @@ export default function AdminDashboard() {
             <div className="h-11 w-11 rounded-xl bg-sky-50 dark:bg-sky-500/12 text-sky-600 dark:text-sky-300 flex items-center justify-center ring-1 ring-sky-200/60 dark:ring-sky-500/25 shadow-2xs group-hover:scale-105 transition-transform">
               <BookOpen className="h-5 w-5" />
             </div>
-            <span className="text-[10px] font-bold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-500/12 px-2 py-0.5 rounded-full border border-sky-100 dark:border-sky-500/25">
+            <span className="text-[0.625rem] font-bold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-500/12 px-2 py-0.5 rounded-full border border-sky-100 dark:border-sky-500/25">
               {studentPct}% {t('สัดส่วนผู้ใช้', 'Share')}
             </span>
           </div>
@@ -276,7 +276,7 @@ export default function AdminDashboard() {
             <p className="text-3xl font-black tracking-tight text-slate-900 dark:text-slate-100 font-sans">{totalStudents}</p>
             <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">{t('นักศึกษาที่ลงทะเบียน', 'Registered Students')}</p>
           </div>
-          <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400">
+          <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[0.6875rem] text-slate-400">
             <span>{t('สำนักวิชา ADT', 'School of ADT')}</span>
             <span>{t('บัญชีนักศึกษา', 'Student accounts')}</span>
           </div>
@@ -287,7 +287,7 @@ export default function AdminDashboard() {
             <div className="h-11 w-11 rounded-xl bg-sky-50 dark:bg-sky-500/12 text-sky-600 dark:text-sky-300 flex items-center justify-center ring-1 ring-sky-200/60 dark:ring-sky-500/25 shadow-2xs group-hover:scale-105 transition-transform">
               <Shield className="h-5 w-5" />
             </div>
-            <span className="text-[10px] font-bold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-500/12 px-2 py-0.5 rounded-full border border-sky-100 dark:border-sky-500/25">
+            <span className="text-[0.625rem] font-bold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-500/12 px-2 py-0.5 rounded-full border border-sky-100 dark:border-sky-500/25">
               {advisorPct}% {t('สัดส่วนผู้ใช้', 'Share')}
             </span>
           </div>
@@ -295,7 +295,7 @@ export default function AdminDashboard() {
             <p className="text-3xl font-black tracking-tight text-slate-900 dark:text-slate-100 font-sans">{totalAdvisors}</p>
             <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">{t('อาจารย์ที่ปรึกษา', 'Faculty Advisors')}</p>
           </div>
-          <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400">
+          <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[0.6875rem] text-slate-400">
             <span>{t('อัตราส่วนเฉลี่ย', 'Avg Load')}</span>
             <span className="font-semibold text-slate-700 dark:text-slate-200">{averageLoad} {t('คน/ท่าน', 'advisees')}</span>
           </div>
@@ -306,7 +306,7 @@ export default function AdminDashboard() {
             <div className="h-11 w-11 rounded-xl bg-sky-50 dark:bg-sky-500/12 text-sky-600 dark:text-sky-300 flex items-center justify-center ring-1 ring-sky-200/60 dark:ring-sky-500/25 shadow-2xs group-hover:scale-105 transition-transform">
               <FolderCog className="h-5 w-5" />
             </div>
-            <span className="text-[10px] font-bold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-500/12 px-2 py-0.5 rounded-full border border-sky-100 dark:border-sky-500/25">
+            <span className="text-[0.625rem] font-bold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-500/12 px-2 py-0.5 rounded-full border border-sky-100 dark:border-sky-500/25">
               {t('จับคู่สมบูรณ์', 'Mapped')}
             </span>
           </div>
@@ -314,7 +314,7 @@ export default function AdminDashboard() {
             <p className="text-3xl font-black tracking-tight text-slate-900 dark:text-slate-100 font-sans">{activeRosterCount}</p>
             <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">{t('คู่ที่ปรึกษาที่จัดสรรแล้ว', 'Roster Pairings')}</p>
           </div>
-          <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400">
+          <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[0.6875rem] text-slate-400">
             <span>{t('ความครอบคลุม', 'Coverage')}</span>
             <span className="font-semibold text-emerald-600 dark:text-emerald-400">{coveragePct}%</span>
           </div>
@@ -348,7 +348,7 @@ export default function AdminDashboard() {
                   <div className="h-10 w-10 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/60 dark:border-slate-700/60 flex items-center justify-center shadow-2xs group-hover:scale-105 transition-transform">
                     {mod.icon}
                   </div>
-                  <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${mod.tagColor}`}>
+                  <span className={`text-[0.625rem] font-extrabold px-2 py-0.5 rounded-full border ${mod.tagColor}`}>
                     {mod.count}
                   </span>
                 </div>
@@ -356,13 +356,13 @@ export default function AdminDashboard() {
                   <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
                     {mod.title}
                   </h4>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 line-clamp-2 leading-relaxed">
+                  <p className="text-[0.6875rem] text-slate-500 dark:text-slate-400 mt-1 line-clamp-2 leading-relaxed">
                     {mod.desc}
                   </p>
                 </div>
               </div>
 
-              <div className="pt-3 mt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[11px] font-semibold text-sky-600 dark:text-sky-400 group-hover:text-sky-700 dark:group-hover:text-sky-300">
+              <div className="pt-3 mt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[0.6875rem] font-semibold text-sky-600 dark:text-sky-400 group-hover:text-sky-700 dark:group-hover:text-sky-300">
                 <span>{t('เปิดจัดการ', 'Access module')}</span>
                 <ChevronRight className="h-3.5 w-3.5 group-hover:translate-x-1.5 transition-transform" />
               </div>
@@ -386,14 +386,14 @@ export default function AdminDashboard() {
                     <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
                       {t('ประวัติการทำงานล่าสุดของระบบ', 'Recent System Audit Activity')}
                     </h3>
-                    <p className="text-[11px] text-slate-400 dark:text-slate-500">
+                    <p className="text-[0.6875rem] text-slate-400 dark:text-slate-500">
                       {t('บันทึกการกระทำและเหตุการณ์ความปลอดภัยแบบเรียลไทม์', 'Real-time security and administrative events log')}
                     </p>
                   </div>
                 </div>
 
                 {/* Audit Filter Tabs */}
-                <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/70 p-0.5 rounded-xl border border-slate-200/60 dark:border-slate-700/60 text-[11px] font-semibold">
+                <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/70 p-0.5 rounded-xl border border-slate-200/60 dark:border-slate-700/60 text-[0.6875rem] font-semibold">
                   <button
                     onClick={() => setAuditFilter('all')}
                     className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
@@ -461,20 +461,20 @@ export default function AdminDashboard() {
                             <p className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
                               {log.description || '-'}
                             </p>
-                            <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500 flex-shrink-0 flex items-center gap-1">
+                            <span className="text-[0.625rem] font-mono text-slate-400 dark:text-slate-500 flex-shrink-0 flex items-center gap-1">
                               <Clock className="h-3 w-3" />
                               {timeStr}
                             </span>
                           </div>
 
                           <div className="flex flex-wrap items-center gap-2 mt-1">
-                            <span className="text-[11px] text-slate-600 dark:text-slate-400 font-medium">
+                            <span className="text-[0.6875rem] text-slate-600 dark:text-slate-400 font-medium">
                               {log.userName || 'System'}
                             </span>
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${role.bg} ${role.color}`}>
+                            <span className={`text-[0.625rem] font-bold px-2 py-0.5 rounded-md border ${role.bg} ${role.color}`}>
                               {t(role.labelTh, role.labelEn)}
                             </span>
-                            <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500 uppercase">
+                            <span className="text-[0.625rem] font-mono text-slate-400 dark:text-slate-500 uppercase">
                               · {(log.action || '').replace(/_/g, ' ')}
                             </span>
                           </div>
@@ -555,7 +555,7 @@ export default function AdminDashboard() {
 
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                 <span className="text-xl font-black text-slate-900 dark:text-slate-100 font-sans">{totalUsers}</span>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t('ผู้ใช้ทั้งหมด', 'Users')}</span>
+                <span className="text-[0.625rem] font-bold text-slate-400 uppercase tracking-wider">{t('ผู้ใช้ทั้งหมด', 'Users')}</span>
               </div>
             </div>
 
@@ -569,7 +569,7 @@ export default function AdminDashboard() {
                   </span>
                   <span className="text-xs font-bold text-slate-900 dark:text-slate-100">{totalStudents}</span>
                 </div>
-                <p className="text-[10px] text-slate-400 mt-0.5">{studentPct}% {t('ของระบบ', 'share')}</p>
+                <p className="text-[0.625rem] text-slate-400 mt-0.5">{studentPct}% {t('ของระบบ', 'share')}</p>
               </Link>
 
               <Link to="/admin/users?role=advisor" className="block hover:border-sky-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 p-2 rounded-xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800/80">
@@ -580,7 +580,7 @@ export default function AdminDashboard() {
                   </span>
                   <span className="text-xs font-bold text-slate-900 dark:text-slate-100">{totalAdvisors}</span>
                 </div>
-                <p className="text-[10px] text-slate-400 mt-0.5">{advisorPct}% {t('ของระบบ', 'share')}</p>
+                <p className="text-[0.625rem] text-slate-400 mt-0.5">{advisorPct}% {t('ของระบบ', 'share')}</p>
               </Link>
 
               <Link to="/admin/users?role=qa_chair" className="block hover:border-sky-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 p-2 rounded-xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800/80">
@@ -591,7 +591,7 @@ export default function AdminDashboard() {
                   </span>
                   <span className="text-xs font-bold text-slate-900 dark:text-slate-100">{totalQAChairs}</span>
                 </div>
-                <p className="text-[10px] text-slate-400 mt-0.5">{qaPct}% {t('ของระบบ', 'share')}</p>
+                <p className="text-[0.625rem] text-slate-400 mt-0.5">{qaPct}% {t('ของระบบ', 'share')}</p>
               </Link>
 
               <Link to="/admin/users?role=admin" className="block hover:border-sky-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 p-2 rounded-xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800/80">
@@ -602,14 +602,14 @@ export default function AdminDashboard() {
                   </span>
                   <span className="text-xs font-bold text-slate-900 dark:text-slate-100">{totalAdmins}</span>
                 </div>
-                <p className="text-[10px] text-slate-400 mt-0.5">{adminPct}% {t('ของระบบ', 'share')}</p>
+                <p className="text-[0.625rem] text-slate-400 mt-0.5">{adminPct}% {t('ของระบบ', 'share')}</p>
               </Link>
               <Link to="/admin/users?role=super_admin" className="block rounded-xl border border-slate-200/60 bg-slate-50/70 p-2 hover:border-sky-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:border-slate-800/80 dark:bg-slate-800/40">
                 <div className="flex items-center justify-between text-xs">
                   <span className="font-semibold text-slate-600 dark:text-slate-300">Super Admin</span>
                   <span className="font-bold text-slate-900 dark:text-slate-100">{totalSuperAdmins}</span>
                 </div>
-                <p className="mt-0.5 text-[10px] text-slate-400">{totalUsers > 0 ? Math.round(totalSuperAdmins / totalUsers * 100) : 0}% {t('ของระบบ', 'share')}</p>
+                <p className="mt-0.5 text-[0.625rem] text-slate-400">{totalUsers > 0 ? Math.round(totalSuperAdmins / totalUsers * 100) : 0}% {t('ของระบบ', 'share')}</p>
               </Link>
             </div>
           </Card>
@@ -632,7 +632,7 @@ export default function AdminDashboard() {
               <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
                 {t('ผู้ใช้งานล่าสุดในระบบ', 'Recently Registered / Active Users')}
               </h3>
-              <p className="text-[11px] text-slate-400 dark:text-slate-500">
+              <p className="text-[0.6875rem] text-slate-400 dark:text-slate-500">
                 {t('บัญชีผู้ใช้งานที่เปิดใช้งานและเข้าใช้งานล่าสุดในระบบ', 'Active accounts and role credentials')}
               </p>
             </div>
@@ -658,7 +658,7 @@ export default function AdminDashboard() {
               >
                 <div className="flex items-start justify-between gap-2">
                   <UserAvatar name={user.name} avatar={user.avatar} size="md" />
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${role.bg} ${role.color}`}>
+                  <span className={`text-[0.625rem] font-bold px-2 py-0.5 rounded-md border ${role.bg} ${role.color}`}>
                     {t(role.labelTh, role.labelEn)}
                   </span>
                 </div>
@@ -667,10 +667,10 @@ export default function AdminDashboard() {
                   <p className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
                     {user.name}
                   </p>
-                  <p className="text-[11px] font-mono text-slate-400 dark:text-slate-500 mt-0.5">
+                  <p className="text-[0.6875rem] font-mono text-slate-400 dark:text-slate-500 mt-0.5">
                     {user.code}
                   </p>
-                  <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate mt-1">
+                  <p className="text-[0.625rem] text-slate-400 dark:text-slate-500 truncate mt-1">
                     {user.email}
                   </p>
                 </div>

@@ -192,29 +192,29 @@ export function DocumentViewerModal({
                   {document.title || document.fileName || t('เอกสาร', 'Document')}
                 </h3>
                 {extension && (
-                  <span className="uppercase text-[10px] font-mono px-2 py-0.5 rounded-md bg-slate-200/80 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-semibold">
+                  <span className="uppercase text-[0.625rem] font-mono px-2 py-0.5 rounded-md bg-slate-200/80 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-semibold">
                     {extension}
                   </span>
                 )}
                 {document.signatureMethod === 'e_signature' && (
-                  <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-sky-100 dark:bg-sky-950/80 text-sky-700 dark:text-sky-300">
+                  <span className="hidden sm:inline-flex items-center gap-1 text-[0.625rem] font-bold px-2 py-0.5 rounded-md bg-sky-100 dark:bg-sky-950/80 text-sky-700 dark:text-sky-300">
                     <CheckCircle2 className="h-3 w-3" />
                     <span>{t('ลายเซ็นดิจิทัล (E-Sign)', 'E-Signature')}</span>
                   </span>
                 )}
                 {document.signatureMethod === 'wet_signature' && (
-                  <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300">
+                  <span className="hidden sm:inline-flex items-center gap-1 text-[0.625rem] font-bold px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300">
                     <FileCheck className="h-3 w-3" />
                     <span>{t('ลายเซ็นจริงบนกระดาษ', 'Physical Signature')}</span>
                   </span>
                 )}
                 {document.signatureMethod === 'none' && (
-                  <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300">
+                  <span className="hidden sm:inline-flex items-center gap-1 text-[0.625rem] font-bold px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300">
                     <span>{t('ไม่ต้องลงลายมือชื่อ', 'No Signature Required')}</span>
                   </span>
                 )}
               </div>
-              <p className="text-[11px] text-slate-400 dark:text-slate-500 truncate mt-0.5">
+              <p className="text-[0.6875rem] text-slate-400 dark:text-slate-500 truncate mt-0.5">
                 {document.studentName ? `${document.studentName} (${document.studentCode || ''}) • ` : ''}
                 {document.uploadedAt ? `${t('อัปโหลดเมื่อ', 'Uploaded')}: ${document.uploadedAt}` : fileName}
               </p>
@@ -274,7 +274,7 @@ export function DocumentViewerModal({
         {canZoomRotate && (
           <div className="flex items-center justify-between px-4 sm:px-6 py-2 bg-slate-100/70 dark:bg-slate-800/60 border-b border-slate-200/60 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-300">
             <div className="flex items-center gap-2">
-              <span className="font-medium text-[11px] text-slate-500 dark:text-slate-400">
+              <span className="font-medium text-[0.6875rem] text-slate-500 dark:text-slate-400">
                 {t('มุมมอง:', 'View:')} {zoom}%
               </span>
             </div>
@@ -305,7 +305,7 @@ export function DocumentViewerModal({
               {(zoom !== 100 || rotation !== 0) && (
                 <button
                   onClick={handleResetView}
-                  className="text-[10px] font-semibold px-2 py-1 rounded-md bg-white dark:bg-slate-700 hover:bg-slate-200 text-slate-600 dark:text-slate-200 ml-1 transition-colors cursor-pointer"
+                  className="text-[0.625rem] font-semibold px-2 py-1 rounded-md bg-white dark:bg-slate-700 hover:bg-slate-200 text-slate-600 dark:text-slate-200 ml-1 transition-colors cursor-pointer"
                 >
                   {t('รีเซ็ต', 'Reset')}
                 </button>

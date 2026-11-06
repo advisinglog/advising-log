@@ -304,7 +304,7 @@ export default function UserManagement() {
       render: (u: User) => (
         <div>
           <p className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100">{u.name}</p>
-          <p className="text-[11px] text-slate-400 dark:text-slate-400 font-mono">{u.email}</p>
+          <p className="text-[0.6875rem] text-slate-400 dark:text-slate-400 font-mono">{u.email}</p>
         </div>
       ),
     },
@@ -330,7 +330,7 @@ export default function UserManagement() {
         }
         const r = roleLabels[u.role] || { th: u.role, en: u.role }
         return (
-          <span className={`inline-block whitespace-nowrap text-[11px] font-bold px-2.5 py-0.5 rounded-md border ${
+          <span className={`inline-block whitespace-nowrap text-[0.6875rem] font-bold px-2.5 py-0.5 rounded-md border ${
             u.role === 'super_admin'
               ? 'bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border-purple-200/70 dark:border-purple-800'
               : u.role === 'admin'
@@ -366,7 +366,7 @@ export default function UserManagement() {
 
         if (isSuperAdminUser) {
           return (
-            <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-400 dark:text-slate-400 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700">
+            <span className="inline-flex items-center gap-1.5 text-[0.6875rem] font-semibold text-slate-400 dark:text-slate-400 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700">
               <ShieldCheck className="h-3.5 w-3.5 text-sky-500" />
               {t('คุ้มครองระดับระบบ', 'Root Protected')}
             </span>
@@ -375,7 +375,7 @@ export default function UserManagement() {
 
         if (isProtectedFromAdmin) {
           return (
-            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-400 dark:text-slate-500 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 border border-slate-200/50 dark:border-slate-700/50">
+            <span className="inline-flex items-center gap-1 text-[0.6875rem] font-semibold text-slate-400 dark:text-slate-500 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 border border-slate-200/50 dark:border-slate-700/50">
               <ShieldAlert className="h-3 w-3 text-slate-400" />
               {t('สงวนสิทธิ์ Super Admin', 'Super Admin Only')}
             </span>
@@ -384,7 +384,7 @@ export default function UserManagement() {
 
         if (isSelf) {
           return (
-            <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500 italic">
+            <span className="text-[0.6875rem] font-medium text-slate-400 dark:text-slate-500 italic">
               {t('บัญชีปัจจุบันของคุณ', 'Current user')}
             </span>
           )
@@ -448,7 +448,7 @@ export default function UserManagement() {
             <p className="font-bold text-slate-900 dark:text-slate-100">
               {t('ศูนย์ควบคุมระบบ AI และการกำหนดสิทธิ์ (AI Governance Hub)', 'AI & LLM Governance Console')}
             </p>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+            <p className="text-[0.6875rem] text-slate-500 dark:text-slate-400">
               {t(
                 'สำหรับการเปิด/ปิดสิทธิ์ AI รายบุคคลของอาจารย์และ QA รวมทั้งตั้งค่า API Key ส่วนกลาง กรุณาใช้หน้าจัดการ AI โดยเฉพาะ',
                 'To manage individual AI permissions for faculty/QA and configure central API keys, visit the dedicated AI Governance console.'
@@ -642,7 +642,7 @@ export default function UserManagement() {
                       {derivedSingleName}
                     </span>
                   </div>
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400 pt-1 border-t border-sky-100 dark:border-sky-900/40 flex items-center gap-1.5">
+                  <p className="text-[0.625rem] text-slate-500 dark:text-slate-400 pt-1 border-t border-sky-100 dark:border-sky-900/40 flex items-center gap-1.5">
                     <Info className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400 flex-shrink-0" />
                     <span>
                       {t(
@@ -699,7 +699,7 @@ export default function UserManagement() {
                       <Upload className="h-3.5 w-3.5 mr-1.5" />
                       {t('นำเข้าไฟล์ CSV', 'Import CSV File')}
                     </label>
-                    <span className="text-[10px] text-slate-400 font-mono">
+                    <span className="text-[0.625rem] text-slate-400 font-mono">
                       {t('สร้างชื่อ, รหัส และบทบาทให้อัตโนมัติจากอีเมล', 'Name, code & role auto-derived from email')}
                     </span>
                   </div>
@@ -734,7 +734,7 @@ export default function UserManagement() {
                     <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
                       {t('ตรวจสอบข้อมูลก่อนนำเข้า (Live Preview)', 'Live Preview')}
                     </span>
-                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-sky-100 dark:bg-sky-950/60 text-sky-800 dark:text-sky-300 border border-sky-200 dark:border-sky-800">
+                    <span className="text-[0.6875rem] font-bold px-2 py-0.5 rounded-md bg-sky-100 dark:bg-sky-950/60 text-sky-800 dark:text-sky-300 border border-sky-200 dark:border-sky-800">
                       {parsedBulkUsers.filter(u => !u.isDuplicate).length} {t('คนพร้อมนำเข้า', 'users ready')}
                     </span>
                   </div>
@@ -769,13 +769,13 @@ export default function UserManagement() {
                            <p className="font-semibold text-slate-900 dark:text-slate-100 truncate">
                             {u.name} <span className="font-mono text-slate-400 font-normal">({u.email})</span>
                           </p>
-                          <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                          <p className="text-[0.625rem] text-slate-500 dark:text-slate-400">
                             {u.department} <span className="font-mono text-slate-400">• Code: {u.code}</span>
                           </p>
                         </div>
                         <div className="flex items-center gap-1.5 flex-shrink-0">
                           {u.isStu ? (
-                            <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-sky-100 text-sky-800 dark:bg-sky-950/60 dark:text-sky-300">
+                            <span className="px-2 py-0.5 rounded-md text-[0.625rem] font-bold bg-sky-100 text-sky-800 dark:bg-sky-950/60 dark:text-sky-300">
                               Student
                             </span>
                           ) : (
@@ -788,7 +788,7 @@ export default function UserManagement() {
                                   [u.email.toLowerCase()]: val,
                                 }))
                               }}
-                              className={`px-2 py-0.5 rounded-md text-[10px] font-bold border cursor-pointer focus:outline-none focus:ring-1 focus:ring-sky-500 ${
+                              className={`px-2 py-0.5 rounded-md text-[0.625rem] font-bold border cursor-pointer focus:outline-none focus:ring-1 focus:ring-sky-500 ${
                                 u.role === 'super_admin'
                                   ? 'bg-purple-50 text-purple-800 border-purple-300 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-800'
                                   : u.role === 'admin'
@@ -804,7 +804,7 @@ export default function UserManagement() {
                             </select>
                           )}
                           {u.isDuplicate && (
-                            <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300">
+                            <span className="px-2 py-0.5 rounded-md text-[0.625rem] font-bold bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300">
                               {t('มีในระบบแล้ว', 'Duplicate')}
                             </span>
                           )}

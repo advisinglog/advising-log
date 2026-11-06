@@ -3,6 +3,7 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import App from './App'
 import { ThemeProvider, useTheme } from '@/contexts/ThemeContext'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
+import { FontSizeControl } from '@/components/ui/FontSizeControl'
 import { LanguageProvider, useLanguage } from '@/contexts/LanguageContext'
 
 function ThemeTestConsumer() {
@@ -90,6 +91,60 @@ describe('App component', () => {
       fireEvent.click(toggleButton)
     })
     expect(document.documentElement.classList.contains('dark')).toBe(false)
+  })
+
+  it('FontSizeControl enlarges text from a popover, persists it, and caps at 130%', () => {
+    render(
+      <ThemeProvider>
+        <LanguageProvider>
+          <FontSizeControl />
+        </LanguageProvider>
+      </ThemeProvider>
+    )
+
+    act(() => { fireEvent.click(screen.getByRole('button', { name: /ขนาดตัวอักษร|Text size/i })) })
+    const options = screen.getAllByRole('radio')
+    // Only enlarging is offered: 100 / 110 / 120 / 130
+    expect(options).toHaveLength(4)
+    expect(options[0]).toHaveAttribute('aria-checked', 'true')
+
+    act(() => { fireEvent.click(screen.getByRole('radio', { name: /130%/ })) })
+    expect(document.documentElement.style.fontSize).toBe('130%')
+    expect(localStorage.getItem('advising_log_font_scale')).toBe('130')
+    expect(screen.getByRole('radio', { name: /130%/ })).toHaveAttribute('aria-checked', 'true')
+
+    // Back to default removes the override entirely
+    act(() => { fireEvent.click(screen.getByRole('radio', { name: /100%/ })) })
+    expect(document.documentElement.style.fontSize).toBe('')
+
+    // Clicking inside the panel keeps it open; clicking outside dismisses it
+    act(() => { fireEvent.pointerDown(screen.getByRole('dialog')) })
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    act(() => { fireEvent.pointerDown(document.body) })
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('snaps out-of-range stored text sizes into the 100–130% range', () => {
+    localStorage.setItem('advising_log_font_scale', '500')
+    const { unmount } = render(
+      <ThemeProvider>
+        <LanguageProvider>
+          <FontSizeControl />
+        </LanguageProvider>
+      </ThemeProvider>
+    )
+    expect(document.documentElement.style.fontSize).toBe('130%')
+    unmount()
+
+    localStorage.setItem('advising_log_font_scale', '90')
+    render(
+      <ThemeProvider>
+        <LanguageProvider>
+          <FontSizeControl />
+        </LanguageProvider>
+      </ThemeProvider>
+    )
+    expect(document.documentElement.style.fontSize).toBe('')
   })
 
   it('translates advising subcategories properly in Thai and English modes', () => {

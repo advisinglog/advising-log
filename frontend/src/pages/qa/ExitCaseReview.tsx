@@ -81,7 +81,7 @@ export default function ExitCaseReview() {
             <p className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100">
               {s?.name || e.studentId}
             </p>
-            <p className="text-[11px] font-mono text-slate-400 dark:text-slate-400">
+            <p className="text-[0.6875rem] font-mono text-slate-400 dark:text-slate-400">
               {s?.code || ''}
             </p>
           </div>
@@ -423,7 +423,7 @@ export default function ExitCaseReview() {
                       'Formal Committee Resolution:'
                     )}
                   </span>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/80 text-emerald-800 dark:text-emerald-200">
+                  <span className="text-[0.625rem] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/80 text-emerald-800 dark:text-emerald-200">
                     {t('มีมติเรียบร้อย', 'Recorded')}
                   </span>
                 </div>
@@ -444,7 +444,7 @@ export default function ExitCaseReview() {
                     'Qualitative Problem Diagnosis:'
                   )}
                 </span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                <span className="text-[0.625rem] font-mono px-2 py-0.5 rounded bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                   #{selectedCase.reasonCode}
                 </span>
               </div>
@@ -481,13 +481,13 @@ export default function ExitCaseReview() {
                       'Student Voice Survey Response'
                     )}
                   </h4>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-100 dark:bg-sky-900 text-sky-800 dark:text-sky-200">
+                  <span className="text-[0.625rem] font-bold px-2 py-0.5 rounded-full bg-sky-100 dark:bg-sky-900 text-sky-800 dark:text-sky-200">
                     AUN-QA
                   </span>
                 </div>
 
                 <div className="space-y-2 p-3.5 bg-sky-50/60 dark:bg-sky-950/40 rounded-xl border border-sky-100 dark:border-sky-900/40 text-xs">
-                  <div className="flex flex-wrap items-center gap-3 text-[11px] font-semibold text-slate-700 dark:text-slate-300 border-b border-sky-100/80 dark:border-sky-800/60 pb-2">
+                  <div className="flex flex-wrap items-center gap-3 text-[0.6875rem] font-semibold text-slate-700 dark:text-slate-300 border-b border-sky-100/80 dark:border-sky-800/60 pb-2">
                     <span>
                       {t('คะแนนหลักสูตร:', 'Curriculum:')}{' '}
                       <strong className="text-sky-700 dark:text-sky-300">
@@ -524,7 +524,7 @@ export default function ExitCaseReview() {
                     {(voiceResponse.primaryFactors || []).map((fac, idx) => (
                       <span
                         key={idx}
-                        className="px-2 py-0.5 rounded-md text-[10px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-medium"
+                        className="px-2 py-0.5 rounded-md text-[0.625rem] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-medium"
                       >
                         {fac}
                       </span>
@@ -627,7 +627,7 @@ export default function ExitCaseReview() {
                         <div className="flex items-center gap-2 min-w-0">
                           <FileUp className="h-3.5 w-3.5 text-sky-600 flex-shrink-0" />
                           <span className="font-semibold text-slate-800 dark:text-slate-200 truncate">{doc.documentName}</span>
-                          {doc.fileName && <span className="text-[11px] font-mono text-slate-400 truncate">({doc.fileName})</span>}
+                          {doc.fileName && <span className="text-[0.6875rem] font-mono text-slate-400 truncate">({doc.fileName})</span>}
                         </div>
                         <div className="flex items-center gap-1 flex-shrink-0">
                           <Button
@@ -645,7 +645,7 @@ export default function ExitCaseReview() {
                                 signatureMethod: doc.signatureMethod,
                               })
                             }
-                            className="text-[11px] h-7 px-2"
+                            className="text-[0.6875rem] h-7 px-2"
                           >
                             <Eye className="h-3 w-3 mr-1" /> {t('ดูเอกสาร', 'View')}
                           </Button>
@@ -720,7 +720,7 @@ export default function ExitCaseReview() {
             {/* Case Summary Pill */}
             <div className="flex items-center justify-between p-2.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200/80 dark:border-slate-700/80 text-xs">
               <div>
-                <span className="text-slate-400 block text-[10px]">
+                <span className="text-slate-400 block text-[0.625rem]">
                   {t('เคสคำร้องของนักศึกษา', 'Student Case')}
                 </span>
                 <span className="font-bold text-slate-800 dark:text-slate-200">
@@ -729,7 +729,7 @@ export default function ExitCaseReview() {
                   (#{selectedCase.id})
                 </span>
               </div>
-              <span className="text-[11px] font-semibold text-sky-600 dark:text-sky-400">
+              <span className="text-[0.6875rem] font-semibold text-sky-600 dark:text-sky-400">
                 {getExitTypeLabel(selectedCase.exitType)}
               </span>
             </div>
@@ -812,7 +812,7 @@ export default function ExitCaseReview() {
                       <span className="font-bold text-slate-900 dark:text-slate-100 block">
                         {opt.label}
                       </span>
-                      <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                      <span className="text-[0.6875rem] text-slate-500 dark:text-slate-400">
                         {opt.desc}
                       </span>
                     </div>

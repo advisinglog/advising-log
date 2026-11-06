@@ -800,7 +800,7 @@ export default function QualitativeExitAnalysis({ view = 'analysis' }: { view?: 
                 <h3 className="text-base font-bold text-slate-900 dark:text-white">
                   {t('การวิเคราะห์และสรุปประเด็นด้วย AI', 'Qualitative Synthesis & AI Assistant')}
                 </h3>
-                <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700 font-mono">
+                <span className="text-[0.6875rem] font-medium px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700 font-mono">
                   {aiProvider}
                 </span>
               </div>
@@ -817,7 +817,7 @@ export default function QualitativeExitAnalysis({ view = 'analysis' }: { view?: 
             >
               <Key className="h-3.5 w-3.5 mr-1.5 text-slate-500" />
               <span>{t('คีย์ API', 'API Key')}</span>
-              <span className="ml-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700">
+              <span className="ml-1.5 px-2 py-0.5 rounded-full text-[0.625rem] font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700">
                 {getStoredAiKeySource() === 'custom'
                   ? t(`คีย์ API ของฉัน · ${AI_PROVIDER_PRESETS[getStoredAiProvider()].name}`, `My API key · ${AI_PROVIDER_PRESETS[getStoredAiProvider()].name}`)
                   : t('คีย์ API เริ่มต้น', 'Default API key')}
@@ -862,7 +862,7 @@ export default function QualitativeExitAnalysis({ view = 'analysis' }: { view?: 
                 </p>
               </div>
             </div>
-            <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-200/80 dark:bg-amber-900/80 text-amber-900 dark:text-amber-100 self-start sm:self-auto uppercase tracking-wide">
+            <span className="text-[0.625rem] font-bold px-2.5 py-1 rounded-full bg-amber-200/80 dark:bg-amber-900/80 text-amber-900 dark:text-amber-100 self-start sm:self-auto uppercase tracking-wide">
               {t('ระงับบริการชั่วคราว', 'Paused')}
             </span>
           </div>
@@ -884,7 +884,7 @@ export default function QualitativeExitAnalysis({ view = 'analysis' }: { view?: 
                 </p>
               </div>
             </div>
-            <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 self-start sm:self-auto uppercase tracking-wide">
+            <span className="text-[0.625rem] font-bold px-2.5 py-1 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 self-start sm:self-auto uppercase tracking-wide">
               {t('ไม่มีสิทธิ์ใช้งาน', 'Unauthorized')}
             </span>
           </div>
@@ -917,7 +917,7 @@ export default function QualitativeExitAnalysis({ view = 'analysis' }: { view?: 
             <Bot className="h-3.5 w-3.5 text-slate-500" />
             <span>{t('ถาม-ตอบข้อมูลคำร้อง', 'Query Assistant')}</span>
             {aiChatMessages.length > 0 && (
-              <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium">
+              <span className="px-1.5 py-0.2 rounded-full text-[0.625rem] bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium">
                 {aiChatMessages.length}
               </span>
             )}
@@ -998,7 +998,7 @@ export default function QualitativeExitAnalysis({ view = 'analysis' }: { view?: 
                   key={idx}
                   type="button"
                   onClick={() => handleSendAiChat(language === 'th' ? chip.labelTh : chip.labelEn)}
-                  className="text-[11px] font-medium px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer shadow-2xs"
+                  className="text-[0.6875rem] font-medium px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer shadow-2xs"
                 >
                   {language === 'th' ? chip.labelTh : chip.labelEn}
                 </button>
@@ -1030,7 +1030,7 @@ export default function QualitativeExitAnalysis({ view = 'analysis' }: { view?: 
                           : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700 rounded-bl-xs whitespace-pre-line'
                       }`}
                     >
-                      <div className="flex items-center justify-between gap-2 mb-1 opacity-70 text-[10px]">
+                      <div className="flex items-center justify-between gap-2 mb-1 opacity-70 text-[0.625rem]">
                         <span>{msg.role === 'user' ? t('ประธานหลักสูตร / QA', 'Program Chair / QA') : 'AdvisingLog AI'}</span>
                         <span>{msg.timestamp}</span>
                       </div>
@@ -1095,7 +1095,7 @@ export default function QualitativeExitAnalysis({ view = 'analysis' }: { view?: 
               {t('เปรียบเทียบสาเหตุ: "ทำไมเด็กลาออก?" VS "ทำไมเด็กขอพักการศึกษา?"', 'Comparative Matrix: Resignation vs. Leave')}
             </h3>
           </div>
-          <span className="text-[11px] font-semibold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-500/10 px-3 py-1 rounded-full border border-sky-200/60 dark:border-sky-500/20 self-start sm:self-auto">
+          <span className="text-[0.6875rem] font-semibold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-500/10 px-3 py-1 rounded-full border border-sky-200/60 dark:border-sky-500/20 self-start sm:self-auto">
             {t(`รวมทั้งหมด ${totalDepartures} เคส`, `Total ${totalDepartures} Cases`)}
           </span>
         </div>
@@ -1118,7 +1118,7 @@ export default function QualitativeExitAnalysis({ view = 'analysis' }: { view?: 
                   </span>
                 </div>
               </div>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-100 dark:border-rose-900/50">
+              <span className="text-[0.625rem] font-bold px-2 py-0.5 rounded-md bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-100 dark:border-rose-900/50">
                 {t('ความเสี่ยงตกหล่น', 'Attrition Risk')}
               </span>
             </div>
@@ -1132,7 +1132,7 @@ export default function QualitativeExitAnalysis({ view = 'analysis' }: { view?: 
                         <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
                         {t(`อันดับ ${idx + 1}: ${item.label}`, `Rank ${idx + 1}: ${item.label}`)}
                       </span>
-                      <span className="text-[10px] font-mono font-bold bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 px-1.5 py-0.5 rounded">
+                      <span className="text-[0.625rem] font-mono font-bold bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 px-1.5 py-0.5 rounded">
                         {item.percentage}% ({item.count} {t('เคส', 'cases')})
                       </span>
                     </div>
@@ -1172,7 +1172,7 @@ export default function QualitativeExitAnalysis({ view = 'analysis' }: { view?: 
                   </span>
                 </div>
               </div>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-slate-200/80 dark:border-slate-700/70">
+              <span className="text-[0.625rem] font-bold px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-slate-200/80 dark:border-slate-700/70">
                 {t('โอกาสรักษาผู้เรียน 100%', '100% Retention Target')}
               </span>
             </div>
@@ -1186,7 +1186,7 @@ export default function QualitativeExitAnalysis({ view = 'analysis' }: { view?: 
                         <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
                         {t(`อันดับ ${idx + 1}: ${item.label}`, `Rank ${idx + 1}: ${item.label}`)}
                       </span>
-                      <span className="text-[10px] font-mono font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 px-1.5 py-0.5 rounded">
+                      <span className="text-[0.625rem] font-mono font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 px-1.5 py-0.5 rounded">
                         {item.percentage}% ({item.count} {t('เคส', 'cases')})
                       </span>
                     </div>
@@ -1284,7 +1284,7 @@ export default function QualitativeExitAnalysis({ view = 'analysis' }: { view?: 
                           {payload.map((entry: any, i: number) => {
                             const c = entry.dataKey === 'withdrawal' ? '#e11d48' : '#d97706'
                             return (
-                              <div key={i} className="flex items-center justify-between gap-3 text-[11px]">
+                              <div key={i} className="flex items-center justify-between gap-3 text-[0.6875rem]">
                                 <div className="flex items-center gap-1.5">
                                   <span className="h-2 w-2 rounded-full" style={{ backgroundColor: c }} />
                                   <span className="text-slate-600 dark:text-slate-300 font-medium">{entry.name}</span>
@@ -1366,13 +1366,13 @@ export default function QualitativeExitAnalysis({ view = 'analysis' }: { view?: 
                       {theme.icon}
                       {theme.label}
                     </span>
-                    <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-md border ${theme.badgeTone}`}>
+                    <span className={`text-[0.6875rem] font-bold px-2.5 py-0.5 rounded-md border ${theme.badgeTone}`}>
                       {theme.count} {t('เคส', 'Cases')} ({theme.percentage}%)
                     </span>
                   </div>
 
                   {/* Sub breakdown: Withdrawals vs Leaves */}
-                  <div className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400">
+                  <div className="flex items-center gap-2 text-[0.6875rem] text-slate-500 dark:text-slate-400">
                     <span className="inline-flex items-center gap-1">
                       <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
                       {theme.withdrawalCount} {t('ลาออก', 'Withdrawal')}
@@ -1392,7 +1392,7 @@ export default function QualitativeExitAnalysis({ view = 'analysis' }: { view?: 
                         {t('เสียงสะท้อนนักศึกษา (Student Voice):', 'Student Voice:')}
                       </span>
                       {primaryVoice?.studentCode && (
-                        <span className="text-[10px] font-mono font-normal text-slate-400">
+                        <span className="text-[0.625rem] font-mono font-normal text-slate-400">
                           {privacyMask ? 'ID Masked' : primaryVoice.studentCode}
                         </span>
                       )}
@@ -1416,7 +1416,7 @@ export default function QualitativeExitAnalysis({ view = 'analysis' }: { view?: 
                         {t('การวินิจฉัยของอาจารย์ที่ปรึกษา:', 'Advisor Evaluation:')}
                       </span>
                       {primaryDiagnosis?.advisorName && (
-                        <span className="text-[10px] font-normal text-slate-400">
+                        <span className="text-[0.625rem] font-normal text-slate-400">
                           {primaryDiagnosis.advisorName}
                         </span>
                       )}
@@ -1441,7 +1441,7 @@ export default function QualitativeExitAnalysis({ view = 'analysis' }: { view?: 
                     <CheckCircle2 className="h-3 w-3" />
                     {t('มาตรการแก้ไข AUN-QA Criteria 6.4:', 'AUN-QA CQI Action:')}
                   </span>
-                  <p className="text-slate-600 dark:text-slate-300 text-[11px] leading-relaxed">
+                  <p className="text-slate-600 dark:text-slate-300 text-[0.6875rem] leading-relaxed">
                     {theme.action}
                   </p>
                 </div>
@@ -1462,11 +1462,11 @@ export default function QualitativeExitAnalysis({ view = 'analysis' }: { view?: 
 
               <div className="grid grid-cols-2 gap-2 py-1">
                 <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/70 dark:border-slate-700/60">
-                  <p className="text-[10px] text-slate-400 uppercase font-semibold">{t('เคสขอออก/พักทั้งหมด', 'Total Exit Cases')}</p>
+                  <p className="text-[0.625rem] text-slate-400 uppercase font-semibold">{t('เคสขอออก/พักทั้งหมด', 'Total Exit Cases')}</p>
                   <p className="text-base font-bold text-slate-900 dark:text-slate-100 mt-0.5">{store.exitCases.length} {t('ราย', 'cases')}</p>
                 </div>
                 <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/70 dark:border-slate-700/60">
-                  <p className="text-[10px] text-slate-400 uppercase font-semibold">{t('เสียงสะท้อนนักศึกษา', 'Student Voices')}</p>
+                  <p className="text-[0.625rem] text-slate-400 uppercase font-semibold">{t('เสียงสะท้อนนักศึกษา', 'Student Voices')}</p>
                   <p className="text-base font-bold text-sky-600 dark:text-sky-400 mt-0.5">{store.studentVoiceResponses.length} {t('ชุด', 'surveys')}</p>
                 </div>
               </div>
@@ -1602,7 +1602,7 @@ export default function QualitativeExitAnalysis({ view = 'analysis' }: { view?: 
                       {(() => {
                         if (c.exitType === 'transfer') {
                           return (
-                            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-100 dark:bg-purple-900/60 text-purple-800 dark:text-purple-200 border border-purple-200/80 dark:border-purple-800">
+                            <span className="px-2.5 py-0.5 rounded-full text-[0.6875rem] font-bold bg-purple-100 dark:bg-purple-900/60 text-purple-800 dark:text-purple-200 border border-purple-200/80 dark:border-purple-800">
                               <span className="inline-flex items-center gap-1.5">
                                 <ArrowRightLeft className="h-3.5 w-3.5" />
                                 {t('ขอโอนย้ายสถาบัน', 'Institution Transfer')}
@@ -1612,7 +1612,7 @@ export default function QualitativeExitAnalysis({ view = 'analysis' }: { view?: 
                         }
                         if (c.exitType === 'dropout') {
                           return (
-                            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 dark:bg-rose-900/60 text-rose-800 dark:text-rose-200 border border-rose-200/80 dark:border-rose-800">
+                            <span className="px-2.5 py-0.5 rounded-full text-[0.6875rem] font-bold bg-rose-100 dark:bg-rose-900/60 text-rose-800 dark:text-rose-200 border border-rose-200/80 dark:border-rose-800">
                               <span className="inline-flex items-center gap-1.5">
                                 <UserX className="h-3.5 w-3.5" />
                                 {t('พ้นสภาพนักศึกษา', 'Dropout')}
@@ -1622,7 +1622,7 @@ export default function QualitativeExitAnalysis({ view = 'analysis' }: { view?: 
                         }
                         if (c.exitType === 'leave_of_absence') {
                           return (
-                            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-200 border border-amber-200/80 dark:border-amber-800">
+                            <span className="px-2.5 py-0.5 rounded-full text-[0.6875rem] font-bold bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-200 border border-amber-200/80 dark:border-amber-800">
                               <span className="inline-flex items-center gap-1.5">
                                 <HeartHandshake className="h-3.5 w-3.5" />
                                 {t('ขอพักการศึกษา', 'Leave of Absence')}
@@ -1631,7 +1631,7 @@ export default function QualitativeExitAnalysis({ view = 'analysis' }: { view?: 
                           )
                         }
                         return (
-                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 dark:bg-rose-900/60 text-rose-800 dark:text-rose-200 border border-rose-200/80 dark:border-rose-800">
+                          <span className="px-2.5 py-0.5 rounded-full text-[0.6875rem] font-bold bg-rose-100 dark:bg-rose-900/60 text-rose-800 dark:text-rose-200 border border-rose-200/80 dark:border-rose-800">
                             <span className="inline-flex items-center gap-1.5">
                               <UserX className="h-3.5 w-3.5" />
                               {t('ขอลาออกถาวร', 'Withdrawal')}
@@ -1652,7 +1652,7 @@ export default function QualitativeExitAnalysis({ view = 'analysis' }: { view?: 
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <span className="text-[11px] font-semibold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-500/10 px-2.5 py-0.5 rounded-full border border-sky-100 dark:border-sky-500/20">
+                      <span className="text-[0.6875rem] font-semibold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-500/10 px-2.5 py-0.5 rounded-full border border-sky-100 dark:border-sky-500/20">
                         {getExitReasonLabel(c.reasonCode)}
                       </span>
                       <StatusBadge status={c.status} />
@@ -1663,14 +1663,14 @@ export default function QualitativeExitAnalysis({ view = 'analysis' }: { view?: 
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 text-sm">
                     {/* Left: What Student Stated */}
                     <div className="p-3.5 bg-slate-50/70 dark:bg-slate-800/40 rounded-xl space-y-1.5">
-                      <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide block">
+                      <span className="text-[0.6875rem] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide block">
                         {t('เหตุผลที่นักศึกษาระบุ (Student Voice Details):', 'Student Stated Reason:')}
                       </span>
                       <p className="text-slate-700 dark:text-slate-300 leading-relaxed italic text-xs">
                         "{c.details}"
                       </p>
                       {voice?.whatCouldUniversityDoBetter && (
-                        <p className="text-[11px] text-sky-700 dark:text-sky-300 pt-1 border-t border-slate-200/60 dark:border-slate-700/60 mt-1 flex items-center gap-1.5">
+                        <p className="text-[0.6875rem] text-sky-700 dark:text-sky-300 pt-1 border-t border-slate-200/60 dark:border-slate-700/60 mt-1 flex items-center gap-1.5">
                           <Lightbulb className="h-3 w-3 text-amber-500 flex-shrink-0" />
                           <span>{t('สิ่งที่อยากให้ ม. ปรับปรุง:', 'University Feedback:')} "{voice.whatCouldUniversityDoBetter}"</span>
                         </p>
@@ -1679,9 +1679,9 @@ export default function QualitativeExitAnalysis({ view = 'analysis' }: { view?: 
 
                     {/* Right: Advisor Assessment */}
                     <div className="p-3.5 bg-sky-50/40 dark:bg-sky-950/20 rounded-xl border border-sky-100 dark:border-sky-900/40 space-y-1.5">
-                      <span className="text-[10px] font-semibold text-sky-700 dark:text-sky-300 uppercase tracking-wider flex items-center justify-between">
+                      <span className="text-[0.625rem] font-semibold text-sky-700 dark:text-sky-300 uppercase tracking-wider flex items-center justify-between">
                         <span>{t('การวินิจฉัยของอาจารย์ที่ปรึกษา:', 'Advisor Diagnostic:')}</span>
-                        <span className="font-medium text-[10px] text-slate-400">{advisor?.name}</span>
+                        <span className="font-medium text-[0.625rem] text-slate-400">{advisor?.name}</span>
                       </span>
                       {assessment ? (
                         <>
@@ -1689,7 +1689,7 @@ export default function QualitativeExitAnalysis({ view = 'analysis' }: { view?: 
                             {assessment.assessment}
                           </p>
                           {assessment.recommendation && (
-                            <p className="text-[11px] text-emerald-700 dark:text-emerald-400 pt-1 border-t border-sky-100/80 dark:border-sky-900/40 mt-1 font-semibold flex items-center gap-1.5">
+                            <p className="text-[0.6875rem] text-emerald-700 dark:text-emerald-400 pt-1 border-t border-sky-100/80 dark:border-sky-900/40 mt-1 font-semibold flex items-center gap-1.5">
                               <CheckCircle2 className="h-3 w-3 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
                               <span>{t('ข้อเสนอแนะ:', 'Recommendation:')} {assessment.recommendation}</span>
                             </p>
@@ -1707,19 +1707,19 @@ export default function QualitativeExitAnalysis({ view = 'analysis' }: { view?: 
                   <div className="flex items-center justify-between pt-1 text-xs">
                     <div className="flex flex-wrap items-center gap-1.5">
                       <span className="text-xs text-slate-400 font-medium mr-1">{t('แท็กปัญหา:', 'Root Tags:')}</span>
-                      <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[10px] font-mono">
+                      <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[0.625rem] font-mono">
                         #{c.reasonCode}
                       </span>
                       {c.exitType === 'leave_of_absence' ? (
-                        <span className="px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 text-[10px]">
+                        <span className="px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 text-[0.625rem]">
                           #ReEntryPlanned
                         </span>
                       ) : c.exitType === 'transfer' ? (
-                        <span className="px-2 py-0.5 rounded-md bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-[10px]">
+                        <span className="px-2 py-0.5 rounded-md bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-[0.625rem]">
                           #TransferOut
                         </span>
                       ) : (
-                        <span className="px-2 py-0.5 rounded-md bg-rose-50 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 text-[10px]">
+                        <span className="px-2 py-0.5 rounded-md bg-rose-50 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 text-[0.625rem]">
                           #PermanentDeparture
                         </span>
                       )}
@@ -1876,12 +1876,12 @@ export default function QualitativeExitAnalysis({ view = 'analysis' }: { view?: 
                       <MessageSquareHeart className="h-4 w-4 text-sky-600" />
                       {t('แบบประเมินประสบการณ์ของนักศึกษา (Student Voice Survey)', 'Student Voice Survey Response')}
                     </span>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-sky-100 dark:bg-sky-900 text-sky-800 dark:text-sky-200">
+                    <span className="text-[0.625rem] font-bold px-2 py-0.5 rounded bg-sky-100 dark:bg-sky-900 text-sky-800 dark:text-sky-200">
                       AUN-QA Criteria 6 & 8
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 text-[11px] font-semibold text-slate-700 dark:text-slate-300">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 text-[0.6875rem] font-semibold text-slate-700 dark:text-slate-300">
                     <div>{t('หลักสูตร:', 'Curriculum:')} <strong className="text-sky-700 dark:text-sky-300">{voice.ratings?.curriculumRelevance ?? 4}/5</strong></div>
                     <div>{t('การสอน:', 'Teaching:')} <strong className="text-sky-700 dark:text-sky-300">{voice.ratings?.teachingQuality ?? 4}/5</strong></div>
                     <div>{t('อาจารย์ที่ปรึกษา:', 'Advisor:')} <strong className="text-sky-700 dark:text-sky-300">{voice.ratings?.advisorSupport ?? 5}/5</strong></div>
@@ -1956,7 +1956,7 @@ export default function QualitativeExitAnalysis({ view = 'analysis' }: { view?: 
                     variant="secondary"
                     onClick={() => handleRunCaseAiDiagnostic(drilldownCase)}
                     disabled={caseAiLoading}
-                    className="cursor-pointer text-[11px] py-1 h-7"
+                    className="cursor-pointer text-[0.6875rem] py-1 h-7"
                   >
                     {caseAiLoading ? (
                       <>
@@ -1974,7 +1974,7 @@ export default function QualitativeExitAnalysis({ view = 'analysis' }: { view?: 
               </div>
 
               {caseAiDiagnostic[drilldownCase.id] ? (
-                <div className="prose prose-sm dark:prose-invert max-w-none text-[11px] sm:text-xs leading-relaxed text-slate-800 dark:text-slate-200 whitespace-pre-line pt-1 border-t border-sky-200/50 dark:border-sky-900/40">
+                <div className="prose prose-sm dark:prose-invert max-w-none text-[0.6875rem] sm:text-xs leading-relaxed text-slate-800 dark:text-slate-200 whitespace-pre-line pt-1 border-t border-sky-200/50 dark:border-sky-900/40">
                   {caseAiDiagnostic[drilldownCase.id]}
                 </div>
               ) : (
@@ -2042,7 +2042,7 @@ export default function QualitativeExitAnalysis({ view = 'analysis' }: { view?: 
                     <span className="text-xs font-bold text-slate-900 dark:text-white">{opt.title}</span>
                     {active && <Check className="h-3.5 w-3.5 ml-auto text-sky-600 dark:text-sky-400" />}
                   </div>
-                  <p className="mt-1 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">{opt.desc}</p>
+                  <p className="mt-1 text-[0.6875rem] leading-relaxed text-slate-500 dark:text-slate-400">{opt.desc}</p>
                 </button>
               )
             })}
@@ -2106,11 +2106,11 @@ export default function QualitativeExitAnalysis({ view = 'analysis' }: { view?: 
                                   <div className="min-w-0 flex-1">
                                     <div className="flex items-center justify-between gap-1">
                                       <span className="truncate">{preset.name}</span>
-                                      <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 shrink-0">
+                                      <span className="text-[0.625rem] font-mono px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 shrink-0">
                                         {preset.badge}
                                       </span>
                                     </div>
-                                    <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate mt-0.5 font-normal">
+                                    <p className="text-[0.625rem] text-slate-400 dark:text-slate-500 truncate mt-0.5 font-normal">
                                       {language === 'th' ? preset.taglineTh : preset.taglineEn}
                                     </p>
                                   </div>
@@ -2138,7 +2138,7 @@ export default function QualitativeExitAnalysis({ view = 'analysis' }: { view?: 
                       href={currentPreset.studioUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-sky-600 dark:text-sky-400 hover:underline text-[11px] font-medium inline-flex items-center gap-1 transition-colors"
+                      className="text-sky-600 dark:text-sky-400 hover:underline text-[0.6875rem] font-medium inline-flex items-center gap-1 transition-colors"
                     >
                       <span>{t('ขอรับคีย์ API ได้ที่ไหน?', 'Where do I get an API key?')}</span>
                       <ExternalLink className="h-3 w-3" />
@@ -2176,12 +2176,12 @@ export default function QualitativeExitAnalysis({ view = 'analysis' }: { view?: 
                       </button>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between text-[11px] text-slate-400 pt-0.5">
-                    <span className="font-mono text-[10px]">
+                  <div className="flex items-center justify-between text-[0.6875rem] text-slate-400 pt-0.5">
+                    <span className="font-mono text-[0.625rem]">
                       {currentPreset.keyFormatHint}
                     </span>
                     {personalApiKey.trim() && (
-                      <span className="text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1 text-[11px]">
+                      <span className="text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1 text-[0.6875rem]">
                         <Check className="h-3 w-3" />
                         {t('พร้อมใช้งาน', 'Ready')}
                       </span>
@@ -2194,7 +2194,7 @@ export default function QualitativeExitAnalysis({ view = 'analysis' }: { view?: 
                   <button
                     type="button"
                     onClick={() => setShowAdvancedModel(!showAdvancedModel)}
-                    className="flex items-center gap-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer"
+                    className="flex items-center gap-1 text-[0.6875rem] font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer"
                   >
                     <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showAdvancedModel ? 'rotate-180' : ''}`} />
                     {t(`ขั้นสูง: รุ่นโมเดล (${customModel || currentPreset.defaultModel})`, `Advanced: model (${customModel || currentPreset.defaultModel})`)}
@@ -2207,7 +2207,7 @@ export default function QualitativeExitAnalysis({ view = 'analysis' }: { view?: 
                       <label className="text-xs font-semibold text-slate-800 dark:text-slate-200">
                         {t('รุ่นโมเดล', 'Model')}
                       </label>
-                      <span className="text-[10px] text-slate-400 font-mono">
+                      <span className="text-[0.625rem] text-slate-400 font-mono">
                         {currentPreset.badge}
                       </span>
                     </div>
@@ -2232,7 +2232,7 @@ export default function QualitativeExitAnalysis({ view = 'analysis' }: { view?: 
                         <>
                           <div className="fixed inset-0 z-40" onClick={() => setShowModelDropdown(false)} />
                           <div className="absolute left-0 right-0 top-full mt-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl z-50 py-1.5 max-h-64 overflow-y-auto animate-[slideIn_0.12s_ease-out]">
-                            <div className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                            <div className="px-3 py-1 text-[0.625rem] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                               {t('โมเดลแนะนำสำหรับค่ายนี้', 'Recommended for this Provider')}
                             </div>
                             {currentPreset.popularModels.map((m) => {
@@ -2257,7 +2257,7 @@ export default function QualitativeExitAnalysis({ view = 'analysis' }: { view?: 
                                   <div className="flex items-center gap-2 min-w-0">
                                     <span className="truncate">{m}</span>
                                     {isDefault && (
-                                      <span className="text-[10px] font-sans px-1.5 py-0.2 rounded bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800 shrink-0">
+                                      <span className="text-[0.625rem] font-sans px-1.5 py-0.2 rounded bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800 shrink-0">
                                         {t('แนะนำ', 'Recommended')}
                                       </span>
                                     )}
@@ -2304,7 +2304,7 @@ export default function QualitativeExitAnalysis({ view = 'analysis' }: { view?: 
                 {/* Custom Model Input if custom is chosen */}
                 {(isCustomModelInput || isCustomModelOption) && (
                   <div className="space-y-1 pt-0.5">
-                    <label className="text-[11px] font-medium text-slate-600 dark:text-slate-400">
+                    <label className="text-[0.6875rem] font-medium text-slate-600 dark:text-slate-400">
                       {t('ระบุชื่อรหัสโมเดลเฉพาะเจาะจง (Custom Model ID):', 'Custom Model ID:')}
                     </label>
                     <input
@@ -2326,7 +2326,7 @@ export default function QualitativeExitAnalysis({ view = 'analysis' }: { view?: 
                 </div>
 
                 {/* Minimal PDPA Assurance */}
-                <div className="flex items-center gap-1.5 text-[11px] text-slate-400 pt-0.5">
+                <div className="flex items-center gap-1.5 text-[0.6875rem] text-slate-400 pt-0.5">
                   <ShieldCheck className="h-3.5 w-3.5 text-slate-400 shrink-0" />
                   <span>{t('คีย์ API จะถูกเก็บไว้ในเบราว์เซอร์นี้เท่านั้น และจะถูกทดสอบอัตโนมัติเมื่อกดบันทึก', 'Your API key is stored only in this browser and is tested automatically when you save.')}</span>
                 </div>
@@ -2349,11 +2349,11 @@ export default function QualitativeExitAnalysis({ view = 'analysis' }: { view?: 
                 )}
                 <div className="truncate">
                   <p className="font-bold truncate">{testResult.message}</p>
-                  <p className="text-[10px] opacity-80">{testResult.provider}</p>
+                  <p className="text-[0.625rem] opacity-80">{testResult.provider}</p>
                 </div>
               </div>
               {testResult.latencyMs !== undefined && (
-                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-white dark:bg-slate-900 border shrink-0">
+                <span className="text-[0.625rem] font-mono font-bold px-2 py-0.5 rounded-full bg-white dark:bg-slate-900 border shrink-0">
                   ⚡ {testResult.latencyMs}ms
                 </span>
               )}

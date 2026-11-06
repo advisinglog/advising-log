@@ -134,7 +134,7 @@ export default function EarlyWarning() {
         return (
           <div>
             <p className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100">{s?.name}</p>
-            <p className="text-[11px] font-mono text-slate-400 dark:text-slate-400">{s?.code}</p>
+            <p className="text-[0.6875rem] font-mono text-slate-400 dark:text-slate-400">{s?.code}</p>
           </div>
         )
       },
@@ -216,7 +216,7 @@ export default function EarlyWarning() {
                 <div className="flex items-center justify-between mb-3">
                   <div>
                     <p className="text-xs font-semibold text-slate-900 dark:text-slate-100">{store.users.find(u => u.id === w.studentId)?.name}</p>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400">{getWarningTypeLabel(w.warningType)} · {w.dateDetected}</p>
+                    <p className="text-[0.6875rem] text-slate-500 dark:text-slate-400">{getWarningTypeLabel(w.warningType)} · {w.dateDetected}</p>
                   </div>
                   <StatusBadge status={w.status} />
                 </div>
@@ -224,7 +224,7 @@ export default function EarlyWarning() {
                   {followUps.map(fw => (
                     <div key={fw.id} className="p-3 bg-slate-50/60 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">{fw.createdAt}</span>
+                        <span className="text-[0.6875rem] font-mono text-slate-500 dark:text-slate-400">{fw.createdAt}</span>
                         <div className="flex items-center gap-1.5">
                           <StatusBadge status={fw.status} />
                           {fw.status !== 'completed' && (
@@ -244,13 +244,13 @@ export default function EarlyWarning() {
                       </div>
                       <p className="text-xs text-slate-700 dark:text-slate-300 mb-1">{fw.notes}</p>
                       {fw.referredTo && (
-                        <p className="text-[11px] font-semibold text-sky-700 dark:text-sky-400">{t('ส่งต่อไปยัง', 'Referred to')}: {getReferralLabel(fw.referredTo)}</p>
+                        <p className="text-[0.6875rem] font-semibold text-sky-700 dark:text-sky-400">{t('ส่งต่อไปยัง', 'Referred to')}: {getReferralLabel(fw.referredTo)}</p>
                       )}
                       {fw.actionsTaken && (
-                        <p className="text-[11px] text-slate-600 dark:text-slate-400 italic">{t('การดำเนินการ', 'Actions')}: {fw.actionsTaken}</p>
+                        <p className="text-[0.6875rem] text-slate-600 dark:text-slate-400 italic">{t('การดำเนินการ', 'Actions')}: {fw.actionsTaken}</p>
                       )}
                       {fw.outcome && (
-                        <p className="text-[11px] text-slate-600 dark:text-slate-400 italic">{t('ผลลัพธ์', 'Outcome')}: {fw.outcome}</p>
+                        <p className="text-[0.6875rem] text-slate-600 dark:text-slate-400 italic">{t('ผลลัพธ์', 'Outcome')}: {fw.outcome}</p>
                       )}
                     </div>
                   ))}
@@ -340,7 +340,7 @@ export default function EarlyWarning() {
           <div className="p-3 bg-sky-50/70 dark:bg-sky-950/40 rounded-xl border border-sky-100 dark:border-sky-800">
             <p className="text-xs font-semibold text-sky-900 dark:text-sky-200 mb-1">{t('นักศึกษา', 'Student')}</p>
             <p className="text-xs text-slate-700 dark:text-slate-300">{store.users.find(u => u.id === selectedWarning?.studentId)?.name}</p>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">{selectedWarning?.description}</p>
+            <p className="text-[0.6875rem] text-slate-500 dark:text-slate-400 mt-1">{selectedWarning?.description}</p>
           </div>
 
           <div>

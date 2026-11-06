@@ -470,7 +470,7 @@ export default function RequestAdvising() {
                           <span className="h-2 w-2 rounded-full bg-sky-500 flex-shrink-0 ring-2 ring-sky-200 dark:ring-sky-900" />
                           <span className="truncate font-medium">{fu.task}</span>
                           {fu.dueDate && (
-                            <span className="text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/80 px-2 py-0.5 rounded-md font-mono text-[10px] font-medium ml-auto flex-shrink-0 border border-sky-200/60 dark:border-sky-800/50">
+                            <span className="text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/80 px-2 py-0.5 rounded-md font-mono text-[0.625rem] font-medium ml-auto flex-shrink-0 border border-sky-200/60 dark:border-sky-800/50">
                               {t('ครบกำหนด:', 'Due:')} {fu.dueDate}
                             </span>
                           )}
@@ -520,12 +520,12 @@ export default function RequestAdvising() {
                               {advisor.name}
                             </p>
                             {isAssignedAdvisor ? (
-                              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800/60">
+                              <span className="inline-flex items-center gap-1 text-[0.625rem] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800/60">
                                 <CheckCircle2 className="h-3 w-3 text-emerald-500" />
                                 {t('อาจารย์ที่ปรึกษาประจำตัว', 'Assigned Advisor')}
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/80 px-2 py-0.5 rounded-full border border-sky-200 dark:border-sky-800/60">
+                              <span className="inline-flex items-center gap-1 text-[0.625rem] font-bold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/80 px-2 py-0.5 rounded-full border border-sky-200 dark:border-sky-800/60">
                                 {t('อาจารย์ประจำสาขา', 'Faculty Advisor')}
                               </span>
                             )}
@@ -617,11 +617,11 @@ export default function RequestAdvising() {
                             <div className="min-w-0">
                               <div className="flex items-center gap-1.5 flex-wrap">
                                 <span className="font-bold text-slate-900 dark:text-slate-100 truncate">{assignedAdvisor.name}</span>
-                                <span className="text-[9px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950 px-1.5 py-0.2 rounded border border-emerald-200 dark:border-emerald-800">
+                                <span className="text-[0.5625rem] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950 px-1.5 py-0.2 rounded border border-emerald-200 dark:border-emerald-800">
                                   {t('อาจารย์ที่ปรึกษาประจำตัว', 'Assigned Advisor')}
                                 </span>
                               </div>
-                              <p className="text-[11px] text-slate-400 truncate mt-0.5">{assignedAdvisor.department || assignedAdvisor.email}</p>
+                              <p className="text-[0.6875rem] text-slate-400 truncate mt-0.5">{assignedAdvisor.department || assignedAdvisor.email}</p>
                             </div>
                           </div>
                           {advisor?.id === assignedAdvisor.id && <Check className="h-4 w-4 text-sky-600 dark:text-sky-400 flex-shrink-0 ml-2" />}
@@ -659,7 +659,7 @@ export default function RequestAdvising() {
                                 </div>
                                 <div className="min-w-0">
                                   <p className="font-bold text-slate-900 dark:text-slate-100 truncate">{u.name}</p>
-                                  <p className="text-[11px] text-slate-400 truncate mt-0.5">{u.department || u.email}</p>
+                                  <p className="text-[0.6875rem] text-slate-400 truncate mt-0.5">{u.department || u.email}</p>
                                 </div>
                               </div>
                               {isSelected && <Check className="h-4 w-4 text-sky-600 dark:text-sky-400 flex-shrink-0 ml-2" />}
@@ -721,7 +721,7 @@ export default function RequestAdvising() {
                         {`${t('หมวดหมู่:', 'Category:')} ${category ? getCategoryLabel(category) : t('-- กรุณาเลือกหมวดหมู่เรื่องที่ต้องการปรึกษา --', '-- Select Advising Category --')}`}
                       </p>
                       {category && (
-                        <p className="text-[11px] text-slate-400 dark:text-slate-500 truncate">
+                        <p className="text-[0.6875rem] text-slate-400 dark:text-slate-500 truncate">
                           {t('หมวดหมู่ที่เลือกสำหรับการนัดหมาย', 'Selected advising consultation category')}
                         </p>
                       )}
@@ -1005,7 +1005,7 @@ export default function RequestAdvising() {
                         <p className="text-xs font-semibold text-slate-900 dark:text-slate-100">
                           {t('แบบสำรวจเสียงของนักศึกษา (Student Voice)', 'Student Voice Survey')}
                         </p>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                        <p className="text-[0.6875rem] text-slate-500 dark:text-slate-400">
                           {hasVoiceResponse
                             ? t('บันทึกข้อมูลเสียงของนักศึกษาเรียบร้อยแล้ว', 'Survey response recorded')
                             : t('จำเป็นต้องทำแบบสำรวจก่อนส่งคำร้องในหมวดนี้', 'Survey required before submitting this category')}
@@ -1059,7 +1059,7 @@ export default function RequestAdvising() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1">
+                    <label className="block text-[0.6875rem] font-medium text-slate-500 dark:text-slate-400 mb-1">
                       {t('วันที่ต้องการเข้าพบ', 'Meeting Date')} <span className="text-red-500 font-bold ml-0.5">*</span>
                     </label>
                     <input
@@ -1071,7 +1071,7 @@ export default function RequestAdvising() {
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1">
+                    <label className="block text-[0.6875rem] font-medium text-slate-500 dark:text-slate-400 mb-1">
                       {t('เวลาที่ต้องการเข้าพบ', 'Meeting Time')} <span className="text-red-500 font-bold ml-0.5">*</span>
                     </label>
                     <input
@@ -1084,7 +1084,7 @@ export default function RequestAdvising() {
                         }`}
                     />
                     {isCurrentTimeSlotTaken && (
-                      <p className="text-[11px] text-rose-500 dark:text-rose-400 mt-1 font-semibold flex items-center gap-1">
+                      <p className="text-[0.6875rem] text-rose-500 dark:text-rose-400 mt-1 font-semibold flex items-center gap-1">
                         <AlertTriangle className="h-3 w-3" />
                         {t('ช่วงเวลานี้มีนัดหมายแล้ว กรุณาเลือกเวลาอื่น', 'This slot is already booked. Please choose another time.')}
                       </p>
@@ -1103,7 +1103,7 @@ export default function RequestAdvising() {
                           `Selected date (${preferredDate}) has ${sameDateAppointments.length} existing booking(s):`
                         )}
                       </p>
-                      <p className="text-[11px] leading-relaxed">
+                      <p className="text-[0.6875rem] leading-relaxed">
                         {t('ช่วงเวลาที่ติดนัดหมาย:', 'Busy slots:')}{' '}
                         <span className="font-semibold">{sameDateAppointments.map(a => a.scheduledTime).join(', ')}</span>{' '}
                         — {t('แนะนำให้เลือกช่วงเวลาอื่นเพื่อหลีกเลี่ยงการนัดชนกัน', 'Please pick an open hour to avoid collision.')}
@@ -1133,7 +1133,7 @@ export default function RequestAdvising() {
                   <label className="block text-sm sm:text-base font-bold text-slate-800 dark:text-slate-200">
                     {t('เอกสารประกอบและแบบคำร้อง (ถ้ามี)', 'Supporting Documents & Forms')}
                   </label>
-                  <span className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">
+                  <span className="text-[0.6875rem] text-slate-400 dark:text-slate-500 font-medium">
                     {t('รองรับ PDF, รูปภาพ, Word (ไม่เกิน 10MB)', 'Supports PDF, Image, Word up to 10MB')}
                   </span>
                 </div>
@@ -1149,7 +1149,7 @@ export default function RequestAdvising() {
                           ? t('เอกสารประกอบคำร้องขอลาพัก / ลาออก', 'Exit Petition Supporting Files')
                           : t('เอกสารการลงทะเบียน / เพิ่ม-ถอน', 'Registration & Petition Documents')}
                     </p>
-                    <p className="text-slate-600 dark:text-slate-300 text-[11px] leading-relaxed">
+                    <p className="text-slate-600 dark:text-slate-300 text-[0.6875rem] leading-relaxed">
                       {t(
                         'แนบไฟล์แบบฟอร์มหรือเอกสารหลักฐานที่นี่ อาจารย์ที่ปรึกษาจะสามารถเปิดดูและลงนามรับรองเอกสารได้โดยตรงเมื่อบันทึกผลการเข้าพบ',
                         'Attach your completed form or evidence here. Your advisor will be able to preview and endorse the document directly when logging your session.'
@@ -1185,7 +1185,7 @@ export default function RequestAdvising() {
                         <FileText className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400" />
                         <span className="truncate max-w-[200px] font-semibold">{f.fileName}</span>
                         {f.size && (
-                          <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
+                          <span className="text-[0.625rem] text-slate-500 dark:text-slate-400 font-mono">
                             ({f.size > 1024 * 1024 ? `${(f.size / (1024 * 1024)).toFixed(1)} MB` : `${Math.round(f.size / 1024)} KB`})
                           </span>
                         )}
@@ -1291,7 +1291,7 @@ export default function RequestAdvising() {
                 </div>
                 <div className="min-w-0">
                   <p className="font-bold text-slate-900 dark:text-slate-100 truncate">{advisor.name}</p>
-                  <p className="text-slate-500 dark:text-slate-400 font-mono text-[11px] truncate">{advisor.email}</p>
+                  <p className="text-slate-500 dark:text-slate-400 font-mono text-[0.6875rem] truncate">{advisor.email}</p>
                 </div>
               </div>
               <button
@@ -1330,7 +1330,7 @@ export default function RequestAdvising() {
                 </button>
               </div>
 
-              <span className="text-[11px] text-slate-400 dark:text-slate-500 italic">
+              <span className="text-[0.6875rem] text-slate-400 dark:text-slate-500 italic">
                 {calendarTab === 'google' ? t('แสดงตารางปฏิทินแบบสัปดาห์', 'Weekly view') : t('แสดงเฉพาะคิวที่อนุมัติแล้ว', 'Confirmed slots')}
               </span>
             </div>
@@ -1365,9 +1365,9 @@ export default function RequestAdvising() {
                             <Clock className="h-3 w-3 text-slate-400" /> {a.scheduledTime}
                           </span>
                           <span className="text-slate-400">·</span>
-                          <span className="text-slate-500 text-[11px]">{a.location}</span>
+                          <span className="text-slate-500 text-[0.6875rem]">{a.location}</span>
                         </div>
-                        <span className="text-[10px] font-bold text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 px-2 py-0.5 rounded-full border border-rose-200 dark:border-rose-900/60">
+                        <span className="text-[0.625rem] font-bold text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 px-2 py-0.5 rounded-full border border-rose-200 dark:border-rose-900/60">
                           {t('มีนัดหมายแล้ว', 'Booked')}
                         </span>
                       </div>
@@ -1383,7 +1383,7 @@ export default function RequestAdvising() {
 
             {/* Modal Bottom Guidance & Actions */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1 border-t border-slate-100 dark:border-slate-800">
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+              <p className="text-[0.6875rem] text-slate-500 dark:text-slate-400 leading-relaxed">
                 💡 {t('ตรวจสอบช่วงเวลาว่าง แล้วระบุวันและเวลาที่ต้องการในแบบฟอร์ม', 'Check available slots, then pick your preferred date & time in the form.')}
               </p>
               <Button

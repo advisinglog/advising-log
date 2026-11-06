@@ -171,7 +171,7 @@ export default function AdvisingDetail() {
                   <Calendar className="h-4 w-4 text-sky-600 dark:text-sky-400" /> {t('การนัดหมาย', 'Appointment')}
                 </h3>
                 {appointment.studentConfirmed === false && !appointment.studentDeclined && (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-amber-100 dark:bg-amber-950/80 border border-amber-300 dark:border-amber-700 rounded-full text-[10px] font-bold text-amber-800 dark:text-amber-300 animate-pulse">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-amber-100 dark:bg-amber-950/80 border border-amber-300 dark:border-amber-700 rounded-full text-[0.625rem] font-bold text-amber-800 dark:text-amber-300 animate-pulse">
                     ⚠️ {t('อาจารย์เสนอเวลาใหม่ (รอยืนยัน)', 'New Time Proposed (Pending Your Confirmation)')}
                   </span>
                 )}
@@ -281,17 +281,17 @@ export default function AdvisingDetail() {
                     <div className="flex items-center justify-between gap-2">
                       <div>
                         <p className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100">{fu.task}</p>
-                        <p className="text-[11px] text-slate-400 dark:text-slate-400 mt-0.5 font-medium">{t('กำหนดส่ง:', 'Due:')} {fu.dueDate}</p>
+                        <p className="text-[0.6875rem] text-slate-400 dark:text-slate-400 mt-0.5 font-medium">{t('กำหนดส่ง:', 'Due:')} {fu.dueDate}</p>
                       </div>
                       <StatusBadge status={fu.status} />
                     </div>
 
                     {progressRecord?.notes && (
                       <div className="p-2.5 bg-white dark:bg-slate-900/80 rounded-lg border border-slate-200/60 dark:border-slate-800 text-xs">
-                        <span className="font-semibold text-sky-700 dark:text-sky-300 text-[11px] block mb-0.5">
+                        <span className="font-semibold text-sky-700 dark:text-sky-300 text-[0.6875rem] block mb-0.5">
                           {t('บันทึกผลการปฏิบัติงาน:', 'Student Action & Report:')}
                         </span>
-                        <p className="text-slate-600 dark:text-slate-300 whitespace-pre-wrap text-[11px]">
+                        <p className="text-slate-600 dark:text-slate-300 whitespace-pre-wrap text-[0.6875rem]">
                           {progressRecord.notes}
                         </p>
                       </div>
@@ -309,7 +309,7 @@ export default function AdvisingDetail() {
                               cloudinaryPublicId: evidenceDoc.cloudinaryPublicId,
                             })
                           }
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/60 border border-sky-200/70 dark:border-sky-800/60 hover:bg-sky-100 cursor-pointer"
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[0.6875rem] font-medium text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/60 border border-sky-200/70 dark:border-sky-800/60 hover:bg-sky-100 cursor-pointer"
                         >
                           <span>{t('ดูไฟล์หลักฐาน', 'View Evidence')}: {evidenceDoc.fileName}</span>
                         </button>

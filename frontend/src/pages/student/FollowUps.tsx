@@ -228,7 +228,7 @@ export default function FollowUps() {
           <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
             <ListChecks className="h-4 w-4 text-sky-600 dark:text-sky-400" />
             {t('งานที่ต้องทำ (รอดำเนินการ)', 'Pending Tasks')}
-            <span className="ml-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 dark:bg-sky-950 text-sky-700 dark:text-sky-300">
+            <span className="ml-1 px-2 py-0.5 rounded-full text-[0.625rem] font-bold bg-sky-100 dark:bg-sky-950 text-sky-700 dark:text-sky-300">
               {pendingTasks.length}
             </span>
           </h3>
@@ -242,7 +242,7 @@ export default function FollowUps() {
             <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 mb-1">
               {t('ไม่มีงานค้างที่ต้องทำ', 'All Tasks Completed')}
             </h4>
-            <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
+            <p className="text-[0.6875rem] sm:text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
               {t('คุณได้ปฏิบัติตามคำแนะนำของอาจารย์ครบถ้วนแล้ว สามารถดูประวัติการส่งงานได้ที่หมวดด้านล่าง', 'You have no pending action items. Check completed submissions below.')}
             </p>
           </div>
@@ -263,7 +263,7 @@ export default function FollowUps() {
                       <StatusBadge status={f.status} />
                     </div>
 
-                    <div className="flex items-center gap-3 flex-wrap text-[11px] text-slate-500 dark:text-slate-400">
+                    <div className="flex items-center gap-3 flex-wrap text-[0.6875rem] text-slate-500 dark:text-slate-400">
                       {f.dueDate && (
                         <span className="flex items-center gap-1 font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 px-2 py-0.5 rounded-md border border-rose-200/50 dark:border-rose-900/40">
                           <Calendar className="h-3 w-3" />
@@ -328,7 +328,7 @@ export default function FollowUps() {
           <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
             <History className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
             {t('ประวัติงานที่ส่งและเสร็จสิ้นแล้ว', 'Completed Tasks & Submissions')}
-            <span className="ml-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
+            <span className="ml-1 px-2 py-0.5 rounded-full text-[0.625rem] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
               {completedTasks.length}
             </span>
           </h3>
@@ -358,12 +358,12 @@ export default function FollowUps() {
                       <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100">
                         {f.task}
                       </span>
-                      <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60">
+                      <span className="px-2 py-0.5 rounded-md text-[0.625rem] font-bold bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60">
                         {t('เสร็จสิ้นแล้ว', 'Completed')}
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-3 text-[11px] text-slate-400 dark:text-slate-500">
+                    <div className="flex items-center gap-3 text-[0.6875rem] text-slate-400 dark:text-slate-500">
                       {f.completedAt && (
                         <span>{t('ส่งเมื่อ:', 'Completed on:')} {f.completedAt}</span>
                       )}
@@ -376,7 +376,7 @@ export default function FollowUps() {
                   {/* Student Submission Notes */}
                   {progressRecord?.notes && (
                     <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-800 text-xs space-y-1">
-                      <p className="font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 text-[11px]">
+                      <p className="font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 text-[0.6875rem]">
                         <Sparkles className="h-3 w-3 text-sky-500" />
                         {t('บันทึกผลการปฏิบัติงานของนักศึกษา:', 'Student Action & Report:')}
                       </p>
@@ -430,7 +430,7 @@ export default function FollowUps() {
                 <ListChecks className="h-4 w-4 text-sky-600 dark:text-sky-400 shrink-0" />
                 <span>{selectedTask.task}</span>
               </div>
-              <div className="flex items-center gap-3 text-[11px] text-sky-800 dark:text-sky-300">
+              <div className="flex items-center gap-3 text-[0.6875rem] text-sky-800 dark:text-sky-300">
                 {selectedTask.dueDate && (
                   <span>{t('กำหนดส่ง:', 'Due:')} {selectedTask.dueDate}</span>
                 )}
@@ -446,7 +446,7 @@ export default function FollowUps() {
               <AlertCircle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
               <div>
                 <p className="font-semibold">{t('คำแนะนำในการรายงานผล', 'Submission Guidance')}</p>
-                <p className="text-[11px] text-amber-700 dark:text-amber-400 mt-0.5">
+                <p className="text-[0.6875rem] text-amber-700 dark:text-amber-400 mt-0.5">
                   {t(
                     'โปรดระบุรายละเอียดว่าได้ไปดำเนินการอย่างไร ผลลัพธ์เป็นอย่างไร หรือระบุข้อตกลงที่ได้รับ พร้อมแนบรูปถ่ายหรือเอกสารหลักฐาน (ถ้ามี) เพื่อให้อาจารย์ที่ปรึกษาตรวจสอบความถูกต้องได้',
                     'Please describe the steps you took, results achieved, and attach supporting photos or documents so your advisor can verify.'
@@ -500,7 +500,7 @@ export default function FollowUps() {
                   <p className="text-xs font-medium text-slate-700 dark:text-slate-200">
                     {t('คลิกเพื่อเลือกไฟล์ หรือลากไฟล์มาวางที่นี่', 'Click to browse or drag and drop file here')}
                   </p>
-                  <p className="text-[10px] text-slate-400 mt-0.5">
+                  <p className="text-[0.625rem] text-slate-400 mt-0.5">
                     {t('รองรับ PDF, PNG, JPG, DOCX ขนาดไม่เกิน 15MB', 'Supports PDF, PNG, JPG, DOCX up to 15MB')}
                   </p>
                 </div>
@@ -512,7 +512,7 @@ export default function FollowUps() {
                       <p className="text-xs font-semibold text-slate-900 dark:text-slate-100 truncate">
                         {selectedFile.name}
                       </p>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                      <p className="text-[0.625rem] text-slate-500 dark:text-slate-400">
                         {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
                       </p>
                     </div>

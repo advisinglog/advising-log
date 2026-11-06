@@ -277,7 +277,7 @@ export default function QADashboard() {
         >
           <Brain className="h-4 w-4 text-sky-600 dark:text-sky-400" />
           <span>{t('วิเคราะห์เจาะลึกทำไมลาออก / พักการศึกษา (Qualitative)', 'Why Resign / Leave (Qualitative)')}</span>
-          <span className="ml-1 px-2 py-0.5 rounded-full text-[10px] bg-sky-100 dark:bg-sky-950/80 text-sky-700 dark:text-sky-300 font-bold border border-sky-200/60 dark:border-sky-800/60">
+          <span className="ml-1 px-2 py-0.5 rounded-full text-[0.625rem] bg-sky-100 dark:bg-sky-950/80 text-sky-700 dark:text-sky-300 font-bold border border-sky-200/60 dark:border-sky-800/60">
             {totalExitCases}
           </span>
         </button>
@@ -293,7 +293,7 @@ export default function QADashboard() {
         >
           <MessageSquareHeart className="h-4 w-4 text-sky-600 dark:text-sky-400" />
           <span>{t('เสียงของนักศึกษา (กรณีลาออก/พักการศึกษา)', 'Student Voice — Resignation/Leave')}</span>
-          <span className="ml-1 px-2 py-0.5 rounded-full text-[10px] bg-sky-100 dark:bg-sky-950/80 text-sky-700 dark:text-sky-300 font-bold border border-sky-200/60 dark:border-sky-800/60">
+          <span className="ml-1 px-2 py-0.5 rounded-full text-[0.625rem] bg-sky-100 dark:bg-sky-950/80 text-sky-700 dark:text-sky-300 font-bold border border-sky-200/60 dark:border-sky-800/60">
             {totalVoiceResponses}
           </span>
         </button>
@@ -360,7 +360,7 @@ export default function QADashboard() {
                               <p className="font-bold text-slate-900 dark:text-slate-100 mb-1.5 border-b border-slate-100 dark:border-slate-800 pb-1">
                                 {d.name}
                               </p>
-                              <div className="flex items-center justify-between gap-3 text-[11px]">
+                              <div className="flex items-center justify-between gap-3 text-[0.6875rem]">
                                 <span className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
                                   <span className="h-2 w-2 rounded-full bg-sky-500" />
                                   {t('จำนวนคำร้อง', 'Requests')}
@@ -401,7 +401,7 @@ export default function QADashboard() {
                 <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                   <UserX className="h-4 w-4 text-rose-600 dark:text-rose-400" /> {t('สัดส่วนสาเหตุการขอลาออกและลาพัก', 'Exit & Leave Cases by Category')}
                 </h3>
-                <span className="inline-flex items-center rounded-full border border-sky-100 dark:border-sky-900/50 bg-sky-50 dark:bg-sky-950/35 px-3 py-1 text-[11px] font-bold text-sky-700 dark:text-sky-300 whitespace-nowrap">
+                <span className="inline-flex items-center rounded-full border border-sky-100 dark:border-sky-900/50 bg-sky-50 dark:bg-sky-950/35 px-3 py-1 text-[0.6875rem] font-bold text-sky-700 dark:text-sky-300 whitespace-nowrap">
                   {t(`${exitTotal} เคส`, `${exitTotal} total`)}
                 </span>
               </div>
@@ -444,7 +444,7 @@ export default function QADashboard() {
                                       {item.name}
                                     </span>
                                   </div>
-                                  <div className="flex items-center justify-between gap-3 text-[11px]">
+                                  <div className="flex items-center justify-between gap-3 text-[0.6875rem]">
                                     <span className="text-slate-500 dark:text-slate-400">
                                       {t('จำนวนและสัดส่วน', 'Count & Share')}
                                     </span>
@@ -461,7 +461,7 @@ export default function QADashboard() {
                       <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
                         <div className="text-center">
                           <div className="text-2xl font-black leading-none text-slate-950 dark:text-white">{exitTotal}</div>
-                          <div className="mt-1 text-[10px] font-bold uppercase tracking-wide text-sky-500 dark:text-sky-300">
+                          <div className="mt-1 text-[0.625rem] font-bold uppercase tracking-wide text-sky-500 dark:text-sky-300">
                             {t('เคส', 'Cases')}
                           </div>
                         </div>
@@ -489,7 +489,7 @@ export default function QADashboard() {
                               <span className="font-bold text-slate-900 dark:text-white">
                                 {item.value}
                               </span>
-                              <span className="text-[11px] text-slate-400">
+                              <span className="text-[0.6875rem] text-slate-400">
                                 ({percentage}%)
                               </span>
                             </div>
@@ -567,13 +567,13 @@ export default function QADashboard() {
                           <div className="rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-white/95 dark:bg-slate-900/95 p-3 shadow-xl backdrop-blur-md min-w-[200px] text-xs">
                             <div className="font-bold text-slate-900 dark:text-slate-100 mb-2 border-b border-slate-100 dark:border-slate-800 pb-1.5 flex items-center justify-between">
                               <span>{payload[0]?.payload?.fullName || label}</span>
-                              <span className="text-[10px] text-slate-400 font-normal">{t('ภาระงานที่ปรึกษา', 'Workload & Sessions')}</span>
+                              <span className="text-[0.625rem] text-slate-400 font-normal">{t('ภาระงานที่ปรึกษา', 'Workload & Sessions')}</span>
                             </div>
                             <div className="space-y-1.5">
                               {payload.map((entry: any, i: number) => {
                                 const dotColors = ['#0284c7', '#7c3aed', '#059669']
                                 return (
-                                  <div key={i} className="flex items-center justify-between gap-3 text-[11px]">
+                                  <div key={i} className="flex items-center justify-between gap-3 text-[0.6875rem]">
                                     <div className="flex items-center gap-1.5">
                                       <span className="h-2 w-2 rounded-full" style={{ backgroundColor: dotColors[i] || entry.color }} />
                                       <span className="text-slate-600 dark:text-slate-300 font-medium">{entry.name}</span>
@@ -661,7 +661,7 @@ export default function QADashboard() {
                     <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100">
                       {t('ข้อมูลเชิงคุณภาพเสียงของนักศึกษา', 'Student Voice Qualitative Analysis')}
                     </h2>
-                    <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60">
+                    <span className="text-[0.6875rem] font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60">
                       AUN-QA Criteria 6 & 8
                     </span>
                   </div>
@@ -742,7 +742,7 @@ export default function QADashboard() {
                 </h3>
               </div>
 
-              <span className="inline-flex items-center self-start rounded-full border border-sky-100 dark:border-sky-900/50 bg-sky-50 dark:bg-sky-950/35 px-3 py-1 text-[11px] font-semibold text-sky-700 dark:text-sky-300">
+              <span className="inline-flex items-center self-start rounded-full border border-sky-100 dark:border-sky-900/50 bg-sky-50 dark:bg-sky-950/35 px-3 py-1 text-[0.6875rem] font-semibold text-sky-700 dark:text-sky-300">
                 {t(`${voiceFactorData.length} ปัจจัย`, `${voiceFactorData.length} factors`)}
               </span>
             </div>
@@ -797,7 +797,7 @@ export default function QADashboard() {
                             <p className="font-bold text-slate-900 dark:text-slate-100 mb-1.5 border-b border-slate-100 dark:border-slate-800 pb-1">
                               {d.fullName || d.name}
                             </p>
-                            <div className="flex items-center justify-between gap-3 text-[11px]">
+                            <div className="flex items-center justify-between gap-3 text-[0.6875rem]">
                               <span className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
                                 <span className="h-2 w-2 rounded-full bg-sky-500" />
                                 {t('จำนวนครั้งที่ระบุ', 'Frequency')}
@@ -880,18 +880,18 @@ export default function QADashboard() {
                       {/* Meta */}
                       <div className="flex flex-wrap items-start justify-between gap-2">
                         <div>
-                          <span className="inline-flex items-center rounded-lg bg-slate-100 dark:bg-slate-800 px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:text-slate-300">
+                          <span className="inline-flex items-center rounded-lg bg-slate-100 dark:bg-slate-800 px-2.5 py-1 text-[0.6875rem] font-semibold text-slate-700 dark:text-slate-300">
                             {res.isAnonymous
                               ? t('ไม่ระบุตัวตน', 'Anonymous')
                               : res.studentCode || t('นักศึกษา', 'Student')}
                           </span>
-                          <p className="mt-1.5 text-[11px] font-medium text-slate-400 dark:text-slate-500">
+                          <p className="mt-1.5 text-[0.6875rem] font-medium text-slate-400 dark:text-slate-500">
                             {res.academicYear}
                           </p>
                         </div>
 
                         <span
-                          className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold ${badge.className}`}
+                          className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[0.6875rem] font-semibold ${badge.className}`}
                         >
                           {badge.label}
                         </span>
@@ -903,7 +903,7 @@ export default function QADashboard() {
                           {res.primaryFactors.map((fac, idx) => (
                             <span
                               key={idx}
-                              className="px-2.5 py-1 rounded-full text-[11px] font-medium bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700"
+                              className="px-2.5 py-1 rounded-full text-[0.6875rem] font-medium bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700"
                             >
                               {fac}
                             </span>
@@ -914,7 +914,7 @@ export default function QADashboard() {
                       {/* What University Could Do */}
                       {res.whatCouldUniversityDoBetter && (
                         <div className="pl-3 border-l-2 border-sky-400 py-0.5 space-y-1">
-                          <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                          <div className="flex items-center gap-1.5 text-[0.6875rem] font-semibold text-slate-500 dark:text-slate-400">
                             <Quote className="h-3 w-3 text-sky-500" />
                             <span>{t('สิ่งที่อยากให้มหาวิทยาลัยช่วยเหลือ', 'What the university could improve')}</span>
                           </div>
@@ -927,7 +927,7 @@ export default function QADashboard() {
                       {/* Curriculum Suggestions */}
                       {res.curriculumImprovementSuggestions && (
                         <div className="pl-3 border-l-2 border-sky-500 py-0.5 space-y-1">
-                          <p className="text-[11px] font-semibold text-sky-700 dark:text-sky-300">
+                          <p className="text-[0.6875rem] font-semibold text-sky-700 dark:text-sky-300">
                             {t('ข้อเสนอแนะต่อหลักสูตร', 'Curriculum suggestion')}
                           </p>
                           <p className="text-xs sm:text-sm leading-relaxed italic text-slate-700 dark:text-slate-300">

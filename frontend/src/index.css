@@ -99,7 +99,7 @@
 body {
   margin: 0;
   font-family: var(--font-latin);
-  font-size: 17px;
+  font-size: 1.0625rem; /* 17px at default size; rem so it follows the user's text size setting */
   line-height: 1.65;
   font-feature-settings: "kern" 1, "tnum" 1, "case" 1, "zero" 0;
   font-variant-numeric: tabular-nums;

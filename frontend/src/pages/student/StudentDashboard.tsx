@@ -124,12 +124,12 @@ export default function StudentDashboard() {
               <div className="flex flex-wrap items-center gap-2">
                 <p className="text-sm font-bold text-slate-900 dark:text-slate-100">{apt.scheduledDate}</p>
                 {isPendingConfirmation && (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-amber-100 dark:bg-amber-950/80 border border-amber-300 dark:border-amber-700 rounded-full text-[10px] font-bold text-amber-800 dark:text-amber-300 animate-pulse">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-amber-100 dark:bg-amber-950/80 border border-amber-300 dark:border-amber-700 rounded-full text-[0.625rem] font-bold text-amber-800 dark:text-amber-300 animate-pulse">
                     ⚠️ {t('อาจารย์เสนอเวลาใหม่ (รอยืนยัน)', 'New Time Proposed (Pending Your Confirmation)')}
                   </span>
                 )}
                 {isToday && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-rose-100 dark:bg-rose-950/80 border border-rose-300 dark:border-rose-800 rounded-full text-[10px] font-bold text-rose-700 dark:text-rose-300 animate-pulse">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-rose-100 dark:bg-rose-950/80 border border-rose-300 dark:border-rose-800 rounded-full text-[0.625rem] font-bold text-rose-700 dark:text-rose-300 animate-pulse">
                     {t('วันนี้ (Today)', 'Today')}
                   </span>
                 )}
@@ -274,7 +274,7 @@ export default function StudentDashboard() {
               <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-sky-600 dark:text-sky-400" /> {t('ตารางนัดหมาย', 'Appointment Schedule')}
               </h3>
-              <div className="flex rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden text-[11px] font-semibold">
+              <div className="flex rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden text-[0.6875rem] font-semibold">
                 <button
                   onClick={() => setTimeTab('today')}
                   className={`px-3 py-1 transition-colors ${timeTab === 'today' ? 'bg-rose-600 text-white' : 'bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
@@ -338,7 +338,7 @@ export default function StudentDashboard() {
                     >
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 mb-0.5">
-                          <span className="text-[10px] font-mono font-bold text-slate-400 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
+                          <span className="text-[0.625rem] font-mono font-bold text-slate-400 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
                             {req.id}
                           </span>
                           <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 truncate group-hover:text-sky-900 dark:group-hover:text-sky-300">
@@ -346,7 +346,7 @@ export default function StudentDashboard() {
                           </p>
                         </div>
                         <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5">{req.details}</p>
-                        <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">
+                        <p className="text-[0.625rem] text-slate-400 dark:text-slate-500 mt-1">
                           {t('ยื่นคำร้องเมื่อ:', 'Submitted on:')} {req.createdAt}
                           {req.preferredDate && ` · ${t('ขอเข้าพบ:', 'Requested:')} ${req.preferredDate} ${req.preferredTime || ''}`}
                         </p>
@@ -373,7 +373,7 @@ export default function StudentDashboard() {
               <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                 <ListChecks className="h-4 w-4 text-sky-600 dark:text-sky-400" /> {t('งานที่ต้องดำเนินการ', 'Assigned Action Items')}
               </h3>
-              <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">
+              <span className="text-[0.625rem] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">
                 {myFollowUps.length} {t('รายการ', 'Items')}
               </span>
             </div>
@@ -384,7 +384,7 @@ export default function StudentDashboard() {
                   <div key={fu.id} className="p-3 bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200/70 dark:border-slate-800 rounded-xl hover:border-sky-200 dark:hover:border-sky-800 transition-all">
                     <p className="text-xs font-bold text-slate-900 dark:text-slate-100">{fu.task}</p>
                     <div className="flex items-center justify-between mt-2 pt-1.5 border-t border-slate-200/50 dark:border-slate-700/60">
-                      <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">{t('กำหนดส่ง:', 'Due:')} {fu.dueDate}</span>
+                      <span className="text-[0.625rem] text-slate-500 dark:text-slate-400 font-medium">{t('กำหนดส่ง:', 'Due:')} {fu.dueDate}</span>
                       <StatusBadge status={fu.status} />
                     </div>
                   </div>
@@ -397,7 +397,7 @@ export default function StudentDashboard() {
               <div className="py-6 text-center">
                 <CheckCircle2 className="h-7 w-7 text-emerald-500 mx-auto mb-2 opacity-80" />
                 <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">{t('ไม่มีงานค้างที่ต้องส่ง', 'All tasks completed')}</p>
-                <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">{t('คุณได้ปฏิบัติตามคำแนะนำครบถ้วนแล้ว', 'You have no pending advisor action items.')}</p>
+                <p className="text-[0.6875rem] text-slate-400 dark:text-slate-500 mt-0.5">{t('คุณได้ปฏิบัติตามคำแนะนำครบถ้วนแล้ว', 'You have no pending advisor action items.')}</p>
               </div>
             )}
           </Card>
@@ -412,7 +412,7 @@ export default function StudentDashboard() {
                   <h3 className="text-sm font-bold text-rose-900 dark:text-rose-200 flex items-center gap-2">
                     <XCircle className="h-4 w-4 text-rose-600 dark:text-rose-400" /> {t('คำร้องที่ถูกยกเลิก', 'Cancelled Requests')}
                   </h3>
-                  <span className="text-[10px] font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider bg-rose-100 dark:bg-rose-950/80 px-2 py-0.5 rounded-full border border-rose-200 dark:border-rose-900">
+                  <span className="text-[0.625rem] font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider bg-rose-100 dark:bg-rose-950/80 px-2 py-0.5 rounded-full border border-rose-200 dark:border-rose-900">
                     {cancelledRequests.length} {t('รายการ', 'Items')}
                   </span>
                 </div>
@@ -433,8 +433,8 @@ export default function StudentDashboard() {
                       >
                         {/* Category */}
                         <div className="flex items-center justify-between gap-2 mb-1">
-                          <span className="text-[10px] font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider">{t('หมวดหมู่', 'Category')}</span>
-                          <span className="text-[10px] font-mono text-slate-400 group-hover:text-rose-600 flex items-center gap-1">
+                          <span className="text-[0.625rem] font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider">{t('หมวดหมู่', 'Category')}</span>
+                          <span className="text-[0.625rem] font-mono text-slate-400 group-hover:text-rose-600 flex items-center gap-1">
                             {req.id} <ArrowRight className="h-3 w-3 inline" />
                           </span>
                         </div>
@@ -444,7 +444,7 @@ export default function StudentDashboard() {
                         </p>
 
                         {/* Details grid */}
-                        <div className="space-y-1.5 text-[11px]">
+                        <div className="space-y-1.5 text-[0.6875rem]">
                           {/* Advisor Name */}
                           <div className="flex items-start gap-1.5">
                             <span className="text-slate-400 dark:text-slate-500 font-medium shrink-0">{t('อาจารย์ที่ปรึกษา:', 'Advisor:')}</span>
@@ -461,7 +461,7 @@ export default function StudentDashboard() {
 
                           {/* Cancellation Reason in RED Box */}
                           <div className="mt-2.5 pt-2 border-t border-rose-100 dark:border-rose-900/40">
-                            <span className="text-rose-700 dark:text-rose-400 font-bold block mb-1 flex items-center gap-1 text-[11px]">
+                            <span className="text-rose-700 dark:text-rose-400 font-bold block mb-1 flex items-center gap-1 text-[0.6875rem]">
                               <XCircle className="h-3 w-3" />
                               {t('เหตุผลที่ยกเลิก (Reason):', 'Reason for Cancellation:')}
                             </span>

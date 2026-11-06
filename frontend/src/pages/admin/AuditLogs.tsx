@@ -52,7 +52,7 @@ export default function AuditLogs() {
         return (
           <div>
             <p className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100">{l.userName || '-'}</p>
-            <p className="text-[10px] text-slate-400 dark:text-slate-400 font-bold uppercase tracking-wider">{t(r.th, r.en)}</p>
+            <p className="text-[0.625rem] text-slate-400 dark:text-slate-400 font-bold uppercase tracking-wider">{t(r.th, r.en)}</p>
           </div>
         )
       },
@@ -61,7 +61,7 @@ export default function AuditLogs() {
       key: 'action',
       header: t('ประเภทเหตุการณ์', 'Event Action'),
       render: (l: AuditLog) => (
-        <span className="text-[11px] font-mono font-semibold px-2 py-0.5 rounded-md bg-sky-50 dark:bg-sky-950/60 text-sky-800 dark:text-sky-300 border border-sky-100 dark:border-sky-800">
+        <span className="text-[0.6875rem] font-mono font-semibold px-2 py-0.5 rounded-md bg-sky-50 dark:bg-sky-950/60 text-sky-800 dark:text-sky-300 border border-sky-100 dark:border-sky-800">
           {l.action}
         </span>
       ),

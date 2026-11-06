@@ -356,12 +356,12 @@ export default function AdvisingSessions() {
     { key: 'date', header: t('วันที่ยื่น', 'Date'), render: (r: AdvisingRequest) => (
       <div className="flex items-center gap-2 flex-wrap">
         <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">{r.createdAt}</span>
-        {isNewRequest(r) && <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-sky-100 dark:bg-sky-950/70 text-[10px] font-bold text-sky-700 dark:text-sky-300"><Sparkles className="h-3 w-3" />{t('ใหม่', 'New')}</span>}
+        {isNewRequest(r) && <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-sky-100 dark:bg-sky-950/70 text-[0.625rem] font-bold text-sky-700 dark:text-sky-300"><Sparkles className="h-3 w-3" />{t('ใหม่', 'New')}</span>}
       </div>
     ) },
     { key: 'student', header: t('นักศึกษา', 'Student'), render: (r: AdvisingRequest) => {
       const student = store.users.find(u => u.id === r.studentId)
-      return <div><span className="text-xs text-slate-700 dark:text-slate-300 font-medium block">{student?.name || '-'}</span><span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">{student?.code || '-'}</span></div>
+      return <div><span className="text-xs text-slate-700 dark:text-slate-300 font-medium block">{student?.name || '-'}</span><span className="text-[0.6875rem] font-mono text-slate-500 dark:text-slate-400">{student?.code || '-'}</span></div>
     } },
     {
       key: 'category',
@@ -370,7 +370,7 @@ export default function AdvisingSessions() {
         return (
           <div>
             <span className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100 block">{getCategoryLabel(r.category)}</span>
-            {r.subCategory && <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">{getSubCategoryLabel(r.subCategory)}</span>}
+            {r.subCategory && <span className="text-[0.6875rem] text-slate-500 dark:text-slate-400 font-medium">{getSubCategoryLabel(r.subCategory)}</span>}
           </div>
         )
       },
@@ -387,7 +387,7 @@ export default function AdvisingSessions() {
                 <Calendar className="h-3.5 w-3.5" />
                 {apt.scheduledDate} · {apt.scheduledTime}
               </p>
-              <p className="text-[11px] text-emerald-600/80 dark:text-emerald-400/80 mt-1 font-medium">{apt.location}</p>
+              <p className="text-[0.6875rem] text-emerald-600/80 dark:text-emerald-400/80 mt-1 font-medium">{apt.location}</p>
             </div>
           )
         }
@@ -397,7 +397,7 @@ export default function AdvisingSessions() {
               <Calendar className="h-3.5 w-3.5 text-slate-400" />
               {r.preferredDate} · {r.preferredTime}
             </p>
-            <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 font-medium">{t('เวลาที่นักศึกษาเสนอ', 'Proposed slot')}</p>
+            <p className="text-[0.625rem] text-slate-500 dark:text-slate-400 mt-1 font-medium">{t('เวลาที่นักศึกษาเสนอ', 'Proposed slot')}</p>
           </div>
         )
       },
@@ -568,7 +568,7 @@ export default function AdvisingSessions() {
 
             {/* Student Name */}
             <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
-              <span className="text-[11px] text-slate-400 block font-medium">{t('นักศึกษาผู้ยื่นคำร้อง', 'Student')}</span>
+              <span className="text-[0.6875rem] text-slate-400 block font-medium">{t('นักศึกษาผู้ยื่นคำร้อง', 'Student')}</span>
               <p className="text-sm font-bold text-slate-900 dark:text-slate-100 mt-0.5">
                 {store.users.find(u => u.id === detailReq.studentId)?.name || '-'}
                 <span className="text-xs font-mono font-normal text-slate-500 ml-2">
@@ -579,7 +579,7 @@ export default function AdvisingSessions() {
 
             {/* Requested Slot */}
             <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
-              <span className="text-[11px] text-slate-400 block font-medium">{t('วัน-เวลาที่ขอเข้าพบ', 'Requested Date & Time')}</span>
+              <span className="text-[0.6875rem] text-slate-400 block font-medium">{t('วัน-เวลาที่ขอเข้าพบ', 'Requested Date & Time')}</span>
               <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 mt-0.5">
                 {detailReq.preferredDate} · {detailReq.preferredTime}
               </p>
@@ -601,9 +601,9 @@ export default function AdvisingSessions() {
                   </div>
                   <div className="space-y-1 mt-1.5">
                     {studentPendingTasks.map(fu => (
-                      <div key={fu.id} className="flex items-center justify-between gap-2 text-[11px] text-slate-700 dark:text-slate-200 bg-white/90 dark:bg-slate-900/80 px-2.5 py-1.5 rounded-lg border border-sky-100 dark:border-slate-800">
+                      <div key={fu.id} className="flex items-center justify-between gap-2 text-[0.6875rem] text-slate-700 dark:text-slate-200 bg-white/90 dark:bg-slate-900/80 px-2.5 py-1.5 rounded-lg border border-sky-100 dark:border-slate-800">
                         <span className="truncate font-medium">{fu.task}</span>
-                        {fu.dueDate && <span className="font-mono text-[10px] text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/80 px-1.5 py-0.5 rounded border border-sky-200/50 dark:border-sky-800/50 shrink-0">{fu.dueDate}</span>}
+                        {fu.dueDate && <span className="font-mono text-[0.625rem] text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/80 px-1.5 py-0.5 rounded border border-sky-200/50 dark:border-sky-800/50 shrink-0">{fu.dueDate}</span>}
                       </div>
                     ))}
                   </div>
@@ -692,7 +692,7 @@ export default function AdvisingSessions() {
                     ({store.users.find(u => u.id === selectedReq.studentId)?.code || '-'})
                   </span>
                 </span>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-sky-100 dark:bg-sky-900 text-sky-700 dark:text-sky-300">
+                <span className="px-2 py-0.5 rounded-full text-[0.625rem] font-semibold bg-sky-100 dark:bg-sky-900 text-sky-700 dark:text-sky-300">
                   {getCategoryLabel(selectedReq.category)}
                 </span>
               </div>
@@ -710,7 +710,7 @@ export default function AdvisingSessions() {
                       if (selectedReq.preferredDate) setSchedDate(selectedReq.preferredDate)
                       if (selectedReq.preferredTime) setSchedTime(selectedReq.preferredTime)
                     }}
-                    className="text-[11px] text-emerald-700 dark:text-emerald-300 hover:underline cursor-pointer"
+                    className="text-[0.6875rem] text-emerald-700 dark:text-emerald-300 hover:underline cursor-pointer"
                   >
                     {t('ใช้วัน-เวลานี้', 'Use this slot')}
                   </button>
@@ -755,7 +755,7 @@ export default function AdvisingSessions() {
                 <AlertTriangle className="h-4 w-4 text-rose-600 dark:text-rose-400 flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="font-bold">{t('ช่วงเวลานี้มีนัดหมายอื่นแล้ว', 'Time Slot Collision')}</p>
-                  <p className="text-[11px] mt-0.5">
+                  <p className="text-[0.6875rem] mt-0.5">
                     {t('ท่านมีนัดหมายอื่นที่ยืนยันแล้วในวันและเวลานี้ กรุณาปรับเปลี่ยนเวลาเข้าพบ', 'You already have another confirmed appointment at this time. Please adjust the slot.')}
                   </p>
                 </div>
@@ -773,7 +773,7 @@ export default function AdvisingSessions() {
                     <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
                       {t('Google Calendar ของอาจารย์', 'Advisor Google Calendar')}
                     </span>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    <p className="text-[0.6875rem] text-slate-500 dark:text-slate-400">
                       {t('ตรวจสอบเวลาว่างเพื่อไม่ให้ชนกับตารางสอนหรือภารกิจอื่น', 'Check availability to prevent scheduling conflicts')}
                     </p>
                   </div>
@@ -891,7 +891,7 @@ export default function AdvisingSessions() {
                   onChange={e => setAutoOpenCalendar(e.target.checked)}
                   className="rounded border-slate-300 text-sky-600 focus:ring-sky-500 h-4 w-4"
                 />
-                <span className="text-[11px] text-slate-700 dark:text-slate-300 font-medium">
+                <span className="text-[0.6875rem] text-slate-700 dark:text-slate-300 font-medium">
                   {t('เพิ่มลงใน Google Calendar และส่งคำเชิญให้นักศึกษา', 'Add to Google Calendar & invite student')}
                 </span>
               </label>
@@ -947,7 +947,7 @@ export default function AdvisingSessions() {
 
               {/* Student info banner */}
               <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200/80 dark:border-slate-800 mb-4 text-xs">
-                <span className="text-[11px] text-slate-400 block font-medium">{t('นักศึกษาผู้ยื่นคำร้อง', 'Student')}</span>
+                <span className="text-[0.6875rem] text-slate-400 block font-medium">{t('นักศึกษาผู้ยื่นคำร้อง', 'Student')}</span>
                 <p className="text-sm font-bold text-slate-900 dark:text-slate-100 mt-0.5">
                   {store.users.find(u => u.id === cancelReq.studentId)?.name || '-'}
                   <span className="text-xs font-mono font-normal text-slate-500 ml-2">
@@ -964,7 +964,7 @@ export default function AdvisingSessions() {
               <div className="mb-5">
                 <label className="block text-xs font-bold text-rose-900 dark:text-rose-300 mb-1.5 flex items-center justify-between">
                   <span>{t('เหตุผลการยกเลิก', 'Reason')} *</span>
-                  <span className="text-[10px] font-normal text-slate-400">{t('จำเป็นต้องระบุ', 'Required')}</span>
+                  <span className="text-[0.625rem] font-normal text-slate-400">{t('จำเป็นต้องระบุ', 'Required')}</span>
                 </label>
                 <textarea
                   value={cancelReason}

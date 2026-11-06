@@ -244,7 +244,7 @@ export default function DocumentTypes() {
       key: 'signature',
       header: t('รูปแบบการลงนาม', 'Validation Method'),
       render: (d: DocumentType) => (
-        <div className="inline-flex rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden text-[11px] font-semibold">
+        <div className="inline-flex rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden text-[0.6875rem] font-semibold">
           <button
             type="button"
             onClick={() => store.updateDocumentType(d.id, { signatureMethod: 'wet_signature' })}
@@ -353,7 +353,7 @@ export default function DocumentTypes() {
               <p className="text-xs font-bold text-slate-900 dark:text-slate-100">
                 {t('แม่แบบแบบฟอร์มมหาวิทยาลัยมาตรฐาน', 'Standard Academic Forms')}
               </p>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+              <p className="text-[0.6875rem] text-slate-500 dark:text-slate-400">
                 {t('คลิกเพื่อเพิ่มแบบฟอร์มการลาออก/ลาพัก และคำร้องทั่วไปพร้อมรูปแบบการลงนามที่ถูกต้อง', 'Click any form preset to auto-fill title and signature requirements.')}
               </p>
             </div>
@@ -388,13 +388,13 @@ export default function DocumentTypes() {
                   <div className="flex items-center justify-between gap-1">
                     <p className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">{formTitle}</p>
                     {isAlreadyAdded && (
-                      <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800 flex-shrink-0">
+                      <span className="text-[0.5625rem] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800 flex-shrink-0">
                         {t('มีแล้ว', 'Added')}
                       </span>
                     )}
                   </div>
                   <div className="flex items-center gap-1.5 mt-1">
-                    <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border ${
+                    <span className={`text-[0.625rem] font-semibold px-1.5 py-0.5 rounded border ${
                       preset.signatureMethod === 'e_signature'
                         ? 'bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/60 dark:text-sky-300 dark:border-sky-800'
                         : 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800'
@@ -425,7 +425,7 @@ export default function DocumentTypes() {
           {/* Quick Preset Selector inside modal */}
           {!editingDocType && (
             <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 space-y-1.5">
-              <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">
+              <span className="text-[0.625rem] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">
                 {t('เลือกจากแม่แบบด่วน', 'Quick Fill from Template')}
               </span>
               <div className="flex flex-wrap gap-1.5">
@@ -434,7 +434,7 @@ export default function DocumentTypes() {
                     key={i}
                     type="button"
                     onClick={() => applyPreset(p)}
-                    className="px-2 py-1 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-sky-500 text-[11px] font-medium text-slate-700 dark:text-slate-200 transition-colors cursor-pointer truncate max-w-[200px]"
+                    className="px-2 py-1 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-sky-500 text-[0.6875rem] font-medium text-slate-700 dark:text-slate-200 transition-colors cursor-pointer truncate max-w-[200px]"
                   >
                     {language === 'th' ? p.nameTh : p.nameEn}
                   </button>
@@ -474,7 +474,7 @@ export default function DocumentTypes() {
                   <PenTool className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                   <span>{t('ลายเซ็นจริงบนกระดาษ', 'Physical Signature')}</span>
                 </div>
-                <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-normal">
+                <p className="text-[0.625rem] text-slate-500 dark:text-slate-400 leading-normal">
                   {t('พิมพ์และเซ็นด้วยปากกา', 'Print out and sign with a pen')}
                 </p>
               </button>
@@ -492,7 +492,7 @@ export default function DocumentTypes() {
                   <Fingerprint className="h-4 w-4 text-sky-600 dark:text-sky-400" />
                   <span>{t('ลายเซ็นอิเล็กทรอนิกส์', 'E-Signature')}</span>
                 </div>
-                <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-normal">
+                <p className="text-[0.625rem] text-slate-500 dark:text-slate-400 leading-normal">
                   {t('ลงชื่อออนไลน์ / ดิจิทัล', 'Sign online or digital PDF')}
                 </p>
               </button>
@@ -510,7 +510,7 @@ export default function DocumentTypes() {
                   <FileText className="h-4 w-4 text-slate-500 dark:text-slate-400" />
                   <span>{t('ไม่ต้องลงลายมือชื่อ', 'No Signature')}</span>
                 </div>
-                <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-normal">
+                <p className="text-[0.625rem] text-slate-500 dark:text-slate-400 leading-normal">
                   {t('เอกสารแนบประกอบทั่วไป', 'General attachment only')}
                 </p>
               </button>
@@ -523,11 +523,11 @@ export default function DocumentTypes() {
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-200">
                 {t('ไฟล์แบบฟอร์มเปล่าทางการ (PDF/DOC) (ไม่บังคับ)', 'Official Blank Form Template (PDF/DOC) (Optional)')}
               </label>
-              <span className="text-[10px] text-slate-400 font-normal">
+              <span className="text-[0.625rem] text-slate-400 font-normal">
                 {t('ไม่บังคับ', 'Optional')}
               </span>
             </div>
-            <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">
+            <p className="text-[0.625rem] text-slate-500 dark:text-slate-400 leading-relaxed">
               {t(
                 'หากอัปโหลดไฟล์ต้นฉบับ นักศึกษาจะสามารถดาวน์โหลดไฟล์นี้ได้โดยตรงในหน้านัดพบอาจารย์ หากไม่อัปโหลด ระบบจะสร้างแบบฟอร์มมาตรฐานให้อัตโนมัติ',
                 'If attached, students will download this official file in the Meet Advisor page. If left blank, the system auto-generates a standard template.'

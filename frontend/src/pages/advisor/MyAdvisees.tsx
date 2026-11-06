@@ -462,7 +462,7 @@ export default function MyAdvisees() {
           <div className="overflow-x-auto border border-slate-200/70 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 shadow-xs">
             <table className="w-full text-sm text-left">
               <thead>
-                <tr className="bg-slate-50/80 dark:bg-slate-800/60 border-b border-slate-200/70 dark:border-slate-800 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                <tr className="bg-slate-50/80 dark:bg-slate-800/60 border-b border-slate-200/70 dark:border-slate-800 text-[0.6875rem] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   <th className="px-4 py-3.5">{t('รหัสนักศึกษา', 'Student ID')}</th>
                   <th className="px-4 py-3.5">{t('ชื่อ-นามสกุล', 'Student Name')}</th>
                   <th className="px-4 py-3.5">{t('สำนักวิชา / สาขา', 'Department / School')}</th>
@@ -524,7 +524,7 @@ export default function MyAdvisees() {
                           {studentSessionsCount} {t('ครั้ง', 'times')}
                         </span>
                         {lastSession && (
-                          <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">
+                          <p className="text-[0.625rem] text-slate-400 dark:text-slate-500 mt-0.5">
                             {t('ล่าสุด', 'Last')}: {lastSession.sessionDate}
                           </p>
                         )}
@@ -645,7 +645,7 @@ export default function MyAdvisees() {
                           <CalendarClock className="h-3.5 w-3.5 text-sky-600" />
                           {sess.sessionDate}
                         </span>
-                        <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                        <span className="text-[0.6875rem] font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
                           {sess.outcome || 'Completed'}
                         </span>
                       </div>
@@ -653,7 +653,7 @@ export default function MyAdvisees() {
                         {sess.summary}
                       </p>
                       {sess.advice && (
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400 italic">
+                        <p className="text-[0.6875rem] text-slate-500 dark:text-slate-400 italic">
                           {t('คำแนะนำ', 'Advice')}: {sess.advice}
                         </p>
                       )}
@@ -666,7 +666,7 @@ export default function MyAdvisees() {
                             setSelectedStudentHistory(null)
                             navigate('/advisor/log', { state: { sessionId: sessId, requestId: reqId } })
                           }}
-                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-sky-600 dark:text-sky-400 hover:underline cursor-pointer"
+                          className="inline-flex items-center gap-1 text-[0.6875rem] font-semibold text-sky-600 dark:text-sky-400 hover:underline cursor-pointer"
                         >
                           <Eye className="h-3 w-3" />
                           {t('ดูรายละเอียดบันทึก', 'View Full Log Details')}
@@ -698,9 +698,9 @@ export default function MyAdvisees() {
                         <p className="font-semibold text-slate-800 dark:text-slate-200 truncate">
                           {getCategoryLabel(req.category)}
                         </p>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">{req.details}</p>
+                        <p className="text-[0.6875rem] text-slate-500 dark:text-slate-400 truncate">{req.details}</p>
                       </div>
-                      <span className="shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded uppercase tracking-wider bg-slate-200/70 dark:bg-slate-700 text-slate-700 dark:text-slate-200">
+                      <span className="shrink-0 text-[0.625rem] font-semibold px-2 py-0.5 rounded uppercase tracking-wider bg-slate-200/70 dark:bg-slate-700 text-slate-700 dark:text-slate-200">
                         {req.status}
                       </span>
                     </div>
@@ -765,12 +765,12 @@ export default function MyAdvisees() {
                     >
                       <div>
                         <p className="font-semibold">{student.name}</p>
-                        <p className="text-[11px] text-slate-500 font-mono">
+                        <p className="text-[0.6875rem] text-slate-500 font-mono">
                           {student.code} • {student.email}
                         </p>
                       </div>
                       {isAssigned ? (
-                        <span className="text-[10px] text-emerald-600 font-semibold">
+                        <span className="text-[0.625rem] text-emerald-600 font-semibold">
                           {t('อยู่ในความดูแลแล้ว', 'Already in cohort')}
                         </span>
                       ) : isSelected ? (
@@ -844,7 +844,7 @@ export default function MyAdvisees() {
               }`}
             >
               <p className="font-bold text-slate-900 dark:text-slate-100">{t('อัปเดต / เพิ่มเพิ่ม', 'Upsert / Append')}</p>
-              <p className="text-[11px] text-slate-500 mt-1">
+              <p className="text-[0.6875rem] text-slate-500 mt-1">
                 {t('เพิ่มนักศึกษาใหม่โดยไม่ลบรายชื่อเดิมในบัญชี', 'Add or update without removing current advisees.')}
               </p>
             </button>
@@ -858,7 +858,7 @@ export default function MyAdvisees() {
               }`}
             >
               <p className="font-bold text-slate-900 dark:text-slate-100">{t('แทนที่ทั้งหมด', 'Replace All')}</p>
-              <p className="text-[11px] text-slate-500 mt-1">
+              <p className="text-[0.6875rem] text-slate-500 mt-1">
                 {t('ปลดนักศึกษาที่ไม่มีในไฟล์ออกจากบัญชีความดูแลของคุณ', 'Unassign advisees not listed in this CSV file.')}
               </p>
             </button>
@@ -896,13 +896,13 @@ export default function MyAdvisees() {
               </p>
               <div className="max-h-36 overflow-y-auto border border-slate-200 dark:border-slate-700 rounded-lg p-2 space-y-1 bg-slate-50 dark:bg-slate-800/40">
                 {csvRows.slice(0, 10).map((r, i) => (
-                  <div key={i} className="text-[11px] flex justify-between text-slate-600 dark:text-slate-300">
+                  <div key={i} className="text-[0.6875rem] flex justify-between text-slate-600 dark:text-slate-300">
                     <span className="font-mono">{r.code}</span>
                     <span className="font-semibold">{r.name}</span>
                   </div>
                 ))}
                 {csvRows.length > 10 && (
-                  <p className="text-[10px] text-slate-400 text-center">
+                  <p className="text-[0.625rem] text-slate-400 text-center">
                     {t(`และอีก ${csvRows.length - 10} รายการ...`, `and ${csvRows.length - 10} more...`)}
                   </p>
                 )}

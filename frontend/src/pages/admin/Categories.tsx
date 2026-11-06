@@ -259,12 +259,12 @@ export default function Categories() {
       render: (c: AdvisingCategoryConfig) => (
         <div className="flex flex-wrap gap-1.5 max-w-sm">
           {c.subCategories.slice(0, 3).map((sc, i) => (
-            <span key={i} className="px-2 py-0.5 bg-slate-100/80 dark:bg-slate-800 rounded-md text-[11px] font-medium text-slate-700 dark:text-slate-200 border border-slate-200/50 dark:border-slate-700">
+            <span key={i} className="px-2 py-0.5 bg-slate-100/80 dark:bg-slate-800 rounded-md text-[0.6875rem] font-medium text-slate-700 dark:text-slate-200 border border-slate-200/50 dark:border-slate-700">
               {getSubCategoryLabel(sc)}
             </span>
           ))}
           {c.subCategories.length > 3 && (
-            <span className="px-1.5 py-0.5 bg-sky-50 dark:bg-sky-950/60 rounded-md text-[11px] font-medium text-sky-700 dark:text-sky-300 border border-sky-100 dark:border-sky-800">
+            <span className="px-1.5 py-0.5 bg-sky-50 dark:bg-sky-950/60 rounded-md text-[0.6875rem] font-medium text-sky-700 dark:text-sky-300 border border-sky-100 dark:border-sky-800">
               +{c.subCategories.length - 3} {t('รายการเพิ่มเติม', 'more')}
             </span>
           )}
@@ -334,7 +334,7 @@ export default function Categories() {
               <p className="text-xs font-bold text-slate-900 dark:text-slate-100">
                 {t('แม่แบบหมวดหมู่แนะนำด่วน', 'Recommended Category Presets')}
               </p>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+              <p className="text-[0.6875rem] text-slate-500 dark:text-slate-400">
                 {t('คลิกเพื่อเปิดแบบฟอร์มพร้อมกรอกข้อมูลและหัวข้อย่อยให้อัตโนมัติ', 'Click any preset below to auto-fill category name and subtopics instantly.')}
               </p>
             </div>
@@ -370,12 +370,12 @@ export default function Categories() {
                   <div className="flex items-center justify-between gap-1">
                     <p className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">{labelText}</p>
                     {isAlreadyAdded && (
-                      <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800 flex-shrink-0">
+                      <span className="text-[0.5625rem] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800 flex-shrink-0">
                         {t('มีแล้ว', 'Added')}
                       </span>
                     )}
                   </div>
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                  <p className="text-[0.625rem] text-slate-500 dark:text-slate-400 truncate mt-0.5">
                     {subList.slice(0, 2).join(', ')}...
                   </p>
                 </div>
@@ -401,7 +401,7 @@ export default function Categories() {
           {/* Quick Preset Selector inside modal */}
           {!editingCategory && (
             <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 space-y-1.5">
-              <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">
+              <span className="text-[0.625rem] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">
                 {t('เลือกจากแม่แบบด่วน', 'Quick Fill from Template')}
               </span>
               <div className="flex flex-wrap gap-1.5">
@@ -410,7 +410,7 @@ export default function Categories() {
                     key={i}
                     type="button"
                     onClick={() => applyPreset(p)}
-                    className="px-2 py-1 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-sky-500 text-[11px] font-medium text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
+                    className="px-2 py-1 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-sky-500 text-[0.6875rem] font-medium text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
                   >
                     {language === 'th' ? p.labelTh : p.labelEn}
                   </button>
@@ -438,7 +438,7 @@ export default function Categories() {
             <button
               type="button"
               onClick={() => setShowAdvancedKey(!showAdvancedKey)}
-              className="inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-400 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-300 transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 text-[0.6875rem] font-medium text-slate-400 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-300 transition-colors cursor-pointer"
             >
               <Settings2 className="h-3 w-3" />
               <span>{t('การตั้งค่าขั้นสูง (รหัสระบบ)', 'Advanced Settings (System Key)')}</span>
@@ -446,7 +446,7 @@ export default function Categories() {
             </button>
             {showAdvancedKey && (
               <div className="mt-2 p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/70 dark:border-slate-800 space-y-1">
-                <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                <label className="block text-[0.6875rem] font-semibold text-slate-600 dark:text-slate-300">
                   {t('รหัสอ้างอิงหมวดหมู่ (Internal Key / Slug)', 'Internal Key / Slug')}
                 </label>
                 <input
@@ -456,7 +456,7 @@ export default function Categories() {
                   placeholder="e.g. mental_health, academic_advising"
                   className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-mono text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500"
                 />
-                <p className="text-[10px] text-slate-400 dark:text-slate-500">
+                <p className="text-[0.625rem] text-slate-400 dark:text-slate-500">
                   {t('ระบบจะสร้างรหัสให้อัตโนมัติจากชื่อหมวดหมู่ หากเว้นว่างไว้', 'Auto-generated from category name. Leave empty to auto-generate.')}
                 </p>
               </div>

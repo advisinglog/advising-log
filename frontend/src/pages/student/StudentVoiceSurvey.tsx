@@ -208,7 +208,7 @@ export default function StudentVoiceSurvey() {
               <ShieldCheck className="h-4 w-4 text-sky-600" />
               <span>{t('การรักษาความลับและความเป็นส่วนตัว', 'Confidentiality Assurance')}</span>
             </div>
-            <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-[11px]">
+            <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-[0.6875rem]">
               {t(
                 'แบบสอบถามนี้ไม่มีผลกระทบใดๆ ต่อกระบวนการอนุมัติหรือขั้นตอนการลาออก/ลาพัก และจะไม่ถูกนำไปใช้ในทางอื่นนอกเหนือจากการพัฒนาการศึกษา',
                 'This survey has zero effect on your formal resignation/leave workflow and is kept strictly for educational quality enhancement.'
@@ -260,7 +260,7 @@ export default function StudentVoiceSurvey() {
             <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100">
               {t('แบบสอบถามความสมัครใจเพื่อพัฒนาคุณภาพการศึกษา', 'Voluntary Quality Improvement Survey')}
             </h3>
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-50 dark:bg-sky-500/10 text-sky-700 dark:text-sky-300 border border-sky-200/70 dark:border-sky-500/30 shadow-2xs">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[0.625rem] font-bold bg-sky-50 dark:bg-sky-500/10 text-sky-700 dark:text-sky-300 border border-sky-200/70 dark:border-sky-500/30 shadow-2xs">
               <span className="h-1.5 w-1.5 rounded-full bg-sky-500 dark:bg-sky-400 animate-pulse" />
               AUN-QA Criteria 6 & 8
             </span>
@@ -702,7 +702,7 @@ export default function StudentVoiceSurvey() {
             </span>
           </label>
 
-          <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200/60 dark:border-slate-700 text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed flex items-center gap-2">
+          <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200/60 dark:border-slate-700 text-[0.6875rem] text-slate-500 dark:text-slate-400 leading-relaxed flex items-center gap-2">
             <ShieldCheck className="h-4 w-4 text-emerald-600 flex-shrink-0" />
             <span>
               {t(

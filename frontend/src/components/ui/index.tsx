@@ -10,6 +10,7 @@ import { useLanguage } from '@/contexts/LanguageContext'
 import type { RequestStatus, FollowUpStatus, ReferralStatus, ExitCaseStatus, AppointmentStatus, EarlyWarningSeverity, DocumentStatus } from '@/types'
 
 export { ThemeToggle } from './ThemeToggle'
+export { FontSizeControl } from './FontSizeControl'
 export { DocumentViewerModal, type DocumentViewerTarget } from './DocumentViewerModal'
 
 // --- Custom Select Dropdown ---
@@ -79,7 +80,7 @@ export function CustomSelect({
               {selectedOption.icon && <span className="flex-shrink-0">{selectedOption.icon}</span>}
               <span className="text-slate-900 dark:text-slate-100 font-medium truncate">{selectedOption.label}</span>
               {selectedOption.description && (
-                <span className="text-[11px] text-slate-400 dark:text-slate-500 font-normal truncate">
+                <span className="text-[0.6875rem] text-slate-400 dark:text-slate-500 font-normal truncate">
                   {selectedOption.description}
                 </span>
               )}
@@ -115,7 +116,7 @@ export function CustomSelect({
                   {option.icon && <span className="flex-shrink-0">{option.icon}</span>}
                   <span className="truncate">{option.label}</span>
                   {option.description && (
-                    <span className="text-[11px] text-slate-400 dark:text-slate-500 font-normal truncate">
+                    <span className="text-[0.6875rem] text-slate-400 dark:text-slate-500 font-normal truncate">
                       {option.description}
                     </span>
                   )}
@@ -256,7 +257,7 @@ export function StatusBadge({ status, className }: { status: BadgeStatus; classN
 
   return (
     <span className={cn(
-      'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border tracking-tight',
+      'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[0.6875rem] font-semibold border tracking-tight',
       conf.bg, conf.text, conf.border,
       className,
     )}>
@@ -317,7 +318,7 @@ export function StatCard({ label, value, icon, color = 'sky', onClick }: { label
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-xl sm:text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 font-sans">{value}</p>
-          <p className="text-[10px] sm:text-xs font-semibold text-slate-400 dark:text-slate-400 mt-0.5 break-words leading-tight tracking-wide">{label}</p>
+          <p className="text-[0.625rem] sm:text-xs font-semibold text-slate-400 dark:text-slate-400 mt-0.5 break-words leading-tight tracking-wide">{label}</p>
         </div>
       </div>
     </div>
@@ -463,7 +464,7 @@ export function Tabs({ tabs, active, onChange }: { tabs: { value: string; label:
           {t.label}
           {t.count !== undefined && (
             <span className={cn(
-              'inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full text-[10px] font-bold tracking-tight',
+              'inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full text-[0.625rem] font-bold tracking-tight',
               active === t.value ? 'bg-sky-100 dark:bg-sky-950/80 text-sky-800 dark:text-sky-300' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400',
             )}>
               {t.count}
@@ -517,7 +518,7 @@ export function DataTable<T extends { id?: string }>({ columns, data, onRowClick
         <thead>
           <tr className="bg-slate-50/80 dark:bg-slate-800/60 border-b border-slate-200/70 dark:border-slate-800">
             {columns.map(col => (
-              <th key={col.key} className={cn('px-4 py-3.5 text-left text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider', col.className)}>
+              <th key={col.key} className={cn('px-4 py-3.5 text-left text-[0.6875rem] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider', col.className)}>
                 {col.header}
               </th>
             ))}
@@ -588,7 +589,7 @@ export function Timeline({ items }: { items: { date: string; title: string; desc
             {i < items.length - 1 && <div className="w-px flex-1 bg-slate-200/80 dark:bg-slate-800 my-1" />}
           </div>
           <div className="pb-5">
-            <p className="text-[11px] font-semibold text-slate-400 dark:text-slate-500">{item.date}</p>
+            <p className="text-[0.6875rem] font-semibold text-slate-400 dark:text-slate-500">{item.date}</p>
             <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 mt-0.5">{item.title}</p>
             {item.description && <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">{item.description}</p>}
             {item.status && <StatusBadge status={item.status} className="mt-1.5" />}
@@ -696,7 +697,7 @@ export function UserAvatar({
   ).toUpperCase()
 
   const sizeClasses = {
-    xs: 'h-6 w-6 text-[10px] rounded-lg',
+    xs: 'h-6 w-6 text-[0.625rem] rounded-lg',
     sm: 'h-8 w-8 text-xs rounded-xl font-bold',
     md: 'h-9 w-9 text-xs rounded-xl font-bold',
     lg: 'h-12 w-12 sm:h-14 sm:w-14 text-base rounded-2xl font-extrabold',
@@ -776,14 +777,14 @@ export function StudentProfileBanner({
           <UserAvatar name={student.name} avatar={student.avatar} size="xl" />
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-1">
-              <span className="px-2 sm:px-2.5 py-0.5 rounded-md bg-sky-100/70 dark:bg-sky-950/60 text-sky-800 dark:text-sky-300 text-[10px] sm:text-xs font-mono font-bold border border-sky-200/60 dark:border-sky-800">
+              <span className="px-2 sm:px-2.5 py-0.5 rounded-md bg-sky-100/70 dark:bg-sky-950/60 text-sky-800 dark:text-sky-300 text-[0.625rem] sm:text-xs font-mono font-bold border border-sky-200/60 dark:border-sky-800">
                 {student.code}
               </span>
             </div>
             <h2 className="text-base sm:text-lg md:text-xl font-bold text-slate-900 dark:text-slate-100 leading-tight truncate">
               {student.name}
             </h2>
-            <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-medium truncate">
+            <p className="text-[0.6875rem] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-medium truncate">
               {displayMajor} · {displaySchool}
             </p>
           </div>
@@ -792,11 +793,11 @@ export function StudentProfileBanner({
         {/* Right: Advisor Card */}
         <div className="flex items-center pt-3 lg:pt-0 border-t lg:border-t-0 border-slate-100 dark:border-slate-800">
           <div className="px-3.5 py-2 rounded-xl bg-sky-50/60 dark:bg-sky-500/10 border border-sky-100 dark:border-sky-500/25 min-w-[200px] sm:min-w-[240px]">
-            <p className="text-[9px] sm:text-[10px] font-bold text-sky-700 dark:text-sky-300 uppercase tracking-wider">{t('อาจารย์ที่ปรึกษา', 'Faculty Advisor')}</p>
+            <p className="text-[0.5625rem] sm:text-[0.625rem] font-bold text-sky-700 dark:text-sky-300 uppercase tracking-wider">{t('อาจารย์ที่ปรึกษา', 'Faculty Advisor')}</p>
             <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 truncate mt-0.5">
               {advisor?.name || t('ยังไม่ได้รับการจัดสรร', 'Not Assigned')}
             </p>
-            <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 truncate">
+            <p className="text-[0.625rem] sm:text-xs text-slate-500 dark:text-slate-400 truncate">
               {advisor?.email || t('กรุณาติดต่อสำนักวิชา', 'Contact School Office')}
             </p>
           </div>
@@ -831,7 +832,7 @@ export function AdvisorCohortBanner({
             <h2 className="text-base sm:text-lg md:text-xl font-bold text-slate-900 dark:text-slate-100 leading-tight truncate">
               {advisor.name}
             </h2>
-            <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium truncate">
+            <p className="text-[0.6875rem] sm:text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium truncate">
               {displaySchool}
             </p>
           </div>
@@ -839,7 +840,7 @@ export function AdvisorCohortBanner({
 
         <div className="flex items-center gap-2 sm:gap-3">
           <div className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-sky-50 dark:bg-sky-500/10 border border-sky-100 dark:border-sky-500/25 text-center min-w-[100px]">
-            <p className="text-[9px] sm:text-[10px] font-bold text-sky-700 dark:text-sky-300 uppercase tracking-wider">{t('นักศึกษาในความดูแล', 'Assigned Advisees')}</p>
+            <p className="text-[0.5625rem] sm:text-[0.625rem] font-bold text-sky-700 dark:text-sky-300 uppercase tracking-wider">{t('นักศึกษาในความดูแล', 'Assigned Advisees')}</p>
             <p className="text-lg sm:text-xl font-extrabold text-sky-800 dark:text-sky-200 mt-0.5 font-mono">{adviseeCount} {t('คน', 'Students')}</p>
           </div>
         </div>

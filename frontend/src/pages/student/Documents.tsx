@@ -262,10 +262,10 @@ export default function Documents() {
           <div>
             <span className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100 block">{d.documentName}</span>
             {d.description && (
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-1">{d.description}</p>
+              <p className="text-[0.6875rem] text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-1">{d.description}</p>
             )}
             {d.uploadedAt && (
-              <span className="text-[11px] text-slate-400 dark:text-slate-500">
+              <span className="text-[0.6875rem] text-slate-400 dark:text-slate-500">
                 {t('อัปโหลดเมื่อ', 'Uploaded')}: {d.uploadedAt}
               </span>
             )}
@@ -495,7 +495,7 @@ export default function Documents() {
                         <div className="flex items-center gap-2.5 min-w-0 flex-1">
                           <FileText className="h-4 w-4 text-sky-600 dark:text-sky-400 flex-shrink-0" />
                           <span className="truncate">{dt.name}</span>
-                          <span className={`text-[10px] px-1.5 py-0.2 rounded font-semibold ${
+                          <span className={`text-[0.625rem] px-1.5 py-0.2 rounded font-semibold ${
                             dt.signatureMethod === 'wet_signature'
                               ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300'
                               : 'bg-sky-100 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300'
@@ -553,7 +553,7 @@ export default function Documents() {
                   </span>
                 )}
               </div>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+              <p className="text-[0.6875rem] text-slate-500 dark:text-slate-400 leading-relaxed">
                 {selectedDocType.signatureMethod === 'wet_signature'
                   ? t(
                       'เอกสารนี้ต้องลงลายมือชื่อจริงบนกระดาษ จากนั้นสแกนหรือถ่ายรูปเอกสารฉบับจริงเพื่ออัปโหลดเข้าระบบ',
@@ -607,7 +607,7 @@ export default function Documents() {
                 <p className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-200">
                   {t('คลิกเพื่อเลือกไฟล์จากอุปกรณ์', 'Click to choose file from your device')}
                 </p>
-                <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
+                <p className="text-[0.6875rem] text-slate-400 dark:text-slate-500 mt-0.5">
                   PDF, PNG, JPG หรือ DOCX (ขนาดไม่เกิน 10MB)
                 </p>
               </div>
@@ -621,7 +621,7 @@ export default function Documents() {
                     <p className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
                       {currentFileName}
                     </p>
-                    <p className="text-[10px] text-sky-700 dark:text-sky-300 font-medium">
+                    <p className="text-[0.625rem] text-sky-700 dark:text-sky-300 font-medium">
                       {selectedFile ? `${(selectedFile.size / 1024).toFixed(1)} KB` : ''}
                     </p>
                   </div>
@@ -658,7 +658,7 @@ export default function Documents() {
                       <ShieldCheck className="h-4 w-4 text-sky-600 dark:text-sky-400" />
                       {t('ข้าพเจ้ายืนยันการลงนามอิเล็กทรอนิกส์ (E-Signature)', 'I confirm my Electronic Signature (E-Signature)')}
                     </span>
-                    <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1">
+                    <p className="text-[0.6875rem] text-slate-600 dark:text-slate-400 mt-1">
                       {t(
                         'ข้าพเจ้ายืนยันว่าข้อมูลและเอกสารนี้ถูกต้องครบถ้วน และยินยอมให้ระบบบันทึกลายมือชื่ออิเล็กทรอนิกส์พร้อม Timestamp เพื่อเป็นหลักฐานตามระเบียบของมหาวิทยาลัย',
                         'I certify that this document is accurate and consent to applying an electronic signature timestamp as institutional evidence.'
@@ -674,7 +674,7 @@ export default function Documents() {
                     <span className="font-bold block text-amber-900 dark:text-amber-200 mb-0.5">
                       {t('ไม่ต้องยืนยันลายเซ็นดิจิทัล (ไม่ต้องติ๊กกล่อง)', 'No digital checkbox required')}
                     </span>
-                    <p className="text-[11px] text-amber-700/90 dark:text-amber-400/90">
+                    <p className="text-[0.6875rem] text-amber-700/90 dark:text-amber-400/90">
                       {t(
                         'เอกสารประเภทนี้เป็นการลงนามจริงบนกระดาษ (Wet Signature) อาจารย์ที่ปรึกษาจะเป็นผู้ตรวจสอบลายมือชื่อและความถูกต้องเพื่ออนุมัติในระบบ',
                         'This document uses a physical wet signature. Your academic advisor will verify the physical signature and approve the submission.'
