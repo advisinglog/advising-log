@@ -241,7 +241,7 @@ export function exportAunQaExcelReport(options: AunQaExportOptions): void {
   const completedReq = requests.filter(r => r.status === 'completed' || r.status === 'closed').length || metrics.totalSessions || 0
   const inProgressReq = requests.filter(r => r.status === 'scheduled').length || Math.max(0, totalReq - completedReq)
   const pendingReq = requests.filter(r => r.status === 'pending' || r.status === 'requested').length || 0
-  const completionRate = totalReq > 0 ? Math.round((completedReq / totalReq) * 100) : 100
+  const completionRate = metrics.fuRate
   const totalSessions = metrics.totalSessions ?? 0
   const avgResponseTime = '1.2'
   const totalFollowUps = metrics.totalFollowUps ?? 0

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { useStore } from '@/data/store'
 import { useToast } from '@/contexts/ToastContext'
@@ -15,9 +15,11 @@ export default function AdvisorFollowUps() {
   const store = useStore()
   const { addToast } = useToast()
   const { t } = useLanguage()
+  const location = useLocation()
   const navigate = useNavigate()
 
-  const [activeTab, setActiveTab] = useState<'pending' | 'completed'>('pending')
+  const initialTab = (location.state as { showAll?: boolean } | null)?.showAll ? 'completed' : 'pending'
+  const [activeTab, setActiveTab] = useState<'pending' | 'completed'>(initialTab)
   const [search, setSearch] = useState('')
 
   if (!currentUser) return null
@@ -94,6 +96,12 @@ export default function AdvisorFollowUps() {
           'ตรวจสอบงานที่มอบหมายให้นักศึกษา ติดตามความคืบหน้า และดูประวัติงานที่ทำเสร็จสิ้นแล้ว',
           'Track assigned student action items, monitor deadlines, and view completed task history.'
         )}
+        actions={
+          <Button variant="secondary" onClick={() => navigate('/advisor/sessions')}>
+            {t('กลับไปหน้าการนัดหมาย', 'Back to Sessions')} <ArrowRight className="h-4 w-4 ml-1.5" />
+          </Button>
+        }
+      />
         actions={
           <Button variant="secondary" onClick={() => navigate('/advisor/sessions')}>
             {t('กลับไปหน้าการนัดหมาย', 'Back to Sessions')} <ArrowRight className="h-4 w-4 ml-1.5" />

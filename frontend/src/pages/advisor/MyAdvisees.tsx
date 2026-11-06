@@ -66,6 +66,21 @@ export default function MyAdvisees() {
   // Remove Advisee State
   const [studentToRemove, setStudentToRemove] = useState<User | null>(null)
 
+  // History modal data for selected student
+  const studentSessions = useMemo(() => {
+    if (!selectedStudentHistory) return []
+    return store.sessions
+      .filter(s => s.studentId === selectedStudentHistory.id)
+      .sort((a, b) => b.sessionDate.localeCompare(a.sessionDate))
+  }, [selectedStudentHistory, store.sessions])
+
+  const studentRequests = useMemo(() => {
+    if (!selectedStudentHistory) return []
+    return store.requests
+      .filter(r => r.studentId === selectedStudentHistory.id)
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+  }, [selectedStudentHistory, store.requests])
+
   if (!currentUser) return null
 
   // 1. Get Advisees assigned to this advisor
@@ -354,21 +369,6 @@ export default function MyAdvisees() {
     setStudentToRemove(null)
     store.refreshBackend()
   }
-
-  // History modal data for selected student
-  const studentSessions = useMemo(() => {
-    if (!selectedStudentHistory) return []
-    return store.sessions
-      .filter(s => s.studentId === selectedStudentHistory.id)
-      .sort((a, b) => b.sessionDate.localeCompare(a.sessionDate))
-  }, [selectedStudentHistory, store.sessions])
-
-  const studentRequests = useMemo(() => {
-    if (!selectedStudentHistory) return []
-    return store.requests
-      .filter(r => r.studentId === selectedStudentHistory.id)
-      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-  }, [selectedStudentHistory, store.requests])
 
   return (
     <div className="space-y-6">
