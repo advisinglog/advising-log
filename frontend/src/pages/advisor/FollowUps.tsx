@@ -102,12 +102,6 @@ export default function AdvisorFollowUps() {
           </Button>
         }
       />
-        actions={
-          <Button variant="secondary" onClick={() => navigate('/advisor/sessions')}>
-            {t('กลับไปหน้าการนัดหมาย', 'Back to Sessions')} <ArrowRight className="h-4 w-4 ml-1.5" />
-          </Button>
-        }
-      />
 
       {/* Tabs Switch: In Progress vs Completed */}
       <Tabs
