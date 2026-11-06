@@ -307,6 +307,25 @@ class ApiClient {
     })
   }
 
+  // --- AI on/off switch (server-side, Super Admin) & per-user AI access ---
+  async getAiStatus() {
+    return this.request<{ isAiApiEnabled: boolean; lastToggledAt: string | null; lastToggledBy: string | null }>('/api/system/ai-status')
+  }
+
+  async setAiStatus(isAiApiEnabled: boolean) {
+    return this.request<{ success: boolean; isAiApiEnabled: boolean; lastToggledAt: string | null; lastToggledBy: string | null }>('/api/system/ai-status', {
+      method: 'PATCH',
+      body: JSON.stringify({ isAiApiEnabled }),
+    })
+  }
+
+  async setUserAiAccess(userId: string, hasAiAccess: boolean) {
+    return this.request<{ success: boolean }>(`/api/users/${encodeURIComponent(userId)}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ hasAiAccess }),
+    })
+  }
+
   // --- Anonymous feedback (students send, QA reads) ---
   async submitFeedback(feedback: { topic: FeedbackTopic; rating?: number; message: string }) {
     return this.request<{ success: boolean }>('/api/feedback', {

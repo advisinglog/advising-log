@@ -189,6 +189,7 @@ const AUDIT_ACTIONS: Array<[method: string, path: RegExp, action: string]> = [
   ['PATCH', /^\/api\/requests\/[^/]+\/status$/, 'request_updated'],
   ['PATCH', /^\/api\/requests\/[^/]+\/feedback$/, 'request_feedback_submitted'],
   ['POST', /^\/api\/feedback$/, 'feedback_submitted'],
+  ['PATCH', /^\/api\/system\/ai-status$/, 'ai_switch_toggled'],
   ['DELETE', /^\/api\/requests\/[^/]+$/, 'request_deleted'],
   ['POST', /^\/api\/appointments$/, 'appointment_scheduled'],
   ['PATCH', /^\/api\/appointments\/[^/]+\/status$/, 'appointment_updated'],
@@ -1134,7 +1135,10 @@ app.post('/api/users', async (c) => {
     department: body.department || existingUser?.department || 'School of Applied Digital Technology (ADT)',
     phone: body.phone !== undefined ? body.phone : (existingUser?.phone || null),
     isActive: body.isActive !== undefined ? body.isActive : (existingUser ? existingUser.isActive : true),
-    hasAiAccess: body.hasAiAccess !== undefined ? body.hasAiAccess : (existingUser ? existingUser.hasAiAccess : false),
+    // Only the Super Admin changes an existing user's AI access
+    hasAiAccess: existingUser && c.get('auth')?.role !== 'super_admin'
+      ? existingUser.hasAiAccess
+      : (body.hasAiAccess !== undefined ? body.hasAiAccess : (existingUser ? existingUser.hasAiAccess : false)),
     createdAt: existingUser ? existingUser.createdAt : (body.createdAt || new Date().toISOString().split('T')[0]),
   }
 
@@ -1187,7 +1191,9 @@ app.post('/api/users/bulk', async (c) => {
       department: item.department || existingUser?.department || 'School of Applied Digital Technology (ADT)',
       phone: item.phone !== undefined ? item.phone : (existingUser?.phone || null),
       isActive: item.isActive !== undefined ? item.isActive : (existingUser ? existingUser.isActive : true),
-      hasAiAccess: item.hasAiAccess !== undefined ? item.hasAiAccess : (existingUser ? existingUser.hasAiAccess : false),
+      hasAiAccess: existingUser && c.get('auth')?.role !== 'super_admin'
+        ? existingUser.hasAiAccess
+        : (item.hasAiAccess !== undefined ? item.hasAiAccess : (existingUser ? existingUser.hasAiAccess : false)),
       createdAt: existingUser ? existingUser.createdAt : (item.createdAt || new Date().toISOString().split('T')[0]),
     }
 
@@ -1229,6 +1235,9 @@ app.patch('/api/users/:id', async (c) => {
   // Only the configured super admin email holds super_admin; nobody can grant it here
   if (body.role === 'super_admin') {
     return c.json({ success: false, error: 'The super_admin role cannot be assigned' }, 403)
+  }
+  if (body.hasAiAccess !== undefined && auth?.role !== 'super_admin') {
+    return c.json({ success: false, error: 'Only the Super Admin can change AI access' }, 403)
   }
   const { id: _ignoredId, ...updates } = body
   await database.update(schema.users).set(updates).where(eq(schema.users.id, id))
@@ -2653,36 +2662,124 @@ app.post('/api/ai/keys/:id/test', async (c) => {
 // ============================================================
 // 8. POST /api/qa/ai-analyze: LLM Qualitative Retention Analysis
 // ============================================================
+// ---------------------------------------------------------------
+// AI on/off switch (Super Admin). Stored server-side so it applies to every user and device.
+// ---------------------------------------------------------------
+const AI_SWITCH_KEY = 'ai_api_enabled'
+
+async function getAiStatus(database: ReturnType<typeof db>) {
+  if (!database) return { isAiApiEnabled: true, lastToggledAt: null as string | null, lastToggledBy: null as string | null }
+  const row = await database.select().from(schema.systemSettings).where(eq(schema.systemSettings.key, AI_SWITCH_KEY)).get()
+  return {
+    isAiApiEnabled: row ? row.value !== 'false' : true, // on until the Super Admin turns it off
+    lastToggledAt: row?.updatedAt ?? null,
+    lastToggledBy: row?.updatedBy ?? null,
+  }
+}
+
+app.get('/api/system/ai-status', async (c) => c.json(await getAiStatus(db(c))))
+
+app.patch('/api/system/ai-status', async (c) => {
+  const database = db(c)
+  if (!database) return c.json({ error: 'Database unavailable' }, 503)
+  const parsed = z.object({ isAiApiEnabled: z.boolean() }).safeParse(await c.req.json().catch(() => null))
+  if (!parsed.success) return c.json({ error: 'isAiApiEnabled must be true or false.' }, 400)
+
+  const auth = c.get('auth')
+  const row = {
+    key: AI_SWITCH_KEY,
+    value: String(parsed.data.isAiApiEnabled),
+    updatedAt: new Date().toISOString(),
+    updatedBy: auth?.name || auth?.userId || null,
+  }
+  await database.insert(schema.systemSettings).values(row)
+    .onConflictDoUpdate({ target: schema.systemSettings.key, set: { value: row.value, updatedAt: row.updatedAt, updatedBy: row.updatedBy } })
+  return c.json({ success: true, ...(await getAiStatus(database)) })
+})
+
+// ---------------------------------------------------------------
+// AI analysis prompt. The server builds it from validated parts; the client never sends a
+// finished prompt. MUST stay identical to buildAiPrompt() in frontend/src/services/aiService.ts
+// (both sides have a test pinned to the same expected text).
+// ---------------------------------------------------------------
+const MAX_AI_INSTRUCTIONS_CHARS = 4000
+const aiCaseSchema = z.object({
+  academicYear: z.string().max(40).optional(),
+  exitType: z.string().max(40),
+  reasonCode: z.string().max(60),
+  details: z.string().max(4000).optional(),
+  advisorAssessment: z.string().max(4000).optional(),
+  studentVoiceFeedback: z.string().max(4000).optional(),
+}) // unknown keys (e.g. studentCode) are stripped: they never reach the model
+const aiAnalyzeSchema = z.object({
+  mode: z.enum(['strategic_synthesis', 'chat_query', 'case_diagnostic']).default('strategic_synthesis'),
+  language: z.enum(['th', 'en']).default('th'),
+  cases: z.array(aiCaseSchema).max(300).default([]),
+  instructions: z.string().trim().min(1).max(MAX_AI_INSTRUCTIONS_CHARS),
+})
+
+export function buildAiAnalysisPrompt(input: {
+  language: 'th' | 'en'
+  cases: z.infer<typeof aiCaseSchema>[]
+  instructions: string
+}): { systemInstruction: string; userPrompt: string } {
+  const systemInstruction = `You are a Higher Education Quality Assurance (QA) and Student Retention specialist advising the Program Chair under AUN-QA Criteria 6 & 8.
+All student names and IDs have been removed for PDPA compliance. Never attempt to identify individual students.
+Analyze qualitative departure data with empathy and academic rigor, using only the case data provided.
+Respond in ${input.language === 'th' ? 'Thai' : 'English'}.`
+
+  const caseData = input.cases.map((item, idx) => `Case #${idx + 1} [Year: ${item.academicYear || 'N/A'} | Type: ${item.exitType} | Reason: ${item.reasonCode}]
+- Student Stated Reason: "${item.details || 'N/A'}"
+- Advisor Assessment: "${item.advisorAssessment || 'N/A'}"
+- Student Voice Feedback: "${item.studentVoiceFeedback || 'N/A'}"`).join('\n\n')
+
+  const userPrompt = `Student departure cases (de-identified):
+${caseData || '(no cases)'}
+
+Instructions:
+${input.instructions}`
+
+  return { systemInstruction, userPrompt }
+}
+
 app.post('/api/qa/ai-analyze', async (c) => {
   try {
-    const body = await c.req.json<{
-      mode?: 'strategic_synthesis' | 'chat_query' | 'case_diagnostic'
-      cases?: Array<{
-        id: string
-        studentCode?: string
-        academicYear?: string
-        exitType: string
-        reasonCode: string
-        details: string
-        advisorAssessment?: string
-        studentVoiceFeedback?: string
-      }>
-      query?: string
-      apiKey?: string
-      language?: 'th' | 'en'
-      systemInstruction?: string
-      userPrompt?: string
-    }>()
+    const raw = await c.req.json().catch(() => null) as Record<string, unknown> | null
+    const lang: 'th' | 'en' = raw?.language === 'en' ? 'en' : 'th'
+    const rawMode = typeof raw?.mode === 'string' ? raw.mode : 'strategic_synthesis'
+    const refuse = (status: 400 | 403, error: string, th: string, en: string) => c.json({
+      success: false, provider: 'Default API key', mode: rawMode, error,
+      analysis: lang === 'th' ? th : en, timestamp: new Date().toISOString(),
+    }, status)
 
-    const mode = body.mode || 'strategic_synthesis'
-    const cases = body.cases || []
-    const userQuery = body.query || ''
-    const lang = body.language || 'th'
+    const parsed = aiAnalyzeSchema.safeParse(raw)
+    if (!parsed.success) {
+      return refuse(400, 'INVALID_AI_REQUEST',
+        '⚠️ คำขอไม่ถูกต้อง (คำสั่งต้องไม่ว่างและยาวไม่เกิน 4,000 ตัวอักษร)',
+        '⚠️ Invalid request (instructions must be non-empty and at most 4,000 characters).')
+    }
+    const { mode, cases } = parsed.data
     const database = db(c)
 
-    // 1. Determine active API key: direct override > D1 default key > env/header
-    let apiKey = body.apiKey || c.req.header('x-gemini-key')
-    if (!apiKey && database) {
+    // Admin controls, enforced here so they apply on every device
+    if (database) {
+      if (!(await getAiStatus(database)).isAiApiEnabled) {
+        return refuse(403, 'AI_API_DISABLED',
+          '⚠️ ผู้ดูแลระบบปิดการใช้งาน AI ชั่วคราว',
+          '⚠️ AI is currently turned off by the System Administrator.')
+      }
+      const auth = c.get('auth')
+      const me = auth ? await database.select({ hasAiAccess: schema.users.hasAiAccess }).from(schema.users).where(eq(schema.users.id, auth.userId)).get() : null
+      if (!me?.hasAiAccess) {
+        return refuse(403, 'USER_AI_ACCESS_DENIED',
+          '⚠️ บัญชีของคุณยังไม่ได้รับสิทธิ์ใช้งาน AI กรุณาติดต่อผู้ดูแลระบบ',
+          '⚠️ Your account does not have AI access. Please contact the System Administrator.')
+      }
+    }
+
+    // 1. Active API key: the Admin's default key in D1, else the environment key
+    let apiKey: string | undefined
+    if (database) {
       const activeDbKey = await database.select().from(schema.aiApiKeys).where(eq(schema.aiApiKeys.isDefault, true)).get()
       if (activeDbKey && activeDbKey.key) {
         apiKey = activeDbKey.key
@@ -2692,60 +2789,8 @@ app.post('/api/qa/ai-analyze', async (c) => {
       apiKey = c.env?.GEMINI_API_KEY
     }
 
-    // De-identify: Only pass sanitized academic context
-    const sanitizedDataSummary = cases.map((item, idx) => {
-      return `Case #${idx + 1} [Year: ${item.academicYear || 'N/A'} | Type: ${item.exitType} | Reason: ${item.reasonCode}]
-- Student Stated Reason: "${item.details || 'N/A'}"
-- Advisor Assessment: "${item.advisorAssessment || 'N/A'}"
-- Student Survey Voice: "${item.studentVoiceFeedback || 'N/A'}"`
-    }).join('\r\n\r\n')
-
-    // If a Gemini API key is available, call Google Gemini (newest available model)
     if (apiKey && apiKey.trim().length > 10) {
-      let systemInstruction = `You are an expert Higher Education Quality Assurance (QA) Analyst and Academic Retention Specialist advising the Program Chair and Dean under AUN-QA Criterion 6 (Student Support Services) and Criterion 8 (Retention & Dropout Rates).
-All personal names have been stripped for PDPA compliance. Analyze the qualitative data deeply.
-Respond in ${lang === 'th' ? 'Thai with professional academic tone and clear markdown bullet points' : 'English with professional academic tone and clear markdown bullet points'}.`
-
-      let userPrompt = ''
-      if (mode === 'strategic_synthesis') {
-        userPrompt = `Analyze the following student exit cases (Withdrawal / Resignation vs. Leave of Absence):
-
-${sanitizedDataSummary}
-
-Please deliver a comprehensive Qualitative QA Synthesis containing:
-1. **Executive Summary (บทสรุปสำหรับประธานหลักสูตร)**: Key patterns and primary differences between Permanent Withdrawals and Temporary Leaves of Absence.
-2. **Top 3 Root Causes (3 สาเหตุรากเหง้าเชิงลึก)**: Detail how curriculum pacing, mental burnout, or family obligations drove these decisions.
-3. **Curriculum & Teaching Impacts (ผลกระทบต่อการจัดการเรียนการสอน)**: Specifically analyzing Term 1 foundation courses (e.g. Programming/Calculus).
-4. **Actionable CQI Recommendations (ข้อเสนอแนะเชิงมาตรการตามเกณฑ์ AUN-QA)**: Concrete 0-3 month and 1-year intervention plans to boost retention.`
-      } else if (mode === 'case_diagnostic') {
-        userPrompt = `Perform a deep qualitative diagnostic analysis for this specific student departure case:
-
-${sanitizedDataSummary}
-
-Please provide:
-1. **Root Cause Diagnosis (การวินิจฉัยสาเหตุแท้จริง)**: Contrast student stated reason vs underlying factors.
-2. **Intervention Feasibility (การประเมินความเป็นไปได้ในการช่วยเหลือ/ชะลอการออก)**
-3. **Re-entry or Retention Action Plan (ข้อเสนอแนะสู่อาจารย์ที่ปรึกษาและหลักสูตร)**`
-      } else {
-        userPrompt = `Based on the following student exit data:
-
-${sanitizedDataSummary}
-
-Please answer the Program Chair's question:
-"${userQuery}"
-
-Provide a concise, evidence-based academic response with clear takeaways for curriculum improvement.`
-      }
-
-      // The client shows the user the exact prompt before analysis; use it verbatim when provided
-      const MAX_PROMPT_CHARS = 100_000
-      if (
-        typeof body.systemInstruction === 'string' && body.systemInstruction.length <= MAX_PROMPT_CHARS &&
-        typeof body.userPrompt === 'string' && body.userPrompt.trim() && body.userPrompt.length <= MAX_PROMPT_CHARS
-      ) {
-        systemInstruction = body.systemInstruction
-        userPrompt = body.userPrompt
-      }
+      const { systemInstruction, userPrompt } = buildAiAnalysisPrompt({ language: lang, cases, instructions: parsed.data.instructions })
 
       const candidateEndpoints = [
         'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent',

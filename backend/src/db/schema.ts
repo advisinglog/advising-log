@@ -257,3 +257,11 @@ export const studentFeedback = sqliteTable('student_feedback', {
   message: text('message').notNull(),
   createdAt: text('created_at').notNull(),
 })
+
+// 19. System-wide settings set by the Super Admin (e.g. the AI on/off switch), enforced by the API
+export const systemSettings = sqliteTable('system_settings', {
+  key: text('key').primaryKey(),
+  value: text('value').notNull(),
+  updatedAt: text('updated_at').notNull(),
+  updatedBy: text('updated_by'),
+})

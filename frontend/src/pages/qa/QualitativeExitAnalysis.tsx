@@ -246,6 +246,7 @@ export default function QualitativeExitAnalysis({ view = 'analysis' }: { view?: 
       customBaseUrl,
       language,
       userHasAiAccess: isUserAiAuthorized,
+      systemAiEnabled: isSystemAiEnabled,
     }
     const reviewed = await reviewPrompt(req)
     if (!reviewed) return
@@ -280,6 +281,7 @@ export default function QualitativeExitAnalysis({ view = 'analysis' }: { view?: 
       customBaseUrl,
       language,
       userHasAiAccess: isUserAiAuthorized,
+      systemAiEnabled: isSystemAiEnabled,
     }
     const reviewed = await reviewPrompt(req)
     if (!reviewed) return
@@ -313,6 +315,7 @@ export default function QualitativeExitAnalysis({ view = 'analysis' }: { view?: 
       customBaseUrl,
       language,
       userHasAiAccess: isUserAiAuthorized,
+      systemAiEnabled: isSystemAiEnabled,
     }
     const reviewed = await reviewPrompt(req)
     if (!reviewed) return

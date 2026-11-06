@@ -118,6 +118,8 @@ export interface AIAnalysisRequest {
   customInstructions?: string
   language?: 'th' | 'en'
   userHasAiAccess?: boolean
+  /** The Super Admin's AI switch as last loaded from the server (the server enforces it too) */
+  systemAiEnabled?: boolean
 }
 
 export interface AIAnalysisResponse {
@@ -219,17 +221,6 @@ export function setStoredApiKeyForProvider(providerId: AIProviderId, key: string
   } else {
     localStorage.removeItem(`advising_log_qa_key_${providerId}`)
   }
-}
-
-export function isSystemAiEnabled(): boolean {
-  try {
-    const raw = localStorage.getItem('advising_log_system_api_config')
-    if (raw) {
-      const parsed = JSON.parse(raw)
-      return parsed.isAiApiEnabled !== false
-    }
-  } catch {}
-  return true
 }
 
 export async function testAiConnection(
@@ -382,13 +373,18 @@ Respond in ${lang === 'th' ? 'Thai' : 'English'}.`
  * Single source of truth for the exact prompt sent to any LLM.
  * Shown to the user for review before every analysis, then sent verbatim.
  */
-export function buildAiPrompt(req: AIAnalysisRequest): AIPrompt {
+/** The editable part of the prompt: the user's edited instructions, or this mode's defaults. */
+export function resolveAiInstructions(req: AIAnalysisRequest): string {
   const mode = req.mode || 'strategic_synthesis'
-  const { systemInstruction, caseData } = buildLockedPromptParts(req)
-  const instructions = (req.customInstructions?.trim()
+  return (req.customInstructions?.trim()
     ? req.customInstructions.trim()
     : getDefaultAiInstructions(mode, req.query)
   ).slice(0, MAX_AI_INSTRUCTIONS_CHARS)
+}
+
+export function buildAiPrompt(req: AIAnalysisRequest): AIPrompt {
+  const { systemInstruction, caseData } = buildLockedPromptParts(req)
+  const instructions = resolveAiInstructions(req)
 
   const userPrompt = `Student departure cases (de-identified):
 ${caseData || '(no cases)'}
@@ -440,8 +436,8 @@ async function requestAnalysis(req: AIAnalysisRequest): Promise<AIAnalysisRespon
     : (keySource === 'custom' ? getStoredApiKeyForProvider(effectiveProv) : undefined)
   const { systemInstruction, userPrompt: prompt } = buildAiPrompt(req)
 
-  // 1. Check Master Switch (System-Wide)
-  if (!isSystemAiEnabled()) {
+  // 1. Check Master Switch (System-Wide); the server enforces it as well
+  if (req.systemAiEnabled === false) {
     return {
       success: false,
       provider: 'System Admin Disabled',
@@ -488,28 +484,36 @@ async function requestAnalysis(req: AIAnalysisRequest): Promise<AIAnalysisRespon
   // 1. System Gateway: Backend Hono API (Cloudflare Workers) with the admin-managed key
   if (keySource === 'system') {
     try {
+      // Send only the parts; the server rebuilds the same prompt from its locked template.
+      // Student codes and record ids are never sent.
       const res = await fetch(`${getApiBase()}/api/qa/ai-analyze`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({
           mode,
-          cases: req.cases,
-          query: req.query,
           language: lang,
-          systemInstruction,
-          userPrompt: prompt,
+          cases: req.cases.map(c => ({
+            academicYear: c.academicYear,
+            exitType: c.exitType,
+            reasonCode: c.reasonCode,
+            details: c.details,
+            advisorAssessment: c.advisorAssessment,
+            studentVoiceFeedback: c.studentVoiceFeedback,
+          })),
+          instructions: resolveAiInstructions(req),
         }),
       })
 
       notifyUnauthorized(res.status)
+      const data = await res.json().catch(() => null) as AIAnalysisResponse | null
+      // Server refusals (AI switched off, no AI access, invalid request) carry their own message
+      if (data && typeof data.analysis === 'string') {
+        return data
+      }
       if (res.status === 401 || res.status === 403) {
         return aiError(mode, 'Default API key', 'NOT_AUTHORIZED', lang === 'th'
           ? '⚠️ คุณไม่มีสิทธิ์ใช้งาน AI ด้วยบทบาทนี้ หรือเซสชันหมดอายุ กรุณาเข้าสู่ระบบอีกครั้ง'
           : '⚠️ You are not allowed to use AI in this role, or your session expired. Please sign in again.')
-      }
-      const data = await res.json().catch(() => null) as AIAnalysisResponse | null
-      if (data && typeof data.analysis === 'string') {
-        return data
       }
       return aiError(mode, 'Default API key', 'BACKEND_ERROR', lang === 'th'
         ? `⚠️ เซิร์ฟเวอร์ตอบกลับผิดพลาด (HTTP ${res.status}) กรุณาลองใหม่อีกครั้ง`

@@ -76,8 +76,34 @@ describe('aiService (LLM Qualitative Retention Analysis)', () => {
     expect(result.success).toBe(true)
     expect(result.analysis).toBe('REAL AI ANSWER')
     const body = JSON.parse(fetchMock.mock.calls[0][1].body)
-    expect(body.userPrompt).toContain('Programming was too fast')
-    expect(body.userPrompt).not.toContain('6631503001')
+    // Only the parts are sent; the server rebuilds the prompt. No finished prompt, no student codes.
+    expect(body).not.toHaveProperty('userPrompt')
+    expect(body).not.toHaveProperty('systemInstruction')
+    expect(body.instructions).toContain('Executive Summary')
+    expect(body.cases[0].details).toContain('Programming was too fast')
+    expect(JSON.stringify(body)).not.toContain('6631503001')
+  })
+
+  // backend/src/index.test.ts pins the same text for the server-side builder: change both together
+  it('builds exactly the prompt the server rebuilds', () => {
+    const { systemInstruction, userPrompt } = buildAiPrompt({
+      mode: 'chat_query',
+      language: 'en',
+      cases: [{ id: 'EXIT9', studentCode: '6600000000', academicYear: 'Year 1', exitType: 'withdrawal', reasonCode: 'financial', details: 'Cannot pay fees' }],
+      customInstructions: 'List the top 3 causes.',
+    })
+    expect(systemInstruction).toBe(`You are a Higher Education Quality Assurance (QA) and Student Retention specialist advising the Program Chair under AUN-QA Criteria 6 & 8.
+All student names and IDs have been removed for PDPA compliance. Never attempt to identify individual students.
+Analyze qualitative departure data with empathy and academic rigor, using only the case data provided.
+Respond in English.`)
+    expect(userPrompt).toBe(`Student departure cases (de-identified):
+Case #1 [Year: Year 1 | Type: withdrawal | Reason: financial]
+- Student Stated Reason: "Cannot pay fees"
+- Advisor Assessment: "N/A"
+- Student Voice Feedback: "N/A"
+
+Instructions:
+List the top 3 causes.`)
   })
 
   it('returns an explicit error, not canned text, when the backend is unreachable', async () => {

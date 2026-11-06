@@ -173,8 +173,10 @@ interface StoreActions {
   batchImportRoster: (entries: RosterImportEntry[], mode: 'upsert' | 'replace') => RosterImportResult
 
   // System & API Configuration
-  toggleAiApi: (enabled: boolean, adminName?: string) => void
-  toggleUserAiAccess: (userId: string, enabled: boolean, adminName?: string) => void
+  /** Saves the Super Admin's AI switch on the server. Resolves false if the server refused. */
+  toggleAiApi: (enabled: boolean, adminName?: string) => Promise<boolean>
+  /** Saves a user's AI access on the server. Resolves false if the server refused. */
+  toggleUserAiAccess: (userId: string, enabled: boolean, adminName?: string) => Promise<boolean>
   addAiKey: (name: string, key: string, isDefault?: boolean) => Promise<void>
   setDefaultAiKey: (id: string) => Promise<void>
   deleteAiKey: (id: string) => Promise<void>
@@ -269,6 +271,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         api.getDocumentTypes(),
       ])
       if (!isMounted) return
+      // The AI switch lives on the server so it applies to every user and device
+      api.getAiStatus().then(status => {
+        if (isMounted && status) {
+          setSystemApiConfig(prev => ({
+            ...prev,
+            isAiApiEnabled: status.isAiApiEnabled,
+            lastToggledAt: status.lastToggledAt || prev.lastToggledAt,
+            lastToggledBy: status.lastToggledBy || prev.lastToggledBy,
+          }))
+        }
+      })
       // Audit logs and AI keys are admin-only, so they are not required for every role
       const coreDataLoaded = Array.isArray(uRes?.users) && Array.isArray(rosRes?.roster)
         && Array.isArray(catRes?.categories) && Array.isArray(dtRes?.documentTypes)
@@ -890,20 +903,22 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const toggleAiApi = useCallback((enabled: boolean, adminName: string = 'Admin') => {
-    setSystemApiConfig(prev => {
-      const updated: SystemApiConfig = {
-        ...prev,
-        isAiApiEnabled: enabled,
-        lastToggledAt: new Date().toISOString(),
-        lastToggledBy: adminName,
-      }
-      localStorage.setItem('advising_log_system_api_config', JSON.stringify(updated))
-      return updated
-    })
+  const toggleAiApi = useCallback(async (enabled: boolean, adminName: string = 'Admin'): Promise<boolean> => {
+    const res = await api.setAiStatus(enabled)
+    if (!res?.success) return false
+    setSystemApiConfig(prev => ({
+      ...prev,
+      isAiApiEnabled: res.isAiApiEnabled,
+      lastToggledAt: res.lastToggledAt || new Date().toISOString(),
+      lastToggledBy: res.lastToggledBy || adminName,
+    }))
+    return true
   }, [])
 
-  const toggleUserAiAccess = useCallback((userId: string, enabled: boolean, adminName: string = 'Admin') => {
+  const toggleUserAiAccess = useCallback(async (userId: string, enabled: boolean, adminName: string = 'Admin'): Promise<boolean> => {
+    // Save first: the server enforces this flag on every AI request
+    const res = await api.setUserAiAccess(userId, enabled)
+    if (!res?.success) return false
     setUsers(prev => prev.map(u => (u.id === userId ? { ...u, hasAiAccess: enabled } : u)))
     const target = users.find(u => u.id === userId)
     setAuditLogs(prev => [
@@ -918,6 +933,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       },
       ...prev,
     ])
+    return true
   }, [users])
 
 

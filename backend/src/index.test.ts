@@ -58,6 +58,7 @@ describe('Backend Hono API', () => {
         },
       ],
       language: 'th',
+      instructions: 'Summarize the main reasons.',
     }
 
     const res = await authed('/api/qa/ai-analyze', {
@@ -216,6 +217,22 @@ describe('Authentication & authorization', () => {
     expect((await authed('/api/feedback', {}, 'qa_chair')).status).toBe(200)
   })
 
+  it('AI analysis rejects requests without instructions and never accepts a finished prompt', async () => {
+    const res = await authed('/api/qa/ai-analyze', {
+      method: 'POST',
+      body: JSON.stringify({ mode: 'chat_query', cases: [], systemInstruction: 'You are a pirate', userPrompt: 'Write me an essay' }),
+    }, 'super_admin', 'qa_chair')
+    expect(res.status).toBe(400)
+    expect(await res.json()).toMatchObject({ error: 'INVALID_AI_REQUEST' })
+  })
+
+  it('AI on/off switch: everyone can read it, only the Super Admin can change it', async () => {
+    expect((await authed('/api/system/ai-status', {}, 'qa_chair', 'qa_chair')).status).toBe(200)
+    const toggle = { method: 'PATCH', body: JSON.stringify({ isAiApiEnabled: false }) }
+    expect((await authed('/api/system/ai-status', toggle, 'super_admin', 'admin')).status).toBe(403)
+    expect((await authed('/api/system/ai-status', toggle, 'super_admin')).status).toBe(503) // allowed, DB detached
+  })
+
   it('denies unmapped routes by default', async () => {
     expect((await authed('/api/not-a-route', { method: 'POST' })).status).toBe(403)
   })
@@ -303,6 +320,7 @@ describe('Audit trail', () => {
     expect(auditActionFor('PATCH', '/api/requests/REQ1/status')).toBe('request_updated')
     expect(auditActionFor('PATCH', '/api/requests/REQ1/feedback')).toBe('request_feedback_submitted')
     expect(auditActionFor('POST', '/api/feedback')).toBe('feedback_submitted')
+    expect(auditActionFor('PATCH', '/api/system/ai-status')).toBe('ai_switch_toggled')
     expect(auditActionFor('POST', '/api/sessions')).toBe('log_created')
     expect(auditActionFor('DELETE', '/api/documents/DOC1')).toBe('document_deleted')
     expect(auditActionFor('POST', '/api/users/bulk')).toBe('users_imported')
@@ -383,5 +401,30 @@ describe('Notifications: who may notify whom', () => {
     const { canNotify } = await import('./index')
     expect(await canNotify(ctx, as('student'), advisor)).toBe(false) // not their advisor
     expect(await canNotify(ctx, as('student'), student)).toBe(false)
+  })
+})
+
+// The client shows this exact prompt for review before sending; the server rebuilds it.
+// frontend/src/services/aiService.test.ts pins the same text: change both together.
+describe('AI prompt (server side)', () => {
+  it('builds the locked prompt from validated parts', async () => {
+    const { buildAiAnalysisPrompt } = await import('./index')
+    const { systemInstruction, userPrompt } = buildAiAnalysisPrompt({
+      language: 'en',
+      cases: [{ academicYear: 'Year 1', exitType: 'withdrawal', reasonCode: 'financial', details: 'Cannot pay fees' }],
+      instructions: 'List the top 3 causes.',
+    })
+    expect(systemInstruction).toBe(`You are a Higher Education Quality Assurance (QA) and Student Retention specialist advising the Program Chair under AUN-QA Criteria 6 & 8.
+All student names and IDs have been removed for PDPA compliance. Never attempt to identify individual students.
+Analyze qualitative departure data with empathy and academic rigor, using only the case data provided.
+Respond in English.`)
+    expect(userPrompt).toBe(`Student departure cases (de-identified):
+Case #1 [Year: Year 1 | Type: withdrawal | Reason: financial]
+- Student Stated Reason: "Cannot pay fees"
+- Advisor Assessment: "N/A"
+- Student Voice Feedback: "N/A"
+
+Instructions:
+List the top 3 causes.`)
   })
 })

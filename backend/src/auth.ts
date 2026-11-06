@@ -193,6 +193,9 @@ const ROUTE_RULES: Array<[method: string, path: RegExp, roles: Role[]]> = [
 
   // AI
   ['POST', /^\/api\/qa\/ai-analyze$/, ['qa_chair']],
+  // AI on/off switch: everyone may read it (the UI shows its state), only the Super Admin changes it
+  ['GET', /^\/api\/system\/ai-status$/, ALL],
+  ['PATCH', /^\/api\/system\/ai-status$/, ['super_admin']],
   ['GET', /^\/api\/ai\/keys$/, ADMINS],
   ['POST', /^\/api\/ai\/keys$/, ADMINS],
   ['PATCH', /^\/api\/ai\/keys\/[^/]+\/default$/, ADMINS],

@@ -55,9 +55,13 @@ export default function AiGovernance() {
   const isEnabled = store.systemApiConfig?.isAiApiEnabled !== false
 
   // Master Switch Handler
-  const handleToggleMasterSwitch = () => {
+  const handleToggleMasterSwitch = async () => {
     const nextState = !isEnabled
-    store.toggleAiApi(nextState, currentUser?.name || 'Admin')
+    const saved = await store.toggleAiApi(nextState, currentUser?.name || 'Admin')
+    if (!saved) {
+      addToast('error', t('บันทึกไม่สำเร็จ', 'Not Saved'), t('ไม่สามารถเปลี่ยนสถานะ AI ได้ กรุณาลองใหม่', 'Could not change the AI switch. Please try again.'))
+      return
+    }
     addToast(
       nextState ? 'success' : 'warning',
       nextState
@@ -162,9 +166,13 @@ export default function AiGovernance() {
   }
 
   // Handle Toggle Individual Personnel AI Access
-  const handleTogglePersonnelAi = (targetUser: User) => {
+  const handleTogglePersonnelAi = async (targetUser: User) => {
     const nextState = !targetUser.hasAiAccess
-    store.toggleUserAiAccess(targetUser.id, nextState, currentUser?.name || 'Admin')
+    const saved = await store.toggleUserAiAccess(targetUser.id, nextState, currentUser?.name || 'Admin')
+    if (!saved) {
+      addToast('error', t('บันทึกไม่สำเร็จ', 'Not Saved'), t(`ไม่สามารถเปลี่ยนสิทธิ์ของ ${targetUser.name} ได้`, `Could not update ${targetUser.name}'s AI access.`))
+      return
+    }
     addToast(
       nextState ? 'success' : 'info',
       nextState ? t('อนุมัติสิทธิ์ AI เรียบร้อย', 'AI Access Granted') : t('ระงับสิทธิ์ AI เรียบร้อย', 'AI Access Revoked'),
@@ -176,12 +184,15 @@ export default function AiGovernance() {
   }
 
   // Batch Grant All Faculty
-  const handleGrantAllFaculty = () => {
-    facultyAndStaff.forEach(u => {
-      if (!u.hasAiAccess) {
-        store.toggleUserAiAccess(u.id, true, currentUser?.name || 'Admin')
-      }
-    })
+  const handleGrantAllFaculty = async () => {
+    const results = await Promise.all(facultyAndStaff
+      .filter(u => !u.hasAiAccess)
+      .map(u => store.toggleUserAiAccess(u.id, true, currentUser?.name || 'Admin')))
+    const failed = results.filter(ok => !ok).length
+    if (failed > 0) {
+      addToast('error', t('บันทึกไม่ครบ', 'Some Not Saved'), t(`${failed} บัญชีบันทึกไม่สำเร็จ กรุณาลองใหม่`, `${failed} account(s) could not be updated. Please try again.`))
+      return
+    }
     addToast(
       'success',
       t('อนุมัติสิทธิ์อาจารย์/บุคลากรทั้งหมดแล้ว', 'Granted All Faculty Access'),
@@ -190,12 +201,15 @@ export default function AiGovernance() {
   }
 
   // Batch Revoke All Faculty
-  const handleRevokeAllFaculty = () => {
-    facultyAndStaff.forEach(u => {
-      if (u.hasAiAccess) {
-        store.toggleUserAiAccess(u.id, false, currentUser?.name || 'Admin')
-      }
-    })
+  const handleRevokeAllFaculty = async () => {
+    const results = await Promise.all(facultyAndStaff
+      .filter(u => u.hasAiAccess)
+      .map(u => store.toggleUserAiAccess(u.id, false, currentUser?.name || 'Admin')))
+    const failed = results.filter(ok => !ok).length
+    if (failed > 0) {
+      addToast('error', t('บันทึกไม่ครบ', 'Some Not Saved'), t(`${failed} บัญชีบันทึกไม่สำเร็จ กรุณาลองใหม่`, `${failed} account(s) could not be updated. Please try again.`))
+      return
+    }
     addToast(
       'info',
       t('ระงับสิทธิ์บุคลากรทั้งหมดแล้ว', 'Revoked All Personnel Access'),

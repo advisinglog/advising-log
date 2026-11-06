@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { render, screen, fireEvent, act } from '@testing-library/react'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { StoreProvider, useStore } from '@/data/store'
@@ -10,6 +10,7 @@ import UserManagement from '@/pages/admin/UserManagement'
 import AiGovernance from '@/pages/admin/AiGovernance'
 import Roster from '@/pages/admin/Roster'
 import { analyzeWithLLM } from '@/services/aiService'
+import api from '@/services/apiClient'
 
 // Mock currentUser as Admin
 vi.mock('@/contexts/AuthContext', async () => {
@@ -53,6 +54,10 @@ describe('Admin API Control & Roster Management', () => {
     localStorage.clear()
   })
 
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
   it('opens the student list from the dashboard student count', () => {
     renderWithProviders(
       <Routes>
@@ -77,16 +82,13 @@ describe('Admin API Control & Roster Management', () => {
   })
 
   it('rejects LLM calls with disabled notice when Admin turns off the API', async () => {
-    // Manually set API config to disabled in localStorage
-    localStorage.setItem(
-      'advising_log_system_api_config',
-      JSON.stringify({ isAiApiEnabled: false, provider: 'Google Gemini', model: 'gemini-1.5-flash' })
-    )
 
+    // The Super Admin's switch (loaded from the server) is off
     const res = await analyzeWithLLM({
       mode: 'strategic_synthesis',
       cases: [],
       language: 'th',
+      systemAiEnabled: false,
     })
 
     expect(res.success).toBe(false)
@@ -98,11 +100,6 @@ describe('Admin API Control & Roster Management', () => {
   // PART 2: Per-User AI Governance Tests
   // -------------------------------------------------------------
   it('enforces Layer 2 per-user AI authorization (rejects when user hasAiAccess is false)', async () => {
-    // Master switch is ON
-    localStorage.setItem(
-      'advising_log_system_api_config',
-      JSON.stringify({ isAiApiEnabled: true, provider: 'Google Gemini', model: 'gemini-1.5-flash' })
-    )
 
     const res = await analyzeWithLLM({
       mode: 'strategic_synthesis',
@@ -117,17 +114,13 @@ describe('Admin API Control & Roster Management', () => {
   })
 
   it('prioritizes Layer 1 Master Switch over Layer 2 individual access', async () => {
-    // Master switch is OFF, even if user has individual permission
-    localStorage.setItem(
-      'advising_log_system_api_config',
-      JSON.stringify({ isAiApiEnabled: false, provider: 'Google Gemini', model: 'gemini-1.5-flash' })
-    )
 
     const res = await analyzeWithLLM({
       mode: 'strategic_synthesis',
       cases: [],
       language: 'th',
       userHasAiAccess: true, // User has individual permission, but master switch is off
+      systemAiEnabled: false,
     })
 
     expect(res.success).toBe(false)
@@ -194,9 +187,11 @@ describe('Admin API Control & Roster Management', () => {
 
     const initialAuditCount = storeRef.auditLogs.length
 
+    const saveSpy = vi.spyOn(api, 'setUserAiAccess').mockResolvedValue({ success: true })
     await act(async () => {
-      storeRef.toggleUserAiAccess('ADV002', true, 'TestAdmin')
+      await storeRef.toggleUserAiAccess('ADV002', true, 'TestAdmin')
     })
+    expect(saveSpy).toHaveBeenCalledWith('ADV002', true)
 
     // Check updated user state
     const user = storeRef.users.find((u: any) => u.id === 'ADV002')
@@ -207,6 +202,23 @@ describe('Admin API Control & Roster Management', () => {
     const latestLog = storeRef.auditLogs[0]
     expect(latestLog.action).toBe('user_ai_access_toggled')
     expect(latestLog.description).toContain('GRANTED AI access for user Dr. Wipawan Buathong')
+  })
+
+  it('does not change per-user AI access locally when the server refuses', async () => {
+    let storeRef: any
+    function TestComponent() {
+      storeRef = useStore()
+      return <div>Store Test</div>
+    }
+    renderWithProviders(<TestComponent />)
+    const before = storeRef.users.find((u: any) => u.id === 'ADV002')?.hasAiAccess
+    vi.spyOn(api, 'setUserAiAccess').mockResolvedValue(null)
+    let saved = true
+    await act(async () => {
+      saved = await storeRef.toggleUserAiAccess('ADV002', !before, 'TestAdmin')
+    })
+    expect(saved).toBe(false)
+    expect(storeRef.users.find((u: any) => u.id === 'ADV002')?.hasAiAccess).toBe(before)
   })
 
   // -------------------------------------------------------------
