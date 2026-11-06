@@ -51,7 +51,7 @@ import {
   mockAuditLogs,
 } from '@/test/fixtures'
 
-import { getLocalDateString } from '@/utils/dateUtils'
+import { getLocalDateString, getLocalTimestamp } from '@/utils/dateUtils'
 import { getSuperAdminEmail } from '@/utils/adminContact'
 
 const isTestEnv = () => import.meta.env?.MODE === 'test'
@@ -411,7 +411,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   // --- Actions ---
 
   const addRequest = useCallback(async (req: Omit<AdvisingRequest, 'id' | 'createdAt' | 'updatedAt'>): Promise<AdvisingRequest> => {
-    const newReq: AdvisingRequest = { ...req, id: nextId('REQ'), createdAt: now(), updatedAt: now() }
+    // Full timestamp (not just the date) so same-day requests sort newest-first
+    const newReq: AdvisingRequest = { ...req, id: nextId('REQ'), createdAt: getLocalTimestamp(), updatedAt: now() }
     const response = await api.createRequest(newReq)
     if (!response?.request) {
       throw new Error('The advising request could not be saved.')

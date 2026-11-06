@@ -355,7 +355,7 @@ export default function AdvisingSessions() {
   const columns = [
     { key: 'date', header: t('วันที่ยื่น', 'Date'), render: (r: AdvisingRequest) => (
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">{r.createdAt}</span>
+        <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">{r.createdAt.slice(0, 10)}</span>
         {isNewRequest(r) && <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-sky-100 dark:bg-sky-950/70 text-[0.625rem] font-bold text-sky-700 dark:text-sky-300"><Sparkles className="h-3 w-3" />{t('ใหม่', 'New')}</span>}
       </div>
     ) },

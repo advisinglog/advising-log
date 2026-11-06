@@ -1389,10 +1389,10 @@ app.get('/api/requests', async (c) => {
 
   let query = database.select().from(schema.advisingRequests)
   if (studentId) {
-    const list = await query.where(eq(schema.advisingRequests.studentId, studentId))
+    const list = await query.where(eq(schema.advisingRequests.studentId, studentId)).orderBy(desc(schema.advisingRequests.createdAt))
     return c.json({ requests: list.map(normalizeReq) })
   } else if (advisorId) {
-    const list = await query.where(eq(schema.advisingRequests.advisorId, advisorId))
+    const list = await query.where(eq(schema.advisingRequests.advisorId, advisorId)).orderBy(desc(schema.advisingRequests.createdAt))
     return c.json({ requests: list.map(normalizeReq) })
   }
 

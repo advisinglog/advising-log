@@ -347,7 +347,7 @@ export default function StudentDashboard() {
                         </div>
                         <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5">{req.details}</p>
                         <p className="text-[0.625rem] text-slate-400 dark:text-slate-500 mt-1">
-                          {t('ยื่นคำร้องเมื่อ:', 'Submitted on:')} {req.createdAt}
+                          {t('ยื่นคำร้องเมื่อ:', 'Submitted on:')} {req.createdAt.slice(0, 10)}
                           {req.preferredDate && ` · ${t('ขอเข้าพบ:', 'Requested:')} ${req.preferredDate} ${req.preferredTime || ''}`}
                         </p>
                       </div>
