@@ -12,6 +12,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { ThemeToggle } from '@/components/ui'
 import { InteractiveVideoHero } from '@/components/InteractiveVideoHero'
+import { isGoogleAuthConfigured } from '@/utils/googleAuth'
 import {
   GraduationCap,
   AlertCircle,
@@ -38,7 +39,9 @@ export default function LoginPage() {
   const { language, setLanguage, t } = useLanguage()
   const navigate = useNavigate()
 
-  const [authError, setAuthError] = useState<{ code?: string; message?: string; email?: string } | null>(null)
+  const [authError, setAuthError] = useState<{ code?: string; message?: string; email?: string } | null>(
+    isGoogleAuthConfigured ? null : { code: 'GOOGLE_NOT_CONFIGURED' }
+  )
   const [loading, setLoading] = useState(false)
 
   function redirectForRole(role: string) {
@@ -79,6 +82,13 @@ export default function LoginPage() {
       return t(
         `ไม่สามารถเข้าสู่ระบบได้: บัญชีของคุณ${userEmail} ยังไม่ได้รับการจัดสรรอาจารย์ที่ปรึกษา กรุณาติดต่ออาจารย์ที่ปรึกษาหรือสำนักวิชาเพื่อเพิ่มรายชื่อเข้าสู่ระบบ`,
         `Sign in failed: Your account${userEmail} has not been assigned to a faculty advisor. Please contact your advisor or School office.`
+      )
+    }
+
+    if (code === 'GOOGLE_NOT_CONFIGURED') {
+      return t(
+        'ระบบเข้าสู่ระบบด้วย Google ยังไม่ได้ตั้งค่า กรุณาติดต่อผู้ดูแลระบบ',
+        'Google sign-in is not configured. Please contact the system administrator.'
       )
     }
 
@@ -322,7 +332,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => handleGoogleSelectAccount()}
-                disabled={loading}
+                disabled={loading || !isGoogleAuthConfigured}
                 className="w-full h-11.5 px-5 rounded-xl bg-gradient-to-r from-sky-600 via-sky-500 to-blue-600 hover:from-sky-500 hover:via-sky-400 hover:to-blue-500 active:from-sky-700 active:to-blue-700 text-white font-semibold text-sm tracking-wide shadow-[inset_0_1px_0_rgba(255,255,255,0.4),0_8px_22px_-4px_rgba(2,132,199,0.45)] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_12px_28px_-4px_rgba(2,132,199,0.6)] border border-white/25 hover:border-white/40 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex items-center justify-center gap-2.5 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed group relative overflow-hidden"
               >
                 {/* Posh Metallic Light Sweep Sheen */}

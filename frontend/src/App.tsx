@@ -8,6 +8,7 @@ import { LanguageProvider } from '@/contexts/LanguageContext'
 import { ThemeProvider } from '@/contexts/ThemeContext'
 import { ToastContainer } from '@/components/ui'
 import { AppLayout } from '@/components/layout/AppLayout'
+import { GOOGLE_CLIENT_ID } from '@/utils/googleAuth'
 
 // Pages
 import LoginPage from '@/pages/LoginPage'
@@ -71,8 +72,6 @@ function RootRedirect() {
   if (currentUser?.role === 'admin' || currentUser?.role === 'super_admin') return <Navigate to="/admin" replace />
   return <Navigate to="/login" replace />
 }
-
-const GOOGLE_CLIENT_ID = (import.meta.env.VITE_GOOGLE_CLIENT_ID as string) || '1029384756-demo-advising-log.apps.googleusercontent.com'
 
 export default function App() {
   return (

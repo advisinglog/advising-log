@@ -6,7 +6,7 @@ import { useToast } from '@/contexts/ToastContext'
 import { PageHeader, DataTable, StatusBadge, Button, SearchInput, Modal } from '@/components/ui'
 import type { DocumentType } from '@/types'
 import { FileText, PenTool, Fingerprint, Plus, Edit2, Trash2, CheckCircle2, Sparkles, FileCheck, ArrowRightLeft, Clock, GraduationCap, AlertCircle, Upload, Loader2, X, FileDown } from 'lucide-react'
-import { uploadFileToCloudinary } from '@/services/cloudinaryService'
+import { uploadFileToCloudinary, getUploadErrorMessage } from '@/services/cloudinaryService'
 
 // Pre-built University Document Templates with clean separate Thai & English
 const PRESET_DOCUMENTS = [
@@ -181,8 +181,8 @@ export default function DocumentTypes() {
       setFormTemplateFileName(res.originalFilename || file.name)
       setFormTemplatePublicId(res.publicId || '')
       addToast('success', t('อัปโหลดแบบฟอร์มสำเร็จ', 'Template Uploaded'), file.name)
-    } catch (err: any) {
-      addToast('error', t('อัปโหลดแบบฟอร์มไม่สำเร็จ', 'Upload Failed'), err.message || 'Error uploading template')
+    } catch (err: unknown) {
+      addToast('error', t('อัปโหลดแบบฟอร์มไม่สำเร็จ', 'Upload Failed'), getUploadErrorMessage(err, t))
     } finally {
       setIsUploadingTemplate(false)
     }

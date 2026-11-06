@@ -23,7 +23,7 @@ import {
   Sparkles,
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { uploadFileToCloudinary } from '@/services/cloudinaryService'
+import { uploadFileToCloudinary, getUploadErrorMessage } from '@/services/cloudinaryService'
 import { getLocalDateString } from '@/utils/dateUtils'
 
 export default function FollowUps() {
@@ -142,9 +142,10 @@ export default function FollowUps() {
           })
           uploadedCloudId = res.publicId
           uploadedFileUrl = res.secureUrl
-        } catch {
-          // Fallback in case Cloudinary upload fails
-          uploadedFileUrl = URL.createObjectURL(selectedFile)
+        } catch (err: unknown) {
+          // Never record evidence that was not actually uploaded
+          addToast('error', t('อัปโหลดหลักฐานไม่สำเร็จ', 'Evidence Upload Failed'), getUploadErrorMessage(err, t))
+          return
         }
 
         // Store document record linked to this follow-up

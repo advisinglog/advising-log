@@ -8,7 +8,28 @@ export interface CloudinaryUploadResult {
   format: string
   bytes: number
   originalFilename: string
-  isSimulated?: boolean
+}
+
+/** Thrown when VITE_CLOUDINARY_CLOUD_NAME / VITE_CLOUDINARY_UPLOAD_PRESET are not set. */
+export class CloudinaryNotConfiguredError extends Error {
+  constructor() {
+    super('File upload is not configured (missing Cloudinary settings). Please contact the system administrator.')
+    this.name = 'CloudinaryNotConfiguredError'
+  }
+}
+
+/** Bilingual, user-facing message for a failed upload. `t` is LanguageContext's translator. */
+export function getUploadErrorMessage(err: unknown, t: (th: string, en: string) => string): string {
+  if (err instanceof CloudinaryNotConfiguredError) {
+    return t('ระบบอัปโหลดไฟล์ยังไม่ได้ตั้งค่า กรุณาติดต่อผู้ดูแลระบบ', 'File upload is not configured. Please contact the system administrator.')
+  }
+  return err instanceof Error && err.message ? err.message : t('อัปโหลดไฟล์ไม่สำเร็จ กรุณาลองใหม่อีกครั้ง', 'File upload failed. Please try again.')
+}
+
+export function isCloudinaryConfigured(): boolean {
+  const cloudName = (import.meta.env.VITE_CLOUDINARY_CLOUD_NAME as string | undefined)?.trim() || ''
+  const uploadPreset = (import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET as string | undefined)?.trim() || ''
+  return Boolean(cloudName && uploadPreset && !cloudName.includes('your_cloud_name'))
 }
 
 export interface CloudinaryUploadOptions {
@@ -26,15 +47,12 @@ const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024 // 10 MB
  * Follows AGENTS.md rules:
  * - Tags Cloudinary assets with student_code and log_id only (no PII in metadata)
  * - Validates file types and sizes
- * - Graceful fallback simulation if Cloudinary environment variables are pending setup
+ * - Throws CloudinaryNotConfiguredError if Cloudinary environment variables are missing
  */
 export async function uploadFileToCloudinary(
   file: File,
   options: CloudinaryUploadOptions = {}
 ): Promise<CloudinaryUploadResult> {
-  const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || ''
-  const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || ''
-
   // 1. File Validation
   const extension = file.name.split('.').pop()?.toLowerCase() || ''
   if (!ALLOWED_EXTENSIONS.includes(extension)) {
@@ -45,18 +63,12 @@ export async function uploadFileToCloudinary(
     throw new Error(`File size (${(file.size / (1024 * 1024)).toFixed(1)} MB) exceeds 10 MB limit.`)
   }
 
-  // 2. If Cloudinary credentials are missing, provide a safe simulated upload
-  if (!cloudName || !uploadPreset || cloudName.includes('your_cloud_name')) {
-    const mockPublicId = `advising_docs/${options.studentCode || 'std'}_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`
-    return {
-      publicId: mockPublicId,
-      secureUrl: URL.createObjectURL(file),
-      format: extension,
-      bytes: file.size,
-      originalFilename: file.name,
-      isSimulated: true,
-    }
+  // 2. Refuse to upload if Cloudinary is not configured (never fake a successful upload)
+  if (!isCloudinaryConfigured()) {
+    throw new CloudinaryNotConfiguredError()
   }
+  const cloudName = (import.meta.env.VITE_CLOUDINARY_CLOUD_NAME as string).trim()
+  const uploadPreset = (import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET as string).trim()
 
   // 3. Build Multipart FormData for Cloudinary API
   const formData = new FormData()
@@ -94,7 +106,6 @@ export async function uploadFileToCloudinary(
     format: data.format || extension,
     bytes: data.bytes || file.size,
     originalFilename: data.original_filename || file.name,
-    isSimulated: false,
   }
 }
 

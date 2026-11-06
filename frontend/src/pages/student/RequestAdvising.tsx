@@ -38,7 +38,7 @@ import {
 } from 'lucide-react'
 import { buildAdvisorCalendarUrl, openAdvisorCalendar } from '@/utils/calendarUtils'
 import { getLocalDateString } from '@/utils/dateUtils'
-import { uploadFileToCloudinary } from '@/services/cloudinaryService'
+import { uploadFileToCloudinary, getUploadErrorMessage } from '@/services/cloudinaryService'
 
 interface UploadedAttachment {
   file?: File
@@ -321,12 +321,9 @@ export default function RequestAdvising() {
               size: res.bytes,
             })
           } catch (err: unknown) {
-            const error = err as Error
-            console.error('Failed to upload file to Cloudinary:', error)
-            processedAttachments.push({
-              fileName: att.fileName,
-              fileUrl: '',
-            })
+            // Stop the submission rather than saving an attachment with no file behind it
+            addToast('error', t('อัปโหลดไฟล์แนบไม่สำเร็จ', 'Attachment Upload Failed'), `${att.fileName}: ${getUploadErrorMessage(err, t)}`)
+            return
           }
         } else {
           processedAttachments.push(att)

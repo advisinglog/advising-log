@@ -5,8 +5,8 @@ import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { PageHeader, DataTable, StatusBadge, Button, Modal, ConfirmDialog, DocumentViewerModal, type DocumentViewerTarget } from '@/components/ui'
 import type { StudentDocument } from '@/types'
-import { FileText, Upload, AlertCircle, FileUp, X, ShieldCheck, Trash2, PenTool, Fingerprint, FileCheck, Eye, Download, Loader2, ChevronDown, Check } from 'lucide-react'
-import { uploadFileToCloudinary, getCloudinaryViewUrl, getCloudinaryDownloadUrl } from '@/services/cloudinaryService'
+import { FileText, Upload, AlertCircle, FileUp, X, ShieldCheck, Trash2, PenTool, Fingerprint, Eye, Download, Loader2, ChevronDown, Check } from 'lucide-react'
+import { uploadFileToCloudinary, getCloudinaryViewUrl, getCloudinaryDownloadUrl, getUploadErrorMessage } from '@/services/cloudinaryService'
 import { getLocalDateString } from '@/utils/dateUtils'
 
 export default function Documents() {
@@ -21,7 +21,6 @@ export default function Documents() {
   const [showDocTypeDropdown, setShowDocTypeDropdown] = useState(false)
   const [descriptionText, setDescriptionText] = useState('')
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [simulatedFileName, setSimulatedFileName] = useState('')
   const [hasConsentedEsign, setHasConsentedEsign] = useState(false)
   const [formError, setFormError] = useState('')
   const [targetRequiredDocId, setTargetRequiredDocId] = useState<string | null>(null)
@@ -58,14 +57,13 @@ export default function Documents() {
   const activeDocumentTypes = store.documentTypes.filter(d => d.isActive)
 
   const selectedDocType = activeDocumentTypes.find(d => d.id === selectedTypeId)
-  const currentFileName = selectedFile?.name || simulatedFileName
+  const currentFileName = selectedFile?.name || ''
 
   function resetForm() {
     setSelectedTypeId('')
     setShowDocTypeDropdown(false)
     setDescriptionText('')
     setSelectedFile(null)
-    setSimulatedFileName('')
     setHasConsentedEsign(false)
     setFormError('')
     setTargetRequiredDocId(null)
@@ -87,23 +85,12 @@ export default function Documents() {
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     if (e.target.files && e.target.files[0]) {
       setSelectedFile(e.target.files[0])
-      setSimulatedFileName('')
       setFormError('')
-    }
-  }
-
-  function handleSimulateSample(sampleName: string) {
-    setSelectedFile(null)
-    setSimulatedFileName(sampleName)
-    setFormError('')
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ''
     }
   }
 
   function handleRemoveFile() {
     setSelectedFile(null)
-    setSimulatedFileName('')
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
@@ -133,16 +120,12 @@ export default function Documents() {
       let cloudPublicId: string | undefined
       let cloudUrl: string | undefined
 
-      // Real Cloudinary Upload if a real file is attached
       if (selectedFile) {
         const uploadRes = await uploadFileToCloudinary(selectedFile, {
           studentCode: currentUser.code || currentUser.id,
         })
         cloudPublicId = uploadRes.publicId
         cloudUrl = uploadRes.secureUrl
-      } else {
-        // Mock fallback for simulated demo files
-        cloudPublicId = `advising_docs/${currentUser.code || 'std'}_${Date.now()}_${simulatedFileName}`
       }
 
       const today = getLocalDateString()
@@ -198,8 +181,8 @@ export default function Documents() {
 
       setIsModalOpen(false)
       resetForm()
-    } catch (err: any) {
-      setFormError(err.message || 'Failed to upload document')
+    } catch (err: unknown) {
+      setFormError(getUploadErrorMessage(err, t))
     } finally {
       setIsUploading(false)
     }
@@ -627,35 +610,6 @@ export default function Documents() {
                 <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
                   PDF, PNG, JPG หรือ DOCX (ขนาดไม่เกิน 10MB)
                 </p>
-
-                {/* Quick Simulation Presets */}
-                <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-center gap-1.5 flex-wrap">
-                  <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
-                    {t('หรือเลือกไฟล์จำลอง:', 'Or quick demo files:')}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={e => {
-                      e.stopPropagation()
-                      handleSimulateSample('scholarship_form_scanned.pdf')
-                    }}
-                    className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-sky-50 hover:text-sky-600 dark:hover:bg-sky-950/60 dark:hover:text-sky-300 transition-colors flex items-center gap-1"
-                  >
-                    <FileCheck className="h-3 w-3 text-sky-500" />
-                    <span>scholarship_form_scanned.pdf</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={e => {
-                      e.stopPropagation()
-                      handleSimulateSample('petition_document_signed.pdf')
-                    }}
-                    className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-sky-50 hover:text-sky-600 dark:hover:bg-sky-950/60 dark:hover:text-sky-300 transition-colors flex items-center gap-1"
-                  >
-                    <FileCheck className="h-3 w-3 text-sky-500" />
-                    <span>petition_document_signed.pdf</span>
-                  </button>
-                </div>
               </div>
             ) : (
               <div className="flex items-center justify-between p-3 rounded-xl border border-sky-200 dark:border-sky-800 bg-sky-50/60 dark:bg-sky-950/40">
@@ -668,7 +622,7 @@ export default function Documents() {
                       {currentFileName}
                     </p>
                     <p className="text-[10px] text-sky-700 dark:text-sky-300 font-medium">
-                      {selectedFile ? `${(selectedFile.size / 1024).toFixed(1)} KB` : t('ไฟล์จำลองสำหรับทดสอบ', 'Demo attachment')}
+                      {selectedFile ? `${(selectedFile.size / 1024).toFixed(1)} KB` : ''}
                     </p>
                   </div>
                 </div>
