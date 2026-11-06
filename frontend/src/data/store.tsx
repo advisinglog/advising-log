@@ -104,6 +104,8 @@ interface StoreActions {
   // Requests
   addRequest: (req: Omit<AdvisingRequest, 'id' | 'createdAt' | 'updatedAt'>) => Promise<AdvisingRequest>
   updateRequestStatus: (id: string, status: AdvisingRequest['status'], cancellation?: { reason: string; cancelledBy: string }) => void
+  /** Student check-in after the meeting time: met → completed, didn't meet → back to the advisor to reschedule. */
+  studentCheckIn: (requestId: string, met: boolean) => Promise<boolean>
   /** Advisor review step: completed → closed. Throws if the server rejects it. */
   closeRequest: (id: string) => Promise<void>
   /** Student's optional 1–5 rating on a closed request. Throws if the server rejects it. */
@@ -452,6 +454,20 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       } : {}),
     } : r))
     api.updateRequestStatus(id, status, cancellation?.reason, cancellation?.cancelledBy).catch(() => {})
+  }, [])
+
+  const studentCheckIn = useCallback(async (requestId: string, met: boolean): Promise<boolean> => {
+    const status: AdvisingRequest['status'] = met ? 'completed' : 'requested'
+    const res = await api.updateRequestStatus(requestId, status)
+    if (!res?.success) return false
+    setRequests(prev => prev.map(r => r.id === requestId ? { ...r, status, updatedAt: now() } : r))
+    setAppointments(prev => prev.map(a => {
+      if (a.requestId !== requestId || a.status !== 'scheduled') return a
+      const aptStatus = met ? 'completed' : 'cancelled'
+      api.updateAppointmentStatus(a.id, aptStatus).catch(() => {})
+      return { ...a, status: aptStatus }
+    }))
+    return true
   }, [])
 
   const closeRequest = useCallback(async (id: string) => {
@@ -1200,7 +1216,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     users, roster, requests, appointments, sessions, followUps,
     notifications, earlyWarnings, earlyWarningFollowUps, followUpProgress, requestProgress, exitCases, advisorAssessments, studentVoiceResponses, completedVoiceStudents, documents,
     categoryConfigs, documentTypes, auditLogs, systemApiConfig, aiKeys,
-    addRequest, updateRequestStatus, closeRequest, submitRequestFeedback,
+    addRequest, updateRequestStatus, studentCheckIn, closeRequest, submitRequestFeedback,
     addAppointment, updateAppointmentStatus,
     confirmAppointment, declineAppointment,
     addSession, updateSession, deleteSession,

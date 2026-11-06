@@ -10,6 +10,8 @@ import { PageHeader, Card, StatusBadge, EmptyState, GoogleCalendarButton, Button
 import { ArrowLeft, Calendar, Paperclip, FileText, CheckCircle, Eye, XCircle } from 'lucide-react'
 import { useState } from 'react'
 import { CaseFeedbackCard } from '@/components/student/CaseFeedbackCard'
+import { MeetingCheckIn } from '@/components/student/MeetingCheckIn'
+import { checkInAppointment } from '@/utils/requestFlow'
 
 export default function AdvisingDetail() {
   const { id } = useParams<{ id: string }>()
@@ -88,6 +90,12 @@ export default function AdvisingDetail() {
 
         {/* Case finished + optional rating */}
         {request.status === 'closed' && <CaseFeedbackCard request={request} />}
+
+        {/* After the meeting time: did it happen? */}
+        {(() => {
+          const apt = checkInAppointment(request, store.appointments)
+          return apt ? <MeetingCheckIn request={request} appointment={apt} /> : null
+        })()}
 
         {/* Request details */}
         <Card>

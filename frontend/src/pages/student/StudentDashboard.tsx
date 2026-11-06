@@ -11,6 +11,8 @@ import { useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 
 import { getLocalDateString } from '@/utils/dateUtils'
+import { checkInAppointment } from '@/utils/requestFlow'
+import { MeetingCheckIn } from '@/components/student/MeetingCheckIn'
 
 export default function StudentDashboard() {
   const { currentUser } = useAuth()
@@ -62,6 +64,10 @@ export default function StudentDashboard() {
 
   // My requests & follow-ups
   const myRequests = store.requests.filter(r => isCurrentStudent(r.studentId))
+  // Meetings whose time has passed: ask the student whether they happened
+  const checkIns = myRequests
+    .map(r => ({ request: r, appointment: checkInAppointment(r, store.appointments) }))
+    .filter((x): x is { request: typeof x.request; appointment: NonNullable<typeof x.appointment> } => x.appointment !== null)
   const pendingRequests = myRequests.filter(r => r.status === 'requested' || r.status === 'pending')
   const myRequestIds = new Set(myRequests.map(r => r.id))
   const mySessionIds = new Set(store.sessions.filter(s => isCurrentStudent(s.studentId) || (s.requestId && myRequestIds.has(s.requestId))).map(s => s.id))
@@ -225,6 +231,14 @@ export default function StudentDashboard() {
           </Button>
         }
       />
+
+      {checkIns.length > 0 && (
+        <div className="space-y-3 mb-6">
+          {checkIns.map(({ request, appointment }) => (
+            <MeetingCheckIn key={request.id} request={request} appointment={appointment} />
+          ))}
+        </div>
+      )}
 
       {/* Stats row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mb-6">

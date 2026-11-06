@@ -3,7 +3,7 @@ import { cors } from 'hono/cors'
 import { z } from 'zod'
 import { getDb } from './db'
 import * as schema from './db/schema'
-import { eq, desc, and, or } from 'drizzle-orm'
+import { eq, desc, and, or, inArray } from 'drizzle-orm'
 import {
   AuthError,
   allowedRolesFor,
@@ -1537,6 +1537,22 @@ app.patch('/api/requests/:id/status', async (c) => {
       return c.json({ error: 'A cancellation reason is required.' }, 400)
     }
   }
+  // Students may only make the status changes their screens offer
+  if (c.get('auth')?.role === 'student') {
+    const current = await database.select({ status: schema.advisingRequests.status })
+      .from(schema.advisingRequests).where(eq(schema.advisingRequests.id, id)).get()
+    if (!current) return c.json({ error: 'Request not found.' }, 404)
+    const allowed = studentStatusChangeAllowed(current.status, body.status)
+    if (!allowed) return c.json({ error: 'This status change is not allowed.' }, 403)
+    if (allowed === 'after_meeting') {
+      // "I met my advisor" / "the meeting didn't happen" only once the meeting time has passed
+      const apt = await database.select().from(schema.appointments)
+        .where(and(eq(schema.appointments.requestId, id), eq(schema.appointments.status, 'scheduled'))).get()
+      if (!apt || !meetingTimeHasPassed(apt.scheduledDate, apt.scheduledTime)) {
+        return c.json({ error: 'You can confirm the meeting after its scheduled time.' }, 409)
+      }
+    }
+  }
   if (body.status === 'closed') {
     // Closing is the advisor's review step; a student cannot close their own case
     if (c.get('auth')?.role === 'student') return c.json({ error: 'Only the advisor can close a case.' }, 403)
@@ -1564,6 +1580,78 @@ app.patch('/api/requests/:id/status', async (c) => {
     .where(eq(schema.advisingRequests.id, id))
   return c.json({ success: true })
 })
+
+// Status changes a student may make on their own request.
+// 'after_meeting' changes also require the meeting time to have passed.
+export function studentStatusChangeAllowed(from: string, to: string): true | 'after_meeting' | false {
+  if (to === 'cancelled') return ['requested', 'pending', 'scheduled', 'rescheduled_pending_student'].includes(from)
+  if (from === 'rescheduled_pending_student' && to === 'scheduled') return true // accept a new time
+  if (from === 'scheduled' && (to === 'completed' || to === 'requested')) return 'after_meeting' // met / didn't meet
+  return false
+}
+
+// Appointment times are entered in Thailand local time (UTC+7, no daylight saving)
+export function meetingTimeHasPassed(date: string, time: string, now = new Date()): boolean {
+  const start = new Date(`${date}T${(time || '00:00').slice(0, 5)}:00+07:00`)
+  return !Number.isNaN(start.getTime()) && start.getTime() <= now.getTime()
+}
+
+// ---------------------------------------------------------------
+// Daily job: close cases the advisor forgot to close. A completed case with meeting notes
+// and no open tasks closes itself 7 days after the last activity (notes or last task done).
+// ---------------------------------------------------------------
+// Not exported: a Worker entry file may only export handlers (functions), not plain values
+const AUTO_CLOSE_AFTER_DAYS = 7
+
+export async function autoCloseStaleCases(database: NonNullable<ReturnType<typeof db>>, now = new Date()): Promise<number> {
+  const candidates = await database.select().from(schema.advisingRequests).where(eq(schema.advisingRequests.status, 'completed'))
+  if (candidates.length === 0) return 0
+  const ids = candidates.map(r => r.id)
+  const sessions = await database.select().from(schema.advisingSessions).where(inArray(schema.advisingSessions.requestId, ids))
+  const followUps = await database.select().from(schema.followUps).where(inArray(schema.followUps.requestId, ids))
+  const cutoff = now.getTime() - AUTO_CLOSE_AFTER_DAYS * 24 * 60 * 60 * 1000
+
+  let closed = 0
+  for (const req of candidates) {
+    const notes = sessions.filter(s => s.requestId === req.id)
+    if (notes.length === 0) continue // the advisor still has to write notes
+    const tasks = followUps.filter(f => f.requestId === req.id)
+    if (tasks.some(f => f.status !== 'completed')) continue // the student still has tasks
+    const lastActivity = Math.max(
+      ...notes.map(s => Date.parse(s.createdAt)),
+      ...tasks.map(f => Date.parse(f.completedAt || f.createdAt)),
+    )
+    if (!Number.isFinite(lastActivity) || lastActivity > cutoff) continue
+
+    const at = now.toISOString()
+    await database.update(schema.advisingRequests)
+      .set({ status: 'closed', closedAt: at, updatedAt: at.split('T')[0] })
+      .where(and(eq(schema.advisingRequests.id, req.id), eq(schema.advisingRequests.status, 'completed')))
+    await database.insert(schema.notifications).values({
+      id: `NOT_AUTO_${req.id}`,
+      userId: req.studentId,
+      type: 'success',
+      title: 'การให้คำปรึกษาเสร็จสมบูรณ์แล้ว / Your advising case is finished',
+      message: 'เคสนี้ปิดอัตโนมัติ ช่วยบอกเราหน่อยว่าการให้คำปรึกษาเป็นอย่างไร (ไม่บังคับ) / This case was closed automatically. Tell us how it went (optional).',
+      relatedId: req.id,
+      isRead: false,
+      createdAt: at,
+    }).onConflictDoNothing()
+    await database.insert(schema.auditLogs).values({
+      id: `LOG${Date.now()}${Math.random().toString(36).slice(2, 6)}`,
+      userId: 'system',
+      userName: 'System',
+      userRole: 'system',
+      action: 'request_auto_closed',
+      description: `Auto-closed ${AUTO_CLOSE_AFTER_DAYS} days after the last activity (advisor did not close it)`,
+      targetId: req.id,
+      timestamp: at,
+      ipAddress: null,
+    })
+    closed++
+  }
+  return closed
+}
 
 // Optional satisfaction rating, given once by the student after the case is closed.
 // Ownership (student's own request) is enforced by the record-ownership middleware.
@@ -3158,4 +3246,13 @@ app.delete('/api/document-types/:id', async (c) => {
   return c.json({ success: true, message: 'Document type deleted' })
 })
 
-export default app
+export { app }
+
+// Workers entry: HTTP requests + the daily cron (see "triggers" in wrangler.jsonc)
+export default {
+  fetch: app.fetch,
+  async scheduled(_event: unknown, env: Bindings, ctx: { waitUntil(p: Promise<unknown>): void }) {
+    if (!env.DB) return
+    ctx.waitUntil(autoCloseStaleCases(getDb(env.DB)).then(n => console.log(`auto-close: ${n} case(s) closed`)))
+  },
+}

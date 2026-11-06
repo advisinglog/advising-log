@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import app from './index'
+import { app } from './index'
 import { signSession, type Role } from './auth'
 
 const ENV = {
@@ -426,5 +426,39 @@ Case #1 [Year: Year 1 | Type: withdrawal | Reason: financial]
 
 Instructions:
 List the top 3 causes.`)
+  })
+})
+
+describe('Student meeting check-in rules', () => {
+  it('lets students only make the status changes their screens offer', async () => {
+    const { studentStatusChangeAllowed } = await import('./index')
+    expect(studentStatusChangeAllowed('scheduled', 'completed')).toBe('after_meeting') // "I met my advisor"
+    expect(studentStatusChangeAllowed('scheduled', 'requested')).toBe('after_meeting') // "didn't meet"
+    expect(studentStatusChangeAllowed('rescheduled_pending_student', 'scheduled')).toBe(true)
+    expect(studentStatusChangeAllowed('requested', 'cancelled')).toBe(true)
+    expect(studentStatusChangeAllowed('requested', 'completed')).toBe(false)
+    expect(studentStatusChangeAllowed('completed', 'closed')).toBe(false)
+    expect(studentStatusChangeAllowed('closed', 'requested')).toBe(false)
+  })
+
+  it('treats appointment times as Thailand time', async () => {
+    const { meetingTimeHasPassed } = await import('./index')
+    const now = new Date('2026-11-06T03:00:00Z') // 10:00 in Thailand
+    expect(meetingTimeHasPassed('2026-11-06', '09:30', now)).toBe(true)
+    expect(meetingTimeHasPassed('2026-11-06', '10:00', now)).toBe(true)
+    expect(meetingTimeHasPassed('2026-11-06', '10:30', now)).toBe(false)
+    expect(meetingTimeHasPassed('2026-11-07', '08:00', now)).toBe(false)
+  })
+})
+
+describe('Worker entry file', () => {
+  // Cloudflare treats every named export of the entry file as an entrypoint: a plain value
+  // (e.g. `export const X = 7`) makes the Worker fail to start.
+  it('only exports functions or handler objects', async () => {
+    const mod = await import('./index') as Record<string, unknown>
+    for (const [name, value] of Object.entries(mod)) {
+      const ok = typeof value === 'function' || (typeof value === 'object' && value !== null && 'fetch' in value)
+      expect(ok, `export "${name}" is not a function or handler`).toBe(true)
+    }
   })
 })

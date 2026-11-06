@@ -351,6 +351,15 @@ export default function AdvisorLog() {
           outcome: '',
         })
 
+    // Writing notes means the meeting happened: finish it if nobody pressed "Complete"
+    const linkedRequest = reqId ? store.requests.find(r => r.id === reqId) : undefined
+    if (linkedRequest && (linkedRequest.status === 'scheduled' || linkedRequest.status === 'rescheduled_pending_student')) {
+      store.updateRequestStatus(linkedRequest.id, 'completed')
+      store.appointments
+        .filter(a => a.requestId === linkedRequest.id && a.status === 'scheduled')
+        .forEach(a => store.updateAppointmentStatus(a.id, 'completed'))
+    }
+
     store.addAuditLog({
       userId: currentUser!.id,
       userName: currentUser!.name,

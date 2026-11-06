@@ -3,6 +3,8 @@
   "name": "advising-log-backend",
   "main": "src/index.ts",
   "compatibility_date": "2026-09-01",
+  // Daily at 01:00 UTC (08:00 Thailand): auto-close cases the advisor forgot to close
+  "triggers": { "crons": ["0 1 * * *"] },
   "d1_databases": [
     {
       "binding": "DB",
