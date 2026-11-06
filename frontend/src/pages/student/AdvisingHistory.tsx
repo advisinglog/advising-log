@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useStore } from '@/data/store'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useNavigate } from 'react-router-dom'
-import { PageHeader, DataTable, StatusBadge, SearchInput, Button } from '@/components/ui'
+import { PageHeader, DataTable, StatusBadge, SearchInput, Button, CustomSelect } from '@/components/ui'
 import type { AdvisingRequest } from '@/types'
 import { getLocalDateString } from '@/utils/dateUtils'
 import { useState } from 'react'
@@ -160,33 +160,33 @@ export default function AdvisingHistory() {
           <SearchInput value={search} onChange={setSearch} placeholder={t('ค้นหาตามหมวดหมู่ หรือคำสำคัญ...', 'Search by category or keyword...')} />
         </div>
         
-        <select 
-          className="w-full sm:w-48 text-sm border-slate-200 dark:border-slate-800 rounded-md shadow-sm bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 p-2"
+        <CustomSelect
+          className="sm:w-48"
+          ariaLabel={t('ช่วงเวลา', 'Timeframe')}
           value={timeframeFilter}
-          onChange={(e) => setTimeframeFilter(e.target.value)}
-        >
-          <option value="all">{t('ช่วงเวลาทั้งหมด', 'All Timeframes')}</option>
-          <option value="present">{t('วันนี้', 'Present (Today)')}</option>
-          <option value="future">{t('อนาคต', 'Future')}</option>
-          <option value="past">{t('อดีต', 'Past')}</option>
-        </select>
+          onChange={setTimeframeFilter}
+          options={[
+            { value: 'all', label: t('ช่วงเวลาทั้งหมด', 'All Timeframes') },
+            { value: 'present', label: t('วันนี้', 'Present (Today)') },
+            { value: 'future', label: t('อนาคต', 'Future') },
+            { value: 'past', label: t('อดีต', 'Past') },
+          ]}
+        />
 
-        <select 
-          className="w-full sm:w-48 text-sm border-slate-200 dark:border-slate-800 rounded-md shadow-sm bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 p-2"
+        <CustomSelect
+          className="sm:w-48"
+          ariaLabel={t('หมวดหมู่', 'Category')}
           value={categoryFilter}
-          onChange={(e) => setCategoryFilter(e.target.value)}
-        >
-          <option value="all">{t('ทุกหมวดหมู่', 'All Categories')}</option>
-          {store.categoryConfigs.filter(c => c.isActive !== false).map(cat => {
-            const val = cat.value
-            const label = getCategoryLabel(val) !== val ? getCategoryLabel(val) : ('label' in cat && cat.label ? cat.label : val)
-            return (
-              <option key={val} value={val}>
-                {label}
-              </option>
-            )
-          })}
-        </select>
+          onChange={setCategoryFilter}
+          options={[
+            { value: 'all', label: t('ทุกหมวดหมู่', 'All Categories') },
+            ...store.categoryConfigs.filter(c => c.isActive !== false).map(cat => {
+              const val = cat.value
+              const label = getCategoryLabel(val) !== val ? getCategoryLabel(val) : ('label' in cat && cat.label ? String(cat.label) : val)
+              return { value: val, label }
+            }),
+          ]}
+        />
       </div>
       <DataTable
         columns={columns}

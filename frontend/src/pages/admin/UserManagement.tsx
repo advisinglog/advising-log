@@ -6,7 +6,7 @@ import { useStore } from '@/data/store'
 import { useAuth } from '@/contexts/AuthContext'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useToast } from '@/contexts/ToastContext'
-import { PageHeader, DataTable, StatusBadge, Button, SearchInput, Modal, RequiredMark } from '@/components/ui'
+import { PageHeader, DataTable, StatusBadge, Button, SearchInput, Modal, RequiredMark, CustomSelect } from '@/components/ui'
 import type { User, UserRole } from '@/types'
 import { ChevronDown, Bot, ExternalLink, UserPlus, ShieldCheck, User as UserIcon, Users, Info, Trash2, AlertTriangle, ShieldAlert, Upload } from 'lucide-react'
 import { getLocalDateString } from '@/utils/dateUtils'
@@ -590,15 +590,16 @@ export default function UserManagement() {
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
                       {t('บทบาทในระบบ', 'System Role')} <RequiredMark />
                     </label>
-                    <select
+                    <CustomSelect
+                      ariaLabel={t('บทบาท', 'Role')}
                       value={newRole}
-                      onChange={e => setNewRole(e.target.value as UserRole)}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer"
-                    >
-                      <option value="advisor">{t('อาจารย์ที่ปรึกษา (Advisor)', 'Faculty Advisor')}</option>
-                      <option value="qa_chair">{t('ประกันคุณภาพ/ประธานหลักสูตร (QA Chair)', 'QA Chair / Program Chair')}</option>
-                      <option value="admin">{t('ผู้ดูแลระบบ (Admin)', 'Administrator')}</option>
-                    </select>
+                      onChange={v => setNewRole(v as UserRole)}
+                      options={[
+                        { value: 'advisor', label: t('อาจารย์ที่ปรึกษา (Advisor)', 'Faculty Advisor') },
+                        { value: 'qa_chair', label: t('ประกันคุณภาพ/ประธานหลักสูตร (QA Chair)', 'QA Chair / Program Chair') },
+                        { value: 'admin', label: t('ผู้ดูแลระบบ (Admin)', 'Administrator') },
+                      ]}
+                    />
                   </div>
 
                   <div>
@@ -746,19 +747,21 @@ export default function UserManagement() {
                         <Users className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
                         {t('บทบาทเริ่มต้นสำหรับอาจารย์/บุคลากร:', 'Default Role for Staff/Faculty:')}
                       </span>
-                      <select
+                      <CustomSelect
+                        size="sm"
+                        className="w-auto min-w-[11rem]"
+                        ariaLabel={t('บทบาทเริ่มต้น', 'Default role')}
                         value={bulkDefaultStaffRole}
-                        onChange={e => {
-                          const newDef = e.target.value as UserRole
-                          setBulkDefaultStaffRole(newDef)
+                        onChange={v => {
+                          setBulkDefaultStaffRole(v as UserRole)
                           setBulkRoleOverrides({})
                         }}
-                        className="px-2.5 py-1 rounded-lg border border-amber-300 dark:border-amber-800 bg-white dark:bg-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-amber-500 cursor-pointer"
-                      >
-                        <option value="advisor">{t('อาจารย์ที่ปรึกษา (Advisor)', 'Faculty Advisor')}</option>
-                        <option value="qa_chair">{t('ประกันคุณภาพ/ประธานหลักสูตร (QA Chair)', 'QA Chair / Program Chair')}</option>
-                        <option value="admin">{t('ผู้ดูแลระบบ (Admin)', 'Administrator')}</option>
-                      </select>
+                        options={[
+                        { value: 'advisor', label: t('อาจารย์ที่ปรึกษา (Advisor)', 'Faculty Advisor') },
+                        { value: 'qa_chair', label: t('ประกันคุณภาพ/ประธานหลักสูตร (QA Chair)', 'QA Chair / Program Chair') },
+                        { value: 'admin', label: t('ผู้ดูแลระบบ (Admin)', 'Administrator') },
+                      ]}
+                      />
                     </div>
                   )}
 
@@ -779,29 +782,23 @@ export default function UserManagement() {
                               Student
                             </span>
                           ) : (
-                            <select
+                            <CustomSelect
+                              size="sm"
+                              className="w-auto min-w-[7.5rem]"
+                              ariaLabel={t('บทบาท', 'Role')}
                               value={u.role}
-                              onChange={e => {
-                                const val = e.target.value as UserRole
+                              onChange={v => {
                                 setBulkRoleOverrides(prev => ({
                                   ...prev,
-                                  [u.email.toLowerCase()]: val,
+                                  [u.email.toLowerCase()]: v as UserRole,
                                 }))
                               }}
-                              className={`px-2 py-0.5 rounded-md text-[0.625rem] font-bold border cursor-pointer focus:outline-none focus:ring-1 focus:ring-sky-500 ${
-                                u.role === 'super_admin'
-                                  ? 'bg-purple-50 text-purple-800 border-purple-300 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-800'
-                                  : u.role === 'admin'
-                                  ? 'bg-sky-50 text-sky-800 border-sky-300 dark:bg-sky-950/60 dark:text-sky-300 dark:border-sky-800'
-                                  : u.role === 'qa_chair'
-                                  ? 'bg-emerald-50 text-emerald-800 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800'
-                                  : 'bg-amber-50 text-amber-800 border-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800'
-                              }`}
-                            >
-                              <option value="advisor">Advisor</option>
-                              <option value="qa_chair">QA Chair</option>
-                              <option value="admin">Admin</option>
-                            </select>
+                              options={[
+                                { value: 'advisor', label: 'Advisor' },
+                                { value: 'qa_chair', label: 'QA Chair' },
+                                { value: 'admin', label: 'Admin' },
+                              ]}
+                            />
                           )}
                           {u.isDuplicate && (
                             <span className="px-2 py-0.5 rounded-md text-[0.625rem] font-bold bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300">

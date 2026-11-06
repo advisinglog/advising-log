@@ -10,7 +10,7 @@ import { useStore } from '@/data/store'
 import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useTheme } from '@/contexts/ThemeContext'
-import { Card, Button, Modal, StatusBadge, RequiredMark } from '@/components/ui'
+import { Card, Button, Modal, StatusBadge, RequiredMark, CustomSelect } from '@/components/ui'
 import { EXIT_REASON_CODES } from '@/types'
 import type { ExitCase, ExitType } from '@/types'
 import {
@@ -1540,48 +1540,48 @@ export default function QualitativeExitAnalysis({ view = 'analysis' }: { view?: 
 
           {/* Exit Type Filter */}
           <div>
-            <select
+            <CustomSelect
               value={selectedExitType}
-              onChange={e => setSelectedExitType(e.target.value as any)}
-              className="w-full px-3 py-2.5 rounded-xl text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 cursor-pointer"
-            >
-              <option value="all">{t('ทุกประเภทคำร้อง (All Types)', 'All Exit Types')}</option>
-              <option value="withdrawal">{t('ขอลาออกถาวร (Withdrawal)', 'Withdrawal')}</option>
-              <option value="leave_of_absence">{t('ขอพักการศึกษา (Leave of Absence)', 'Leave of Absence')}</option>
-              <option value="transfer">{t('ขอโอนย้ายสถาบัน (Institution Transfer)', 'Institution Transfer')}</option>
-              <option value="dropout">{t('พ้นสภาพนักศึกษา (Dropout)', 'Dropout')}</option>
-            </select>
+              onChange={v => setSelectedExitType(v as typeof selectedExitType)}
+              options={[
+                { value: 'all', label: t('ทุกประเภทคำร้อง (All Types)', 'All Exit Types') },
+                { value: 'withdrawal', label: t('ขอลาออกถาวร (Withdrawal)', 'Withdrawal') },
+                { value: 'leave_of_absence', label: t('ขอพักการศึกษา (Leave of Absence)', 'Leave of Absence') },
+                { value: 'transfer', label: t('ขอโอนย้ายสถาบัน (Institution Transfer)', 'Institution Transfer') },
+                { value: 'dropout', label: t('พ้นสภาพนักศึกษา (Dropout)', 'Dropout') },
+              ]}
+            />
           </div>
 
           {/* Academic Year Filter */}
           <div>
-            <select
+            <CustomSelect
               value={selectedYear}
-              onChange={e => setSelectedYear(e.target.value)}
-              className="w-full px-3 py-2.5 rounded-xl text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 cursor-pointer"
-            >
-              <option value="all">{t('ทุกชั้นปี (All Years)', 'All Academic Years')}</option>
-              <option value="Year 1">{t('ชั้นปีที่ 1 (Year 1)', 'Year 1')}</option>
-              <option value="Year 2">{t('ชั้นปีที่ 2 (Year 2)', 'Year 2')}</option>
-              <option value="Year 3">{t('ชั้นปีที่ 3 (Year 3)', 'Year 3')}</option>
-              <option value="Year 4">{t('ชั้นปีที่ 4 (Year 4)', 'Year 4')}</option>
-            </select>
+              onChange={setSelectedYear}
+              options={[
+                { value: 'all', label: t('ทุกชั้นปี (All Years)', 'All Academic Years') },
+                { value: 'Year 1', label: t('ชั้นปีที่ 1 (Year 1)', 'Year 1') },
+                { value: 'Year 2', label: t('ชั้นปีที่ 2 (Year 2)', 'Year 2') },
+                { value: 'Year 3', label: t('ชั้นปีที่ 3 (Year 3)', 'Year 3') },
+                { value: 'Year 4', label: t('ชั้นปีที่ 4 (Year 4)', 'Year 4') },
+              ]}
+            />
           </div>
 
           {/* Thematic Filter */}
           <div>
-            <select
+            <CustomSelect
               value={selectedTheme}
-              onChange={e => setSelectedTheme(e.target.value)}
-              className="w-full px-3 py-2.5 rounded-xl text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 cursor-pointer"
-            >
-              <option value="all">{t('ทุกหมวดปัญหา (All Themes)', 'All Problem Themes')}</option>
-              <option value="academic">{t('ด้านวิชาการ/หลักสูตร', 'Academic Rigor')}</option>
-              <option value="mental_health">{t('ด้านสุขภาพจิต/ความเครียด', 'Mental Health')}</option>
-              <option value="financial">{t('ด้านการเงิน/ค่าครองชีพ', 'Financial')}</option>
-              <option value="family">{t('ด้านครอบครัว/สุขภาพกาย', 'Family & Health')}</option>
-              <option value="career">{t('ด้านความถนัด/เป้าหมายอาชีพ', 'Career & Transfer')}</option>
-            </select>
+              onChange={setSelectedTheme}
+              options={[
+                { value: 'all', label: t('ทุกหมวดปัญหา (All Themes)', 'All Problem Themes') },
+                { value: 'academic', label: t('ด้านวิชาการ/หลักสูตร', 'Academic Rigor') },
+                { value: 'mental_health', label: t('ด้านสุขภาพจิต/ความเครียด', 'Mental Health') },
+                { value: 'financial', label: t('ด้านการเงิน/ค่าครองชีพ', 'Financial') },
+                { value: 'family', label: t('ด้านครอบครัว/สุขภาพกาย', 'Family & Health') },
+                { value: 'career', label: t('ด้านความถนัด/เป้าหมายอาชีพ', 'Career & Transfer') },
+              ]}
+            />
           </div>
         </div>
 

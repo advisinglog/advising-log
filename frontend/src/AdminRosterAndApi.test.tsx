@@ -455,13 +455,17 @@ describe('Admin API Control & Roster Management', () => {
     })
 
     // Select the new student and advisor Dr. Prasit
-    const selects = screen.getAllByRole('combobox')
-    const studentSelect = selects[0]
-    const advisorSelect = selects[1]
-
     act(() => {
-      fireEvent.change(studentSelect, { target: { value: 'STU_NEW_999' } })
-      fireEvent.change(advisorSelect, { target: { value: 'ADV001' } })
+      fireEvent.click(screen.getByRole('button', { name: /^(นักศึกษา|Student)$/ }))
+    })
+    act(() => {
+      fireEvent.click(screen.getByRole('option', { name: /Nattapong NewStudent/ }))
+    })
+    act(() => {
+      fireEvent.click(screen.getByRole('button', { name: /^(อาจารย์ที่ปรึกษา|Advisor)$/ }))
+    })
+    act(() => {
+      fireEvent.click(screen.getAllByRole('option').find(o => /Prasit/.test(o.textContent || ''))!)
     })
 
     // Submit assignment

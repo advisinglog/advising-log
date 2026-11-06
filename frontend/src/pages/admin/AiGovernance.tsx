@@ -20,7 +20,7 @@ import {
   UserX,
   Activity,
 } from 'lucide-react'
-import { PageHeader, Button, UserAvatar, Modal, RequiredMark } from '@/components/ui'
+import { PageHeader, Button, UserAvatar, Modal, RequiredMark, CustomSelect } from '@/components/ui'
 import { useStore } from '@/data/store'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/contexts/ToastContext'
@@ -708,16 +708,18 @@ export default function AiGovernance() {
               </div>
 
               <div className="flex items-center gap-2">
-                <select
+                <CustomSelect
+                  className="sm:w-64"
+                  ariaLabel={t('บทบาทบุคลากร', 'Staff role')}
                   value={personnelRoleFilter}
-                  onChange={e => setPersonnelRoleFilter(e.target.value as any)}
-                  className="px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 focus:outline-hidden focus:ring-2 focus:ring-sky-500 cursor-pointer shadow-2xs"
-                >
-                  <option value="all">{t('ทุกบทบาทบุคลากร (All Faculty & Staff)', 'All Faculty & Staff')}</option>
-                  <option value="qa_chair">{t('ประกันคุณภาพ / ประธานสาขา (QA Chair)', 'QA Chair')}</option>
-                  <option value="advisor">{t('อาจารย์ที่ปรึกษา (Advisor)', 'Advisor')}</option>
-                  <option value="admin">{t('ผู้ดูแลระบบ (Admin)', 'Admin')}</option>
-                </select>
+                  onChange={v => setPersonnelRoleFilter(v as typeof personnelRoleFilter)}
+                  options={[
+                    { value: 'all', label: t('ทุกบทบาทบุคลากร (All Faculty & Staff)', 'All Faculty & Staff') },
+                    { value: 'qa_chair', label: t('ประกันคุณภาพ / ประธานสาขา (QA Chair)', 'QA Chair') },
+                    { value: 'advisor', label: t('อาจารย์ที่ปรึกษา (Advisor)', 'Advisor') },
+                    { value: 'admin', label: t('ผู้ดูแลระบบ (Admin)', 'Admin') },
+                  ]}
+                />
 
                 <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200/80 dark:border-slate-700/80">
                   <button

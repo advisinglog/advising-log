@@ -31,6 +31,9 @@ export function CustomSelect({
   className,
   disabled,
   error,
+  id,
+  ariaLabel,
+  size = 'md',
 }: {
   value: string
   onChange: (value: string) => void
@@ -39,7 +42,12 @@ export function CustomSelect({
   className?: string
   disabled?: boolean
   error?: boolean
+  id?: string
+  ariaLabel?: string
+  /** 'sm' is a compact trigger for tables and inline toolbars */
+  size?: 'sm' | 'md'
 }) {
+  const { t } = useLanguage()
   const [isOpen, setIsOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -49,11 +57,16 @@ export function CustomSelect({
         setIsOpen(false)
       }
     }
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === 'Escape') setIsOpen(false)
+    }
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside)
+      document.addEventListener('keydown', handleEscape)
     }
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('keydown', handleEscape)
     }
   }, [isOpen])
 
@@ -62,11 +75,16 @@ export function CustomSelect({
   return (
     <div ref={containerRef} className={cn('relative w-full', className)}>
       <button
+        id={id}
         type="button"
         disabled={disabled}
+        aria-label={ariaLabel}
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
         onClick={() => setIsOpen(prev => !prev)}
         className={cn(
-          'w-full flex items-center justify-between gap-2 px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border bg-white dark:bg-slate-900 text-left transition-all cursor-pointer shadow-xs',
+          'w-full flex items-center justify-between gap-2 border bg-white dark:bg-slate-900 text-left transition-all cursor-pointer shadow-xs',
+          size === 'sm' ? 'px-2.5 py-1.5 text-xs rounded-lg' : 'px-3.5 py-2.5 text-xs sm:text-sm rounded-xl',
           isOpen
             ? 'border-sky-500 ring-2 ring-sky-500/20'
             : error
@@ -94,14 +112,16 @@ export function CustomSelect({
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-1.5 max-h-60 overflow-y-auto bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-xl shadow-xl z-50 py-1 divide-y divide-slate-100 dark:divide-slate-800/60">
+        <div role="listbox" className="absolute top-full left-0 right-0 min-w-max mt-1.5 max-h-60 overflow-y-auto bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-xl shadow-xl z-50 py-1 divide-y divide-slate-100 dark:divide-slate-800/60">
           {options.length === 0 ? (
-            <div className="px-3.5 py-2.5 text-xs text-slate-400 text-center">ไม่มีตัวเลือก</div>
+            <div className="px-3.5 py-2.5 text-xs text-slate-400 text-center">{t('ไม่มีตัวเลือก', 'No options')}</div>
           ) : (
             options.map(option => (
               <button
                 key={option.value}
                 type="button"
+                role="option"
+                aria-selected={value === option.value}
                 onClick={() => {
                   onChange(option.value)
                   setIsOpen(false)

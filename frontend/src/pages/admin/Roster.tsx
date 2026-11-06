@@ -9,7 +9,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useStore } from '@/data/store'
 import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { PageHeader, DataTable, Button, SearchInput, Modal, RequiredMark } from '@/components/ui'
+import { PageHeader, DataTable, Button, SearchInput, Modal, RequiredMark, CustomSelect } from '@/components/ui'
 import {
   Plus,
 } from 'lucide-react'
@@ -168,35 +168,25 @@ export default function Roster() {
             <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">
               {t('นักศึกษา', 'Student')} <RequiredMark />
             </label>
-            <select
+            <CustomSelect
+              ariaLabel={t('นักศึกษา', 'Student')}
               value={selectedStudent}
-              onChange={e => setSelectedStudent(e.target.value)}
-              className="w-full px-3.5 py-2 text-xs sm:text-sm border border-slate-200/90 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
-            >
-              <option value="">{t('-- เลือกนักศึกษา (รหัส / อีเมล) --', 'Select student (Code / Email)')}</option>
-              {students.map(s => (
-                <option key={s.id} value={s.id}>
-                  {s.code} - {s.email} ({s.name})
-                </option>
-              ))}
-            </select>
+              onChange={setSelectedStudent}
+              placeholder={t('-- เลือกนักศึกษา (รหัส / อีเมล) --', 'Select student (Code / Email)')}
+              options={students.map(s => ({ value: s.id, label: `${s.code} - ${s.name}`, description: s.email }))}
+            />
           </div>
           <div>
             <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">
               {t('อาจารย์ที่ปรึกษา', 'Assigned Faculty Advisor')} <RequiredMark />
             </label>
-            <select
+            <CustomSelect
+              ariaLabel={t('อาจารย์ที่ปรึกษา', 'Advisor')}
               value={selectedAdvisor}
-              onChange={e => setSelectedAdvisor(e.target.value)}
-              className="w-full px-3.5 py-2 text-xs sm:text-sm border border-slate-200/90 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
-            >
-              <option value="">{t('-- เลือกอาจารย์ที่ปรึกษา (อีเมล / ชื่อ) --', 'Select advisor (Email / Name)')}</option>
-              {advisors.map(a => (
-                <option key={a.id} value={a.id}>
-                  {a.email} — {a.name} ({a.department})
-                </option>
-              ))}
-            </select>
+              onChange={setSelectedAdvisor}
+              placeholder={t('-- เลือกอาจารย์ที่ปรึกษา (อีเมล / ชื่อ) --', 'Select advisor (Email / Name)')}
+              options={advisors.map(a => ({ value: a.id, label: a.name, description: a.email }))}
+            />
           </div>
           <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
             <Button variant="secondary" onClick={() => setShowAssign(false)}>

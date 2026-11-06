@@ -5,7 +5,7 @@ import { useStore } from '@/data/store'
 import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { cn } from '@/lib/utils'
-import { PageHeader, Card, Button, EmptyState, DocumentViewerModal, Modal, Tabs, StatusBadge, type DocumentViewerTarget, RequiredMark } from '@/components/ui'
+import { PageHeader, Card, Button, EmptyState, DocumentViewerModal, Modal, Tabs, StatusBadge, type DocumentViewerTarget, RequiredMark, CustomSelect } from '@/components/ui'
 import {
   ClipboardCheck,
   User,
@@ -19,11 +19,12 @@ import {
   ChevronDown,
   Clock,
   Paperclip,
+  DoorOpen,
 } from 'lucide-react'
 
 import { isAdvisorMatch } from '@/utils/advisorUtils'
 import { getLocalDateString } from '@/utils/dateUtils'
-import type { AdvisingRequest } from '@/types'
+import type { AdvisingRequest, AdvisingCategory, User as UserType } from '@/types'
 
 export default function AdvisorLog() {
   const { currentUser } = useAuth()
@@ -32,7 +33,7 @@ export default function AdvisorLog() {
   const { t, getCategoryLabel } = useLanguage()
   const location = useLocation()
 
-  type LogNavigationState = { appointmentId?: string; requestId?: string; studentId?: string; sessionId?: string; edit?: boolean; viewOnly?: boolean }
+  type LogNavigationState = { appointmentId?: string; requestId?: string; studentId?: string; sessionId?: string; edit?: boolean; viewOnly?: boolean; walkIn?: boolean }
   const navState = location.state as LogNavigationState | null
 
   // Preselected student if navigated from My Advisees, Appointments, or Dashboard
@@ -58,6 +59,12 @@ export default function AdvisorLog() {
   const [savedCategoryFilter, setSavedCategoryFilter] = useState('')
   const [savedStudentIdSearch, setSavedStudentIdSearch] = useState('')
   const [autoApproveDocs, setAutoApproveDocs] = useState(true)
+
+  // Walk-in: student shows up without booking, so there is no request to attach the log to yet
+  const [walkInMode, setWalkInMode] = useState(Boolean(navState?.walkIn))
+  const [walkInStudentId, setWalkInStudentId] = useState(navState?.walkIn ? navStudent?.id || '' : '')
+  const [walkInCategory, setWalkInCategory] = useState('')
+  const [walkInConsent, setWalkInConsent] = useState(false)
 
   // Auto-pull previous follow-ups interactive state
   const [extendingTaskId, setExtendingTaskId] = useState<string | null>(null)
@@ -161,7 +168,7 @@ export default function AdvisorLog() {
 
   // Auto-select request if student was pre-selected and has an eligible request
   useEffect(() => {
-    if (navStudent && !selectedRequestId) {
+    if (navStudent && !selectedRequestId && !walkInMode) {
       const studentReq =
         completedRequests.find(r => r.studentId === navStudent.id) ||
         eligibleRequests.find(r => r.studentId === navStudent.id)
@@ -169,7 +176,7 @@ export default function AdvisorLog() {
         setSelectedRequestId(studentReq.id)
       }
     }
-  }, [navStudent, completedRequests, eligibleRequests, selectedRequestId])
+  }, [navStudent, completedRequests, eligibleRequests, selectedRequestId, walkInMode])
 
   if (!currentUser) return null
 
@@ -180,7 +187,40 @@ export default function AdvisorLog() {
     (!navState?.studentId || !linkedRequestId || selectedRequestId !== linkedRequestId || r.studentId === navState.studentId)
   )
 
-  const student = (selectedReq ? store.users.find(u => u.id === selectedReq.studentId) : null) || navStudent
+  const adviseeStudents: UserType[] = store.roster
+    .filter(r => isAdvisorMatch(r.advisorId, currentUser, store.users) && r.isActive)
+    .map(assignment =>
+      store.users.find(
+        u =>
+          u.role === 'student' &&
+          (u.id === assignment.studentId ||
+            u.code?.toUpperCase() === assignment.studentId?.toUpperCase() ||
+            u.email?.toLowerCase() === assignment.studentId?.toLowerCase())
+      )
+    )
+    .filter((u): u is UserType => Boolean(u))
+    .filter((u, index, list) => list.findIndex(item => item.id === u.id) === index)
+    .sort((a, b) => a.name.localeCompare(b.name))
+  const walkInStudent = walkInMode ? adviseeStudents.find(u => u.id === walkInStudentId) || null : null
+
+  const student = walkInMode
+    ? walkInStudent
+    : (selectedReq ? store.users.find(u => u.id === selectedReq.studentId) : null) || navStudent
+  // No booked request behind this log: it must be recorded as a walk-in
+  const isWalkIn = !selectedReq && Boolean(student)
+  const activeCategoryOptions = store.categoryConfigs
+    .filter(c => c.isActive !== false)
+    .map(c => ({ value: c.value, label: getCategoryLabel(c.value) }))
+
+  function startWalkIn() {
+    setWalkInMode(true)
+    setSelectedRequestId('')
+    setEditingRequestId('')
+    setWalkInStudentId('')
+    setWalkInCategory('')
+    setWalkInConsent(false)
+    setSection('entry')
+  }
 
   const appointment = selectedReq
     ? (linkedAppointment?.requestId === selectedReq.id
@@ -313,6 +353,15 @@ export default function AdvisorLog() {
       return
     }
 
+    if (isWalkIn && (!walkInCategory || !walkInConsent)) {
+      addToast(
+        'error',
+        t('ข้อมูล Walk-in ไม่ครบ', 'Walk-in details missing'),
+        t('กรุณาเลือกหมวดหมู่และยืนยันว่านักศึกษายินยอมให้บันทึกข้อมูล', 'Please choose a category and confirm the student agreed to have this meeting recorded.')
+      )
+      return
+    }
+
     const cleanSummary = summary.trim()
     const currentSession = selectedRequestId ? store.sessions.find(s => s.requestId === selectedRequestId) : undefined
     if (currentSession && editingRequestId !== selectedRequestId) {
@@ -327,24 +376,24 @@ export default function AdvisorLog() {
     // Resolve or generate requestId to satisfy foreign key requirement
     let reqId = selectedRequestId
     if (!reqId) {
-      const anyReq = store.requests.find(
-        r => r.studentId === targetStudentId && isAdvisorMatch(r.advisorId, currentUser, store.users)
-      )
-      if (anyReq) {
-        reqId = anyReq.id
-      } else {
+      // Walk-in: create its own request rather than attaching the notes to an unrelated older one
+      const nowTime = new Date()
+      try {
         const walkInReq = await store.addRequest({
           studentId: targetStudentId,
           advisorId: currentUser!.id,
-          category: 'academic_performance',
-          details: cleanSummary.slice(0, 150),
+          category: walkInCategory as AdvisingCategory,
+          details: `[Walk-in] ${cleanSummary.slice(0, 150)}`,
           preferredDate: getLocalDateString(),
-          preferredTime: '10:00',
+          preferredTime: `${String(nowTime.getHours()).padStart(2, '0')}:${String(nowTime.getMinutes()).padStart(2, '0')}`,
           attachments: [],
-          pdpaConsent: true,
+          pdpaConsent: walkInConsent,
           status: 'completed',
         })
         reqId = walkInReq.id
+      } catch {
+        addToast('error', t('บันทึกไม่สำเร็จ', 'Save failed'), t('ไม่สามารถสร้างรายการ Walk-in ได้ กรุณาลองใหม่', 'Could not create the walk-in record. Please try again.'))
+        return
       }
     }
 
@@ -383,7 +432,7 @@ export default function AdvisorLog() {
       userName: currentUser!.name,
       userRole: 'advisor',
       action: 'log_created',
-      description: `Created advising log for ${student?.name || targetStudentId}`,
+      description: `Created ${isWalkIn ? 'walk-in ' : ''}advising log for ${student?.name || targetStudentId}`,
       targetId: session.id,
     })
 
@@ -423,6 +472,10 @@ export default function AdvisorLog() {
     )
     setSelectedRequestId('')
     setEditingRequestId('')
+    setWalkInMode(false)
+    setWalkInStudentId('')
+    setWalkInCategory('')
+    setWalkInConsent(false)
     setSection('saved')
     setSummary('')
     setFollowUpTask('')
@@ -438,6 +491,12 @@ export default function AdvisorLog() {
           'บันทึกสรุปผลการให้คำปรึกษา คำแนะนำ และกำหนดงานติดตามผลแก่นักศึกษาอย่างกระชับและรวดเร็ว',
           'Document session summary, guidance provided, and assign action items.'
         )}
+        actions={
+          <Button size="sm" variant="secondary" onClick={startWalkIn}>
+            <DoorOpen className="h-4 w-4 mr-1.5" />
+            {t('บันทึก Walk-in', 'Log a Walk-in')}
+          </Button>
+        }
       />
 
       <Tabs
@@ -466,17 +525,12 @@ export default function AdvisorLog() {
                   <label htmlFor="saved-log-category-filter" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                     {t('กรองตามหมวดหมู่', 'Filter by Category')}
                   </label>
-                  <select
+                  <CustomSelect
                     id="saved-log-category-filter"
                     value={savedCategoryFilter}
-                    onChange={e => setSavedCategoryFilter(e.target.value)}
-                    className="w-full min-h-[40px] px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs sm:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
-                  >
-                    <option value="">{t('ทุกหมวดหมู่', 'All categories')}</option>
-                    {store.categoryConfigs.filter(c => c.isActive !== false).map(config => (
-                      <option key={config.value} value={config.value}>{getCategoryLabel(config.value)}</option>
-                    ))}
-                  </select>
+                    onChange={setSavedCategoryFilter}
+                    options={[{ value: '', label: t('ทุกหมวดหมู่', 'All categories') }, ...activeCategoryOptions]}
+                  />
                 </div>
                 <div>
                   <label htmlFor="saved-log-student-id-search" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
@@ -584,7 +638,7 @@ export default function AdvisorLog() {
             )}
           </div>
         )
-      ) : completedRequests.length === 0 && !selectedReq && !student ? (
+      ) : completedRequests.length === 0 && !selectedReq && !student && !walkInMode ? (
         <Card>
           <EmptyState
             icon={<ClipboardCheck className="h-6 w-6 text-sky-500" />}
@@ -593,13 +647,52 @@ export default function AdvisorLog() {
               'รายการนัดหมายที่ถึงกำหนดหรือเสร็จสิ้นแล้วจะปรากฏที่นี่เพื่อเขียนบันทึกผล หรือเลือกจากหน้านักศึกษาในความดูแล',
               'Scheduled sessions will appear here to write their official advising log.'
             )}
+            action={
+              <Button size="sm" onClick={startWalkIn}>
+                <DoorOpen className="h-4 w-4 mr-1.5" />
+                {t('นักศึกษามาโดยไม่ได้นัด? บันทึก Walk-in', 'Student dropped in? Log a Walk-in')}
+              </Button>
+            }
           />
         </Card>
       ) : (
         <Card>
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Direct Student Pre-selected banner (Locks student automatically without dropdown) */}
-            {isDirectStudentLog && student ? (
+            {walkInMode ? (
+              <div className="rounded-xl border border-violet-200 dark:border-violet-800 bg-violet-50/70 dark:bg-violet-950/30 p-4 space-y-3 shadow-xs">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs sm:text-sm font-bold text-violet-900 dark:text-violet-200 flex items-center gap-1.5">
+                      <DoorOpen className="h-4 w-4" />
+                      {t('Walk-in (นักศึกษามาโดยไม่ได้นัดล่วงหน้า)', 'Walk-in (student came without booking)')}
+                    </p>
+                    <p className="text-[0.6875rem] text-violet-800/80 dark:text-violet-300/80 mt-0.5">
+                      {t('ระบบจะสร้างรายการคำปรึกษาให้อัตโนมัติเมื่อบันทึก', 'An advising record is created for you when you save.')}
+                    </p>
+                  </div>
+                  {completedRequests.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setWalkInMode(false)}
+                      className="text-[0.6875rem] font-semibold text-violet-700 dark:text-violet-300 hover:underline whitespace-nowrap"
+                    >
+                      {t('กลับไปเลือกนัดหมาย', 'Back to booked sessions')}
+                    </button>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 mb-1.5">
+                    {t('นักศึกษา', 'Student')} <RequiredMark />
+                  </label>
+                  <CustomSelect
+                    value={walkInStudentId}
+                    onChange={setWalkInStudentId}
+                    placeholder={t('-- เลือกนักศึกษาในความดูแล --', 'Choose one of your advisees')}
+                    options={adviseeStudents.map(u => ({ value: u.id, label: u.name, description: u.code }))}
+                  />
+                </div>
+              </div>
+            ) : isDirectStudentLog && student ? (
               <div className="rounded-xl border border-sky-200 dark:border-sky-800 bg-sky-50/80 dark:bg-sky-950/40 p-4 space-y-1.5 shadow-xs">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-sky-800 dark:text-sky-300 flex items-center gap-1.5">
@@ -632,26 +725,67 @@ export default function AdvisorLog() {
                 <label className="block text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 mb-1.5">
                   {t('เลือกนัดหมายที่ต้องการบันทึกผล', 'Select Advising Session')} <RequiredMark />
                 </label>
-                <select
+                <CustomSelect
                   value={selectedRequestId}
-                  onChange={e => {
+                  onChange={value => {
                     setEditingRequestId('')
-                    setSelectedRequestId(e.target.value)
+                    setSelectedRequestId(value)
                   }}
-                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200/90 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-xs cursor-pointer"
-                >
-                  <option value="">
-                    {t('-- เลือกรายการนัดหมายที่ต้องการบันทึก --', 'Select an advising session to log')}
-                  </option>
-                  {completedRequests.map(r => {
+                  placeholder={t('-- เลือกรายการนัดหมายที่ต้องการบันทึก --', 'Select an advising session to log')}
+                  options={completedRequests.map(r => {
                     const s = store.users.find(u => u.id === r.studentId)
-                    return (
-                      <option key={r.id} value={r.id}>
-                        {s?.name || r.studentId} ({s?.code || '-'}) — {getCategoryLabel(r.category)}
-                      </option>
-                    )
+                    return {
+                      value: r.id,
+                      label: `${s?.name || r.studentId} (${s?.code || '-'})`,
+                      description: getCategoryLabel(r.category),
+                    }
                   })}
-                </select>
+                />
+                <button
+                  type="button"
+                  onClick={startWalkIn}
+                  className="mt-2 text-[0.6875rem] font-semibold text-violet-700 dark:text-violet-300 hover:underline inline-flex items-center gap-1"
+                >
+                  <DoorOpen className="h-3.5 w-3.5" />
+                  {t('นักศึกษามาโดยไม่ได้นัด? บันทึกเป็น Walk-in', 'Student came without booking? Log it as a walk-in')}
+                </button>
+              </div>
+            )}
+
+            {isWalkIn && student && (
+              <div className="space-y-4">
+                {!walkInMode && (
+                  <p className="text-[0.6875rem] font-semibold text-violet-700 dark:text-violet-300 flex items-center gap-1.5">
+                    <DoorOpen className="h-3.5 w-3.5" />
+                    {t('นักศึกษาคนนี้ไม่มีนัดหมายที่รอบันทึก จะบันทึกเป็น Walk-in', 'This student has no booked session waiting for notes, so this is logged as a walk-in.')}
+                  </p>
+                )}
+                <div>
+                  <label className="block text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 mb-1.5">
+                    {t('หมวดหมู่การปรึกษา', 'Advising Category')} <RequiredMark />
+                  </label>
+                  <CustomSelect
+                    value={walkInCategory}
+                    onChange={setWalkInCategory}
+                    placeholder={t('-- เลือกหมวดหมู่ --', 'Choose a category')}
+                    options={activeCategoryOptions}
+                  />
+                </div>
+                <label className="flex items-start gap-2.5 p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/40 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={walkInConsent}
+                    onChange={e => setWalkInConsent(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                  />
+                  <span className="text-xs text-slate-700 dark:text-slate-300">
+                    {t(
+                      'นักศึกษายินยอมให้บันทึกข้อมูลการเข้าพบครั้งนี้ในระบบ (ตาม พ.ร.บ. คุ้มครองข้อมูลส่วนบุคคล)',
+                      'The student agreed to have this meeting recorded in the system (PDPA).'
+                    )}
+                    <RequiredMark />
+                  </span>
+                </label>
               </div>
             )}
 

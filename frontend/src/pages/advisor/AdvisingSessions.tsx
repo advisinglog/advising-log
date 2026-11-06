@@ -10,7 +10,7 @@ import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { PageHeader, Tabs, DataTable, Button, Modal, DocumentViewerModal, SearchInput, type DocumentViewerTarget, RequiredMark } from '@/components/ui'
 import type { AdvisingRequest } from '@/types'
-import { Calendar, Eye, FileText, Sparkles, Building2, Video, CheckCircle2, MapPin, Link2, ClipboardList, AlertTriangle, XCircle, X, ExternalLink, ChevronDown } from 'lucide-react'
+import { Calendar, Eye, FileText, Sparkles, Building2, Video, CheckCircle2, MapPin, Link2, ClipboardList, AlertTriangle, XCircle, X, ExternalLink, ChevronDown, DoorOpen } from 'lucide-react'
 import { isAdvisorMatch } from '@/utils/advisorUtils'
 import { openGoogleCalendarEvent, openAdvisorCalendar, buildAdvisorCalendarUrl } from '@/utils/calendarUtils'
 import { getLocalDateString } from '@/utils/dateUtils'
@@ -285,36 +285,6 @@ export default function AdvisingSessions() {
     setCancelReason('')
   }
 
-  function handleComplete(req: AdvisingRequest) {
-    if (!currentUser) return
-    markRequestViewed(req.id)
-    store.updateRequestStatus(req.id, 'completed')
-    const linkedAppt = store.appointments.find(a => a.requestId === req.id && a.status === 'scheduled')
-    store.appointments
-      .filter(a => a.requestId === req.id && a.status === 'scheduled')
-      .forEach(a => store.updateAppointmentStatus(a.id, 'completed'))
-    store.addAuditLog({
-      userId: currentUser.id,
-      userName: currentUser.name,
-      userRole: currentUser.role === 'qa_chair' ? 'qa_chair' : 'advisor',
-      action: 'request_updated',
-      description: `Completed advising session for ${store.users.find(u => u.id === req.studentId)?.name || req.studentId}`,
-      targetId: req.id,
-    })
-    addToast(
-      'success',
-      t('เสร็จสิ้นการนัดหมายแล้ว', 'Appointment Completed'),
-      t('นำท่านไปยังหน้าบันทึกผลการเข้าพบเพื่อสรุปผลการให้คำปรึกษา', 'Redirecting to Advisor Log to record session summary & agreements.')
-    )
-    navigate('/advisor/log', {
-      state: {
-        requestId: req.id,
-        studentId: req.studentId,
-        appointmentId: linkedAppt?.id,
-      },
-    })
-  }
-
   function handleSubmitCancel() {
     if (!cancelReq || !currentUser) return
     const reason = cancelReason.trim()
@@ -436,28 +406,16 @@ export default function AdvisingSessions() {
                   )}
 
                   {(r.status === 'scheduled' || r.status === 'rescheduled_pending_student') && (
-                    <>
-                      <Button
-                        size="sm"
-                        variant="primary"
-                        onClick={() => {
-                          markRequestViewed(r.id)
-                          navigate('/advisor/log', { state: { requestId: r.id } })
-                        }}
-                      >
-                        <ClipboardList className="h-3 w-3 mr-1" /> {t('บันทึกการเข้าพบ', 'Log Notes')}
-                      </Button>
-                      {(tab === 'upcoming' || tab === 'ongoing') && (
-                        <Button
-                          size="sm"
-                          variant="primary"
-                          className="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 focus:ring-emerald-500/15"
-                          onClick={() => handleComplete(r)}
-                        >
-                          <CheckCircle2 className="h-3 w-3 mr-1" /> {t('เสร็จสิ้นและบันทึกผล', 'Complete & Log Notes')}
-                        </Button>
-                      )}
-                    </>
+                    <Button
+                      size="sm"
+                      variant="primary"
+                      onClick={() => {
+                        markRequestViewed(r.id)
+                        navigate('/advisor/log', { state: { requestId: r.id } })
+                      }}
+                    >
+                      <ClipboardList className="h-3 w-3 mr-1" /> {t('บันทึกการเข้าพบ', 'Log Notes')}
+                    </Button>
                   )}
 
                   {isReadyToClose(r, store.sessions, store.followUps) && (
@@ -507,6 +465,12 @@ export default function AdvisingSessions() {
       <PageHeader
         title={t('คำร้องและนัดหมาย', 'Requests & Appointments')}
         description={t('ตอบรับคำร้องใหม่ นัดเวลาเข้าพบ บันทึกผล และปิดเคสเมื่อนักศึกษาทำงานครบ', 'Accept new requests, schedule meetings, log notes, and close cases once the student finishes their tasks.')}
+        actions={
+          <Button size="sm" variant="secondary" onClick={() => navigate('/advisor/log', { state: { walkIn: true } })}>
+            <DoorOpen className="h-4 w-4 mr-1.5" />
+            {t('บันทึก Walk-in', 'Log a Walk-in')}
+          </Button>
+        }
       />
 
       <CloseCaseDialog request={closeReq} onClose={() => setCloseReq(null)} />
