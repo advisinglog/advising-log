@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { PageHeader, Card, StatusBadge, EmptyState, GoogleCalendarButton, Button, DocumentViewerModal, type DocumentViewerTarget } from '@/components/ui'
 import { ArrowLeft, Calendar, Paperclip, FileText, CheckCircle, Eye, XCircle } from 'lucide-react'
 import { useState } from 'react'
+import { CaseFeedbackCard } from '@/components/student/CaseFeedbackCard'
 
 export default function AdvisingDetail() {
   const { id } = useParams<{ id: string }>()
@@ -84,6 +85,9 @@ export default function AdvisingDetail() {
             </div>
           </div>
         )}
+
+        {/* Case finished + optional rating */}
+        {request.status === 'closed' && <CaseFeedbackCard request={request} />}
 
         {/* Request details */}
         <Card>

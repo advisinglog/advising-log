@@ -195,6 +195,27 @@ describe('Authentication & authorization', () => {
     expect((await authed('/api/qa/ai-analyze', { method: 'POST', body: '{}' }, 'advisor', 'qa_chair')).status).not.toBe(403)
   })
 
+  it('only lets students submit request feedback', async () => {
+    const feedback = { method: 'PATCH', body: JSON.stringify({ rating: 5 }) }
+    for (const role of ['advisor', 'qa_chair', 'admin'] as Role[]) {
+      expect((await authed('/api/requests/REQ1/feedback', feedback, role)).status).toBe(403)
+    }
+    // Student passes the role check, then hits the detached DB
+    expect((await authed('/api/requests/REQ1/feedback', feedback, 'student')).status).toBe(503)
+  })
+
+  it('anonymous feedback: only students may send it, only QA may read it', async () => {
+    const send = { method: 'POST', body: JSON.stringify({ topic: 'app_bug', message: 'x' }) }
+    for (const role of ['advisor', 'qa_chair', 'admin'] as Role[]) {
+      expect((await authed('/api/feedback', send, role)).status).toBe(403)
+    }
+    expect((await authed('/api/feedback', send, 'student')).status).toBe(503) // passes auth, DB detached
+    for (const role of ['student', 'advisor', 'admin'] as Role[]) {
+      expect((await authed('/api/feedback', {}, role)).status).toBe(403)
+    }
+    expect((await authed('/api/feedback', {}, 'qa_chair')).status).toBe(200)
+  })
+
   it('denies unmapped routes by default', async () => {
     expect((await authed('/api/not-a-route', { method: 'POST' })).status).toBe(403)
   })
@@ -280,6 +301,8 @@ describe('Audit trail', () => {
     const { auditActionFor } = await import('./index')
     expect(auditActionFor('POST', '/api/requests')).toBe('request_created')
     expect(auditActionFor('PATCH', '/api/requests/REQ1/status')).toBe('request_updated')
+    expect(auditActionFor('PATCH', '/api/requests/REQ1/feedback')).toBe('request_feedback_submitted')
+    expect(auditActionFor('POST', '/api/feedback')).toBe('feedback_submitted')
     expect(auditActionFor('POST', '/api/sessions')).toBe('log_created')
     expect(auditActionFor('DELETE', '/api/documents/DOC1')).toBe('document_deleted')
     expect(auditActionFor('POST', '/api/users/bulk')).toBe('users_imported')

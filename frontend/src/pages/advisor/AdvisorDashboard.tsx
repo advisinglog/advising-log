@@ -12,6 +12,9 @@ import { PageHeader, StatCard, Card, StatusBadge, EmptyState, Button, Modal, Adv
 import { FileEdit, CalendarClock, ListChecks, UserX, AlertTriangle, Clock, ArrowRight, UserPlus, CheckCircle2, Search, Users, RefreshCw, Upload, Eye } from 'lucide-react'
 import { isAdvisorMatch } from '@/utils/advisorUtils'
 import { getLocalDateString } from '@/utils/dateUtils'
+import { isReadyToClose } from '@/utils/requestFlow'
+import { CloseCaseDialog } from '@/components/advisor/CloseCaseDialog'
+import type { AdvisingRequest } from '@/types'
 
 export default function AdvisorDashboard() {
   const { currentUser } = useAuth()
@@ -31,6 +34,7 @@ export default function AdvisorDashboard() {
   }, [store.refreshBackend])
 
   const [showAddAdvisee, setShowAddAdvisee] = useState(false)
+  const [closeReq, setCloseReq] = useState<AdvisingRequest | null>(null)
   const [showImportCsv, setShowImportCsv] = useState(false)
   const [csvText, setCsvText] = useState('')
   const [csvRows, setCsvRows] = useState<Array<{ name: string; code: string }>>([])
@@ -163,6 +167,7 @@ export default function AdvisorDashboard() {
     .sort((a, b) => a.name.localeCompare(b.name))
   const myRequests = store.requests.filter(r => isAdvisorMatch(r.advisorId, currentUser, store.users))
   const pendingRequests = myRequests.filter(r => r.status === 'requested' || r.status === 'pending')
+  const readyToClose = myRequests.filter(r => isReadyToClose(r, store.sessions, store.followUps))
   const confirmedApts = store.appointments
     .filter(a => {
       const requestStatus = store.requests.find(r => r.id === a.requestId)?.status
@@ -492,7 +497,38 @@ export default function AdvisorDashboard() {
         </div>
       </div>
 
+      <CloseCaseDialog request={closeReq} onClose={() => setCloseReq(null)} />
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Ready to close: the student finished everything, the advisor's last step */}
+        {readyToClose.length > 0 && (
+          <Card className="lg:col-span-2 border-emerald-200/80 dark:border-emerald-800/60">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2 mb-1">
+              <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+              {t('พร้อมปิดเคส', 'Ready to Close')} ({readyToClose.length})
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-3.5">
+              {t('นักศึกษาทำงานติดตามผลครบแล้ว ตรวจสอบและปิดเคส', 'The student has finished all tasks. Review and close the case.')}
+            </p>
+            <div className="space-y-2">
+              {readyToClose.slice(0, 5).map(r => {
+                const student = store.users.find(u => u.id === r.studentId)
+                return (
+                  <div key={r.id} className="flex items-center justify-between gap-3 p-3 bg-slate-50/80 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/60 rounded-xl">
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">{student?.name || r.studentId} <span className="font-mono text-slate-400 font-normal">({student?.code})</span></p>
+                      <p className="text-[0.6875rem] text-slate-500 dark:text-slate-400">{getCategoryLabel(r.category)}</p>
+                    </div>
+                    <Button size="sm" onClick={() => setCloseReq(r)}>
+                      {t('ตรวจสอบและปิดเคส', 'Review & Close')}
+                    </Button>
+                  </div>
+                )
+              })}
+            </div>
+          </Card>
+        )}
+
         {/* Pending Requests */}
         <Card>
           <div className="flex items-center justify-between mb-3.5">

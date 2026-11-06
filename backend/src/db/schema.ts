@@ -39,6 +39,11 @@ export const advisingRequests = sqliteTable('advising_requests', {
   cancellationReason: text('cancellation_reason'),
   cancelledBy: text('cancelled_by'),
   cancelledAt: text('cancelled_at'),
+  closedAt: text('closed_at'),
+  // Optional student rating after the case is closed (1–5). Visible to the student and QA only.
+  satisfactionRating: integer('satisfaction_rating'),
+  satisfactionComment: text('satisfaction_comment'),
+  satisfactionAt: text('satisfaction_at'),
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull(),
 })
@@ -240,4 +245,15 @@ export const notifications = sqliteTable('notifications', {
   emailError: text('email_error'),
   createdAt: text('created_at').notNull(),
   readAt: text('read_at'),
+})
+
+// 18. Anonymous anytime feedback from students (bugs, complaints, suggestions).
+// Deliberately has NO student reference: nobody, including QA and admins, can see who sent it.
+// created_at is a date only (no time) so entries can't be matched to audit-log timestamps.
+export const studentFeedback = sqliteTable('student_feedback', {
+  id: text('id').primaryKey(), // random UUID, not time-based
+  topic: text('topic', { enum: ['advising', 'app_bug', 'other'] }).notNull(),
+  rating: integer('rating'), // optional 1–5
+  message: text('message').notNull(),
+  createdAt: text('created_at').notNull(),
 })

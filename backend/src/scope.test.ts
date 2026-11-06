@@ -59,6 +59,14 @@ describe('Record-level scoping', () => {
     }
   })
 
+  it('QA receives after-meeting ratings (FR-13) without the student identity', () => {
+    const rated = [{ ...requests[0], status: 'closed', satisfactionRating: 4, satisfactionComment: 'Helpful', satisfactionAt: '2026-11-06T09:00:00Z' }]
+    const [row] = scopeResponse('/api/requests', { requests: rated }, qa).requests
+    expect(row).toMatchObject({ satisfactionRating: 4, satisfactionComment: 'Helpful', satisfactionAt: '2026-11-06T09:00:00Z' })
+    expect(row).not.toHaveProperty('studentId')
+    expect(row).not.toHaveProperty('details')
+  })
+
   it('QA sees exit cases case-level, and only exit-case students are identifiable', () => {
     expect(scopeResponse('/api/exit-cases', { exitCases }, qa).exitCases).toEqual(exitCases)
     const qaUsers = scopeResponse('/api/users', { users }, qa).users

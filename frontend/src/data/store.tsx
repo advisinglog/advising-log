@@ -104,6 +104,10 @@ interface StoreActions {
   // Requests
   addRequest: (req: Omit<AdvisingRequest, 'id' | 'createdAt' | 'updatedAt'>) => Promise<AdvisingRequest>
   updateRequestStatus: (id: string, status: AdvisingRequest['status'], cancellation?: { reason: string; cancelledBy: string }) => void
+  /** Advisor review step: completed → closed. Throws if the server rejects it. */
+  closeRequest: (id: string) => Promise<void>
+  /** Student's optional 1–5 rating on a closed request. Throws if the server rejects it. */
+  submitRequestFeedback: (id: string, rating: number, comment?: string) => Promise<void>
 
   // Appointments
   addAppointment: (apt: Omit<Appointment, 'id' | 'createdAt'>) => Appointment
@@ -435,6 +439,24 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       } : {}),
     } : r))
     api.updateRequestStatus(id, status, cancellation?.reason, cancellation?.cancelledBy).catch(() => {})
+  }, [])
+
+  const closeRequest = useCallback(async (id: string) => {
+    // Wait for the server: a case must never look closed when it isn't
+    const res = await api.updateRequestStatus(id, 'closed')
+    if (!res?.success) throw new Error('CLOSE_FAILED')
+    setRequests(prev => prev.map(r => r.id === id ? { ...r, status: 'closed', closedAt: new Date().toISOString(), updatedAt: now() } : r))
+  }, [])
+
+  const submitRequestFeedback = useCallback(async (id: string, rating: number, comment?: string) => {
+    const res = await api.submitRequestFeedback(id, rating, comment?.trim() || undefined)
+    if (!res?.success) throw new Error('FEEDBACK_FAILED')
+    setRequests(prev => prev.map(r => r.id === id ? {
+      ...r,
+      satisfactionRating: rating,
+      satisfactionComment: comment?.trim() || null,
+      satisfactionAt: res.satisfactionAt,
+    } : r))
   }, [])
 
   const addAppointment = useCallback((apt: Omit<Appointment, 'id' | 'createdAt'>): Appointment => {
@@ -1162,7 +1184,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     users, roster, requests, appointments, sessions, followUps,
     notifications, earlyWarnings, earlyWarningFollowUps, followUpProgress, requestProgress, exitCases, advisorAssessments, studentVoiceResponses, completedVoiceStudents, documents,
     categoryConfigs, documentTypes, auditLogs, systemApiConfig, aiKeys,
-    addRequest, updateRequestStatus,
+    addRequest, updateRequestStatus, closeRequest, submitRequestFeedback,
     addAppointment, updateAppointmentStatus,
     confirmAppointment, declineAppointment,
     addSession, updateSession, deleteSession,

@@ -242,7 +242,7 @@ export default function StudentVoiceSurvey() {
   return (
     <div className="max-w-3xl mx-auto pb-12">
       <PageHeader
-        title={t('เสียงของนักศึกษา (กรณีลาออก/พักการศึกษา)', 'Student Voice — Resignation/Leave')}
+        title={t('แบบสำรวจก่อนออก (ลาออก / ลาพัก / โอนย้าย)', 'Exit Survey — Withdrawal, Leave or Transfer')}
         description={t(
           'แบบสอบถามโดยสมัครใจ เพื่อให้นักศึกษาเล่าด้วยคำพูดของตนเอง ข้อมูลใช้พัฒนาหลักสูตรเท่านั้นและไม่มีผลต่อกระบวนการลาออก',
           'Voluntary survey in your own words. Used only to improve the programme and does NOT affect your resignation process.'

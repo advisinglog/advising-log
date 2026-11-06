@@ -2,6 +2,8 @@ import { NavLink } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { useStore } from '@/data/store'
+import { isAdvisorMatch } from '@/utils/advisorUtils'
 import type { UserRole } from '@/types'
 import {
   LayoutDashboard,
@@ -22,6 +24,7 @@ import {
   GraduationCap,
   X,
   MessageSquareHeart,
+  MessageCircle,
   Bot,
 } from 'lucide-react'
 
@@ -29,12 +32,19 @@ interface NavItem {
   to: string
   label: string
   icon: React.ReactNode
+  /** Count of items waiting for this user (shown as a badge) */
+  badge?: number
 }
 
 export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const { currentUser } = useAuth()
   const { t } = useLanguage()
+  const store = useStore()
   if (!currentUser) return null
+
+  const newRequestCount = currentUser.role === 'advisor'
+    ? store.requests.filter(r => (r.status === 'requested' || r.status === 'pending') && isAdvisorMatch(r.advisorId, currentUser, store.users)).length
+    : 0
 
   function getNavItems(role: UserRole): NavItem[] {
     switch (role) {
@@ -45,13 +55,14 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
           { to: '/student/history', label: t('ประวัติและนัดหมาย', 'Meetings & History'), icon: <History className="h-4 w-4" /> },
           { to: '/student/followups', label: t('สิ่งที่ต้องทำต่อ', 'Tasks & Next Steps'), icon: <ListChecks className="h-4 w-4" /> },
           { to: '/student/forms', label: t('ดาวน์โหลดแบบฟอร์ม', 'Download Forms'), icon: <FileDown className="h-4 w-4" /> },
-          { to: '/student/voice', label: t('เสียงสะท้อนนักศึกษา', 'Student Feedback'), icon: <MessageSquareHeart className="h-4 w-4" /> },
+          { to: '/student/feedback', label: t('ข้อเสนอแนะ', 'Feedback'), icon: <MessageCircle className="h-4 w-4" /> },
+          { to: '/student/voice', label: t('แบบสำรวจก่อนออก', 'Exit Survey'), icon: <MessageSquareHeart className="h-4 w-4" /> },
         ]
       case 'advisor':
         return [
           { to: '/advisor', label: t('หน้าหลักอาจารย์', 'Advisor Dashboard'), icon: <LayoutDashboard className="h-4 w-4" /> },
           { to: '/advisor/advisees', label: t('นักศึกษาในความดูแล', 'My Advisees'), icon: <Users className="h-4 w-4" /> },
-          { to: '/advisor/sessions', label: t('ตารางนัดหมาย', 'Appointments'), icon: <CalendarClock className="h-4 w-4" /> },
+          { to: '/advisor/sessions', label: t('คำร้องและนัดหมาย', 'Requests & Appointments'), icon: <CalendarClock className="h-4 w-4" />, badge: newRequestCount },
           { to: '/advisor/log', label: t('บันทึกการเข้าพบ', 'Meeting Notes'), icon: <ClipboardList className="h-4 w-4" /> },
           { to: '/advisor/followups', label: t('งานติดตามผล', 'Follow-ups'), icon: <ListChecks className="h-4 w-4" /> },
           { to: '/advisor/warnings', label: t('นักศึกษาที่ต้องดูแลพิเศษ', 'Students Needing Support'), icon: <AlertTriangle className="h-4 w-4" /> },
@@ -144,6 +155,14 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
                     {item.icon}
                   </span>
                   <span className="flex-1">{item.label}</span>
+                  {item.badge ? (
+                    <span
+                      className="min-w-5 h-5 px-1.5 rounded-full bg-red-500 text-white text-[0.6875rem] font-bold flex items-center justify-center"
+                      aria-label={t(`คำร้องใหม่ ${item.badge} รายการ`, `${item.badge} new`)}
+                    >
+                      {item.badge > 99 ? '99+' : item.badge}
+                    </span>
+                  ) : null}
                 </>
               )}
             </NavLink>

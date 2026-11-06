@@ -13,6 +13,8 @@ import type {
   FollowUpProgress,
   ExitCase,
   StudentVoiceResponse,
+  StudentFeedback,
+  FeedbackTopic,
   EarlyWarningCase,
   AuditLog,
   AiApiKey,
@@ -205,6 +207,13 @@ class ApiClient {
     })
   }
 
+  async submitRequestFeedback(id: string, rating: number, comment?: string) {
+    return this.request<{ success: boolean; satisfactionAt: string }>(`/api/requests/${id}/feedback`, {
+      method: 'PATCH',
+      body: JSON.stringify({ rating, comment }),
+    })
+  }
+
   // --- Appointments & Sessions ---
   async getAppointments() {
     return this.request<{ appointments: Appointment[] }>('/api/appointments')
@@ -296,6 +305,18 @@ class ApiClient {
       method: 'PATCH',
       body: JSON.stringify(updates),
     })
+  }
+
+  // --- Anonymous feedback (students send, QA reads) ---
+  async submitFeedback(feedback: { topic: FeedbackTopic; rating?: number; message: string }) {
+    return this.request<{ success: boolean }>('/api/feedback', {
+      method: 'POST',
+      body: JSON.stringify(feedback),
+    })
+  }
+
+  async getFeedback() {
+    return this.request<{ feedback: StudentFeedback[] }>('/api/feedback')
   }
 
   async getStudentVoice() {

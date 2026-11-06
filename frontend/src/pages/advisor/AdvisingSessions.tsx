@@ -14,6 +14,8 @@ import { Calendar, Eye, FileText, Sparkles, Building2, Video, CheckCircle2, MapP
 import { isAdvisorMatch } from '@/utils/advisorUtils'
 import { openGoogleCalendarEvent, openAdvisorCalendar, buildAdvisorCalendarUrl } from '@/utils/calendarUtils'
 import { getLocalDateString } from '@/utils/dateUtils'
+import { isReadyToClose } from '@/utils/requestFlow'
+import { CloseCaseDialog } from '@/components/advisor/CloseCaseDialog'
 
 
 
@@ -48,6 +50,7 @@ export default function AdvisingSessions() {
   // Cancel reason modal state
   const [cancelReq, setCancelReq] = useState<AdvisingRequest | null>(null)
   const [cancelReason, setCancelReason] = useState('')
+  const [closeReq, setCloseReq] = useState<AdvisingRequest | null>(null)
 
   const viewedRequestsKey = currentUser ? `advising_log_viewed_requests_${currentUser.id}` : ''
 
@@ -182,7 +185,8 @@ export default function AdvisingSessions() {
       return
     }
 
-    const todayStr = new Date().toISOString().split('T')[0]
+    // Local (Thailand) date, not UTC: toISOString() would still say "yesterday" before 7am
+    const todayStr = getLocalDateString()
     if (schedDate < todayStr) {
       addToast('error', t('วันที่ไม่ถูกต้อง', 'Invalid Date'), t('ไม่สามารถเลือกวันที่ในอดีตได้', 'Cannot select a past date.'))
       return
@@ -456,6 +460,12 @@ export default function AdvisingSessions() {
                     </>
                   )}
 
+                  {isReadyToClose(r, store.sessions, store.followUps) && (
+                    <Button size="sm" onClick={() => { markRequestViewed(r.id); setCloseReq(r) }}>
+                      <CheckCircle2 className="h-3 w-3 mr-1" /> {t('ตรวจสอบและปิดเคส', 'Review & Close')}
+                    </Button>
+                  )}
+
                   {(r.status === 'completed' || r.status === 'closed' || session) && (
                     <Button
                       size="sm"
@@ -495,9 +505,11 @@ export default function AdvisingSessions() {
   return (
     <div>
       <PageHeader
-        title={t('ตารางนัดหมายและการเข้าพบ', 'Appointments & Advising Sessions')}
-        description={t('ตรวจสอบคำขอนัดหมาย ยืนยันเวลาเข้าพบ และบันทึกผลการพูดคุยกับนักศึกษา', 'Review meeting requests, confirm appointment slots, and record session notes.')}
+        title={t('คำร้องและนัดหมาย', 'Requests & Appointments')}
+        description={t('ตอบรับคำร้องใหม่ นัดเวลาเข้าพบ บันทึกผล และปิดเคสเมื่อนักศึกษาทำงานครบ', 'Accept new requests, schedule meetings, log notes, and close cases once the student finishes their tasks.')}
       />
+
+      <CloseCaseDialog request={closeReq} onClose={() => setCloseReq(null)} />
 
       <Tabs tabs={tabs} active={tab} onChange={setTab} />
 

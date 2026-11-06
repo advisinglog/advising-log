@@ -24,6 +24,7 @@ import {
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { uploadFileToCloudinary, getUploadErrorMessage } from '@/services/cloudinaryService'
+import { allFollowUpsDone } from '@/utils/requestFlow'
 import { getLocalDateString } from '@/utils/dateUtils'
 
 export default function FollowUps() {
@@ -176,16 +177,29 @@ export default function FollowUps() {
         status: 'submitted',
       })
 
-      // 3. Notify Advisor
+      // 3. Notify Advisor. If this was the case's last open task, ask them to review & close it.
       if (selectedTask.advisorId) {
-        store.addNotification({
-          userId: selectedTask.advisorId,
-          type: 'info',
-          title: t('นักศึกษารายงานผลงานมอบหมายแล้ว', 'Student Submitted Follow-up Task'),
-          message: `${currentUser!.name} (${currentUser!.code || currentUser!.id}) ${t('ได้ส่งรายงานผลงาน:', 'submitted report for:')} "${selectedTask.task}"`,
-          relatedId: selectedTask.id,
-          isRead: false,
-        })
+        const caseFinished = Boolean(selectedTask.requestId) && allFollowUpsDone(
+          selectedTask.requestId!,
+          store.followUps.map(f => f.id === selectedTask.id ? { ...f, status: 'completed' as const } : f),
+        )
+        store.addNotification(caseFinished
+          ? {
+              userId: selectedTask.advisorId,
+              type: 'action_required',
+              title: t('นักศึกษาทำงานครบแล้ว — พร้อมปิดเคส', 'All tasks done — ready to review & close'),
+              message: `${currentUser!.name} (${currentUser!.code || currentUser!.id}) ${t('ทำงานติดตามผลครบทุกข้อแล้ว กรุณาตรวจสอบและปิดเคส', 'has finished every follow-up task. Please review and close the case.')}`,
+              relatedId: selectedTask.requestId,
+              isRead: false,
+            }
+          : {
+              userId: selectedTask.advisorId,
+              type: 'info',
+              title: t('นักศึกษารายงานผลงานมอบหมายแล้ว', 'Student Submitted Follow-up Task'),
+              message: `${currentUser!.name} (${currentUser!.code || currentUser!.id}) ${t('ได้ส่งรายงานผลงาน:', 'submitted report for:')} "${selectedTask.task}"`,
+              relatedId: selectedTask.id,
+              isRead: false,
+            })
       }
 
       // 4. Audit Log

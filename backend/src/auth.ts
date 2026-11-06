@@ -168,6 +168,7 @@ const ROUTE_RULES: Array<[method: string, path: RegExp, roles: Role[]]> = [
   // Advising workflow
   ['POST', /^\/api\/requests$/, ['student']],
   ['PATCH', /^\/api\/requests\/[^/]+\/status$/, ['student', 'advisor', ...ADMINS]],
+  ['PATCH', /^\/api\/requests\/[^/]+\/feedback$/, ['student']],
   ['DELETE', /^\/api\/requests\/[^/]+$/, ADMINS],
   ['POST', /^\/api\/appointments$/, ['advisor']],
   ['PATCH', /^\/api\/appointments\/[^/]+\/status$/, ['student', 'advisor']],
@@ -179,6 +180,9 @@ const ROUTE_RULES: Array<[method: string, path: RegExp, roles: Role[]]> = [
   ['POST', /^\/api\/exit-cases$/, ['student', 'advisor']],
   ['PATCH', /^\/api\/exit-cases\/[^/]+$/, ['student', 'advisor', 'qa_chair', ...ADMINS]],
   ['POST', /^\/api\/student-voice$/, ['student']],
+  // Anonymous feedback: any student may send; only QA may read
+  ['POST', /^\/api\/feedback$/, ['student']],
+  ['GET', /^\/api\/feedback$/, ['qa_chair']],
   ['POST', /^\/api\/early-warnings$/, ['advisor']],
   ['POST', /^\/api\/documents$/, ['student', 'advisor']],
   ['DELETE', /^\/api\/documents\/[^/]+$/, ['student', 'advisor', ...ADMINS]],

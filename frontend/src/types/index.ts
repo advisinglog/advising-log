@@ -148,6 +148,8 @@ export type AuditAction =
   | 'user_login'
   | 'request_created'
   | 'request_updated'
+  | 'request_feedback_submitted'
+  | 'feedback_submitted'
   | 'appointment_scheduled'
   | 'session_completed'
   | 'log_created'
@@ -213,8 +215,23 @@ export interface AdvisingRequest {
   cancellationReason?: string
   cancelledBy?: string
   cancelledAt?: string
+  closedAt?: string
+  /** Optional 1–5 rating the student gives after the case is closed (only returned to the student and QA) */
+  satisfactionRating?: number | null
+  satisfactionComment?: string | null
+  satisfactionAt?: string | null
   createdAt: string
   updatedAt: string
+}
+
+/** Anonymous anytime feedback. Has no student reference by design. */
+export type FeedbackTopic = 'advising' | 'app_bug' | 'other'
+export interface StudentFeedback {
+  id: string
+  topic: FeedbackTopic
+  rating?: number | null
+  message: string
+  createdAt: string // date only
 }
 
 export interface RequestProgress {

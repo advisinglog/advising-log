@@ -12,6 +12,8 @@ import { useNavigate } from 'react-router-dom'
 import { PageHeader, Card, StatCard, Button } from '@/components/ui'
 import { EXIT_REASON_CODES, STUDENT_VOICE_FACTORS } from '@/types'
 import { exportAunQaExcelReport } from '@/utils/exportUtils'
+import { AdvisingSatisfactionPanel } from '@/components/qa/AdvisingSatisfactionPanel'
+import { AnonymousFeedbackPanel } from '@/components/qa/AnonymousFeedbackPanel'
 import {
   BarChart3,
   TrendingUp,
@@ -316,6 +318,12 @@ export default function QADashboard() {
             />
             <StatCard label={t('เคสเตือนภัยวิชาการ', 'Early Warnings')} value={totalWarnings} icon={<AlertTriangle className="h-5 w-5" />} color="amber" onClick={() => navigate('/advisor/warnings')} />
           </div>
+
+          {/* FR-13/FR-15: after-meeting satisfaction, each score traceable to its case */}
+          <AdvisingSatisfactionPanel />
+
+          {/* Anonymous anytime feedback from all students */}
+          <AnonymousFeedbackPanel />
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Category Distribution */}

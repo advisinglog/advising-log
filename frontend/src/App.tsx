@@ -22,6 +22,7 @@ const AdvisingDetail = lazy(() => import('@/pages/student/AdvisingDetail'))
 const StudentForms = lazy(() => import('@/pages/student/StudentForms'))
 const FollowUps = lazy(() => import('@/pages/student/FollowUps'))
 const StudentVoiceSurvey = lazy(() => import('@/pages/student/StudentVoiceSurvey'))
+const StudentFeedbackPage = lazy(() => import('@/pages/student/Feedback'))
 
 // Advisor Pages
 const AdvisorDashboard = lazy(() => import('@/pages/advisor/AdvisorDashboard'))
@@ -98,6 +99,7 @@ export default function App() {
                       <Route path="student/followups" element={<RequireRole allowedRoles={['student']}><FollowUps /></RequireRole>} />
                       <Route path="student/exit" element={<Navigate to="/student/request?category=withdrawal_leave" replace />} />
                       <Route path="student/voice" element={<RequireRole allowedRoles={['student']}><StudentVoiceSurvey /></RequireRole>} />
+                      <Route path="student/feedback" element={<RequireRole allowedRoles={['student']}><StudentFeedbackPage /></RequireRole>} />
 
                       {/* Advisor Routes */}
                       <Route path="advisor" element={<RequireRole allowedRoles={['advisor']}><AdvisorDashboard /></RequireRole>} />

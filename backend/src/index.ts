@@ -187,6 +187,8 @@ app.use('/api/*', async (c, next) => {
 const AUDIT_ACTIONS: Array<[method: string, path: RegExp, action: string]> = [
   ['POST', /^\/api\/requests$/, 'request_created'],
   ['PATCH', /^\/api\/requests\/[^/]+\/status$/, 'request_updated'],
+  ['PATCH', /^\/api\/requests\/[^/]+\/feedback$/, 'request_feedback_submitted'],
+  ['POST', /^\/api\/feedback$/, 'feedback_submitted'],
   ['DELETE', /^\/api\/requests\/[^/]+$/, 'request_deleted'],
   ['POST', /^\/api\/appointments$/, 'appointment_scheduled'],
   ['PATCH', /^\/api\/appointments\/[^/]+\/status$/, 'appointment_updated'],
@@ -379,7 +381,7 @@ app.use('/api/*', async (c, next) => {
   }
 
   // 1. Changing or deleting an existing record
-  const existing = path.match(/^\/api\/(requests|appointments|follow-ups|exit-cases|documents)\/([^/]+)(?:\/status)?$/)
+  const existing = path.match(/^\/api\/(requests|appointments|follow-ups|exit-cases|documents)\/([^/]+)(?:\/(?:status|feedback))?$/)
   if (existing) {
     const table = OWNED_TABLES[existing[1] as keyof typeof OWNED_TABLES]
     const rec = await database.select().from(table).where(eq(table.id, decodeURIComponent(existing[2]))).get() as any
@@ -1377,7 +1379,18 @@ app.get('/api/requests', async (c) => {
     }
   }
 
+  // The satisfaction rating is the student's private evaluation of their advisor:
+  // only the student who gave it and QA (for aggregate C6 reporting) may see it.
+  const viewerRole = c.get('auth')?.role
+  const canSeeRating = viewerRole === 'student' || viewerRole === 'qa_chair'
+
   function normalizeReq(r: any) {
+    if (!canSeeRating) {
+      r = { ...r }
+      delete r.satisfactionRating
+      delete r.satisfactionComment
+      delete r.satisfactionAt
+    }
     let att = []
     if (Array.isArray(r.attachments)) {
       att = r.attachments
@@ -1515,9 +1528,20 @@ app.patch('/api/requests/:id/status', async (c) => {
       return c.json({ error: 'A cancellation reason is required.' }, 400)
     }
   }
+  if (body.status === 'closed') {
+    // Closing is the advisor's review step; a student cannot close their own case
+    if (c.get('auth')?.role === 'student') return c.json({ error: 'Only the advisor can close a case.' }, 403)
+    const current = await database.select({ status: schema.advisingRequests.status })
+      .from(schema.advisingRequests).where(eq(schema.advisingRequests.id, id)).get()
+    if (!current) return c.json({ error: 'Request not found.' }, 404)
+    if (current.status !== 'completed') return c.json({ error: 'Only a completed request can be closed.' }, 409)
+  }
   const updates: Record<string, any> = {
     status: body.status,
     updatedAt: new Date().toISOString().split('T')[0],
+  }
+  if (body.status === 'closed') {
+    updates.closedAt = new Date().toISOString()
   }
   if (body.cancellationReason !== undefined) {
     updates.cancellationReason = body.cancellationReason
@@ -1530,6 +1554,74 @@ app.patch('/api/requests/:id/status', async (c) => {
     .set(updates)
     .where(eq(schema.advisingRequests.id, id))
   return c.json({ success: true })
+})
+
+// Optional satisfaction rating, given once by the student after the case is closed.
+// Ownership (student's own request) is enforced by the record-ownership middleware.
+const requestFeedbackSchema = z.object({
+  rating: z.number().int().min(1).max(5),
+  comment: z.string().trim().max(500).optional(),
+})
+
+app.patch('/api/requests/:id/feedback', async (c) => {
+  const database = db(c)
+  if (!database) return c.json({ error: 'Database unavailable' }, 503)
+
+  const parsed = requestFeedbackSchema.safeParse(await c.req.json().catch(() => null))
+  if (!parsed.success) return c.json({ error: 'Rating must be a whole number from 1 to 5.' }, 400)
+
+  const id = c.req.param('id')
+  const current = await database.select({
+    status: schema.advisingRequests.status,
+    satisfactionRating: schema.advisingRequests.satisfactionRating,
+  }).from(schema.advisingRequests).where(eq(schema.advisingRequests.id, id)).get()
+  if (!current) return c.json({ error: 'Request not found.' }, 404)
+  if (current.status !== 'closed') return c.json({ error: 'Feedback can only be given after the case is closed.' }, 409)
+  if (current.satisfactionRating != null) return c.json({ error: 'Feedback has already been submitted.' }, 409)
+
+  const satisfactionAt = new Date().toISOString()
+  await database.update(schema.advisingRequests)
+    .set({
+      satisfactionRating: parsed.data.rating,
+      satisfactionComment: parsed.data.comment || null,
+      satisfactionAt,
+    })
+    .where(eq(schema.advisingRequests.id, id))
+  return c.json({ success: true, satisfactionAt })
+})
+
+// ---------------------------------------------------------------
+// Anonymous anytime feedback. The sender is never stored, and the response carries
+// no id, so the audit log records *that* a student sent feedback but not *which* entry.
+// ---------------------------------------------------------------
+const anonymousFeedbackSchema = z.object({
+  topic: z.enum(['advising', 'app_bug', 'other']),
+  rating: z.number().int().min(1).max(5).optional(),
+  message: z.string().trim().min(1).max(1000),
+})
+
+app.post('/api/feedback', async (c) => {
+  const database = db(c)
+  if (!database) return c.json({ error: 'Database unavailable' }, 503)
+
+  const parsed = anonymousFeedbackSchema.safeParse(await c.req.json().catch(() => null))
+  if (!parsed.success) return c.json({ error: 'Please choose a topic and write a message (up to 1000 characters).' }, 400)
+
+  await database.insert(schema.studentFeedback).values({
+    id: crypto.randomUUID(),
+    topic: parsed.data.topic,
+    rating: parsed.data.rating ?? null,
+    message: parsed.data.message,
+    createdAt: new Date().toISOString().split('T')[0],
+  })
+  return c.json({ success: true }, 201)
+})
+
+app.get('/api/feedback', async (c) => {
+  const database = db(c)
+  if (!database) return c.json({ feedback: [] })
+  const feedback = await database.select().from(schema.studentFeedback).orderBy(desc(schema.studentFeedback.createdAt))
+  return c.json({ feedback })
 })
 
 app.delete('/api/requests/:id', async (c) => {

@@ -11,6 +11,7 @@ import type { RequestStatus, FollowUpStatus, ReferralStatus, ExitCaseStatus, App
 
 export { ThemeToggle } from './ThemeToggle'
 export { FontSizeControl } from './FontSizeControl'
+export { StarRating, StarDisplay, RATING_LABELS } from './StarRating'
 export { DocumentViewerModal, type DocumentViewerTarget } from './DocumentViewerModal'
 
 // --- Custom Select Dropdown ---

@@ -59,7 +59,7 @@ describe('Student Voice Feature', () => {
     renderWithProviders(<StudentVoiceSurvey />)
 
     // Heading and voluntary disclaimer
-    expect(screen.getByRole('heading', { name: /เสียงของนักศึกษา/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /แบบสำรวจก่อนออก/i })).toBeInTheDocument()
     expect(screen.getByText(/AUN-QA Criteria 6 & 8/i)).toBeInTheDocument()
     expect(screen.getByText(/แบบสอบถามโดยสมัครใจ/i)).toBeInTheDocument()
 

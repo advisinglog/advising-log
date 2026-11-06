@@ -59,12 +59,12 @@ advising-log/
 │   └── src/
 │       ├── index.ts       # Hono API routes & middleware
 │       └── db/
-│           ├── schema.ts  # Drizzle ORM table definitions (16 tables)
+│           ├── schema.ts  # Drizzle ORM table definitions (18 tables)
 │           └── seed.sql   # Initial seed data
 └── slide/                 # Course lecture slides (W2–W6, CoffeeAI case study)
 ```
 
-## 5. Database Schema (16 tables in Drizzle ORM)
+## 5. Database Schema (18 tables in Drizzle ORM)
 
 1. `users` — Student, Advisor, QA Chair, Admin accounts
 2. `student_advisor_assignments` — Roster mapping (student ↔ advisor)
@@ -82,6 +82,11 @@ advising-log/
 14. `ai_api_keys` — Multi-key AI governance configuration
 15. `advising_category_configs` — Admin-configurable advising categories (TH/EN labels)
 16. `document_type_configs` — Admin-configurable document types with format/size rules
+17. `notifications` — In-app notifications and email delivery state
+18. `student_feedback` — Anonymous anytime student feedback (no student reference by design; QA-only read)
+
+`advising_requests` also holds the optional after-meeting satisfaction rating (FR-13), visible only to
+the student who gave it and to QA.
 
 ## 6. Core Workflow (1 locked workflow for Alpha Demo)
 

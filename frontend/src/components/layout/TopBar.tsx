@@ -161,7 +161,9 @@ export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
         navigate('/student/history')
       }
     } else if (currentUser.role === 'advisor') {
-      if (rel.startsWith('APT') || rel.startsWith('REQ')) {
+      if (rel.startsWith('REQ') && store.requests.find(r => r.id === rel)?.status === 'completed') {
+        navigate('/advisor') // dashboard shows the Ready to Close card
+      } else if (rel.startsWith('APT') || rel.startsWith('REQ')) {
         navigate('/advisor/sessions')
       } else if (rel.startsWith('EW') || rel.startsWith('EWF')) {
         navigate('/advisor/warnings')
