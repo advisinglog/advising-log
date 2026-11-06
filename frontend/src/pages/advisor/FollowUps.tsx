@@ -6,9 +6,10 @@ import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { isAdvisorMatch } from '@/utils/advisorUtils'
 import { PageHeader, StatusBadge, EmptyState, Button, Tabs, SearchInput } from '@/components/ui'
-import { ListChecks, ArrowRight, CheckCircle2, RotateCcw, Calendar, Clock, User, Check } from 'lucide-react'
+import { ListChecks, ListPlus, ArrowRight, CheckCircle2, RotateCcw, Calendar, Clock, User, Check } from 'lucide-react'
 import { getLocalDateString } from '@/utils/dateUtils'
 import type { FollowUp } from '@/types'
+import { AddFollowUpModal } from '@/components/advisor/FollowUpTasks'
 
 export default function AdvisorFollowUps() {
   const { currentUser } = useAuth()
@@ -21,6 +22,7 @@ export default function AdvisorFollowUps() {
   const initialTab = (location.state as { showAll?: boolean } | null)?.showAll ? 'completed' : 'pending'
   const [activeTab, setActiveTab] = useState<'pending' | 'completed'>(initialTab)
   const [search, setSearch] = useState('')
+  const [showAddTask, setShowAddTask] = useState(false)
 
   if (!currentUser) return null
 
@@ -97,11 +99,21 @@ export default function AdvisorFollowUps() {
           'Track assigned student action items, monitor deadlines, and view completed task history.'
         )}
         actions={
-          <Button variant="secondary" onClick={() => navigate('/advisor/sessions')}>
-            {t('กลับไปหน้าการนัดหมาย', 'Back to Sessions')} <ArrowRight className="h-4 w-4 ml-1.5" />
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            {currentUser.role === 'advisor' && (
+              <Button onClick={() => setShowAddTask(true)}>
+                <ListPlus className="h-4 w-4 mr-1.5" />
+                {t('เพิ่มงานติดตามผล', 'Add Task')}
+              </Button>
+            )}
+            <Button variant="secondary" onClick={() => navigate('/advisor/sessions')}>
+              {t('กลับไปหน้าการนัดหมาย', 'Back to Sessions')} <ArrowRight className="h-4 w-4 ml-1.5" />
+            </Button>
+          </div>
         }
       />
+
+      <AddFollowUpModal isOpen={showAddTask} onClose={() => setShowAddTask(false)} />
 
       {/* Tabs Switch: In Progress vs Completed */}
       <Tabs

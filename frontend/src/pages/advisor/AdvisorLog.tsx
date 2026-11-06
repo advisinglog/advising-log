@@ -23,6 +23,7 @@ import {
 } from 'lucide-react'
 
 import { isAdvisorMatch } from '@/utils/advisorUtils'
+import { FollowUpTaskFields, emptyFollowUpDraft, useAssignFollowUps, useCheckDrafts, type FollowUpDraft } from '@/components/advisor/FollowUpTasks'
 import { getLocalDateString } from '@/utils/dateUtils'
 import type { AdvisingRequest, AdvisingCategory, User as UserType } from '@/types'
 
@@ -52,8 +53,9 @@ export default function AdvisorLog() {
   // Existing logs are editable only through the Saved Log tab.
   const [editingRequestId, setEditingRequestId] = useState('')
   const [summary, setSummary] = useState('')
-  const [followUpTask, setFollowUpTask] = useState('')
-  const [followUpDate, setFollowUpDate] = useState('')
+  const [followUpRows, setFollowUpRows] = useState<FollowUpDraft[]>([emptyFollowUpDraft()])
+  const assignFollowUps = useAssignFollowUps()
+  const checkFollowUpDrafts = useCheckDrafts()
   const [previewDoc, setPreviewDoc] = useState<DocumentViewerTarget | null>(null)
   const [viewingSessionId, setViewingSessionId] = useState<string | null>(null)
   const [savedCategoryFilter, setSavedCategoryFilter] = useState('')
@@ -335,23 +337,7 @@ export default function AdvisorLog() {
       return
     }
 
-    if (followUpTask.trim() && !followUpDate) {
-      addToast(
-        'error',
-        t('กรุณาระบุวันกำหนดส่ง', 'Due Date Required'),
-        t('กรุณาระบุวันที่กำหนดส่งสำหรับงานติดตามผลที่มอบหมาย', 'Please select a due date for the assigned follow-up task.')
-      )
-      return
-    }
-
-    if (!followUpTask.trim() && followUpDate) {
-      addToast(
-        'error',
-        t('กรุณาระบุชื่องานติดตามผล', 'Follow-up Task Required'),
-        t('กรุณาระบุรายละเอียดงานที่ต้องการมอบหมาย', 'Please specify the follow-up task description.')
-      )
-      return
-    }
+    if (!checkFollowUpDrafts(followUpRows, false)) return
 
     if (isWalkIn && (!walkInCategory || !walkInConsent)) {
       addToast(
@@ -436,34 +422,8 @@ export default function AdvisorLog() {
       targetId: session.id,
     })
 
-    // Create follow-up if specified
-    if (followUpTask.trim() && followUpDate) {
-      const fu = store.addFollowUp({
-        sessionId: session.id,
-        requestId: reqId,
-        studentId: targetStudentId,
-        advisorId: currentUser!.id,
-        task: followUpTask.trim(),
-        dueDate: followUpDate,
-        status: 'pending',
-      })
-      store.addNotification({
-        userId: targetStudentId,
-        type: 'action_required',
-        title: t('งานติดตามผลใหม่จากอาจารย์', 'New Follow-up Task'),
-        message: `${t('อาจารย์มอบหมายงานติดตามผล:', 'Your advisor has assigned a follow-up:')} ${followUpTask.trim()}`,
-        relatedId: fu.id,
-        isRead: false,
-      })
-      store.addAuditLog({
-        userId: currentUser!.id,
-        userName: currentUser!.name,
-        userRole: 'advisor',
-        action: 'followup_created',
-        description: `Created follow-up for ${student?.name || targetStudentId}: ${followUpTask.trim()}`,
-        targetId: fu.id,
-      })
-    }
+    // Create the follow-up tasks (any number, each with its own due date)
+    assignFollowUps({ drafts: followUpRows, requestId: reqId, sessionId: session.id, studentId: targetStudentId })
 
     addToast(
       'success',
@@ -478,8 +438,7 @@ export default function AdvisorLog() {
     setWalkInConsent(false)
     setSection('saved')
     setSummary('')
-    setFollowUpTask('')
-    setFollowUpDate('')
+    setFollowUpRows([emptyFollowUpDraft()])
     setViewingSessionId(session.id)
   }
 
@@ -1144,7 +1103,7 @@ export default function AdvisorLog() {
             <div className="border-t border-slate-100 dark:border-slate-800 pt-4">
               <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 mb-1 flex items-center gap-1.5">
                 <PlusCircle className="h-4 w-4 text-sky-600 dark:text-sky-400" />
-                <span>{t('มอบหมายงานติดตามผล (ไม่บังคับ)', 'Assign Follow-up Task (Optional)')}</span>
+                <span>{t('มอบหมายงานติดตามผล (ไม่บังคับ)', 'Assign Follow-up Tasks (Optional)')}</span>
               </h3>
               <p className="text-[0.6875rem] text-slate-500 dark:text-slate-400 mb-3">
                 {t(
@@ -1152,26 +1111,7 @@ export default function AdvisorLog() {
                   'Assign an action item if the student needs to submit documents or report progress.'
                 )}
               </p>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="sm:col-span-2">
-                  <input
-                    type="text"
-                    value={followUpTask}
-                    onChange={e => setFollowUpTask(e.target.value)}
-                    placeholder={t('เช่น นำส่งใบคำร้องขอถอนรายวิชา, ส่งเอกสารทุนการศึกษา...', 'e.g. Submit course withdrawal form, submit scholarship receipt...')}
-                    className="w-full px-3 py-2 text-xs sm:text-sm border border-slate-200/90 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-xs"
-                  />
-                </div>
-                <div>
-                  <input
-                    type="date"
-                    min={getLocalDateString()}
-                    value={followUpDate}
-                    onChange={e => setFollowUpDate(e.target.value)}
-                    className="w-full px-3 py-2 text-xs sm:text-sm border border-slate-200/90 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 shadow-xs"
-                  />
-                </div>
-              </div>
+              <FollowUpTaskFields rows={followUpRows} onChange={setFollowUpRows} />
             </div>
 
             {/* Submit Action Buttons */}
