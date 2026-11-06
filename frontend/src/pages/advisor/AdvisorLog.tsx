@@ -240,11 +240,14 @@ export default function AdvisorLog() {
 
   function handleToggleFollowUp(fuId: string, status: 'completed' | 'in_progress', taskName: string) {
     store.updateFollowUpStatus(fuId, status)
+    if (status === 'completed') {
+      setShowCompletedTasks(true)
+    }
     addToast(
       'success',
       t('บันทึกความคืบหน้าเรียบร้อย', 'Follow-up Updated'),
       status === 'completed'
-        ? t(`ทำเครื่องหมายงาน "${taskName}" เสร็จสิ้นแล้ว`, `Marked "${taskName}" as completed.`)
+        ? t(`ทำเครื่องหมายงาน "${taskName}" เสร็จสิ้นแล้ว (ย้ายไปหมวดเสร็จสิ้นด้านล่าง)`, `Marked "${taskName}" as completed (moved to Completed list below).`)
         : t(`ปรับสถานะงาน "${taskName}" เป็นกำลังดำเนินการ`, `Marked "${taskName}" in progress.`)
     )
   }
@@ -784,17 +787,22 @@ export default function AdvisorLog() {
                     <button
                       type="button"
                       onClick={() => setShowCompletedTasks(!showCompletedTasks)}
-                      className="text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 flex items-center gap-1.5 cursor-pointer"
+                      className="text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 flex items-center justify-between w-full cursor-pointer py-0.5"
                     >
-                      <ChevronDown
-                        className={cn('h-3.5 w-3.5 transition-transform duration-200', showCompletedTasks ? 'rotate-180' : '')}
-                      />
-                      {showCompletedTasks
-                        ? t('ซ่อนประวัติงานที่ทำเสร็จแล้ว', 'Hide finished tasks')
-                        : t(
-                            `ดูประวัติงานที่นักศึกษาทำเสร็จแล้ว (${completedFollowUps.length})`,
-                            `Show tasks this student already finished (${completedFollowUps.length})`
-                          )}
+                      <span className="flex items-center gap-1.5">
+                        <ChevronDown
+                          className={cn('h-3.5 w-3.5 transition-transform duration-200', showCompletedTasks ? 'rotate-180' : '')}
+                        />
+                        {showCompletedTasks
+                          ? t('ซ่อนประวัติงานที่ทำเสร็จแล้ว', 'Hide finished tasks')
+                          : t(
+                              `ดูประวัติงานที่นักศึกษาทำเสร็จแล้ว (${completedFollowUps.length})`,
+                              `Show tasks this student already finished (${completedFollowUps.length})`
+                            )}
+                      </span>
+                      <span className="text-[0.625rem] bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-bold px-2 py-0.5 rounded-full">
+                        {completedFollowUps.length} {t('รายการที่เสร็จสิ้น', 'completed')}
+                      </span>
                     </button>
                     {showCompletedTasks && (
                       <p className="text-[0.6875rem] text-slate-500 dark:text-slate-400 mt-1.5">
@@ -824,6 +832,14 @@ export default function AdvisorLog() {
                                   </p>
                                 )}
                               </div>
+                              <button
+                                type="button"
+                                onClick={() => handleToggleFollowUp(cfu.id, 'in_progress', cfu.task)}
+                                title={t('นำกลับมาติดตามต่อ', 'Reopen task')}
+                                className="text-[0.6875rem] text-slate-500 hover:text-sky-600 dark:hover:text-sky-400 underline cursor-pointer self-start shrink-0"
+                              >
+                                {t('เปิดใหม่', 'Reopen')}
+                              </button>
                             </div>
                           )
                         })}
