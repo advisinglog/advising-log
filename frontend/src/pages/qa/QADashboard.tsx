@@ -144,10 +144,9 @@ export default function QADashboard() {
     students: store.roster.filter(r => r.advisorId === a.id && r.isActive).length,
   }))
 
-  // Keep the dashboard metric consistent with the AUN-QA export:
-  // completed advising requests divided by all advising requests.
-  const completedRequests = store.requests.filter(r => r.status === 'completed' || r.status === 'closed').length
-  const completionRate = totalRequests > 0 ? Math.round((completedRequests / totalRequests) * 100) : 100
+  // Follow-up completion is the C6 KPI defined by the design specification.
+  const completedFollowUps = store.followUps.filter(f => f.status === 'completed').length
+  const completionRate = totalFollowUps > 0 ? Math.round((completedFollowUps / totalFollowUps) * 100) : 0
 
   // Student Voice Statistics
   const avgCurriculum = totalVoiceResponses > 0
@@ -307,7 +306,7 @@ export default function QADashboard() {
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
             <StatCard label={t('คำร้องทั้งหมด', 'Total Requests')} value={totalRequests} icon={<BarChart3 className="h-5 w-5" />} color="sky" onClick={() => navigate('/advisor/sessions')} />
             <StatCard label={t('ให้คำปรึกษาสำเร็จ', 'Completed Sessions')} value={totalSessions} icon={<CalendarClock className="h-5 w-5" />} color="sky" onClick={() => navigate('/advisor/sessions', { state: { tab: 'completed' } })} />
-            <StatCard label={t('งานติดตามผลทั้งหมด', 'Total Follow-ups')} value={totalFollowUps} icon={<ListChecks className="h-5 w-5" />} color="sky" onClick={() => navigate('/advisor/followups')} />
+            <StatCard label={t('งานติดตามผลทั้งหมด', 'Total Follow-ups')} value={totalFollowUps} icon={<ListChecks className="h-5 w-5" />} color="sky" onClick={() => navigate('/advisor/followups', { state: { showAll: true } })} />
             <StatCard label={t('อัตราสำเร็จของงาน', 'Completion Rate')} value={`${completionRate}%`} icon={<TrendingUp className="h-5 w-5" />} color="sky" onClick={() => navigate('/advisor/sessions', { state: { tab: 'completed' } })} />
             <StatCard
               label={t('เคสขอลาออก/ลาพัก', 'Exit & Leaves')}

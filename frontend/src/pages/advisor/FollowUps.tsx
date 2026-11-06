@@ -4,25 +4,32 @@ import { useLanguage } from '@/contexts/LanguageContext'
 import { isAdvisorMatch } from '@/utils/advisorUtils'
 import { PageHeader, StatusBadge, EmptyState, Button } from '@/components/ui'
 import { ListChecks, ArrowRight } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 export default function AdvisorFollowUps() {
   const { currentUser } = useAuth()
   const store = useStore()
   const { t } = useLanguage()
+  const location = useLocation()
   const navigate = useNavigate()
 
   if (!currentUser) return null
 
+  const showAll = (location.state as { showAll?: boolean } | null)?.showAll === true
   const followUps = store.followUps
-    .filter(f => (currentUser.role === 'qa_chair' || isAdvisorMatch(f.advisorId, currentUser, store.users)) && f.status !== 'completed')
+    .filter(f =>
+      (currentUser.role === 'qa_chair' || isAdvisorMatch(f.advisorId, currentUser, store.users)) &&
+      (showAll || f.status !== 'completed')
+    )
     .sort((a, b) => (a.dueDate || '').localeCompare(b.dueDate || ''))
 
   return (
     <div>
       <PageHeader
-        title={t('งานติดตามผลค้างอยู่', 'Open Follow-up Tasks')}
-        description={t('ตรวจสอบงานที่มอบหมายให้นักศึกษาและติดตามสถานะการดำเนินงาน', 'Review assigned student tasks and track their progress.')}
+        title={showAll ? t('งานติดตามผลทั้งหมด', 'All Follow-up Tasks') : t('งานติดตามผลค้างอยู่', 'Open Follow-up Tasks')}
+        description={showAll
+          ? t('ตรวจสอบงานติดตามผลทั้งหมด รวมงานที่ดำเนินการเสร็จแล้ว', 'Review all follow-up tasks, including completed tasks.')
+          : t('ตรวจสอบงานที่มอบหมายให้นักศึกษาและติดตามสถานะการดำเนินงาน', 'Review assigned student tasks and track their progress.')}
         actions={
           <Button variant="secondary" onClick={() => navigate('/advisor/sessions')}>
             {t('กลับไปหน้าการนัดหมาย', 'Back to Sessions')} <ArrowRight className="h-4 w-4 ml-1.5" />
