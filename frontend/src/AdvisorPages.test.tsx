@@ -146,7 +146,7 @@ describe('Advisor Pages Audit & Resilience Tests', () => {
 
     expect(screen.getByText(/บันทึกผลการเข้าพบอาจารย์ที่ปรึกษา|Advisor Log Entry/i)).toBeInTheDocument()
     expect(screen.getAllByText(/Tanawat Rungroj/i).length).toBeGreaterThan(0)
-    expect(screen.getByText(/งานที่มอบหมายไว้จากครั้งก่อนหน้า|Previous Assigned Follow-up Tasks/i)).toBeInTheDocument()
+    expect(screen.getByText(/งานที่ยังค้างจากการเข้าพบครั้งก่อน|Unfinished tasks from earlier meetings/i)).toBeInTheDocument()
   })
   it('allows advisor to view full details of saved advising logs and switch to edit mode', () => {
     renderWithProviders(<AdvisorLog />)

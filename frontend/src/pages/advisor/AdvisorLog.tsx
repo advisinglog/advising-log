@@ -221,7 +221,22 @@ export default function AdvisorLog() {
       )
     : []
   const pendingFollowUps = studentFollowUps.filter(f => f.status !== 'completed')
-  const completedFollowUps = studentFollowUps.filter(f => f.status === 'completed')
+  const completedFollowUps = studentFollowUps
+    .filter(f => f.status === 'completed')
+    .sort((a, b) => (b.completedAt || '').localeCompare(a.completedAt || ''))
+
+  // Which meeting a task came from, so the lists make sense on their own
+  function taskSource(fu: { requestId?: string; sessionId?: string }): string {
+    const req = fu.requestId ? store.requests.find(r => r.id === fu.requestId) : undefined
+    const ses = fu.sessionId ? store.sessions.find(s => s.id === fu.sessionId) : undefined
+    const parts = [req ? getCategoryLabel(req.category) : '', ses?.sessionDate || ''].filter(Boolean)
+    return parts.join(' · ')
+  }
+  function studentReport(fuId: string): string {
+    return store.followUpProgress
+      .filter(p => p.followUpId === fuId)
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0]?.notes || ''
+  }
 
   function handleToggleFollowUp(fuId: string, status: 'completed' | 'in_progress', taskName: string) {
     store.updateFollowUpStatus(fuId, status)
@@ -647,12 +662,12 @@ export default function AdvisorLog() {
                     </div>
                     <div>
                       <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100">
-                        {t('งานที่มอบหมายไว้จากครั้งก่อนหน้า (การบ้าน/สิ่งที่ต้องทำต่อ)', 'Previous Assigned Follow-up Tasks')}
+                        {t('งานที่ยังค้างจากการเข้าพบครั้งก่อน', 'Unfinished tasks from earlier meetings')}
                       </h4>
                       <p className="text-[0.6875rem] text-slate-600 dark:text-slate-400">
                         {t(
-                          'ดึงงานเดิมของนักศึกษามาแสดงอัตโนมัติ ติ๊กเสร็จสิ้น หรือขยายกำหนดส่งได้ทันที',
-                          'Auto-pulled from previous sessions. Check off done or extend due date.'
+                          'ติ๊กเมื่อนักศึกษาทำเสร็จแล้ว หรือกด "ขยายเวลา" เพื่อเลื่อนกำหนดส่ง',
+                          'Tick a task when the student has done it, or use "Extend Date" to move the due date.'
                         )}
                       </p>
                     </div>
@@ -693,6 +708,11 @@ export default function AdvisorLog() {
                                 <p className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100 leading-snug">
                                   {fu.task}
                                 </p>
+                                {taskSource(fu) && (
+                                  <p className="text-[0.6875rem] text-slate-500 dark:text-slate-400 mt-0.5">
+                                    {t('จากการเข้าพบ:', 'From meeting:')} {taskSource(fu)}
+                                  </p>
+                                )}
                                 <div className="flex items-center gap-2 mt-1.5 text-xs flex-wrap">
                                   <span
                                     className={cn(
@@ -770,31 +790,43 @@ export default function AdvisorLog() {
                         className={cn('h-3.5 w-3.5 transition-transform duration-200', showCompletedTasks ? 'rotate-180' : '')}
                       />
                       {showCompletedTasks
-                        ? t('ซ่อนงานที่เสร็จสิ้นแล้ว', 'Hide completed tasks')
+                        ? t('ซ่อนประวัติงานที่ทำเสร็จแล้ว', 'Hide finished tasks')
                         : t(
-                            `ดูงานเดิมที่ทำเสร็จสิ้นแล้ว (${completedFollowUps.length} รายการ)`,
-                            `View completed tasks (${completedFollowUps.length})`
+                            `ดูประวัติงานที่นักศึกษาทำเสร็จแล้ว (${completedFollowUps.length})`,
+                            `Show tasks this student already finished (${completedFollowUps.length})`
                           )}
                     </button>
+                    {showCompletedTasks && (
+                      <p className="text-[0.6875rem] text-slate-500 dark:text-slate-400 mt-1.5">
+                        {t('สำหรับดูย้อนหลังเท่านั้น ไม่ต้องทำอะไรเพิ่ม', 'For reference only. Nothing to do here.')}
+                      </p>
+                    )}
 
                     {showCompletedTasks && (
                       <div className="space-y-1.5 mt-2.5">
-                        {completedFollowUps.map(cfu => (
-                          <div
-                            key={cfu.id}
-                            className="p-2.5 rounded-lg bg-white/80 dark:bg-slate-900/80 border border-slate-200/70 dark:border-slate-800 flex items-center justify-between text-xs text-slate-600 dark:text-slate-300"
-                          >
-                            <span className="flex items-center gap-2 min-w-0">
-                              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                              <span className="line-through text-slate-400 dark:text-slate-500 truncate">
-                                {cfu.task}
-                              </span>
-                            </span>
-                            <span className="text-[0.625rem] text-emerald-700 dark:text-emerald-400 font-mono shrink-0">
-                              {t('เสร็จเมื่อ', 'Completed')}: {cfu.completedAt || '-'}
-                            </span>
-                          </div>
-                        ))}
+                        {completedFollowUps.map(cfu => {
+                          const report = studentReport(cfu.id)
+                          return (
+                            <div
+                              key={cfu.id}
+                              className="p-2.5 rounded-lg bg-white/80 dark:bg-slate-900/80 border border-slate-200/70 dark:border-slate-800 flex gap-2 text-xs"
+                            >
+                              <CheckCircle2 className="h-3.5 w-3.5 mt-0.5 text-emerald-600 shrink-0" />
+                              <div className="min-w-0 flex-1">
+                                <p className="font-semibold text-slate-800 dark:text-slate-200">{cfu.task}</p>
+                                <p className="text-[0.6875rem] text-slate-500 dark:text-slate-400 mt-0.5">
+                                  {taskSource(cfu) && <>{t('จากการเข้าพบ:', 'From meeting:')} {taskSource(cfu)} · </>}
+                                  <span className="text-emerald-700 dark:text-emerald-400">{t('เสร็จเมื่อ', 'Finished')} {cfu.completedAt || '-'}</span>
+                                </p>
+                                {report && (
+                                  <p className="text-[0.6875rem] text-slate-600 dark:text-slate-300 mt-1 line-clamp-2">
+                                    <span className="font-semibold">{t('นักศึกษารายงาน:', 'Student reported:')}</span> {report}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          )
+                        })}
                       </div>
                     )}
                   </div>
