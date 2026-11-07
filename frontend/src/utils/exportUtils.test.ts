@@ -96,6 +96,44 @@ describe('exportUtils', () => {
     expect(wb.SheetNames).toContain('6. Student Voice')
   })
 
+  it('preserves true zero counts in AUN-QA export without injecting fabricated numbers', () => {
+    exportAunQaExcelReport({
+      language: 'th',
+      metrics: {
+        totalRequests: 0,
+        totalSessions: 0,
+        totalFollowUps: 0,
+        fuRate: 0,
+        totalExitCases: 0,
+        totalWarnings: 0,
+        totalVoiceResponses: 0,
+        avgCurriculum: '0',
+        avgTeaching: '0',
+        avgAdvisor: '0',
+        avgServices: '0',
+        avgOverall: '0',
+      },
+      categoryData: [],
+      advisorWorkload: [],
+      users: [],
+      requests: [],
+      exitCases: [],
+      studentVoiceResponses: [],
+      earlyWarnings: [],
+    })
+
+    expect(XLSX.writeFile).toHaveBeenCalledTimes(1)
+    const [wb] = vi.mocked(XLSX.writeFile).mock.calls[0]
+    const sheet3 = wb.Sheets['3. ความเสี่ยงและการดูแล']
+    const rows = XLSX.utils.sheet_to_json<Record<string, string>>(sheet3)
+    const academicRow = rows.find(r => r['รายการตัวชี้วัด (Indicator)'] === 'Academic Risk (GPA ต่ำ)')
+    expect(academicRow?.['ผลการดำเนินงาน']).toBe('0')
+    const probationRow = rows.find(r => r['รายการตัวชี้วัด (Indicator)'] === 'Probation Case')
+    expect(probationRow?.['ผลการดำเนินงาน']).toBe('0')
+    const financialRow = rows.find(r => r['รายการตัวชี้วัด (Indicator)'] === 'Financial Risk')
+    expect(financialRow?.['ผลการดำเนินงาน']).toBe('0')
+  })
+
   it('exports Qualitative Retention Audit Excel report with case explorer and CQI sheets', () => {
     exportQualitativeExcelReport({
       language: 'th',

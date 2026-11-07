@@ -233,35 +233,56 @@ export function exportAunQaExcelReport(options: AunQaExportOptions): void {
   const wb = XLSX.utils.book_new()
 
   // Base counts & computations
-  const totalStudents = users.filter(u => u.role === 'student').length || 10
-  const totalAdvisors = users.filter(u => u.role === 'advisor').length || (advisorWorkload.length || 6)
-  const studentsWithAdvisor = totalStudents
-  const assignRate = 100
+  const totalStudents = users.filter(u => u.role === 'student').length
+  const totalAdvisors = users.filter(u => u.role === 'advisor').length || (advisorWorkload ? advisorWorkload.length : 0)
+  const studentsWithAdvisor = options.roster ? new Set(options.roster.filter(r => r.isActive).map(r => r.studentId)).size : totalStudents
+  const assignRate = totalStudents > 0 ? Math.round((studentsWithAdvisor / totalStudents) * 100) : 0
   const totalReq = metrics.totalRequests ?? requests.length ?? 0
-  const completedReq = requests.filter(r => r.status === 'completed' || r.status === 'closed').length || metrics.totalSessions || 0
+  const completedReq = requests.filter(r => r.status === 'completed' || r.status === 'closed').length || (metrics.totalSessions ?? 0)
   const inProgressReq = requests.filter(r => r.status === 'scheduled').length || Math.max(0, totalReq - completedReq)
-  const pendingReq = requests.filter(r => r.status === 'pending' || r.status === 'requested').length || 0
-  const completionRate = metrics.fuRate
-  const totalSessions = metrics.totalSessions ?? 0
-  const avgResponseTime = '1.2'
-  const totalFollowUps = metrics.totalFollowUps ?? 0
+  const pendingReq = requests.filter(r => r.status === 'pending' || r.status === 'requested').length
+  const completionRate = metrics.fuRate ?? (totalReq > 0 ? Math.round((completedReq / totalReq) * 100) : 0)
+  const totalSessions = metrics.totalSessions ?? (options.sessions ? options.sessions.length : 0)
+
+  const responseDays = requests
+    .filter(r => r.createdAt && (r.updatedAt || r.closedAt))
+    .map(r => {
+      const created = new Date(r.createdAt).getTime()
+      const end = new Date(r.closedAt || r.updatedAt).getTime()
+      return Math.max(0, (end - created) / (1000 * 60 * 60 * 24))
+    })
+  const avgResponseTime = responseDays.length > 0
+    ? (responseDays.reduce((a, b) => a + b, 0) / responseDays.length).toFixed(1)
+    : '0.0'
+
+  const totalFollowUps = metrics.totalFollowUps ?? (options.followUps ? options.followUps.length : 0)
 
   const leaveCount = exitCases.filter(c => c.exitType === 'leave_of_absence').length
   const withdrawalCount = exitCases.filter(c => c.exitType === 'withdrawal' || c.exitType === 'dropout').length
   const dropoutRate = totalStudents > 0 ? ((withdrawalCount / totalStudents) * 100).toFixed(1) : '0.0'
   const retentionRate = totalStudents > 0 ? (100 - parseFloat(dropoutRate)).toFixed(1) : '100.0'
 
-  const totalWarnings = metrics.totalWarnings || 4
-  const riskStudentsCount = Math.min(totalWarnings, totalStudents)
-  const academicRiskCases = exitCases.filter(c => c.reasonCode === 'academic').length || 2
-  const probationCases = 1
-  const financialRiskCases = exitCases.filter(c => c.reasonCode === 'financial').length || 1
-  const personalRiskCases = exitCases.filter(c => c.reasonCode === 'mental_health' || c.reasonCode === 'personal_family' || c.reasonCode === 'health').length || 1
-  const dropoutRiskCases = withdrawalCount || 1
-  const riskResolutionRate = '85.0%'
+  const earlyWarningsList = options.earlyWarnings || []
+  const totalWarnings = metrics.totalWarnings ?? earlyWarningsList.length
+  const riskStudentsCount = earlyWarningsList.length > 0
+    ? new Set(earlyWarningsList.map(w => w.studentId)).size
+    : Math.min(totalWarnings, totalStudents)
 
-  const totalVoiceResponses = metrics.totalVoiceResponses || studentVoiceResponses.length || 0
-  const voiceResponseRate = totalStudents > 0 ? Math.round((totalVoiceResponses / totalStudents) * 100) : 100
+  const academicRiskCases = earlyWarningsList.filter(w => w.warningType === 'academic_risk').length + exitCases.filter(c => c.reasonCode === 'academic').length
+  const probationCases = earlyWarningsList.filter(w => w.warningType === 'academic_risk' && w.severity === 'high').length
+  const financialRiskCases = earlyWarningsList.filter(w => w.warningType === 'financial_risk').length + exitCases.filter(c => c.reasonCode === 'financial').length
+  const personalRiskCases = earlyWarningsList.filter(w => w.warningType === 'personal').length + exitCases.filter(c => c.reasonCode === 'mental_health' || c.reasonCode === 'personal_family' || c.reasonCode === 'health').length
+  const dropoutRiskCases = withdrawalCount
+  const resolvedWarnings = earlyWarningsList.filter(w => w.status === 'resolved').length
+  const riskResolutionRate = totalWarnings > 0 ? `${((resolvedWarnings / totalWarnings) * 100).toFixed(1)}%` : '0.0%'
+
+  const totalVoiceResponses = metrics.totalVoiceResponses ?? studentVoiceResponses.length ?? 0
+  const voiceResponseRate = totalStudents > 0 ? Math.round((totalVoiceResponses / totalStudents) * 100) : (totalVoiceResponses > 0 ? 100 : 0)
+
+  const formatScore = (score?: string | number) => {
+    const num = parseFloat(String(score || '0'))
+    return num > 0 ? `${num.toFixed(2)} / 5.00` : '0.00 / 5.00'
+  }
 
   // -------------------------------------------------------------
   // Sheet 1: Executive Summary Dashboard (ตรงตาม PDF Sheet 1)
@@ -348,7 +369,7 @@ export function exportAunQaExcelReport(options: AunQaExportOptions): void {
     {
       [isTh ? 'ลำดับ' : 'No.']: 11,
       [isTh ? 'รายการตัวชี้วัด (Indicator)' : 'Indicator']: isTh ? 'คะแนนความพึงพอใจ' : 'Overall Satisfaction Score',
-      [isTh ? 'ผลการดำเนินงาน' : 'Recorded Value']: `${parseFloat(metrics.avgOverall || '4.8').toFixed(2)} / 5.00`,
+      [isTh ? 'ผลการดำเนินงาน' : 'Recorded Value']: formatScore(metrics.avgOverall),
       [isTh ? 'หน่วยนับ' : 'Unit']: isTh ? 'Score (คะแนน)' : 'Score',
       [isTh ? 'เกณฑ์ AUN-QA' : 'AUN-QA Criterion']: 'C6 / C8',
     },
@@ -360,14 +381,14 @@ export function exportAunQaExcelReport(options: AunQaExportOptions): void {
   // -------------------------------------------------------------
   // Sheet 2: Advising Service & Advisor Management Report (ตรงตาม PDF Sheet 2)
   // -------------------------------------------------------------
-  const catScholarship = requests.filter(r => r.category === 'scholarship_document').length || 2
-  const catFinancial = requests.filter(r => r.category === 'financial').length || 1
-  const catRegistration = requests.filter(r => r.category === 'registration').length || 3
-  const catStatus = requests.filter(r => r.category === 'student_status').length || 1
-  const catGpa = requests.filter(r => r.category === 'academic_performance').length || 4
-  const catCareer = requests.filter(r => r.category === 'internship_career').length || 2
-  const catPersonal = requests.filter(r => r.category === 'personal').length || 1
-  const catWithdrawal = requests.filter(r => r.category === 'withdrawal_leave').length || 1
+  const catScholarship = requests.filter(r => r.category === 'scholarship_document').length
+  const catFinancial = requests.filter(r => r.category === 'financial').length
+  const catRegistration = requests.filter(r => r.category === 'registration').length
+  const catStatus = requests.filter(r => r.category === 'student_status').length
+  const catGpa = requests.filter(r => r.category === 'academic_performance').length
+  const catCareer = requests.filter(r => r.category === 'internship_career').length
+  const catPersonal = requests.filter(r => r.category === 'personal').length
+  const catWithdrawal = requests.filter(r => r.category === 'withdrawal_leave').length
 
   const sheet2Rows = [
     // 2.1 Advising Service Overview
@@ -649,21 +670,21 @@ export function exportAunQaExcelReport(options: AunQaExportOptions): void {
     {
       [isTh ? 'หมวดการรายงาน' : 'Section']: isTh ? '4.3 เสียงสะท้อนและความพึงพอใจของนักศึกษา' : '4.3 Student Voice Survey Evaluation',
       [isTh ? 'รายการตัวชี้วัด (Indicator)' : 'Indicator']: isTh ? 'ความพึงพอใจ Advisor' : 'Advisor Mentorship Satisfaction',
-      [isTh ? 'ผลการดำเนินงาน' : 'Recorded Value']: `${parseFloat(metrics.avgAdvisor || '4.8').toFixed(2)} / 5.00`,
+      [isTh ? 'ผลการดำเนินงาน' : 'Recorded Value']: formatScore(metrics.avgAdvisor),
       [isTh ? 'หน่วยนับ' : 'Unit']: 'Score /5',
       [isTh ? 'เกณฑ์ AUN-QA' : 'AUN-QA Criterion']: 'C6',
     },
     {
       [isTh ? 'หมวดการรายงาน' : 'Section']: isTh ? '4.3 เสียงสะท้อนและความพึงพอใจของนักศึกษา' : '4.3 Student Voice Survey Evaluation',
       [isTh ? 'รายการตัวชี้วัด (Indicator)' : 'Indicator']: isTh ? 'ความพึงพอใจหลักสูตร' : 'Curriculum Structure Satisfaction',
-      [isTh ? 'ผลการดำเนินงาน' : 'Recorded Value']: `${parseFloat(metrics.avgCurriculum || '4.2').toFixed(2)} / 5.00`,
+      [isTh ? 'ผลการดำเนินงาน' : 'Recorded Value']: formatScore(metrics.avgCurriculum),
       [isTh ? 'หน่วยนับ' : 'Unit']: 'Score /5',
       [isTh ? 'เกณฑ์ AUN-QA' : 'AUN-QA Criterion']: 'C8',
     },
     {
       [isTh ? 'หมวดการรายงาน' : 'Section']: isTh ? '4.3 เสียงสะท้อนและความพึงพอใจของนักศึกษา' : '4.3 Student Voice Survey Evaluation',
       [isTh ? 'รายการตัวชี้วัด (Indicator)' : 'Indicator']: isTh ? 'Overall Experience' : 'Overall Academic Experience Satisfaction',
-      [isTh ? 'ผลการดำเนินงาน' : 'Recorded Value']: `${parseFloat(metrics.avgOverall || '4.5').toFixed(2)} / 5.00`,
+      [isTh ? 'ผลการดำเนินงาน' : 'Recorded Value']: formatScore(metrics.avgOverall),
       [isTh ? 'หน่วยนับ' : 'Unit']: 'Score /5',
       [isTh ? 'เกณฑ์ AUN-QA' : 'AUN-QA Criterion']: 'C8',
     },
