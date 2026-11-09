@@ -431,7 +431,7 @@ export default function AdvisingSessions() {
                       className="border-sky-200 text-sky-700 dark:text-sky-300 dark:border-sky-800 hover:bg-sky-50 dark:hover:bg-sky-950/40"
                       onClick={() => {
                         markRequestViewed(r.id)
-                        if (session) {
+                        if (session && currentUser.role !== 'qa_chair') {
                           navigate('/advisor/log', { state: { requestId: r.id, sessionId: session.id } })
                         } else {
                           setDetailReq(r)
@@ -502,25 +502,36 @@ export default function AdvisingSessions() {
               return (
                 <div className="p-3.5 bg-emerald-50/70 dark:bg-emerald-950/30 rounded-xl border border-emerald-200/80 dark:border-emerald-800/60">
                   <div className="flex items-center justify-between gap-2 mb-2">
-                    <h4 className="text-xs font-bold text-emerald-900 dark:text-emerald-200">
-                      {t('บันทึกผลการเข้าพบ', 'Advising Session Log')}
-                    </h4>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-7 text-xs text-sky-700 dark:text-sky-300 hover:bg-sky-100/60 px-2"
-                      onClick={() => {
-                        const targetReqId = detailReq.id
-                        const targetSessId = session.id
-                        setDetailReq(null)
-                        navigate('/advisor/log', { state: { requestId: targetReqId, sessionId: targetSessId } })
-                      }}
-                    >
-                      <Eye className="h-3.5 w-3.5 mr-1" />
-                      {t('ดูรายละเอียดเต็มในระบบบันทึก', 'View Full Log')}
-                    </Button>
+                    <div>
+                      <h4 className="text-xs font-bold text-emerald-900 dark:text-emerald-200">
+                        {t('บันทึกผลการเข้าพบ', 'Advising Session Log')}
+                      </h4>
+                      <p className="text-[0.6875rem] text-emerald-700 dark:text-emerald-300 mt-0.5">
+                        {t('วันที่บันทึก:', 'Recorded:')} {session.sessionDate}
+                      </p>
+                    </div>
+                    {currentUser.role !== 'qa_chair' && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 text-xs text-sky-700 dark:text-sky-300 hover:bg-sky-100/60 px-2"
+                        onClick={() => {
+                          const targetReqId = detailReq.id
+                          const targetSessId = session.id
+                          setDetailReq(null)
+                          navigate('/advisor/log', { state: { requestId: targetReqId, sessionId: targetSessId } })
+                        }}
+                      >
+                        <Eye className="h-3.5 w-3.5 mr-1" />
+                        {t('ดูรายละเอียดเต็มในระบบบันทึก', 'View Full Log')}
+                      </Button>
+                    )}
                   </div>
                   <div className="space-y-2 text-xs text-slate-700 dark:text-slate-200">
+                    <div>
+                      <span className="font-semibold text-emerald-800 dark:text-emerald-300">{t('ปัญหาหรือประเด็น:', 'Problem / Topic:')}</span>
+                      <p className="mt-0.5 whitespace-pre-wrap">{session.problem || '-'}</p>
+                    </div>
                     <div>
                       <span className="font-semibold text-emerald-800 dark:text-emerald-300">{t('สรุปผล:', 'Summary:')}</span>
                       <p className="mt-0.5 whitespace-pre-wrap">{session.summary || '-'}</p>
@@ -529,6 +540,12 @@ export default function AdvisingSessions() {
                       <div>
                         <span className="font-semibold text-emerald-800 dark:text-emerald-300">{t('คำแนะนำ:', 'Advice:')}</span>
                         <p className="mt-0.5 whitespace-pre-wrap">{session.advice}</p>
+                      </div>
+                    )}
+                    {session.actionsTaken && (
+                      <div>
+                        <span className="font-semibold text-emerald-800 dark:text-emerald-300">{t('การดำเนินการ:', 'Actions Taken:')}</span>
+                        <p className="mt-0.5 whitespace-pre-wrap">{session.actionsTaken}</p>
                       </div>
                     )}
                     {session.outcome && session.outcome !== session.summary && (
@@ -553,6 +570,25 @@ export default function AdvisingSessions() {
               </p>
             </div>
 
+            {/* Request metadata */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
+                <span className="text-[0.6875rem] text-slate-400 block font-medium">{t('หมวดหมู่', 'Category')}</span>
+                <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 mt-0.5">
+                  {getCategoryLabel(detailReq.category)}
+                  {detailReq.subCategory && <span className="block text-xs font-normal text-slate-500 dark:text-slate-400">{getSubCategoryLabel(detailReq.subCategory)}</span>}
+                </p>
+              </div>
+              <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
+                <span className="text-[0.6875rem] text-slate-400 block font-medium">{t('สถานะคำร้อง', 'Request Status')}</span>
+                <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 mt-0.5">{detailReq.status}</p>
+              </div>
+              <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
+                <span className="text-[0.6875rem] text-slate-400 block font-medium">{t('วันที่ยื่นคำร้อง', 'Submitted')}</span>
+                <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 mt-0.5">{detailReq.createdAt}</p>
+              </div>
+            </div>
+
             {/* Requested Slot */}
             <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
               <span className="text-[0.6875rem] text-slate-400 block font-medium">{t('วัน-เวลาที่ขอเข้าพบ', 'Requested Date & Time')}</span>
@@ -560,6 +596,19 @@ export default function AdvisingSessions() {
                 {detailReq.preferredDate} · {detailReq.preferredTime}
               </p>
             </div>
+
+            {(() => {
+              const appointment = store.appointments.find(a => a.requestId === detailReq.id)
+              if (!appointment) return null
+              return (
+                <div className="p-3 bg-sky-50/70 dark:bg-sky-950/30 rounded-xl border border-sky-200/80 dark:border-sky-800/60">
+                  <span className="text-[0.6875rem] text-sky-700 dark:text-sky-300 block font-medium">{t('นัดหมายที่ยืนยันแล้ว', 'Confirmed Appointment')}</span>
+                  <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 mt-0.5">
+                    {appointment.scheduledDate} · {appointment.scheduledTime} · {appointment.location}
+                  </p>
+                </div>
+              )
+            })()}
 
             {/* Pending Tasks for this student from earlier sessions */}
             {(() => {
@@ -594,6 +643,15 @@ export default function AdvisingSessions() {
                 {detailReq.details || '-'}
               </p>
             </div>
+
+            {detailReq.cancellationReason && (
+              <div>
+                <h4 className="text-xs font-bold text-rose-700 dark:text-rose-300 mb-1.5">{t('เหตุผลการยกเลิก', 'Cancellation Reason')}</h4>
+                <p className="text-xs sm:text-sm leading-relaxed whitespace-pre-wrap rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 p-3.5 text-rose-900 dark:text-rose-200">
+                  {detailReq.cancellationReason}
+                </p>
+              </div>
+            )}
 
             {/* Attachments (What is not in the table) */}
             <div>
