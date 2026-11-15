@@ -148,8 +148,6 @@ export default function StudentForms() {
         suggestedCategory: preset.suggestedCategory,
       }
     }
-    const labelTh = labels?.labelTh?.trim()
-    const labelEn = labels?.labelEn?.trim()
     if (labels?.labelTh || labels?.labelEn) {
       return {
         title: language === 'th' ? (labels.labelTh || name) : (labels.labelEn || name),
