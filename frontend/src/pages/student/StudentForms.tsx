@@ -87,6 +87,34 @@ const PRESET_FORM_NAMES: Record<string, { en: string; th: string; descriptionEn:
     descriptionTh: 'ใบรับรองแพทย์ ใบเสร็จ หรือเอกสารหลักฐานจากหน่วยงานภายนอก เป็นเอกสารของนักศึกษาเอง ไม่ต้องใช้แบบฟอร์มของมหาวิทยาลัย',
     suggestedCategory: 'general_consultation',
   },
+  'Recommendation Request': {
+    en: 'Faculty Recommendation Letter Request',
+    th: 'คำร้องขอหนังสือรับรองจากอาจารย์',
+    descriptionEn: 'Faculty recommendation letter request for jobs or postgraduate study.',
+    descriptionTh: 'คำร้องขอหนังสือรับรองความประพฤติหรือผลการเรียนจากอาจารย์',
+    suggestedCategory: 'general_consultation',
+  },
+  'Change of Major / Program Transfer': {
+    en: 'Change of Major / Program Transfer',
+    th: 'คำร้องขอย้ายสาขาวิชา',
+    descriptionEn: 'Transfer request between majors or academic schools.',
+    descriptionTh: 'คำร้องขอย้ายหลักสูตรหรือสำนักวิชา',
+    suggestedCategory: 'registration',
+  },
+  'Grade Appeal & Review Form': {
+    en: 'Grade Appeal & Review Form',
+    th: 'คำร้องขอทบทวนผลการเรียน',
+    descriptionEn: 'Formal grade examination review requiring dean signature.',
+    descriptionTh: 'คำร้องขอตรวจสอบคะแนนและผลการเรียนอย่างเป็นทางการ',
+    suggestedCategory: 'academic_performance',
+  },
+  'Internship Agreement': {
+    en: 'Internship Agreement',
+    th: 'หนังสือยินยอมและข้อตกลงการฝึกงาน',
+    descriptionEn: 'Co-op and summer internship agreement with digital e-signature.',
+    descriptionTh: 'หนังสือยินยอมและข้อตกลงการฝึกงาน/สหกิจศึกษาพร้อมลายมือชื่ออิเล็กทรอนิกส์',
+    suggestedCategory: 'internship_career',
+  },
   medical_certificate: {
     en: 'Medical Certificate / Health Proof',
     th: 'ใบรับรองแพทย์',
@@ -118,6 +146,15 @@ const PRESET_FORM_ALIASES: Record<string, keyof typeof PRESET_FORM_NAMES> = {
   medical_certificate: 'medical_certificate',
   resume_cv: 'resume_cv',
   other_document: 'other_document',
+  'course add/drop form': 'Late Registration Petition (คำร้องขอลงทะเบียนล่าช้า)',
+  'supporting evidence / medical note': 'Supporting Evidence / Medical Note (เอกสารหลักฐาน/ใบรับรองแพทย์)',
+  'recommendation request': 'Recommendation Request',
+  'change of major / program transfer': 'Change of Major / Program Transfer',
+  'grade appeal & review form': 'Grade Appeal & Review Form',
+  'withdrawal form': 'Exit Petition Form (คำร้องขอลาออก)',
+  'แบบฟอร์มขอรับและต่ออายุทุนการศึกษา': 'Scholarship / Financial Aid Form (คำร้องขอรับทุน)',
+  'คำร้องขอลาพักการศึกษา': 'Leave of Absence Request (คำร้องขอลาพักการศึกษา)',
+  'หนังสือยินยอมและข้อตกลงการฝึกงาน': 'Internship Agreement',
 }
 
 export default function StudentForms() {
@@ -135,9 +172,6 @@ export default function StudentForms() {
   // Localized title & description helper
   function getDocDetails(name: string, labels?: { labelTh?: string; labelEn?: string }) {
     const dtLike = { name, labelTh: labels?.labelTh, labelEn: labels?.labelEn }
-    const title = getDocumentTypeLabel(dtLike) || name
-    const description = getDocumentTypeDescription(dtLike)
-
     const normalize = (value?: string) => value?.trim().toLowerCase() || ''
     const aliasKey = PRESET_FORM_ALIASES[normalize(name)]
     const preset = aliasKey
@@ -145,6 +179,12 @@ export default function StudentForms() {
       : Object.entries(PRESET_FORM_NAMES).find(([key, value]) =>
           [key, value.en, value.th].some(label => normalize(label) === normalize(name))
         )?.[1]
+    const title = preset
+      ? (language === 'th' ? preset.th : preset.en)
+      : (getDocumentTypeLabel(dtLike) || name)
+    const description = preset
+      ? (language === 'th' ? preset.descriptionTh : preset.descriptionEn)
+      : getDocumentTypeDescription(dtLike)
 
     let suggestedCategory = preset?.suggestedCategory || 'general_consultation'
     if (suggestedCategory === 'general_consultation') {
