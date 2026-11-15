@@ -83,8 +83,8 @@ export default function AdvisingSessions() {
 
   const filterMap: Record<string, string[]> = {
     pending: ['requested', 'pending'],
-    upcoming: ['scheduled'],
-    ongoing: ['scheduled'],
+    upcoming: ['scheduled', 'rescheduled_pending_student'],
+    ongoing: ['scheduled', 'rescheduled_pending_student'],
     completed: ['completed', 'closed'],
     cancelled: ['cancelled'],
   }
@@ -164,11 +164,11 @@ export default function AdvisingSessions() {
   }
 
   const tabs = [
-    { value: 'pending', label: t('คำขอนัดหมายใหม่', 'Pending Requests'), count: myRequests.filter(r => ['requested', 'pending'].includes(r.status)).length },
-    { value: 'upcoming', label: t('นัดหมายที่ยืนยันแล้ว', 'Upcoming Appointments'), count: myRequests.filter(r => r.status === 'scheduled' || r.status === 'rescheduled_pending_student').length },
-    { value: 'ongoing', label: t('การให้คำปรึกษาที่กำลังดำเนินอยู่', 'Ongoing Sessions'), count: myRequests.filter(r => r.status === 'scheduled' || r.status === 'rescheduled_pending_student').length },
-    { value: 'completed', label: t('เสร็จสิ้นแล้ว', 'Completed'), count: myRequests.filter(r => ['completed', 'closed'].includes(r.status)).length },
-    { value: 'cancelled', label: t('ยกเลิก', 'Cancelled'), count: myRequests.filter(r => r.status === 'cancelled').length },
+    { value: 'pending', label: t('คำขอนัดหมายใหม่', 'Pending Requests'), count: myRequests.filter(r => filterMap.pending.includes(r.status)).length },
+    { value: 'upcoming', label: t('นัดหมายที่ยืนยันแล้ว', 'Upcoming Appointments'), count: myRequests.filter(r => filterMap.upcoming.includes(r.status)).length },
+    { value: 'ongoing', label: t('การให้คำปรึกษาที่กำลังดำเนินอยู่', 'Ongoing Sessions'), count: myRequests.filter(r => filterMap.ongoing.includes(r.status)).length },
+    { value: 'completed', label: t('เสร็จสิ้นแล้ว', 'Completed'), count: myRequests.filter(r => filterMap.completed.includes(r.status)).length },
+    { value: 'cancelled', label: t('ยกเลิก', 'Cancelled'), count: myRequests.filter(r => filterMap.cancelled.includes(r.status)).length },
   ]
 
   function handleSchedule() {

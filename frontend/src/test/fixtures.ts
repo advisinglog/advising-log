@@ -187,12 +187,12 @@ export const mockCategoryConfigs: AdvisingCategoryConfig[] = [
 // --- Document Types ---
 
 export const mockDocumentTypes: DocumentType[] = [
-  { id: 'DT001', name: 'Scholarship Renewal Form', signatureMethod: 'wet_signature', isActive: true },
-  { id: 'DT002', name: 'Leave of Absence Form', signatureMethod: 'wet_signature', isActive: true },
-  { id: 'DT003', name: 'Internship Agreement', signatureMethod: 'e_signature', isActive: true },
-  { id: 'DT004', name: 'Course Add/Drop Form', signatureMethod: 'e_signature', isActive: true },
-  { id: 'DT005', name: 'Withdrawal Form', signatureMethod: 'wet_signature', isActive: true },
-  { id: 'DT006', name: 'Recommendation Request', signatureMethod: 'e_signature', isActive: true },
+  { id: 'DT001', name: 'Scholarship Renewal Form', labelTh: 'แบบฟอร์มขอรับและต่ออายุทุนการศึกษา', labelEn: 'Scholarship Renewal Form', signatureMethod: 'wet_signature', isActive: true },
+  { id: 'DT002', name: 'Leave of Absence Form', labelTh: 'คำร้องขอลาพักการศึกษา', labelEn: 'Leave of Absence Form', signatureMethod: 'wet_signature', isActive: true },
+  { id: 'DT003', name: 'Internship Agreement', labelTh: 'หนังสือยินยอมและข้อตกลงการฝึกงาน', labelEn: 'Internship Agreement', signatureMethod: 'e_signature', isActive: true },
+  { id: 'DT004', name: 'Course Add/Drop Form', labelTh: 'คำร้องขอเพิ่มหรือถอนรายวิชา', labelEn: 'Course Add/Drop Form', signatureMethod: 'e_signature', isActive: true },
+  { id: 'DT005', name: 'Withdrawal Form', labelTh: 'คำร้องขอพ้นสภาพหรือลาออก', labelEn: 'Withdrawal Form', signatureMethod: 'wet_signature', isActive: true },
+  { id: 'DT006', name: 'Recommendation Request', labelTh: 'คำร้องขอหนังสือรับรองจากอาจารย์', labelEn: 'Recommendation Request', signatureMethod: 'e_signature', isActive: true },
 ]
 
 // --- Student Documents ---

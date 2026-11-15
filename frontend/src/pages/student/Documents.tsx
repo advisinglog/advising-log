@@ -13,7 +13,7 @@ export default function Documents() {
   const { currentUser } = useAuth()
   const store = useStore()
   const { addToast } = useToast()
-  const { t } = useLanguage()
+  const { t, getDocumentTypeLabel } = useLanguage()
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -260,7 +260,7 @@ export default function Documents() {
             <FileText className="h-4 w-4" />
           </div>
           <div>
-            <span className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100 block">{d.documentName}</span>
+            <span className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100 block">{getDocumentTypeLabel(d.documentName)}</span>
             {d.description && (
               <p className="text-[0.6875rem] text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-1">{d.description}</p>
             )}
@@ -307,7 +307,7 @@ export default function Documents() {
             onClick={() =>
               setPreviewDoc({
                 id: d.id,
-                title: d.documentName,
+                title: getDocumentTypeLabel(d.documentName),
                 fileName: d.fileName,
                 fileUrl: d.fileUrl,
                 cloudinaryPublicId: d.cloudinaryPublicId,
@@ -346,7 +346,7 @@ export default function Documents() {
                   onClick={() =>
                     setPreviewDoc({
                       id: d.id,
-                      title: d.documentName,
+                      title: getDocumentTypeLabel(d.documentName),
                       fileName: d.fileName,
                       fileUrl: d.fileUrl,
                       cloudinaryPublicId: d.cloudinaryPublicId,
@@ -465,7 +465,7 @@ export default function Documents() {
                     <FileText className="h-4 w-4" />
                   </div>
                   <span className={`truncate ${!selectedTypeId ? 'text-slate-400 dark:text-slate-500' : 'font-semibold text-slate-900 dark:text-slate-100'}`}>
-                    {selectedDocType ? selectedDocType.name : t('-- เลือกประเภทเอกสาร / แบบฟอร์ม --', '-- Select Document Type --')}
+                    {selectedDocType ? getDocumentTypeLabel(selectedDocType) : t('-- เลือกประเภทเอกสาร / แบบฟอร์ม --', '-- Select Document Type --')}
                   </span>
                 </div>
                 <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform duration-150 flex-shrink-0 ${showDocTypeDropdown ? 'rotate-180 text-sky-500' : ''}`} />
@@ -494,7 +494,7 @@ export default function Documents() {
                       >
                         <div className="flex items-center gap-2.5 min-w-0 flex-1">
                           <FileText className="h-4 w-4 text-sky-600 dark:text-sky-400 flex-shrink-0" />
-                          <span className="truncate">{dt.name}</span>
+                          <span className="truncate">{getDocumentTypeLabel(dt)}</span>
                           <span className={`text-[0.625rem] px-1.5 py-0.2 rounded font-semibold ${
                             dt.signatureMethod === 'wet_signature'
                               ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300'
@@ -527,7 +527,7 @@ export default function Documents() {
                 <option value="">{t('-- เลือกประเภทเอกสาร --', '-- Select Document Type --')}</option>
                 {activeDocumentTypes.map(dt => (
                   <option key={dt.id} value={dt.id}>
-                    {dt.name}
+                    {getDocumentTypeLabel(dt)}
                   </option>
                 ))}
               </select>
@@ -732,8 +732,8 @@ export default function Documents() {
         onConfirm={handleConfirmDelete}
         title={t('ยืนยันการลบเอกสาร', 'Confirm Delete Document')}
         message={t(
-          `คุณต้องการลบเอกสาร "${docToDelete?.documentName}" ใช่หรือไม่? หากลบแล้วไฟล์ที่อัปโหลดและรายการนี้จะถูกนำออกจากระบบ`,
-          `Are you sure you want to delete "${docToDelete?.documentName}"? The uploaded file and record will be removed.`
+          `คุณต้องการลบเอกสาร "${getDocumentTypeLabel(docToDelete?.documentName)}" ใช่หรือไม่? หากลบแล้วไฟล์ที่อัปโหลดและรายการนี้จะถูกนำออกจากระบบ`,
+          `Are you sure you want to delete "${getDocumentTypeLabel(docToDelete?.documentName)}"? The uploaded file and record will be removed.`
         )}
         confirmLabel={t('ลบเอกสาร', 'Delete')}
         variant="danger"

@@ -142,6 +142,238 @@ export const ADVISING_SUBCATEGORIES: Record<string, { labelTh: string; labelEn: 
   'transfer': { labelTh: 'ย้ายสาขาวิชา', labelEn: 'Transfer' },
 }
 
+export interface DocumentTypePreset {
+  en: string
+  th: string
+  aliases: string[]
+  descriptionEn: string
+  descriptionTh: string
+  suggestedCategory: string
+}
+
+export const DOCUMENT_TYPE_PRESETS: DocumentTypePreset[] = [
+  {
+    en: 'Exit Petition Form (Withdrawal Request)',
+    th: 'แบบคำร้องขอลาออกจากการเป็นนักศึกษา',
+    aliases: [
+      'exit petition form (คำร้องขอลาออก)',
+      'exit petition form (withdrawal request)',
+      'แบบคำร้องขอลาออกจากการเป็นนักศึกษา',
+      'คำร้องขอพ้นสภาพหรือลาออก',
+      'withdrawal form',
+      'exit_petition',
+      'exit_form',
+      'withdrawal',
+      'คำร้องขอลาออก',
+    ],
+    descriptionEn: 'Official petition for voluntary university withdrawal. Requires physical handwritten signature and academic clearance.',
+    descriptionTh: 'แบบฟอร์มขอลาออกโดยความสมัครใจ ต้องใช้ลายเซ็นจริงบนกระดาษและผ่านการให้คำปรึกษาจากอาจารย์',
+    suggestedCategory: 'withdrawal_leave',
+  },
+  {
+    en: 'Leave of Absence Request Form',
+    th: 'แบบคำร้องขอลาพักการศึกษา',
+    aliases: [
+      'leave of absence request (คำร้องขอลาพักการศึกษา)',
+      'leave of absence form',
+      'leave of absence request form',
+      'leave of absence petition',
+      'leave_request',
+      'leave_of_absence',
+      'แบบคำร้องขอลาพักการศึกษา',
+      'คำร้องขอลาพักการศึกษา (leave form)',
+      'คำร้องขอลาพักการศึกษา',
+    ],
+    descriptionEn: 'Formal request to temporarily suspend studies for one or two semesters. Requires handwritten signatures.',
+    descriptionTh: 'แบบฟอร์มขอพักการเรียนชั่วคราว 1-2 ภาคการศึกษา ต้องใช้ลายเซ็นจริงบนกระดาษ',
+    suggestedCategory: 'withdrawal_leave',
+  },
+  {
+    en: 'Late Registration / Add-Drop Petition',
+    th: 'แบบคำร้องขอลงทะเบียนเรียน / เพิ่ม-ถอนล่าช้า',
+    aliases: [
+      'late registration petition (คำร้องขอลงทะเบียนล่าช้า)',
+      'late registration / add-drop petition',
+      'course add/drop form',
+      'course withdrawal petition',
+      'drop_form',
+      'add_drop_form',
+      'แบบคำร้องขอลงทะเบียนเรียน / เพิ่ม-ถอนล่าช้า',
+      'คำร้องขอถอนรายวิชา (drop form)',
+      'คำร้องขอเพิ่มหรือถอนรายวิชา',
+      'คำร้องขอถอนรายวิชา',
+    ],
+    descriptionEn: 'Petition to add or drop courses after the official university deadline. Supports electronic signatures.',
+    descriptionTh: 'แบบฟอร์มขอเพิ่มหรือถอนรายวิชาหลังจากเลยกำหนดเวลาทางการ สามารถลงลายมือชื่อดิจิทัลได้',
+    suggestedCategory: 'registration',
+  },
+  {
+    en: 'Study Plan & Degree Audit Form',
+    th: 'แบบฟอร์มแผนการเรียนและการตรวจสอบหลักสูตร',
+    aliases: [
+      'study plan / degree audit form (แผนการเรียน)',
+      'study plan & degree audit form',
+      'study plan / degree audit form',
+      'study_plan',
+      'degree_audit',
+      'แบบฟอร์มแผนการเรียนและการตรวจสอบหลักสูตร',
+      'แผนการเรียน',
+    ],
+    descriptionEn: 'Academic plan document for tracking curriculum completion, prerequisite checks, and graduation roadmaps.',
+    descriptionTh: 'เอกสารวางแผนการเรียน ตรวจสอบวิชาบังคับก่อน และความคืบหน้าการสำเร็จการศึกษา',
+    suggestedCategory: 'academic_progress',
+  },
+  {
+    en: 'Scholarship & Financial Aid Endorsement Form',
+    th: 'แบบคำร้องขอรับทุนการศึกษา / เงินกู้ยืมเพื่อการศึกษา',
+    aliases: [
+      'scholarship / financial aid form (คำร้องขอรับทุน)',
+      'scholarship & financial aid endorsement form',
+      'scholarship renewal form',
+      'scholarship application/renewal form',
+      'scholarship_form',
+      'scholarship',
+      'financial_aid',
+      'แบบคำร้องขอรับทุนการศึกษา / เงินกู้ยืมเพื่อการศึกษา',
+      'แบบฟอร์มขอรับและต่ออายุทุนการศึกษา',
+      'แบบฟอร์มขอรับ/ต่ออายุทุนการศึกษา',
+    ],
+    descriptionEn: 'Application and advisor endorsement sheet for institutional scholarships or student loans.',
+    descriptionTh: 'เอกสารสมัครทุนการศึกษาและหนังสือรับรองจากอาจารย์ที่ปรึกษา',
+    suggestedCategory: 'scholarship_document',
+  },
+  {
+    en: 'Internship Agreement',
+    th: 'หนังสือยินยอมและข้อตกลงการฝึกงาน',
+    aliases: [
+      'internship agreement',
+      'internship_agreement',
+      'internship',
+      'หนังสือยินยอมและข้อตกลงการฝึกงาน',
+    ],
+    descriptionEn: 'Co-op and summer internship agreement with digital e-signature.',
+    descriptionTh: 'หนังสือยินยอมและข้อตกลงการฝึกงาน/สหกิจศึกษาพร้อมลายมือชื่ออิเล็กทรอนิกส์',
+    suggestedCategory: 'internship_career',
+  },
+  {
+    en: 'Faculty Recommendation Letter Request',
+    th: 'คำร้องขอหนังสือรับรองจากอาจารย์',
+    aliases: [
+      'recommendation request',
+      'faculty recommendation letter request',
+      'recommendation_request',
+      'recommendation',
+      'คำร้องขอหนังสือรับรองจากอาจารย์',
+    ],
+    descriptionEn: 'Faculty recommendation letter request for jobs or postgraduate study.',
+    descriptionTh: 'คำร้องขอหนังสือรับรองความประพฤติหรือผลการเรียนจากอาจารย์',
+    suggestedCategory: 'general_consultation',
+  },
+  {
+    en: 'Grade Appeal & Review Form',
+    th: 'คำร้องขอทบทวนผลการเรียน',
+    aliases: [
+      'grade appeal & review form',
+      'grade appeal and review form',
+      'grade_appeal',
+      'คำร้องขอทบทวนผลการเรียน',
+    ],
+    descriptionEn: 'Formal grade examination review requiring dean signature.',
+    descriptionTh: 'คำร้องขอตรวจสอบคะแนนและผลการเรียนอย่างเป็นทางการ',
+    suggestedCategory: 'academic_performance',
+  },
+  {
+    en: 'Change of Major / Program Transfer',
+    th: 'คำร้องขอย้ายสาขาวิชา',
+    aliases: [
+      'change of major / program transfer',
+      'program_transfer',
+      'change_of_major',
+      'คำร้องขอย้ายสาขาวิชา',
+    ],
+    descriptionEn: 'Transfer request between majors or academic schools.',
+    descriptionTh: 'คำร้องขอย้ายหลักสูตรหรือสำนักวิชา',
+    suggestedCategory: 'registration',
+  },
+  {
+    en: 'Academic Transcript',
+    th: 'ใบรายงานผลการศึกษา (Transcript)',
+    aliases: [
+      'transcript',
+      'academic_transcript',
+      'official / unofficial transcript',
+      'ใบรายงานผลการศึกษา (transcript)',
+      'ใบรายงานผลการศึกษา',
+    ],
+    descriptionEn: 'Official or unofficial academic record showing cumulative GPA and completed credits.',
+    descriptionTh: 'เอกสารแสดงผลการเรียนและหน่วยกิตสะสมทั้งหมด',
+    suggestedCategory: 'academic_performance',
+  },
+  {
+    en: 'Medical Certificate / Health Proof',
+    th: 'ใบรับรองแพทย์ / เอกสารสุขภาพ',
+    aliases: [
+      'medical_certificate',
+      'medical certificate / health proof',
+      'ใบรับรองแพทย์ (medical certificate)',
+      'ใบรับรองแพทย์',
+    ],
+    descriptionEn: 'Official hospital or medical clinic certificate for health-related absence or accommodations.',
+    descriptionTh: 'เอกสารรับรองทางการแพทย์จากสถานพยาบาล',
+    suggestedCategory: 'general_consultation',
+  },
+  {
+    en: 'Resume / Curriculum Vitae',
+    th: 'ประวัติย่อ / เรซูเม่ (Resume/CV)',
+    aliases: [
+      'resume_cv',
+      'resume / curriculum vitae',
+      'ประวัติย่อ / เรซูเม่ (resume/cv)',
+      'ประวัติย่อ / เรซูเม่',
+    ],
+    descriptionEn: 'Curriculum Vitae or Resume for internship or job applications.',
+    descriptionTh: 'เอกสารประวัติส่วนตัวและประวัติการศึกษาเพื่อการฝึกงานหรือสมัครงาน',
+    suggestedCategory: 'internship_career',
+  },
+  {
+    en: 'Supporting Evidence / Other Documents',
+    th: 'เอกสารหลักฐานประกอบทั่วไป',
+    aliases: [
+      'supporting evidence / medical note (เอกสารหลักฐาน/ใบรับรองแพทย์)',
+      'supporting evidence & medical certificate',
+      'supporting evidence / medical note',
+      'เอกสารหลักฐานประกอบ / ใบรับรองแพทย์',
+      'เอกสารหลักฐานประกอบทั่วไป / ใบรับรองแพทย์',
+      'other_document',
+      'เอกสารอื่นๆ',
+      'other supporting documents',
+    ],
+    descriptionEn: 'Official medical certificates, hospital receipts, or external supporting documents.',
+    descriptionTh: 'ใบรับรองแพทย์ ใบเสร็จ หรือเอกสารหลักฐานจากหน่วยงานภายนอก เป็นเอกสารของนักศึกษาเอง',
+    suggestedCategory: 'general_consultation',
+  },
+]
+
+function cleanBilingualString(str: string, lang: Language): string {
+  if (!str) return ''
+  const trimmed = str.trim()
+  const parenMatch = trimmed.match(/^(.*?)\s*[\(（](.*?)[\)）]$/)
+  if (parenMatch) {
+    const part1 = parenMatch[1].trim()
+    const part2 = parenMatch[2].trim()
+    const isPart1Thai = /[\u0E00-\u0E7F]/.test(part1)
+    const isPart2Thai = /[\u0E00-\u0E7F]/.test(part2)
+    if (lang === 'th') {
+      if (isPart2Thai && !isPart1Thai) return part2
+      if (isPart1Thai) return part1
+    } else {
+      if (!isPart1Thai && isPart2Thai) return part1
+      if (!isPart2Thai && isPart1Thai) return part2
+    }
+  }
+  return trimmed
+}
+
 interface LanguageContextType {
   language: Language
   setLanguage: (lang: Language) => void
@@ -153,6 +385,8 @@ interface LanguageContextType {
   getExitReasonLabel: (value: string) => string
   getExitTypeLabel: (value: string) => string
   getWarningTypeLabel: (value: string) => string
+  getDocumentTypeLabel: (docTypeOrName?: { name?: string; labelTh?: string; labelEn?: string } | string | null) => string
+  getDocumentTypeDescription: (docTypeOrName?: { name?: string; labelTh?: string; labelEn?: string } | string | null) => string
 }
 
 const LanguageContext = createContext<LanguageContextType | null>(null)
@@ -260,6 +494,61 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     return language === 'th' ? item.labelTh : item.labelEn
   }
 
+  function findDocPreset(docTypeOrName?: { name?: string; labelTh?: string; labelEn?: string } | string | null) {
+    if (!docTypeOrName) return null
+    const normalize = (v?: string) => v?.trim().toLowerCase() || ''
+    const rawName = typeof docTypeOrName === 'string' ? docTypeOrName : (docTypeOrName.name || '')
+    const labelTh = typeof docTypeOrName === 'object' ? docTypeOrName?.labelTh : undefined
+    const labelEn = typeof docTypeOrName === 'object' ? docTypeOrName?.labelEn : undefined
+
+    const normName = normalize(rawName)
+    const normTh = normalize(labelTh)
+    const normEn = normalize(labelEn)
+
+    return DOCUMENT_TYPE_PRESETS.find(p => {
+      const pEn = normalize(p.en)
+      const pTh = normalize(p.th)
+      const matchesEn = pEn === normName || pEn === normEn || (labelEn && pEn === normalize(labelEn))
+      const matchesTh = pTh === normName || pTh === normTh || (labelTh && pTh === normalize(labelTh))
+      const matchesAliases = p.aliases.some(a => {
+        const normA = normalize(a)
+        return normA === normName || (normTh && normA === normTh) || (normEn && normA === normEn)
+      })
+      return matchesEn || matchesTh || matchesAliases
+    }) || null
+  }
+
+  function getDocumentTypeLabel(docTypeOrName?: { name?: string; labelTh?: string; labelEn?: string } | string | null): string {
+    if (!docTypeOrName) return ''
+    const preset = findDocPreset(docTypeOrName)
+    if (preset) {
+      return language === 'th' ? preset.th : preset.en
+    }
+
+    if (typeof docTypeOrName === 'object') {
+      const th = docTypeOrName.labelTh?.trim()
+      const en = docTypeOrName.labelEn?.trim()
+      if (language === 'th' && th) return cleanBilingualString(th, 'th')
+      if (language === 'en' && en) return cleanBilingualString(en, 'en')
+      if (docTypeOrName.name) return cleanBilingualString(docTypeOrName.name, language)
+    }
+
+    if (typeof docTypeOrName === 'string') {
+      return cleanBilingualString(docTypeOrName, language)
+    }
+    return ''
+  }
+
+  function getDocumentTypeDescription(docTypeOrName?: { name?: string; labelTh?: string; labelEn?: string } | string | null): string {
+    const preset = findDocPreset(docTypeOrName)
+    if (preset) {
+      return language === 'th' ? preset.descriptionTh : preset.descriptionEn
+    }
+    return language === 'th'
+      ? 'แบบฟอร์มทางการสำหรับการดำเนินการทางวิชาการและการให้คำปรึกษา'
+      : 'Official university form for academic and advising procedures.'
+  }
+
   return (
     <LanguageContext.Provider value={{
       language,
@@ -272,6 +561,8 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       getExitReasonLabel,
       getExitTypeLabel,
       getWarningTypeLabel,
+      getDocumentTypeLabel,
+      getDocumentTypeDescription,
     }}>
       {children}
     </LanguageContext.Provider>
