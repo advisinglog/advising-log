@@ -5,7 +5,7 @@ import { useLanguage } from '@/contexts/LanguageContext'
 import { PageHeader, DataTable, SearchInput, Pagination, Button } from '@/components/ui'
 import type { AuditLog } from '@/types'
 import { api } from '@/services/apiClient'
-import { ShieldCheck, ShieldAlert, Lock, RefreshCw, CheckCircle2, Fingerprint } from 'lucide-react'
+import { ShieldCheck, ShieldAlert, Lock, RefreshCw, Fingerprint } from 'lucide-react'
 
 export default function AuditLogs() {
   const store = useStore()
