@@ -75,6 +75,12 @@ const PRESET_FORM_NAMES: Record<string, { en: string; th: string; descriptionEn:
   },
 }
 
+const PRESET_FORM_ALIASES: Record<string, keyof typeof PRESET_FORM_NAMES> = {
+  scholarship_form: 'Scholarship / Financial Aid Form (คำร้องขอรับทุน)',
+  leave_request: 'Leave of Absence Request (คำร้องขอลาพักการศึกษา)',
+  drop_form: 'Late Registration Petition (คำร้องขอลงทะเบียนล่าช้า)',
+}
+
 export default function StudentForms() {
   const navigate = useNavigate()
   const store = useStore()
@@ -89,9 +95,26 @@ export default function StudentForms() {
 
   // Localized title & description helper
   function getDocDetails(name: string, labels?: { labelTh?: string; labelEn?: string }) {
-    const preset = Object.entries(PRESET_FORM_NAMES).find(([key, value]) =>
-      [key, value.en, value.th].some(label => label.toLowerCase() === name.toLowerCase())
-    )?.[1]
+    const normalize = (value?: string) => value?.trim().toLowerCase() || ''
+    const labelTh = labels?.labelTh?.trim()
+    const labelEn = labels?.labelEn?.trim()
+    if (labelTh && labelEn && normalize(labelTh) !== normalize(labelEn)) {
+      return {
+        title: language === 'th' ? labelTh : labelEn,
+        description: t(
+          'แบบฟอร์มทางการสำหรับการดำเนินการทางวิชาการและการให้คำปรึกษา',
+          'Official university form for academic and advising procedures.'
+        ),
+        suggestedCategory: 'general_consultation',
+      }
+    }
+
+    const aliasKey = PRESET_FORM_ALIASES[normalize(name)]
+    const preset = aliasKey
+      ? PRESET_FORM_NAMES[aliasKey]
+      : Object.entries(PRESET_FORM_NAMES).find(([key, value]) =>
+          [key, value.en, value.th].some(label => normalize(label) === normalize(name))
+        )?.[1]
     if (preset) {
       return {
         title: language === 'th' ? preset.th : preset.en,

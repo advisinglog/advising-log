@@ -3263,6 +3263,8 @@ app.post('/api/document-types', async (c) => {
       templateFileUrl: body.templateFileUrl,
       templateFileName: body.templateFileName,
       templatePublicId: body.templatePublicId,
+      labelTh: newDt.labelTh,
+      labelEn: newDt.labelEn,
       isActive: newDt.isActive
     }
   }, 201)

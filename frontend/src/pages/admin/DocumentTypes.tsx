@@ -136,6 +136,8 @@ export default function DocumentTypes() {
       if (!exists) {
         store.addDocumentType({
           name: preset.nameEn,
+          labelTh: preset.nameTh,
+          labelEn: preset.nameEn,
           signatureMethod: preset.signatureMethod,
           isActive: true,
         })
@@ -195,9 +197,20 @@ export default function DocumentTypes() {
       return
     }
 
+    const preset = PRESET_DOCUMENTS.find(
+      p => p.nameEn.toLowerCase() === cleanName.toLowerCase() || p.nameTh.toLowerCase() === cleanName.toLowerCase()
+    )
+    const labels = preset
+      ? { labelTh: preset.nameTh, labelEn: preset.nameEn }
+      : {
+          labelTh: editingDocType?.labelTh || cleanName,
+          labelEn: editingDocType?.labelEn || cleanName,
+        }
+
     if (editingDocType) {
       store.updateDocumentType(editingDocType.id, {
         name: cleanName,
+        ...labels,
         signatureMethod: formSignatureMethod,
         templateFileUrl: formTemplateFileUrl || undefined,
         templateFileName: formTemplateFileName || undefined,
@@ -208,6 +221,7 @@ export default function DocumentTypes() {
     } else {
       store.addDocumentType({
         name: cleanName,
+        ...labels,
         signatureMethod: formSignatureMethod,
         templateFileUrl: formTemplateFileUrl || undefined,
         templateFileName: formTemplateFileName || undefined,
