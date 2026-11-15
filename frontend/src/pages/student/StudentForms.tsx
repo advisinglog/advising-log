@@ -123,7 +123,7 @@ const PRESET_FORM_ALIASES: Record<string, keyof typeof PRESET_FORM_NAMES> = {
 export default function StudentForms() {
   const navigate = useNavigate()
   const store = useStore()
-  const { language, t } = useLanguage()
+  const { language, t, getDocumentTypeLabel, getDocumentTypeDescription } = useLanguage()
 
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedMethodFilter, setSelectedMethodFilter] = useState<'all' | SignatureMethod>('all')
@@ -134,6 +134,10 @@ export default function StudentForms() {
 
   // Localized title & description helper
   function getDocDetails(name: string, labels?: { labelTh?: string; labelEn?: string }) {
+    const dtLike = { name, labelTh: labels?.labelTh, labelEn: labels?.labelEn }
+    const title = getDocumentTypeLabel(dtLike) || name
+    const description = getDocumentTypeDescription(dtLike)
+
     const normalize = (value?: string) => value?.trim().toLowerCase() || ''
     const aliasKey = PRESET_FORM_ALIASES[normalize(name)]
     const preset = aliasKey
@@ -141,30 +145,21 @@ export default function StudentForms() {
       : Object.entries(PRESET_FORM_NAMES).find(([key, value]) =>
           [key, value.en, value.th].some(label => normalize(label) === normalize(name))
         )?.[1]
-    if (preset) {
-      return {
-        title: language === 'th' ? preset.th : preset.en,
-        description: language === 'th' ? preset.descriptionTh : preset.descriptionEn,
-        suggestedCategory: preset.suggestedCategory,
-      }
+
+    let suggestedCategory = preset?.suggestedCategory || 'general_consultation'
+    if (suggestedCategory === 'general_consultation') {
+      const norm = normalize(name)
+      if (norm.includes('scholarship') || norm.includes('ทุน')) suggestedCategory = 'scholarship_document'
+      else if (norm.includes('leave') || norm.includes('withdrawal') || norm.includes('exit') || norm.includes('ลาพัก') || norm.includes('ลาออก')) suggestedCategory = 'withdrawal_leave'
+      else if (norm.includes('add') || norm.includes('drop') || norm.includes('registration') || norm.includes('ลงทะเบียน') || norm.includes('ถอน')) suggestedCategory = 'registration'
+      else if (norm.includes('internship') || norm.includes('career') || norm.includes('resume') || norm.includes('ฝึกงาน')) suggestedCategory = 'career_internship'
+      else if (norm.includes('study plan') || norm.includes('transcript') || norm.includes('grade') || norm.includes('ผลการเรียน') || norm.includes('เกรด')) suggestedCategory = 'academic_performance'
     }
-    if (labels?.labelTh || labels?.labelEn) {
-      return {
-        title: language === 'th' ? (labels.labelTh || name) : (labels.labelEn || name),
-        description: t(
-          'แบบฟอร์มทางการสำหรับการดำเนินการทางวิชาการและการให้คำปรึกษา',
-          'Official university form for academic and advising procedures.'
-        ),
-        suggestedCategory: 'general_consultation',
-      }
-    }
+
     return {
-      title: name,
-      description: t(
-        'แบบฟอร์มทางการสำหรับการดำเนินการทางวิชาการและการให้คำปรึกษา',
-        'Official university form for academic and advising procedures.'
-      ),
-      suggestedCategory: 'general_consultation',
+      title,
+      description,
+      suggestedCategory,
     }
   }
 
