@@ -593,7 +593,7 @@ async function sendWorkspaceEmail(
   const tokenData = await tokenResponse.json() as { access_token?: string }
   if (!tokenData.access_token) return { sent: false, error: 'GOOGLE_ACCESS_TOKEN_MISSING' }
 
-  const targetUrl = 'https://advising-log.pages.dev/login'
+  const targetUrl = 'https://advising-log.pages.dev'
   const boundary = `====_AdvisingLog_${Date.now()}====`
   const formattedTimeTh = new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })
   const formattedTimeEn = new Date().toLocaleString('en-US', { timeZone: 'Asia/Bangkok', dateStyle: 'medium', timeStyle: 'short' })
@@ -642,8 +642,8 @@ async function sendWorkspaceEmail(
           : 'ระบบบริหารการให้คำปรึกษาทางวิชาการ (AdvisingLog) มหาวิทยาลัยแม่ฟ้าหลวง ขอแจ้งเตือนรายการใหม่ในระบบ ดังนี้:')
 
   const buttonText = isEn
-    ? (isStudent ? 'Sign in to View Appointment Details →' : isAdvisor ? 'Sign in to Review Request →' : 'Sign in to Review Details →')
-    : (isStudent ? 'เข้าสู่ระบบเพื่อดูรายละเอียดนัดหมาย →' : isAdvisor ? 'เข้าสู่ระบบเพื่อตรวจสอบคำร้อง →' : 'เข้าสู่ระบบเพื่อตรวจสอบข้อมูล →')
+    ? (isStudent ? 'View Appointment Details →' : isAdvisor ? 'Review Request Details →' : 'View Details →')
+    : (isStudent ? 'ดูรายละเอียดนัดหมาย →' : isAdvisor ? 'ดูรายละเอียดคำร้อง →' : 'ดูรายละเอียดข้อมูล →')
 
   const formattedTime = isEn ? formattedTimeEn : formattedTimeTh
   const boxTitle = isEn ? 'Notification Summary' : 'หัวข้อการแจ้งเตือน'
@@ -663,14 +663,14 @@ async function sendWorkspaceEmail(
         `• Details: ${message}`,
         `• ${timeLabel}: ${formattedTime}`,
         '',
-        'You can sign in to the AdvisingLog system at:',
+        'You can view details and take action in the AdvisingLog system at:',
         `👉 ${targetUrl}`,
         '',
         'Sincerely yours,',
         'Academic Advising & Quality Assurance System (AdvisingLog)',
         'School of Applied Digital Technology, Mae Fah Luang University',
         '--------------------------------------------------------------------------------',
-        'Note: This is an automated notification in compliance with the Personal Data Protection Act (PDPA), Mae Fah Luang University. Please do not reply directly to this email.',
+        'Note: This is an automated notification from AdvisingLog system. Please do not reply directly to this email.',
       ].join('\r\n')
     : [
         `เรื่อง: ${displaySubject}`,
@@ -684,14 +684,14 @@ async function sendWorkspaceEmail(
         `• รายละเอียด: ${message}`,
         `• ${timeLabel}: ${formattedTime}`,
         '',
-        'ท่านสามารถเข้าสู่ระบบเพื่อตรวจสอบข้อมูลและดำเนินการได้ที่:',
+        'ท่านสามารถตรวจสอบข้อมูลและดำเนินการได้ที่:',
         `👉 ${targetUrl}`,
         '',
         'ขอแสดงความนับถือ',
         'ระบบบริหารการให้คำปรึกษาทางวิชาการและการประกันคุณภาพการศึกษา (AdvisingLog)',
         'สำนักวิชาเทคโนโลยีดิจิทัลประยุกต์ มหาวิทยาลัยแม่ฟ้าหลวง',
         '--------------------------------------------------------------------------------',
-        'หมายเหตุ: อีเมลฉบับนี้เป็นการแจ้งเตือนอัตโนมัติจากระบบรักษาความปลอดภัยและการคุ้มครองข้อมูลส่วนบุคคล (PDPA) มหาวิทยาลัยแม่ฟ้าหลวง กรุณาอย่าตอบกลับอีเมลนี้โดยตรง',
+        'หมายเหตุ: ข้อความนี้เป็นการแจ้งเตือนอัตโนมัติจากระบบ AdvisingLog กรุณาอย่าตอบกลับอีเมลนี้โดยตรง',
       ].join('\r\n')
 
   const htmlBody = `<!DOCTYPE html>
@@ -777,8 +777,8 @@ async function sendWorkspaceEmail(
               </p>
               <p style="margin: 0; font-size: 11px; color: #94a3b8; line-height: 1.5; border-top: 1px dashed #cbd5e1; padding-top: 10px;">
                 ${isEn
-                  ? '* This is an automated notification in compliance with the Personal Data Protection Act (PDPA), Mae Fah Luang University. Please do not reply directly to this email.'
-                  : '* อีเมลนี้เป็นการแจ้งเตือนอัตโนมัติจากระบบรักษาความปลอดภัยและการคุ้มครองข้อมูลส่วนบุคคล (PDPA) มหาวิทยาลัยแม่ฟ้าหลวง กรุณาอย่าตอบกลับอีเมลนี้โดยตรง'}
+                  ? '* This is an automated notification from AdvisingLog system. Please do not reply directly to this email.'
+                  : '* ข้อความนี้เป็นการแจ้งเตือนอัตโนมัติจากระบบ AdvisingLog กรุณาอย่าตอบกลับอีเมลนี้โดยตรง'}
               </p>
             </td>
           </tr>
@@ -791,9 +791,10 @@ async function sendWorkspaceEmail(
 </html>`;
 
   const rawMessage = [
-    `From: ${GOOGLE_WORKSPACE_SENDER}`,
+    `From: AdvisingLog <${GOOGLE_WORKSPACE_SENDER}>`,
     `To: ${recipient}`,
     `Subject: ${encodeMimeHeader(displaySubject)}`,
+    `Date: ${new Date().toUTCString()}`,
     'MIME-Version: 1.0',
     `Content-Type: multipart/alternative; boundary="${boundary}"`,
     '',
