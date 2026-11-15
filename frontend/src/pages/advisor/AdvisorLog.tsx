@@ -5,7 +5,7 @@ import { useStore } from '@/data/store'
 import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { cn } from '@/lib/utils'
-import { PageHeader, Card, Button, EmptyState, DocumentViewerModal, Modal, Tabs, StatusBadge, type DocumentViewerTarget, RequiredMark, CustomSelect } from '@/components/ui'
+import { PageHeader, Card, Button, EmptyState, DocumentViewerModal, Tabs, type DocumentViewerTarget, RequiredMark, CustomSelect } from '@/components/ui'
 import {
   ClipboardCheck,
   User,
@@ -17,14 +17,13 @@ import {
   Trash2,
   CalendarClock,
   ChevronDown,
-  Clock,
-  Paperclip,
   DoorOpen,
 } from 'lucide-react'
 
 import { isAdvisorMatch } from '@/utils/advisorUtils'
 import { FollowUpTaskFields, emptyFollowUpDraft, useAssignFollowUps, useCheckDrafts, type FollowUpDraft } from '@/components/advisor/FollowUpTasks'
 import { getLocalDateString } from '@/utils/dateUtils'
+import { SessionLogModal, getRequestAttachments } from '@/components/advisor/SessionLogModal'
 import type { AdvisingRequest, AdvisingCategory, User as UserType } from '@/types'
 
 export default function AdvisorLog() {
@@ -114,48 +113,7 @@ export default function AdvisorLog() {
   }, [selectedRequestId, store.sessions])
 
   function getAttachments(request: AdvisingRequest): DocumentViewerTarget[] {
-    const studentObj = store.users.find(u => u.id === request.studentId)
-    return (Array.isArray(request.attachments) ? request.attachments : []).map((attachment, index) => {
-      let value = attachment as unknown
-      if (typeof value === 'string' && value.startsWith('{')) {
-        try {
-          value = JSON.parse(value)
-        } catch {}
-      }
-
-      if (typeof value === 'string') {
-        const matchedDoc = store.documents.find(
-          d => (d.studentId === request.studentId || (studentObj?.code && d.studentId.toUpperCase() === studentObj.code.toUpperCase())) &&
-               (d.fileName === value || d.documentName === value)
-        )
-        return {
-          id: matchedDoc?.id || `${request.id}-attachment-${index}`,
-          fileName: matchedDoc?.fileName || value,
-          title: matchedDoc?.documentName || value,
-          fileUrl: matchedDoc?.fileUrl,
-          cloudinaryPublicId: matchedDoc?.cloudinaryPublicId,
-          signatureMethod: matchedDoc?.signatureMethod,
-          studentName: studentObj?.name,
-          studentCode: studentObj?.code,
-          uploadedAt: matchedDoc?.uploadedAt,
-        }
-      }
-
-      const file = value as Record<string, unknown>
-      const fileName = String(file.fileName || file.name || file.originalFilename || `attachment-${index + 1}`)
-      return {
-        id: `${request.id}-attachment-${index}`,
-        fileName,
-        title: fileName,
-        fileUrl: typeof file.fileUrl === 'string' ? file.fileUrl : typeof file.url === 'string' ? file.url : typeof file.secureUrl === 'string' ? file.secureUrl : undefined,
-        cloudinaryPublicId: typeof file.cloudinaryPublicId === 'string' ? file.cloudinaryPublicId : typeof file.publicId === 'string' ? file.publicId : undefined,
-        fileType: typeof file.fileType === 'string' ? file.fileType : undefined,
-        signatureMethod: file.signatureMethod as any,
-        studentName: studentObj?.name,
-        studentCode: studentObj?.code,
-        uploadedAt: typeof file.uploadedAt === 'string' ? file.uploadedAt : undefined,
-      }
-    })
+    return getRequestAttachments(request, store.users, store.documents)
   }
 
 
@@ -1130,209 +1088,18 @@ export default function AdvisorLog() {
         </Card>
       )}
 
-      {(() => {
-        const viewingSession = viewingSessionId ? store.sessions.find(session => session.id === viewingSessionId) : null
-        if (!viewingSession) return null
-        const viewingRequest = store.requests.find(request => request.id === viewingSession.requestId)
-        const viewingStudent = store.users.find(user => user.id === viewingSession.studentId)
-        const viewingAppointment = store.appointments.find(
-          a => a.id === viewingSession.appointmentId || (viewingRequest && a.requestId === viewingRequest.id)
-        )
-        const sessionFollowUps = store.followUps.filter(
-          f => f.sessionId === viewingSession.id || (viewingRequest && f.requestId === viewingRequest.id)
-        )
-        const attachments = viewingRequest ? getAttachments(viewingRequest) : []
-
-        return (
-          <Modal
-            isOpen={!!viewingSession}
-            onClose={() => setViewingSessionId(null)}
-            title={t('รายละเอียดบันทึกการให้คำปรึกษา', 'Advising Log Details')}
-            size="lg"
-          >
-            <div className="space-y-4">
-              {/* Student & Session Meta Info */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/70 dark:border-slate-800 space-y-1">
-                  <span className="text-slate-400 font-medium block">{t('ข้อมูลนักศึกษา', 'Student Information')}</span>
-                  <p className="font-bold text-sm text-slate-900 dark:text-slate-100">{viewingStudent?.name || viewingSession.studentId}</p>
-                  {viewingStudent?.code && (
-                    <p className="text-xs text-slate-600 dark:text-slate-300 font-mono">
-                      {t('รหัสนักศึกษา:', 'Student ID:')} {viewingStudent.code}
-                    </p>
-                  )}
-                  {viewingStudent?.department && (
-                    <p className="text-[0.6875rem] text-slate-500 dark:text-slate-400">
-                      {t('สำนักวิชา / สาขา:', 'Department:')} {viewingStudent.department}
-                    </p>
-                  )}
-                  {viewingStudent?.email && (
-                    <p className="text-[0.6875rem] text-slate-500 dark:text-slate-400">
-                      {t('อีเมล:', 'Email:')} {viewingStudent.email}
-                    </p>
-                  )}
-                </div>
-
-                <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/70 dark:border-slate-800 space-y-1">
-                  <span className="text-slate-400 font-medium block">{t('ข้อมูลการเข้าพบ', 'Session Information')}</span>
-                  <p className="font-semibold text-slate-800 dark:text-slate-200">
-                    <span className="text-slate-400 font-normal mr-1">{t('วันที่บันทึก:', 'Recorded Date:')}</span>
-                    {viewingSession.sessionDate}
-                  </p>
-                  {viewingAppointment?.scheduledDate && (
-                    <p className="text-xs text-slate-600 dark:text-slate-300">
-                      <span className="text-slate-400 mr-1">{t('วัน-เวลานัดหมาย:', 'Scheduled Slot:')}</span>
-                      {viewingAppointment.scheduledDate} {viewingAppointment.scheduledTime || ''}
-                    </p>
-                  )}
-                  {viewingAppointment?.location && (
-                    <p className="text-[0.6875rem] text-slate-500 dark:text-slate-400">
-                      <span className="text-slate-400 mr-1">{t('สถานที่ / รูปแบบ:', 'Location / Mode:')}</span>
-                      {viewingAppointment.location}
-                    </p>
-                  )}
-                  <div className="pt-1">
-                    <span className="inline-block px-2.5 py-0.5 rounded-full text-[0.6875rem] font-semibold bg-sky-100 dark:bg-sky-900/60 text-sky-800 dark:text-sky-200">
-                      {viewingRequest ? getCategoryLabel(viewingRequest.category) : t('การให้คำปรึกษาทั่วไป', 'General Advising')}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Student Request Topic / Reason if available */}
-              {viewingRequest?.details && (
-                <div className="p-3.5 rounded-xl bg-sky-50/60 dark:bg-sky-950/20 border border-sky-100 dark:border-sky-900/40 space-y-1">
-                  <span className="text-xs font-bold text-sky-900 dark:text-sky-300 flex items-center gap-1.5">
-                    <FileText className="h-3.5 w-3.5 text-sky-600" />
-                    {t('รายละเอียดที่นักศึกษาแจ้งขอเข้าพบ', 'Student Consultation Request Notes')}
-                  </span>
-                  <p className="text-xs text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">
-                    {viewingRequest.details}
-                  </p>
-                </div>
-              )}
-
-              {/* Advising Summary */}
-              <div>
-                <span className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1.5 flex items-center gap-1.5">
-                  <ClipboardCheck className="h-4 w-4 text-emerald-600" />
-                  {t('สรุปผลการให้คำปรึกษาและข้อตกลงร่วมกัน', 'Session Summary & Discussion')}
-                </span>
-                <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/70 dark:border-slate-800 text-sm text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-wrap">
-                  {viewingSession.summary || t('ไม่มีสรุปบันทึก', 'No summary recorded')}
-                </div>
-              </div>
-
-              {/* Advice Given if distinct */}
-              {viewingSession.advice && viewingSession.advice !== viewingSession.summary && (
-                <div>
-                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1.5">
-                    {t('คำแนะนำและแนวทางแก้ไขจากอาจารย์', 'Advisor Guidance & Advice')}
-                  </span>
-                  <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/70 dark:border-slate-800 text-xs sm:text-sm text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-wrap">
-                    {viewingSession.advice}
-                  </div>
-                </div>
-              )}
-
-              {/* Follow-up Tasks */}
-              {sessionFollowUps.length > 0 && (
-                <div>
-                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1.5 flex items-center gap-1.5">
-                    <Clock className="h-4 w-4 text-amber-600" />
-                    {t('งานติดตามผลที่มอบหมาย', 'Assigned Follow-up Tasks')} ({sessionFollowUps.length})
-                  </span>
-                  <div className="space-y-2">
-                    {sessionFollowUps.map(fu => (
-                      <div
-                        key={fu.id}
-                        className="flex items-center justify-between gap-3 p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800"
-                      >
-                        <div className="min-w-0">
-                          <p className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100">
-                            {fu.task}
-                          </p>
-                          <p className="text-[0.6875rem] text-slate-500 dark:text-slate-400 mt-0.5">
-                            {t('กำหนดส่ง:', 'Due Date:')} {fu.dueDate || '-'}
-                          </p>
-                        </div>
-                        <StatusBadge status={fu.status} />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Attachments */}
-              {attachments.length > 0 && (
-                <div>
-                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1.5 flex items-center gap-1.5">
-                    <Paperclip className="h-4 w-4 text-slate-500" />
-                    {t('เอกสารแนบ', 'Attached Documents')} ({attachments.length})
-                  </span>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {attachments.map(doc => (
-                      <button
-                        key={doc.id}
-                        type="button"
-                        onClick={() => setPreviewDoc(doc)}
-                        className="flex items-center justify-between p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-800 hover:border-sky-300 dark:hover:border-sky-700 bg-white dark:bg-slate-900 text-left transition-colors cursor-pointer"
-                      >
-                        <div className="min-w-0 flex items-center gap-2">
-                          <FileText className="h-4 w-4 text-sky-600 shrink-0" />
-                          <span className="text-xs font-medium text-slate-800 dark:text-slate-200 truncate">
-                            {doc.title || doc.fileName}
-                          </span>
-                        </div>
-                        <span className="text-[0.6875rem] text-sky-600 dark:text-sky-400 shrink-0 ml-2">
-                          {t('เปิดดู', 'View')}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Modal Actions */}
-              <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40"
-                  onClick={() => {
-                    deleteSavedLog(viewingSession.id)
-                    setViewingSessionId(null)
-                  }}
-                >
-                  <Trash2 className="h-4 w-4 mr-1.5" />
-                  {t('ลบบันทึก', 'Delete Log')}
-                </Button>
-                <div className="flex items-center gap-2">
-                  {viewingSession.requestId && (
-                    <Button
-                      type="button"
-                      variant="primary"
-                      onClick={() => {
-                        const reqId = viewingSession.requestId
-                        if (reqId) {
-                          setViewingSessionId(null)
-                          editSavedLog(reqId)
-                        }
-                      }}
-                    >
-                      <Pencil className="h-4 w-4 mr-1.5" />
-                      {t('แก้ไขบันทึก', 'Edit Log')}
-                    </Button>
-                  )}
-                  <Button type="button" variant="secondary" onClick={() => setViewingSessionId(null)}>
-                    {t('ปิด', 'Close')}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </Modal>
-        )
-      })()}
+      <SessionLogModal
+        sessionId={viewingSessionId}
+        onClose={() => setViewingSessionId(null)}
+        onEdit={requestId => {
+          setViewingSessionId(null)
+          editSavedLog(requestId)
+        }}
+        onDelete={sessionId => {
+          deleteSavedLog(sessionId)
+          setViewingSessionId(null)
+        }}
+      />
 
       {/* Document Viewer Modal */}
       {previewDoc && (

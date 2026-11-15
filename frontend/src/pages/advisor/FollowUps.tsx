@@ -10,6 +10,7 @@ import { ListChecks, ListPlus, ArrowRight, CheckCircle2, RotateCcw, Calendar, Cl
 import { getLocalDateString } from '@/utils/dateUtils'
 import type { FollowUp } from '@/types'
 import { AddFollowUpModal } from '@/components/advisor/FollowUpTasks'
+import { SessionLogModal } from '@/components/advisor/SessionLogModal'
 import { findUserByReference } from '@/utils/advisorUtils'
 
 export default function AdvisorFollowUps() {
@@ -25,6 +26,7 @@ export default function AdvisorFollowUps() {
   const [search, setSearch] = useState('')
   const [showAddTask, setShowAddTask] = useState(false)
   const [previewDoc, setPreviewDoc] = useState<DocumentViewerTarget | null>(null)
+  const [viewingSessionId, setViewingSessionId] = useState<string | null>(null)
 
   if (!currentUser) return null
 
@@ -162,6 +164,8 @@ export default function AdvisorFollowUps() {
             const isOverdue = activeTab === 'pending' && followUp.dueDate && followUp.dueDate < todayStr
             const progressRecord = store.followUpProgress.find(progress => progress.followUpId === followUp.id)
             const evidenceDoc = store.documents.find(doc => doc.description?.includes(`followUpId:${followUp.id}`))
+            // The saved meeting notes this task came from (opened in place, without leaving this page)
+            const sessionLog = store.sessions.find(s => s.id === followUp.sessionId) || (request ? store.sessions.find(s => s.requestId === request.id) : undefined)
 
             return (
               <div
@@ -298,18 +302,11 @@ export default function AdvisorFollowUps() {
                         <RotateCcw className="h-3 w-3 text-slate-500" />
                         {t('นำกลับมาติดตามต่อ', 'Reopen')}
                       </Button>
-                      {request && (
+                      {sessionLog && currentUser.role === 'advisor' && (
                         <Button
                           size="sm"
                           variant="ghost"
-                          onClick={() =>
-                            navigate('/advisor/log', {
-                              state: {
-                                requestId: request.id,
-                                studentId: followUp.studentId,
-                              },
-                            })
-                          }
+                          onClick={() => setViewingSessionId(sessionLog.id)}
                         >
                           {t('ดูบันทึก', 'View Log')}
                         </Button>
@@ -322,6 +319,12 @@ export default function AdvisorFollowUps() {
           })}
         </div>
       )}
+
+      <SessionLogModal
+        sessionId={viewingSessionId}
+        onClose={() => setViewingSessionId(null)}
+        onEdit={requestId => navigate('/advisor/log', { state: { requestId, edit: true } })}
+      />
 
       <DocumentViewerModal
         isOpen={Boolean(previewDoc)}
