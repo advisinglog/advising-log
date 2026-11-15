@@ -31,6 +31,13 @@ import { getCloudinaryDownloadUrl } from '@/services/cloudinaryService'
 
 // Standard Preset English/Thai Form Name Localizer
 const PRESET_FORM_NAMES: Record<string, { en: string; th: string; descriptionEn: string; descriptionTh: string; suggestedCategory: string }> = {
+  transcript: {
+    en: 'Official / Unofficial Transcript',
+    th: 'ใบรายงานผลการศึกษา',
+    descriptionEn: 'Official or unofficial academic transcript for advising, applications, and university procedures.',
+    descriptionTh: 'ใบรายงานผลการศึกษาสำหรับการปรึกษา การสมัคร และการดำเนินการด้านการศึกษา',
+    suggestedCategory: 'academic_progress',
+  },
   'Exit Petition Form (คำร้องขอลาออก)': {
     en: 'Exit Petition Form (Withdrawal Request)',
     th: 'แบบคำร้องขอลาออกจากการเป็นนักศึกษา',
@@ -50,6 +57,13 @@ const PRESET_FORM_NAMES: Record<string, { en: string; th: string; descriptionEn:
     th: 'แบบคำร้องขอลงทะเบียนเรียน / เพิ่ม-ถอนล่าช้า',
     descriptionEn: 'Petition to add or drop courses after the official university deadline. Supports electronic signatures.',
     descriptionTh: 'แบบฟอร์มขอเพิ่มหรือถอนรายวิชาหลังจากเลยกำหนดเวลาทางการ สามารถลงลายมือชื่อดิจิทัลได้',
+    suggestedCategory: 'registration',
+  },
+  'Course Withdrawal Form (คำร้องขอถอนรายวิชา)': {
+    en: 'Course Withdrawal / Drop Form',
+    th: 'คำร้องขอถอนรายวิชา',
+    descriptionEn: 'Request to withdraw from a course according to university registration procedures.',
+    descriptionTh: 'แบบฟอร์มขอถอนรายวิชาตามขั้นตอนการลงทะเบียนของมหาวิทยาลัย',
     suggestedCategory: 'registration',
   },
   'Study Plan / Degree Audit Form (แผนการเรียน)': {
@@ -73,12 +87,37 @@ const PRESET_FORM_NAMES: Record<string, { en: string; th: string; descriptionEn:
     descriptionTh: 'ใบรับรองแพทย์ ใบเสร็จ หรือเอกสารหลักฐานจากหน่วยงานภายนอก เป็นเอกสารของนักศึกษาเอง ไม่ต้องใช้แบบฟอร์มของมหาวิทยาลัย',
     suggestedCategory: 'general_consultation',
   },
+  medical_certificate: {
+    en: 'Medical Certificate / Health Proof',
+    th: 'ใบรับรองแพทย์',
+    descriptionEn: 'Medical certificate or health-related supporting evidence for an advising request.',
+    descriptionTh: 'ใบรับรองแพทย์หรือเอกสารหลักฐานด้านสุขภาพสำหรับคำร้องขอคำปรึกษา',
+    suggestedCategory: 'general_consultation',
+  },
+  resume_cv: {
+    en: 'Resume / Curriculum Vitae',
+    th: 'ประวัติย่อ / เรซูเม่',
+    descriptionEn: 'Resume or curriculum vitae for career and internship advising.',
+    descriptionTh: 'ประวัติย่อหรือเรซูเม่สำหรับการให้คำปรึกษาด้านอาชีพและการฝึกงาน',
+    suggestedCategory: 'career_internship',
+  },
+  other_document: {
+    en: 'Other Supporting Documents',
+    th: 'เอกสารประกอบอื่น ๆ',
+    descriptionEn: 'Other supporting documents related to an advising request.',
+    descriptionTh: 'เอกสารประกอบอื่น ๆ ที่เกี่ยวข้องกับคำร้องขอคำปรึกษา',
+    suggestedCategory: 'general_consultation',
+  },
 }
 
 const PRESET_FORM_ALIASES: Record<string, keyof typeof PRESET_FORM_NAMES> = {
+  transcript: 'transcript',
   scholarship_form: 'Scholarship / Financial Aid Form (คำร้องขอรับทุน)',
   leave_request: 'Leave of Absence Request (คำร้องขอลาพักการศึกษา)',
-  drop_form: 'Late Registration Petition (คำร้องขอลงทะเบียนล่าช้า)',
+  drop_form: 'Course Withdrawal Form (คำร้องขอถอนรายวิชา)',
+  medical_certificate: 'medical_certificate',
+  resume_cv: 'resume_cv',
+  other_document: 'other_document',
 }
 
 export default function StudentForms() {
@@ -96,19 +135,6 @@ export default function StudentForms() {
   // Localized title & description helper
   function getDocDetails(name: string, labels?: { labelTh?: string; labelEn?: string }) {
     const normalize = (value?: string) => value?.trim().toLowerCase() || ''
-    const labelTh = labels?.labelTh?.trim()
-    const labelEn = labels?.labelEn?.trim()
-    if (labelTh && labelEn && normalize(labelTh) !== normalize(labelEn)) {
-      return {
-        title: language === 'th' ? labelTh : labelEn,
-        description: t(
-          'แบบฟอร์มทางการสำหรับการดำเนินการทางวิชาการและการให้คำปรึกษา',
-          'Official university form for academic and advising procedures.'
-        ),
-        suggestedCategory: 'general_consultation',
-      }
-    }
-
     const aliasKey = PRESET_FORM_ALIASES[normalize(name)]
     const preset = aliasKey
       ? PRESET_FORM_NAMES[aliasKey]
@@ -122,6 +148,8 @@ export default function StudentForms() {
         suggestedCategory: preset.suggestedCategory,
       }
     }
+    const labelTh = labels?.labelTh?.trim()
+    const labelEn = labels?.labelEn?.trim()
     if (labels?.labelTh || labels?.labelEn) {
       return {
         title: language === 'th' ? (labels.labelTh || name) : (labels.labelEn || name),
