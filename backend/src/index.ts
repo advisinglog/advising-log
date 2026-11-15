@@ -1365,6 +1365,21 @@ app.post('/api/roster', async (c) => {
 // ============================================================
 // 2. Advising Requests
 // ============================================================
+
+// `attachments` is stored as JSON text in D1; the API always returns it as an array.
+function parseAttachments(raw: unknown): unknown[] {
+  if (Array.isArray(raw)) return raw
+  if (typeof raw === 'string') {
+    try {
+      const parsed = JSON.parse(raw)
+      return Array.isArray(parsed) ? parsed : []
+    } catch {
+      return []
+    }
+  }
+  return []
+}
+
 app.get('/api/requests', async (c) => {
   const database = db(c)
   if (!database) return c.json({ requests: [] })
@@ -1410,13 +1425,7 @@ app.get('/api/requests', async (c) => {
       delete r.satisfactionComment
       delete r.satisfactionAt
     }
-    let att = []
-    if (Array.isArray(r.attachments)) {
-      att = r.attachments
-    } else if (typeof r.attachments === 'string') {
-      try { att = JSON.parse(r.attachments) } catch { att = [] }
-    }
-    return { ...r, attachments: Array.isArray(att) ? att : [] }
+    return { ...r, attachments: parseAttachments(r.attachments) }
   }
 
   let query = database.select().from(schema.advisingRequests)
@@ -1529,7 +1538,7 @@ app.post('/api/requests', async (c) => {
 
   try {
     await database.insert(schema.advisingRequests).values(newReq)
-    return c.json({ success: true, request: newReq }, 201)
+    return c.json({ success: true, request: { ...newReq, attachments: parseAttachments(newReq.attachments) } }, 201)
   } catch (error) {
     console.error('Failed to create advising request:', error)
     return c.json({ error: 'The advising request could not be saved.' }, 500)

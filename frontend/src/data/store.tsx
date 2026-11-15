@@ -72,6 +72,27 @@ function now(): string {
   return getLocalDateString()
 }
 
+// The API may return `attachments` as JSON text (as stored in D1) or already parsed.
+// Every request entering the store goes through here so the UI can rely on an array.
+function normalizeRequest(r: any): AdvisingRequest {
+  let attachments: string[] = []
+  if (Array.isArray(r.attachments)) {
+    attachments = r.attachments
+  } else if (typeof r.attachments === 'string') {
+    try {
+      const parsed = JSON.parse(r.attachments)
+      if (Array.isArray(parsed)) attachments = parsed
+    } catch { /* malformed JSON → no attachments */ }
+  }
+  return {
+    ...r,
+    cancellationReason: r.cancellationReason || r.cancellation_reason,
+    cancelledBy: r.cancelledBy || r.cancelled_by,
+    cancelledAt: r.cancelledAt || r.cancelled_at,
+    attachments,
+  }
+}
+
 // --- Store Shape ---
 
 interface StoreState {
@@ -321,18 +342,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         setRoster(dedupedRoster)
       }
       if (rRes && Array.isArray(rRes.requests)) {
-        const normalizedRequests = rRes.requests.map((r: any) => ({
-          ...r,
-          cancellationReason: r.cancellationReason || r.cancellation_reason,
-          cancelledBy: r.cancelledBy || r.cancelled_by,
-          cancelledAt: r.cancelledAt || r.cancelled_at,
-          attachments: Array.isArray(r.attachments)
-            ? r.attachments
-            : typeof r.attachments === 'string'
-              ? (() => { try { const p = JSON.parse(r.attachments); return Array.isArray(p) ? p : [] } catch { return [] } })()
-              : [],
-        }))
-        setRequests(normalizedRequests)
+        setRequests(rRes.requests.map(normalizeRequest))
       }
       if (aptRes && Array.isArray(aptRes.appointments)) setAppointments(aptRes.appointments)
       if (fRes && Array.isArray(fRes.followUps)) setFollowUps(fRes.followUps)
@@ -437,7 +447,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       throw new Error('The advising request could not be saved.')
     }
 
-    const persistedRequest = response.request
+    const persistedRequest = normalizeRequest(response.request)
     setRequests(prev => [persistedRequest, ...prev.filter(r => r.id !== newReq.id && r.id !== persistedRequest.id)])
     return persistedRequest
   }, [])
