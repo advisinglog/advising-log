@@ -451,6 +451,91 @@ describe('Student meeting check-in rules', () => {
   })
 })
 
+describe('Tamper-Evident Audit Logging & Non-Repudiation', () => {
+  it('computes deterministic SHA-256 hash chains that detect tampering', async () => {
+    const { computeAuditHash } = await import('./index')
+
+    const entry1 = {
+      id: 'LOG001',
+      prevHash: 'GENESIS',
+      timestamp: '2026-11-15T10:00:00.000Z',
+      userId: 'STU001',
+      action: 'document_signed',
+      targetId: 'DOC001',
+      ipAddress: '192.168.1.1',
+      description: 'Signed scholarship renewal form',
+    }
+
+    const hash1 = await computeAuditHash(entry1)
+    expect(hash1).toBeDefined()
+    expect(hash1.length).toBe(64) // SHA-256 hex string
+
+    // Chain entry 2 to entry 1's hash
+    const entry2 = {
+      id: 'LOG002',
+      prevHash: hash1,
+      timestamp: '2026-11-15T10:05:00.000Z',
+      userId: 'ADV001',
+      action: 'session_completed',
+      targetId: 'SES001',
+      ipAddress: '192.168.1.2',
+      description: 'Completed advising session',
+    }
+
+    const hash2 = await computeAuditHash(entry2)
+    expect(hash2).toBeDefined()
+    expect(hash2.length).toBe(64)
+    expect(hash2).not.toBe(hash1)
+
+    // Tampering test: if any field is changed (e.g. description altered)
+    const tamperedEntry1 = { ...entry1, description: 'Forged description' }
+    const tamperedHash1 = await computeAuditHash(tamperedEntry1)
+    expect(tamperedHash1).not.toBe(hash1)
+  })
+
+  it('rejects /api/audit-logs/verify without admin role and fails safely on detached DB', async () => {
+    const mod = await import('./index')
+    const app = (mod.default || mod) as any
+    const secret = 'test-secret-that-is-at-least-32-chars-long-12345'
+    const studentToken = await (await import('./auth')).signSession({
+      sub: 'STU001',
+      name: 'Student',
+      email: 'student@lamduan.mfu.ac.th',
+      role: 'student',
+    }, secret)
+    const adminToken = await (await import('./auth')).signSession({
+      sub: 'ADM001',
+      name: 'Admin',
+      email: 'admin@mfu.ac.th',
+      role: 'admin',
+    }, secret)
+
+    // Student is denied 403
+    const deniedRes = await app.fetch(
+      new Request('http://localhost/api/audit-logs/verify'),
+      { SESSION_SECRET: secret }
+    )
+    expect(deniedRes.status).toBe(401)
+
+    const studentRes = await app.fetch(
+      new Request('http://localhost/api/audit-logs/verify', {
+        headers: { Authorization: `Bearer ${studentToken}` },
+      }),
+      { SESSION_SECRET: secret }
+    )
+    expect(studentRes.status).toBe(403)
+
+    // Admin allowed, reports 503 if DB is detached
+    const adminRes = await app.fetch(
+      new Request('http://localhost/api/audit-logs/verify', {
+        headers: { Authorization: `Bearer ${adminToken}` },
+      }),
+      { SESSION_SECRET: secret }
+    )
+    expect(adminRes.status).toBe(503)
+  })
+})
+
 describe('Worker entry file', () => {
   // Cloudflare treats every named export of the entry file as an entrypoint: a plain value
   // (e.g. `export const X = 7`) makes the Worker fail to start.

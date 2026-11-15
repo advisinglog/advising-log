@@ -80,7 +80,7 @@ export async function verifyGoogleAccessToken(accessToken: string, clientId: str
       name = profile.name
       picture = profile.picture
     }
-  } catch {}
+  } catch { }
 
   return { email: info.email.toLowerCase().trim(), name, picture, sub: info.sub || info.user_id || '' }
 }
@@ -190,6 +190,7 @@ const ROUTE_RULES: Array<[method: string, path: RegExp, roles: Role[]]> = [
   // Audit logs: anyone may append (identity is taken from the session), only admins may read
   ['POST', /^\/api\/audit-logs$/, ALL],
   ['GET', /^\/api\/audit-logs$/, ADMINS],
+  ['GET', /^\/api\/audit-logs\/verify$/, ADMINS],
 
   // AI
   ['POST', /^\/api\/qa\/ai-analyze$/, ['qa_chair']],

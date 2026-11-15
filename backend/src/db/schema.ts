@@ -185,7 +185,7 @@ export const earlyWarnings = sqliteTable('early_warnings', {
   createdAt: text('created_at').notNull(),
 })
 
-// 13. PDPA & Security Audit Logs
+// 13. PDPA & Security Audit Logs (Tamper-Evident SHA-256 Chaining)
 export const auditLogs = sqliteTable('audit_logs', {
   id: text('id').primaryKey(),
   userId: text('user_id').notNull(),
@@ -196,6 +196,8 @@ export const auditLogs = sqliteTable('audit_logs', {
   targetId: text('target_id'),
   timestamp: text('timestamp').notNull(),
   ipAddress: text('ip_address'),
+  prevHash: text('prev_hash'),
+  hash: text('hash'),
 })
 
 // 14. Multi-Key AI Governance (Cloudflare D1)

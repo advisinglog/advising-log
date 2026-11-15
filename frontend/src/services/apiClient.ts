@@ -366,6 +366,17 @@ class ApiClient {
     return this.request<{ logs: AuditLog[] }>('/api/audit-logs')
   }
 
+  async verifyAuditLogs() {
+    return this.request<{
+      success: boolean
+      verified: boolean
+      totalLogs: number
+      hashedLogs: number
+      brokenLogId?: string | null
+      status: string
+    }>('/api/audit-logs/verify')
+  }
+
   async logAudit(log: Partial<AuditLog>) {
     return this.request<{ success: boolean; log: AuditLog }>('/api/audit-logs', {
       method: 'POST',

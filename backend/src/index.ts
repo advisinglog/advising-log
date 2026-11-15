@@ -3,7 +3,7 @@ import { cors } from 'hono/cors'
 import { z } from 'zod'
 import { getDb } from './db'
 import * as schema from './db/schema'
-import { eq, desc, and, or, inArray } from 'drizzle-orm'
+import { eq, desc, asc, and, or, inArray } from 'drizzle-orm'
 import {
   AuthError,
   allowedRolesFor,
@@ -77,7 +77,37 @@ function clientIp(c: any): string {
   return c.req.header('cf-connecting-ip') || c.req.header('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
 }
 
-/** Append-only audit record (Computer Crime Act §26). Never throws. */
+/**
+ * Cryptographic SHA-256 Hash Chaining for Non-Repudiation & Tamper-Evident Audit Logs.
+ * Binds actor identity, server timestamp, client IP, action, target, and previous record hash.
+ */
+export async function computeAuditHash(entry: {
+  id: string
+  prevHash: string
+  timestamp: string
+  userId: string
+  action: string
+  targetId?: string | null
+  ipAddress?: string | null
+  description: string
+}): Promise<string> {
+  const content = [
+    entry.id,
+    entry.prevHash || 'GENESIS',
+    entry.timestamp,
+    entry.userId,
+    entry.action,
+    entry.targetId || '',
+    entry.ipAddress || '',
+    entry.description,
+  ].join('|')
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(content))
+  return Array.from(new Uint8Array(digest))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('')
+}
+
+/** Append-only audit record (Computer Crime Act §26 & OWASP Tamper-Evident). Never throws. */
 async function writeAudit(c: any, entry: {
   userId: string
   userName: string
@@ -89,12 +119,34 @@ async function writeAudit(c: any, entry: {
   const database = db(c)
   if (!database) return
   try {
+    const lastRow = await database
+      .select({ hash: schema.auditLogs.hash })
+      .from(schema.auditLogs)
+      .orderBy(desc(schema.auditLogs.timestamp))
+      .limit(1)
+    const prevHash = lastRow?.[0]?.hash || 'GENESIS'
+    const id = `LOG${Date.now()}${Math.random().toString(36).slice(2, 6)}`
+    const timestamp = new Date().toISOString()
+    const ipAddress = clientIp(c)
+    const hash = await computeAuditHash({
+      id,
+      prevHash,
+      timestamp,
+      userId: entry.userId,
+      action: entry.action,
+      targetId: entry.targetId ?? null,
+      ipAddress,
+      description: entry.description,
+    })
+
     await database.insert(schema.auditLogs).values({
-      id: `LOG${Date.now()}${Math.random().toString(36).slice(2, 6)}`,
+      id,
       ...entry,
       targetId: entry.targetId ?? null,
-      timestamp: new Date().toISOString(),
-      ipAddress: clientIp(c),
+      timestamp,
+      ipAddress,
+      prevHash,
+      hash,
     })
   } catch { }
 }
@@ -2451,7 +2503,7 @@ app.post('/api/early-warnings', async (c) => {
 })
 
 // ============================================================
-// 7. Audit Logs & Referrals
+// 7. Audit Logs & Referrals (Non-Repudiation & Tamper-Evident)
 // ============================================================
 app.get('/api/audit-logs', async (c) => {
   const database = db(c)
@@ -2464,23 +2516,99 @@ app.get('/api/audit-logs', async (c) => {
   return c.json({ logs: normalized })
 })
 
+app.get('/api/audit-logs/verify', async (c) => {
+  const database = db(c)
+  if (!database) return c.json({ error: 'Database unavailable' }, 503)
+
+  // Verify chronological SHA-256 chain
+  const rows = await database.select().from(schema.auditLogs).orderBy(asc(schema.auditLogs.timestamp)).all()
+  let verified = true
+  let brokenLogId: string | null = null
+  let expectedPrevHash = 'GENESIS'
+
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i]
+    if (row.hash) {
+      if (row.prevHash && row.prevHash !== expectedPrevHash && i > 0 && expectedPrevHash !== 'GENESIS') {
+        verified = false
+        brokenLogId = row.id
+        break
+      }
+      const calculatedHash = await computeAuditHash({
+        id: row.id,
+        prevHash: row.prevHash || 'GENESIS',
+        timestamp: row.timestamp,
+        userId: row.userId,
+        action: row.action,
+        targetId: row.targetId,
+        ipAddress: row.ipAddress,
+        description: row.description,
+      })
+      if (calculatedHash !== row.hash) {
+        verified = false
+        brokenLogId = row.id
+        break
+      }
+      expectedPrevHash = row.hash
+    }
+  }
+
+  const hashedLogsCount = rows.filter(r => Boolean(r.hash)).length
+  return c.json({
+    success: true,
+    verified,
+    totalLogs: rows.length,
+    hashedLogs: hashedLogsCount,
+    brokenLogId,
+    status: verified ? 'TAMPER_EVIDENT_CHAIN_VERIFIED' : 'TAMPERING_DETECTED',
+  })
+})
+
 app.post('/api/audit-logs', async (c) => {
   const database = db(c)
   if (!database) return c.json({ error: 'Database unavailable' }, 503)
 
   const body = await c.req.json()
   const auth = c.get('auth')!
+
+  const lastRow = await database
+    .select({ hash: schema.auditLogs.hash })
+    .from(schema.auditLogs)
+    .orderBy(desc(schema.auditLogs.timestamp))
+    .limit(1)
+  const prevHash = lastRow?.[0]?.hash || 'GENESIS'
+
+  const id = `LOG${Date.now()}${Math.random().toString(36).slice(2, 6)}`
+  const timestamp = new Date().toISOString()
+  const ipAddress = clientIp(c)
+  const action = String(body.action || 'unknown').slice(0, 64)
+  const description = String(body.description || '').slice(0, 2000)
+  const targetId = body.targetId ? String(body.targetId).slice(0, 128) : null
+
+  const hash = await computeAuditHash({
+    id,
+    prevHash,
+    timestamp,
+    userId: auth.userId,
+    action,
+    targetId,
+    ipAddress,
+    description,
+  })
+
   // Identity, time and IP come from the server, never from the client (no spoofing)
   const log = {
-    id: `LOG${Date.now()}${Math.random().toString(36).slice(2, 6)}`,
+    id,
     userId: auth.userId,
     userName: auth.name,
     userRole: auth.role,
-    action: String(body.action || 'unknown').slice(0, 64),
-    description: String(body.description || '').slice(0, 2000),
-    targetId: body.targetId ? String(body.targetId).slice(0, 128) : null,
-    timestamp: new Date().toISOString(),
-    ipAddress: clientIp(c),
+    action,
+    description,
+    targetId,
+    timestamp,
+    ipAddress,
+    prevHash,
+    hash,
   }
 
   await database.insert(schema.auditLogs).values(log)

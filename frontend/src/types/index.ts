@@ -462,6 +462,9 @@ export interface AuditLog {
   targetId?: string
   metadata?: string
   createdAt: string
+  ipAddress?: string
+  prevHash?: string
+  hash?: string
 }
 
 export interface SystemApiConfig {
