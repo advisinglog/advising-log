@@ -8,7 +8,7 @@ import { useLanguage } from '@/contexts/LanguageContext'
 import { PageHeader, StatCard, Card, StatusBadge, EmptyState, Button, StudentProfileBanner, GoogleCalendarButton } from '@/components/ui'
 import { Calendar, Clock, ListChecks, FileEdit, ArrowRight, BookOpen, CheckCircle2, XCircle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 
 import { getLocalDateString } from '@/utils/dateUtils'
 import { checkInAppointment } from '@/utils/requestFlow'
@@ -22,6 +22,7 @@ export default function StudentDashboard() {
   const [timeTab, setTimeTab] = useState<'today' | 'upcoming' | 'all'>('today')
   const [decliningAptId, setDecliningAptId] = useState<string | null>(null)
   const [declineReason, setDeclineReason] = useState('')
+  const scheduleRef = useRef<HTMLDivElement>(null)
 
   if (!currentUser) return null
 
@@ -254,21 +255,25 @@ export default function StudentDashboard() {
           value={pendingRequests.length}
           icon={<Clock className="h-5 w-5" />}
           color="amber"
-          onClick={() => navigate('/student/history')}
+          onClick={() => navigate('/student/history', { state: { status: 'pending' } })}
         />
         <StatCard
           label={t('นัดหมายที่ยืนยันแล้ว', 'Confirmed Sessions')}
           value={myAppointments.length}
           icon={<CheckCircle2 className="h-5 w-5" />}
           color="emerald"
-          onClick={() => navigate('/student/history')}
+          onClick={() => navigate('/student/history', { state: { status: 'confirmed' } })}
         />
         <StatCard
           label={t('นัดหมายวันนี้ / ล่วงหน้า', 'Today / Upcoming')}
           value={`${todayAppointments.length} / ${futureAppointments.length}`}
           icon={<Calendar className="h-5 w-5" />}
           color="sky"
-          onClick={() => navigate('/student/history')}
+          onClick={() => {
+            // Show the schedule box below, on the tab that has meetings
+            setTimeTab(todayAppointments.length > 0 ? 'today' : 'upcoming')
+            scheduleRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          }}
         />
         <StatCard
           label={t('งานที่ต้องดำเนินการ', 'Pending Tasks')}
@@ -283,6 +288,7 @@ export default function StudentDashboard() {
         {/* Left column (2 cols) */}
         <div className="lg:col-span-2 space-y-6">
           {/* 1. Appointment Schedule */}
+          <div ref={scheduleRef} className="scroll-mt-20">
           <Card>
             <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-100 dark:border-slate-800">
               <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
@@ -326,8 +332,7 @@ export default function StudentDashboard() {
               />
             )}
           </Card>
-
-
+          </div>
 
           {/* Recent Advising Requests Table (REG MFU Academic Table Style) */}
           <Card>

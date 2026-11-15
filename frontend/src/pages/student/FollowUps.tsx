@@ -150,9 +150,10 @@ export default function FollowUps() {
           return
         }
 
-        // Store document record linked to this follow-up
+        // Store document record linked to this follow-up. Wait for the server: if it is not
+        // saved, stop here so the task is not marked done without the advisor ever seeing the file.
         const defaultDocType = store.documentTypes?.[0]
-        store.addDocument({
+        const savedDoc = await store.addDocumentConfirmed({
           studentId: currentUser!.id,
           documentTypeId: defaultDocType?.id || 'DT_FOLLOWUP',
           documentName: `${t('หลักฐานส่งงาน:', 'Task Evidence:')} ${selectedTask.task}`,
@@ -164,6 +165,14 @@ export default function FollowUps() {
           cloudinaryPublicId: uploadedCloudId,
           fileUrl: uploadedFileUrl,
         })
+        if (!savedDoc) {
+          addToast(
+            'error',
+            t('บันทึกไฟล์หลักฐานไม่สำเร็จ', 'Evidence Not Saved'),
+            t('ระบบบันทึกไฟล์ไม่สำเร็จ งานยังไม่ถูกส่ง กรุณาลองใหม่อีกครั้ง', 'Your file could not be saved, so the task was not submitted. Please try again.'),
+          )
+          return
+        }
       }
 
       // 1. Update Follow-up status to completed

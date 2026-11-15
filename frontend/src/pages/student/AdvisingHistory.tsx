@@ -5,7 +5,7 @@
 import { useAuth } from '@/contexts/AuthContext'
 import { useStore } from '@/data/store'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { PageHeader, DataTable, StatusBadge, SearchInput, Button, CustomSelect } from '@/components/ui'
 import type { AdvisingRequest } from '@/types'
 import { getLocalDateString } from '@/utils/dateUtils'
@@ -20,6 +20,10 @@ export default function AdvisingHistory() {
   const [search, setSearch] = useState('')
   const [timeframeFilter, setTimeframeFilter] = useState('all')
   const [categoryFilter, setCategoryFilter] = useState('all')
+  // Dashboard number cards open this page pre-filtered: { status: 'pending' | 'confirmed' }
+  const location = useLocation()
+  const initialStatus = (location.state as { status?: string } | null)?.status
+  const [statusFilter, setStatusFilter] = useState(initialStatus === 'pending' || initialStatus === 'confirmed' ? initialStatus : 'all')
 
   const viewedRequestsKey = currentUser ? `advising_log_viewed_requests_${currentUser.id}` : ''
 
@@ -58,6 +62,13 @@ export default function AdvisingHistory() {
       .flatMap(u => [u.id, u.code, u.email?.toLowerCase()].filter(Boolean) as string[])
   ].filter(Boolean) as string[])
 
+  // A booked meeting that is still coming up (matches "Confirmed Sessions" on the dashboard)
+  const hasActiveAppointment = (r: AdvisingRequest) =>
+    !['completed', 'closed', 'cancelled'].includes(r.status) &&
+    store.appointments.some(a =>
+      a.requestId === r.id && a.status !== 'completed' && a.status !== 'cancelled' && !a.studentDeclined
+    )
+
   const myRequests = store.requests
     .filter(r =>
       studentIdentifiers.has(r.studentId) ||
@@ -83,7 +94,15 @@ export default function AdvisingHistory() {
         return false
       }
 
-      // 3. Timeframe / Status Filter
+      // 3. Status Filter (same rules as the dashboard number cards)
+      if (statusFilter === 'pending' && r.status !== 'requested' && r.status !== 'pending') {
+        return false
+      }
+      if (statusFilter === 'confirmed' && !hasActiveAppointment(r)) {
+        return false
+      }
+
+      // 4. Timeframe Filter
       if (timeframeFilter !== 'all') {
         const apt = store.appointments.find(a => a.requestId === r.id)
         
@@ -172,6 +191,18 @@ export default function AdvisingHistory() {
           <SearchInput value={search} onChange={setSearch} placeholder={t('ค้นหาตามหมวดหมู่ หรือคำสำคัญ...', 'Search by category or keyword...')} />
         </div>
         
+        <CustomSelect
+          className="sm:w-48"
+          ariaLabel={t('สถานะ', 'Status')}
+          value={statusFilter}
+          onChange={setStatusFilter}
+          options={[
+            { value: 'all', label: t('ทุกสถานะ', 'All Statuses') },
+            { value: 'pending', label: t('รอการยืนยัน', 'Pending Sessions') },
+            { value: 'confirmed', label: t('นัดหมายที่ยืนยันแล้ว', 'Confirmed Sessions') },
+          ]}
+        />
+
         <CustomSelect
           className="sm:w-48"
           ariaLabel={t('ช่วงเวลา', 'Timeframe')}

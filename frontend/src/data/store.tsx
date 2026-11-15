@@ -179,6 +179,8 @@ interface StoreActions {
 
   // Documents
   addDocument: (doc: Omit<StudentDocument, 'id'>) => StudentDocument
+  /** Saves to the server first; resolves null (and changes nothing) if the server did not save it. */
+  addDocumentConfirmed: (doc: Omit<StudentDocument, 'id'>) => Promise<StudentDocument | null>
   updateDocument: (id: string, updates: Partial<StudentDocument>) => void
   updateDocumentStatus: (id: string, status: StudentDocument['status']) => void
   deleteDocument: (id: string) => void
@@ -777,6 +779,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return newDoc
   }, [])
 
+  const addDocumentConfirmed = useCallback(async (doc: Omit<StudentDocument, 'id'>): Promise<StudentDocument | null> => {
+    const newDoc: StudentDocument = { ...doc, id: nextId('DOC') }
+    const res = await api.saveDocument(newDoc)
+    if (!res?.success) return null
+    setDocuments(prev => [newDoc, ...prev])
+    return newDoc
+  }, [])
+
   const updateDocument = useCallback((id: string, updates: Partial<StudentDocument>) => {
     setDocuments(prev => prev.map(d => {
       if (d.id === id) {
@@ -1280,7 +1290,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     addExitCase, updateExitCaseStatus,
     addAdvisorAssessment, updateAdvisorAssessmentResolution,
     addStudentVoiceResponse, markVoiceSurveyCompleted,
-    addDocument, updateDocument, updateDocumentStatus, deleteDocument,
+    addDocument, addDocumentConfirmed, updateDocument, updateDocumentStatus, deleteDocument,
     addUser, bulkAddUsers, updateUser, deleteUser,
     addRosterEntry, updateRosterEntry, deactivateRosterEntry, batchImportRoster,
     toggleAiApi, toggleUserAiAccess,
