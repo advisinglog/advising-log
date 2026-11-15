@@ -320,6 +320,8 @@ export interface AdvisingCategoryConfig {
 export interface DocumentType {
   id: string
   name: string
+  labelTh?: string
+  labelEn?: string
   signatureMethod: SignatureMethod
   isActive: boolean
   templateFileUrl?: string

@@ -88,13 +88,25 @@ export default function StudentForms() {
   const activeDocTypes = store.documentTypes.filter(d => d.isActive)
 
   // Localized title & description helper
-  function getDocDetails(name: string) {
-    const preset = PRESET_FORM_NAMES[name]
+  function getDocDetails(name: string, labels?: { labelTh?: string; labelEn?: string }) {
+    const preset = Object.entries(PRESET_FORM_NAMES).find(([key, value]) =>
+      [key, value.en, value.th].some(label => label.toLowerCase() === name.toLowerCase())
+    )?.[1]
     if (preset) {
       return {
         title: language === 'th' ? preset.th : preset.en,
         description: language === 'th' ? preset.descriptionTh : preset.descriptionEn,
         suggestedCategory: preset.suggestedCategory,
+      }
+    }
+    if (labels?.labelTh || labels?.labelEn) {
+      return {
+        title: language === 'th' ? (labels.labelTh || name) : (labels.labelEn || name),
+        description: t(
+          'แบบฟอร์มทางการสำหรับการดำเนินการทางวิชาการและการให้คำปรึกษา',
+          'Official university form for academic and advising procedures.'
+        ),
+        suggestedCategory: 'general_consultation',
       }
     }
     return {
@@ -109,7 +121,7 @@ export default function StudentForms() {
 
   // Filter forms
   const filteredForms = activeDocTypes.filter(dt => {
-    const details = getDocDetails(dt.name)
+    const details = getDocDetails(dt.name, dt)
     const matchesSearch =
       dt.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       details.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -138,7 +150,7 @@ export default function StudentForms() {
   // Open Preview Modal
   function handlePreviewTemplate(dt: typeof activeDocTypes[0]) {
     if (!dt.templateFileUrl && !dt.templatePublicId) return
-    const details = getDocDetails(dt.name)
+    const details = getDocDetails(dt.name, dt)
     setPreviewDoc({
       id: dt.id,
       title: details.title,
@@ -309,7 +321,7 @@ export default function StudentForms() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {filteredForms.map(dt => {
-            const details = getDocDetails(dt.name)
+            const details = getDocDetails(dt.name, dt)
             const isPhysical = dt.signatureMethod === 'wet_signature'
             const isNone = dt.signatureMethod === 'none'
             const hasUploadedFile = !!dt.templateFileUrl

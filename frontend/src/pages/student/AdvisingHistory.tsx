@@ -106,7 +106,19 @@ export default function AdvisingHistory() {
 
       return true
     })
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+
+  const getLatestAppointment = (requestId: string) =>
+    store.appointments
+      .filter(appointment => appointment.requestId === requestId)
+      .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''))[0]
+
+  const getRequestActivityDate = (request: AdvisingRequest) =>
+    getLatestAppointment(request.id)?.createdAt || request.updatedAt || request.createdAt
+
+  myRequests.sort((a, b) =>
+    getRequestActivityDate(b).localeCompare(getRequestActivityDate(a)) ||
+    b.id.localeCompare(a.id)
+  )
 
   const columns = [
     { key: 'date', header: t('วันที่ยื่น', 'Date'), render: (r: AdvisingRequest) => (
@@ -131,7 +143,7 @@ export default function AdvisingHistory() {
     },
     { key: 'advisor', header: t('อาจารย์ที่ปรึกษา', 'Faculty Advisor'), render: (r: AdvisingRequest) => <span className="text-xs text-slate-600 dark:text-slate-300">{store.users.find(u => u.id === r.advisorId)?.name || '-'}</span> },
     { key: 'appointment', header: t('เวลานัดหมาย', 'Appointment'), render: (r: AdvisingRequest) => {
-      const apt = store.appointments.find(a => a.requestId === r.id)
+      const apt = getLatestAppointment(r.id)
       if (apt) {
         return <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">{apt.scheduledDate} · {apt.scheduledTime}</span>
       }
