@@ -198,7 +198,10 @@ export function createOwnershipError(v: Viewer, resource: string, body: Record<s
   if (v.role === 'student') {
     if (studentRefs.length === 0 && resource !== 'student-voice') return 'missing student' // anonymous surveys allowed
     if (studentRefs.some(ref => !inSet(v.aliases, ref))) return 'student is not you'
-    if (body.advisorId && !inSet(v.linkedAliases, body.advisorId)) return 'not your advisor'
+    // Students can submit advising requests or exit cases to any faculty advisor (not restricted to assigned advisor)
+    if (resource !== 'requests' && resource !== 'exit-cases' && body.advisorId && !inSet(v.linkedAliases, body.advisorId)) {
+      return 'not your advisor'
+    }
     return null
   }
   if (studentRefs.length === 0 && resource !== 'follow-up-progress') return 'missing student'

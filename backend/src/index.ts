@@ -1563,6 +1563,9 @@ app.post('/api/requests', async (c) => {
   if (!advisorId || !resolvedAdvisor) {
     return c.json({ error: 'The selected advisor account was not found.' }, 400)
   }
+  if (resolvedAdvisor.role === 'student') {
+    return c.json({ error: 'The selected user is not an advisor.' }, 400)
+  }
 
   let reqId = body.id || `REQ_${Date.now()}`
   const existingReq = await database.select({ id: schema.advisingRequests.id })

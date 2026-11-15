@@ -114,10 +114,11 @@ describe('Write ownership', () => {
     expect(ownsRecord(advisor1, { studentId: 'STU3', advisorId: 'ADV2' })).toBe(false)
   })
 
-  it('students may only create records for themselves, sent to their own advisor', () => {
+  it('students may create advising requests for themselves with any advisor, but other records are constrained', () => {
     expect(createOwnershipError(student1, 'requests', { studentId: 'STU1', advisorId: 'ADV1' })).toBeNull()
+    expect(createOwnershipError(student1, 'requests', { studentId: 'STU1', advisorId: 'ADV2' })).toBeNull()
     expect(createOwnershipError(student1, 'requests', { studentId: 'STU2' })).toBe('student is not you')
-    expect(createOwnershipError(student1, 'requests', { studentId: 'STU1', advisorId: 'ADV2' })).toBe('not your advisor')
+    expect(createOwnershipError(student1, 'sessions', { studentId: 'STU1', advisorId: 'ADV2' })).toBe('not your advisor')
     expect(createOwnershipError(student1, 'documents', {})).toBe('missing student')
     expect(createOwnershipError(student1, 'student-voice', { isAnonymous: true })).toBeNull()
   })
