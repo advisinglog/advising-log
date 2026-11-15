@@ -7,7 +7,7 @@ import { useLanguage } from '@/contexts/LanguageContext'
 import { isAdvisorMatch } from '@/utils/advisorUtils'
 import { PageHeader, StatusBadge, EmptyState, Button, Tabs, SearchInput, DocumentViewerModal, type DocumentViewerTarget } from '@/components/ui'
 import { ListChecks, ListPlus, ArrowRight, CheckCircle2, RotateCcw, Calendar, Clock, User, Check, Paperclip, Eye, Sparkles } from 'lucide-react'
-import { getLocalDateString } from '@/utils/dateUtils'
+import { getLocalDateString, toSortTime, formatDateTime } from '@/utils/dateUtils'
 import type { FollowUp } from '@/types'
 import { AddFollowUpModal } from '@/components/advisor/FollowUpTasks'
 import { SessionLogModal } from '@/components/advisor/SessionLogModal'
@@ -40,7 +40,12 @@ export default function AdvisorFollowUps() {
 
   const completedList = allFollowUps
     .filter(f => f.status === 'completed')
-    .sort((a, b) => (b.completedAt || b.createdAt || '').localeCompare(a.completedAt || a.createdAt || ''))
+    // Most recently finished first; older date-only records fall back to when the task was created
+    .sort((a, b) =>
+      toSortTime(b.completedAt || b.createdAt) - toSortTime(a.completedAt || a.createdAt) ||
+      toSortTime(b.createdAt) - toSortTime(a.createdAt) ||
+      b.id.localeCompare(a.id)
+    )
 
   const currentList = activeTab === 'pending' ? pendingList : completedList
 
@@ -226,7 +231,7 @@ export default function AdvisorFollowUps() {
                       <>
                         <span className="flex items-center gap-1 text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md border border-emerald-200/60 dark:border-emerald-900/40 font-mono text-[0.6875rem]">
                           <CheckCircle2 className="h-3 w-3" />
-                          {t('เสร็จสิ้นเมื่อ:', 'Completed on:')} {followUp.completedAt || followUp.createdAt || '-'}
+                          {t('เสร็จสิ้นเมื่อ:', 'Completed on:')} {formatDateTime(followUp.completedAt || followUp.createdAt)}
                         </span>
                         {progressRecord?.notes && (
                           <div className="basis-full mt-1 p-3 rounded-xl bg-sky-50/70 dark:bg-sky-950/30 border border-sky-100 dark:border-sky-900/60 text-xs text-slate-700 dark:text-slate-300">

@@ -25,7 +25,7 @@ import {
 import { useNavigate } from 'react-router-dom'
 import { uploadFileToCloudinary, getUploadErrorMessage } from '@/services/cloudinaryService'
 import { allFollowUpsDone } from '@/utils/requestFlow'
-import { getLocalDateString } from '@/utils/dateUtils'
+import { getLocalDateString, formatDateTime } from '@/utils/dateUtils'
 import { findUserByReference } from '@/utils/advisorUtils'
 
 export default function FollowUps() {
@@ -389,7 +389,7 @@ export default function FollowUps() {
 
                     <div className="flex items-center gap-3 text-[0.6875rem] text-slate-400 dark:text-slate-500">
                       {f.completedAt && (
-                        <span>{t('ส่งเมื่อ:', 'Completed on:')} {f.completedAt}</span>
+                        <span>{t('ส่งเมื่อ:', 'Completed on:')} {formatDateTime(f.completedAt)}</span>
                       )}
                       {advisor && (
                         <span>{t('อาจารย์:', 'Advisor:')} {advisor.name}</span>

@@ -2059,7 +2059,7 @@ app.patch('/api/follow-ups/:id/status', async (c) => {
     .set({
       status: body.status,
       ...(body.dueDate !== undefined ? { dueDate: body.dueDate } : {}),
-      completedAt: body.status === 'completed' ? new Date().toISOString().split('T')[0] : null,
+      completedAt: body.status === 'completed' ? new Date().toISOString() : null, // full timestamp so same-day tasks sort correctly
     })
     .where(eq(schema.followUps.id, id))
   return c.json({ success: true })

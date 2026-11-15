@@ -610,7 +610,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const updateFollowUpStatus = useCallback((id: string, status: FollowUp['status'], dueDate?: string) => {
-    setFollowUps(prev => prev.map(f => f.id === id ? { ...f, status, ...(dueDate ? { dueDate } : {}), ...(status === 'completed' ? { completedAt: now() } : {}) } : f))
+    setFollowUps(prev => prev.map(f => f.id === id ? { ...f, status, ...(dueDate ? { dueDate } : {}), ...(status === 'completed' ? { completedAt: new Date().toISOString() } : {}) } : f))
     api.updateFollowUpStatus(id, status, dueDate).catch(() => {})
   }, [])
 

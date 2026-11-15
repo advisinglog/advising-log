@@ -22,7 +22,7 @@ import {
 
 import { isAdvisorMatch } from '@/utils/advisorUtils'
 import { FollowUpTaskFields, emptyFollowUpDraft, useAssignFollowUps, useCheckDrafts, type FollowUpDraft } from '@/components/advisor/FollowUpTasks'
-import { getLocalDateString } from '@/utils/dateUtils'
+import { getLocalDateString, toSortTime, formatDateTime } from '@/utils/dateUtils'
 import { SessionLogModal, getRequestAttachments } from '@/components/advisor/SessionLogModal'
 import type { AdvisingRequest, AdvisingCategory, User as UserType } from '@/types'
 
@@ -223,7 +223,7 @@ export default function AdvisorLog() {
   const pendingFollowUps = studentFollowUps.filter(f => f.status !== 'completed')
   const completedFollowUps = studentFollowUps
     .filter(f => f.status === 'completed')
-    .sort((a, b) => (b.completedAt || '').localeCompare(a.completedAt || ''))
+    .sort((a, b) => toSortTime(b.completedAt) - toSortTime(a.completedAt) || toSortTime(b.createdAt) - toSortTime(a.createdAt))
 
   // Which meeting a task came from, so the lists make sense on their own
   function taskSource(fu: { requestId?: string; sessionId?: string }): string {
@@ -875,7 +875,7 @@ export default function AdvisorLog() {
                                 <p className="font-semibold text-slate-800 dark:text-slate-200">{cfu.task}</p>
                                 <p className="text-[0.6875rem] text-slate-500 dark:text-slate-400 mt-0.5">
                                   {taskSource(cfu) && <>{t('จากการเข้าพบ:', 'From meeting:')} {taskSource(cfu)} · </>}
-                                  <span className="text-emerald-700 dark:text-emerald-400">{t('เสร็จเมื่อ', 'Finished')} {cfu.completedAt || '-'}</span>
+                                  <span className="text-emerald-700 dark:text-emerald-400">{t('เสร็จเมื่อ', 'Finished')} {formatDateTime(cfu.completedAt)}</span>
                                 </p>
                                 {report && (
                                   <p className="text-[0.6875rem] text-slate-600 dark:text-slate-300 mt-1 line-clamp-2">
