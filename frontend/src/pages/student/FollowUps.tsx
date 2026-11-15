@@ -26,6 +26,7 @@ import { useNavigate } from 'react-router-dom'
 import { uploadFileToCloudinary, getUploadErrorMessage } from '@/services/cloudinaryService'
 import { allFollowUpsDone } from '@/utils/requestFlow'
 import { getLocalDateString } from '@/utils/dateUtils'
+import { findUserByReference } from '@/utils/advisorUtils'
 
 export default function FollowUps() {
   const { currentUser } = useAuth()
@@ -263,7 +264,7 @@ export default function FollowUps() {
         ) : (
           <div className="space-y-3">
             {pendingTasks.map(f => {
-              const advisor = store.users.find(u => u.id === f.advisorId)
+              const advisor = findUserByReference(f.advisorId, store.users)
               return (
                 <div
                   key={f.id}
@@ -355,7 +356,7 @@ export default function FollowUps() {
         ) : (
           <div className="space-y-3">
             {completedTasks.map(f => {
-              const advisor = store.users.find(u => u.id === f.advisorId)
+              const advisor = findUserByReference(f.advisorId, store.users)
               const evidenceDoc = getEvidenceDocForTask(f.id)
               const progressRecord = getProgressForTask(f.id)
 
@@ -450,7 +451,7 @@ export default function FollowUps() {
                 )}
                 <span>
                   {t('อาจารย์:', 'Advisor:')}{' '}
-                  {store.users.find(u => u.id === selectedTask.advisorId)?.name || 'Advisor'}
+                  {findUserByReference(selectedTask.advisorId, store.users)?.name || 'Advisor'}
                 </span>
               </div>
             </div>

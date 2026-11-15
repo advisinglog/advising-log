@@ -166,6 +166,11 @@ export const documents = sqliteTable('documents', {
   status: text('status', { enum: ['pending', 'approved', 'rejected'] }).notNull().default('pending'),
   publicId: text('public_id').notNull(),
   url: text('url').notNull(),
+  fileName: text('file_name'),
+  description: text('description'),
+  signatureMethod: text('signature_method'),
+  uploadedAt: text('uploaded_at'),
+  signedAt: text('signed_at'),
   createdAt: text('created_at').notNull(),
 })
 

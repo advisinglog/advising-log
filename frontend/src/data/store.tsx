@@ -277,12 +277,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     if (!getSessionToken()) return // Signed out: the API requires a session, reload after sign-in
     setBackendStatus('loading')
     async function syncFromBackend() {
-      const [uRes, rosRes, rRes, aptRes, fRes, sRes, eRes, vRes, aRes, kRes, ewRes, docRes, catRes, dtRes] = await Promise.all([
+      const [uRes, rosRes, rRes, aptRes, fRes, fpRes, sRes, eRes, vRes, aRes, kRes, ewRes, docRes, catRes, dtRes] = await Promise.all([
         api.getUsers(),
         api.getRoster(),
         api.getRequests(),
         api.getAppointments(),
         api.getFollowUps(),
+        api.getFollowUpProgress(),
         api.getSessions(),
         api.getExitCases(),
         api.getStudentVoice(),
@@ -346,6 +347,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       }
       if (aptRes && Array.isArray(aptRes.appointments)) setAppointments(aptRes.appointments)
       if (fRes && Array.isArray(fRes.followUps)) setFollowUps(fRes.followUps)
+      if (fpRes && Array.isArray(fpRes.progress)) setFollowUpProgress(fpRes.progress)
       if (sRes && Array.isArray(sRes.sessions)) setSessions(sRes.sessions)
       if (eRes && Array.isArray(eRes.exitCases)) {
         const normalizedExitCases = eRes.exitCases.map((e: any) => ({
@@ -406,7 +408,19 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           (w.followUps || []).map(f => ({ ...f, warningId: w.id }))
         ))
       }
-      if (docRes && Array.isArray(docRes.documents)) setDocuments(docRes.documents)
+      if (docRes && Array.isArray(docRes.documents)) {
+        setDocuments(docRes.documents.map((doc: any) => ({
+          ...doc,
+          documentTypeId: doc.documentTypeId || doc.type || 'general',
+          documentName: doc.documentName || doc.title || 'Document',
+          fileName: doc.fileName || doc.title || doc.documentName,
+          status: doc.status === 'pending' ? 'uploaded' : doc.status,
+          signatureMethod: doc.signatureMethod || 'none',
+          cloudinaryPublicId: doc.cloudinaryPublicId || doc.publicId,
+          fileUrl: doc.fileUrl || doc.url,
+          uploadedAt: doc.uploadedAt || doc.createdAt,
+        })))
+      }
       if (catRes && Array.isArray(catRes.categories)) setCategoryConfigs(catRes.categories)
       if (dtRes && Array.isArray(dtRes.documentTypes)) setDocumentTypes(dtRes.documentTypes)
     }

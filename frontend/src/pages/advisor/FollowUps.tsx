@@ -5,11 +5,12 @@ import { useStore } from '@/data/store'
 import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { isAdvisorMatch } from '@/utils/advisorUtils'
-import { PageHeader, StatusBadge, EmptyState, Button, Tabs, SearchInput } from '@/components/ui'
-import { ListChecks, ListPlus, ArrowRight, CheckCircle2, RotateCcw, Calendar, Clock, User, Check } from 'lucide-react'
+import { PageHeader, StatusBadge, EmptyState, Button, Tabs, SearchInput, DocumentViewerModal, type DocumentViewerTarget } from '@/components/ui'
+import { ListChecks, ListPlus, ArrowRight, CheckCircle2, RotateCcw, Calendar, Clock, User, Check, Paperclip, Eye, Sparkles } from 'lucide-react'
 import { getLocalDateString } from '@/utils/dateUtils'
 import type { FollowUp } from '@/types'
 import { AddFollowUpModal } from '@/components/advisor/FollowUpTasks'
+import { findUserByReference } from '@/utils/advisorUtils'
 
 export default function AdvisorFollowUps() {
   const { currentUser } = useAuth()
@@ -23,6 +24,7 @@ export default function AdvisorFollowUps() {
   const [activeTab, setActiveTab] = useState<'pending' | 'completed'>(initialTab)
   const [search, setSearch] = useState('')
   const [showAddTask, setShowAddTask] = useState(false)
+  const [previewDoc, setPreviewDoc] = useState<DocumentViewerTarget | null>(null)
 
   if (!currentUser) return null
 
@@ -43,7 +45,7 @@ export default function AdvisorFollowUps() {
   const filteredList = currentList.filter(f => {
     if (!search.trim()) return true
     const q = search.toLowerCase()
-    const student = store.users.find(u => u.id === f.studentId)
+    const student = findUserByReference(f.studentId, store.users)
     return (
       f.task.toLowerCase().includes(q) ||
       (student?.name && student.name.toLowerCase().includes(q)) ||
@@ -155,9 +157,11 @@ export default function AdvisorFollowUps() {
       ) : (
         <div className="space-y-3">
           {filteredList.map(followUp => {
-            const student = store.users.find(u => u.id === followUp.studentId)
+            const student = findUserByReference(followUp.studentId, store.users)
             const request = followUp.requestId ? store.requests.find(r => r.id === followUp.requestId) : undefined
             const isOverdue = activeTab === 'pending' && followUp.dueDate && followUp.dueDate < todayStr
+            const progressRecord = store.followUpProgress.find(progress => progress.followUpId === followUp.id)
+            const evidenceDoc = store.documents.find(doc => doc.description?.includes(`followUpId:${followUp.id}`))
 
             return (
               <div
@@ -215,10 +219,43 @@ export default function AdvisorFollowUps() {
                     )}
 
                     {activeTab === 'completed' && (
-                      <span className="flex items-center gap-1 text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md border border-emerald-200/60 dark:border-emerald-900/40 font-mono text-[0.6875rem]">
-                        <CheckCircle2 className="h-3 w-3" />
-                        {t('เสร็จสิ้นเมื่อ:', 'Completed on:')} {followUp.completedAt || followUp.createdAt || '-'}
-                      </span>
+                      <>
+                        <span className="flex items-center gap-1 text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md border border-emerald-200/60 dark:border-emerald-900/40 font-mono text-[0.6875rem]">
+                          <CheckCircle2 className="h-3 w-3" />
+                          {t('เสร็จสิ้นเมื่อ:', 'Completed on:')} {followUp.completedAt || followUp.createdAt || '-'}
+                        </span>
+                        {progressRecord?.notes && (
+                          <div className="basis-full mt-1 p-3 rounded-xl bg-sky-50/70 dark:bg-sky-950/30 border border-sky-100 dark:border-sky-900/60 text-xs text-slate-700 dark:text-slate-300">
+                            <p className="flex items-center gap-1.5 font-semibold text-sky-800 dark:text-sky-300 mb-1">
+                              <Sparkles className="h-3 w-3" />
+                              {t('ผลการปฏิบัติงานของนักศึกษา:', 'Student Submission:')}
+                            </p>
+                            <p className="whitespace-pre-wrap">{progressRecord.notes}</p>
+                          </div>
+                        )}
+                        {evidenceDoc && (
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            className="gap-1 text-xs"
+                            onClick={() => setPreviewDoc({
+                              id: evidenceDoc.id,
+                              title: evidenceDoc.documentName,
+                              fileName: evidenceDoc.fileName || evidenceDoc.documentName,
+                              fileUrl: evidenceDoc.fileUrl,
+                              cloudinaryPublicId: evidenceDoc.cloudinaryPublicId,
+                              uploadedAt: evidenceDoc.uploadedAt,
+                              studentName: student?.name,
+                              studentCode: student?.code,
+                              description: evidenceDoc.description,
+                            })}
+                          >
+                            <Paperclip className="h-3 w-3" />
+                            {evidenceDoc.fileName || t('ดูไฟล์หลักฐาน', 'View Evidence')}
+                            <Eye className="h-3 w-3 opacity-70" />
+                          </Button>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
@@ -285,6 +322,12 @@ export default function AdvisorFollowUps() {
           })}
         </div>
       )}
+
+      <DocumentViewerModal
+        isOpen={Boolean(previewDoc)}
+        onClose={() => setPreviewDoc(null)}
+        document={previewDoc}
+      />
     </div>
   )
 }

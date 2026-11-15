@@ -34,3 +34,11 @@ export function isAdvisorMatch(
 
   return false
 }
+
+export function findUserByReference(reference: string | undefined, users: User[]): User | undefined {
+  if (!reference) return undefined
+  const normalized = reference.trim().toLowerCase()
+  return users.find(user =>
+    [user.id, user.code, user.email].some(value => value?.trim().toLowerCase() === normalized)
+  )
+}

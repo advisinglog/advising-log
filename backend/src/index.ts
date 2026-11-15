@@ -2494,14 +2494,29 @@ app.get('/api/documents', async (c) => {
   const database = db(c)
   if (!database) return c.json({ documents: [] })
 
+  const formatDocument = (item: typeof schema.documents.$inferSelect) => ({
+    id: item.id,
+    studentId: item.studentId,
+    documentTypeId: item.type,
+    documentName: item.title,
+    fileName: item.fileName || item.title,
+    status: item.status === 'pending' ? 'uploaded' : item.status,
+    signatureMethod: item.signatureMethod || 'none',
+    uploadedAt: item.uploadedAt || item.createdAt,
+    signedAt: item.signedAt || undefined,
+    description: item.description || undefined,
+    cloudinaryPublicId: item.publicId,
+    fileUrl: item.url,
+  })
+
   const studentId = c.req.query('studentId')
   let query = database.select().from(schema.documents).orderBy(desc(schema.documents.createdAt))
   if (studentId) {
     const list = await database.select().from(schema.documents).where(eq(schema.documents.studentId, studentId)).orderBy(desc(schema.documents.createdAt))
-    return c.json({ documents: list })
+    return c.json({ documents: list.map(formatDocument) })
   }
   const list = await query
-  return c.json({ documents: list })
+  return c.json({ documents: list.map(formatDocument) })
 })
 
 app.post('/api/documents', async (c) => {
@@ -2517,10 +2532,31 @@ app.post('/api/documents', async (c) => {
     status: (body.status === 'approved' || body.status === 'rejected' ? body.status : 'pending') as any,
     publicId: body.publicId || body.cloudinaryPublicId || 'local_pending',
     url: body.url || body.fileUrl || '',
+    fileName: body.fileName || null,
+    description: body.description || null,
+    signatureMethod: body.signatureMethod || null,
+    uploadedAt: body.uploadedAt || null,
+    signedAt: body.signedAt || null,
     createdAt: body.createdAt || new Date().toISOString().replace('T', ' ').substring(0, 19),
   }
 
-  await database.insert(schema.documents).values(doc)
+  await database.insert(schema.documents).values(doc).onConflictDoUpdate({
+    target: schema.documents.id,
+    set: {
+      studentId: doc.studentId,
+      title: doc.title,
+      type: doc.type,
+      status: doc.status,
+      publicId: doc.publicId,
+      url: doc.url,
+      fileName: doc.fileName,
+      description: doc.description,
+      signatureMethod: doc.signatureMethod,
+      uploadedAt: doc.uploadedAt,
+      signedAt: doc.signedAt,
+      createdAt: doc.createdAt,
+    },
+  })
   return c.json({ success: true, document: doc }, 201)
 })
 
