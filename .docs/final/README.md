@@ -12,6 +12,7 @@ This index covers the project evidence from Discover through Deliver. All files 
 | Project proposal and problem definition | [Proposal](../01-requirements/proposal.md) |
 | Functional requirements | [System specification](../01-requirements/spec.md) |
 | MoSCoW product backlog and MUST items | [Product backlog](../01-requirements/backlog.md) |
+| Real-user qualitative UAT feedback (not interview transcripts) | [UAT qualitative feedback](../01-requirements/evidence/uat-qualitative-feedback.md) |
 | User journeys | [User journey](../02-design/user-journey.md) |
 | Feature list | [Feature list](../02-design/feature-list.md) |
 | PDPA and legal requirements | [Compliance rules](../03-compliance/rule.md) |
