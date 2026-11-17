@@ -27,6 +27,7 @@ This index covers the project evidence from Discover through Deliver. All files 
 |---|---|
 | Use-case diagram | [Use-case diagram](../02-design/diagrams/01-use-case-diagram.jpg) |
 | Activity diagram | [Activity diagram](../02-design/diagrams/02-activity-diagram.jpg) |
+| Sequence diagram | [Sequence diagram](../02-design/sequence-diagram.md) |
 | Entity-relationship diagram | [ER diagram](../02-design/diagrams/03-ER-diagram.jpg) |
 | System architecture | [Architecture diagram](../02-design/diagrams/04-system-architecture-diagram.jpg) |
 | Frontend source code | [Frontend](../../frontend/) |
@@ -47,7 +48,6 @@ This index covers the project evidence from Discover through Deliver. All files 
 | Test schedule | [Master Timeline](../04-test%20plan/img/Master%20Timeline.png) |
 | Anonymized U01–U10 session logs | [UAT session logs](../04-test%20plan/evidence/uat-session-logs.md) |
 | Anonymized task-level UAT records | [UAT task results CSV](../04-test%20plan/evidence/uat-task-results.csv) |
-| V1/V2 presentation evidence brief | [UAT presentation brief](../04-test%20plan/evidence/advisinglog_uat_presentation_brief.pdf) |
 | Issue severity, fix commits, and retest results | [Issue log](../04-test%20plan/evidence/issue-log.md) |
 | Before/after task results and SUS/TAM summary | [Before/After comparison](comparison-table.md) |
 
