@@ -8,7 +8,7 @@
 ## 1. Evidence index
 
 - [UAT data workbook (Google Sheets)](https://docs.google.com/spreadsheets/d/1vuRry_EFzIqQnaEpisaO380DNdhOafFM-WqMs3bNC7U/edit): `Task Results`, `Student UAT Summary`, `Advisor UAT Summary`, `QA UAT Summary`, `Overview`, `Student`, `Advisor`, `Form Responses 1`, `Student Video Evidence`, `QA Issue Log`.
-- **Committed repository evidence:** [anonymized UAT session logs](../04-test%20plan/evidence/uat-session-logs.md), [anonymized task-level results](../04-test%20plan/evidence/uat-task-results.csv), the [UAT presentation evidence brief](../04-test%20plan/evidence/advisinglog_uat_presentation_brief.pdf), and the [issue log with fix/retest evidence](../04-test%20plan/evidence/issue-log.md). An anonymized SUS/TAM export, video-evidence manifest, and AI feature test artifacts are not included yet.
+- **Committed repository evidence:** [anonymized UAT session logs](../04-test%20plan/evidence/uat-session-logs.md), [anonymized task-level results](../04-test%20plan/evidence/uat-task-results.csv), the [UAT presentation evidence brief](../04-test%20plan/evidence/advisinglog_uat_presentation_brief.pdf), the [issue log with fix/retest evidence](../04-test%20plan/evidence/issue-log.md), and [anonymized SUS/TAM item responses](../04-test%20plan/evidence/sus-tam-results.csv). A video-evidence manifest and AI feature test artifacts are not included yet.
 - **Privacy:** Do not commit participant emails, names, or raw personally identifying form responses. Use participant codes (U01–U10 and QA-01 as recorded) and sanitized aggregates.
 
 ## 2. Participants and measurement scope

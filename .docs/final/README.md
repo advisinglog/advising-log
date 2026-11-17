@@ -49,6 +49,8 @@ This index covers the project evidence from Discover through Deliver. All files 
 | Anonymized U01–U10 session logs | [UAT session logs](../04-test%20plan/evidence/uat-session-logs.md) |
 | Anonymized task-level UAT records | [UAT task results CSV](../04-test%20plan/evidence/uat-task-results.csv) |
 | Issue severity, fix commits, and retest results | [Issue log](../04-test%20plan/evidence/issue-log.md) |
+| Anonymized SUS/TAM item responses and scores | [SUS/TAM results](../04-test%20plan/evidence/sus-tam-results.md) |
+| Anonymized SUS/TAM CSV data | [SUS/TAM CSV](../04-test%20plan/evidence/sus-tam-results.csv) |
 | Before/after task results and SUS/TAM summary | [Before/After comparison](comparison-table.md) |
 
 > The source participant-code field was blank, so U01–U10 are repository-local pseudonyms assigned in source row order. Task-level records are not attributed to individual participants because the source workbook does not provide that mapping.
