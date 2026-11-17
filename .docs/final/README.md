@@ -39,9 +39,13 @@ This index covers the project evidence from Discover through Deliver. All files 
 | Test scope, levels, cases, UAT scenarios, and metrics | [AdvisingLog Test Plan](../04-test%20plan/AdvisingLog%20Test%20Plan.md) |
 | Test-level visual | [Test Level diagram](../04-test%20plan/img/Test%20Level.png) |
 | Test schedule | [Master Timeline](../04-test%20plan/img/Master%20Timeline.png) |
+| Anonymized U01–U10 session logs | [UAT session logs](../04-test%20plan/evidence/uat-session-logs.md) |
+| Anonymized task-level UAT records | [UAT task results CSV](../04-test%20plan/evidence/uat-task-results.csv) |
+| V1/V2 presentation evidence brief | [UAT presentation brief](../04-test%20plan/evidence/advisinglog_uat_presentation_brief.pdf) |
+| Issue severity, fix commits, and retest results | [Issue log](../04-test%20plan/evidence/issue-log.md) |
 | Before/after task results and SUS/TAM summary | [Before/After comparison](comparison-table.md) |
 
-> Anonymized session logs and a repository issue log with severity, fix commit, and retest evidence are not included yet. The comparison document links to the external UAT workbook used as the numerical source.
+> The source participant-code field was blank, so U01–U10 are repository-local pseudonyms assigned in source row order. Task-level records are not attributed to individual participants because the source workbook does not provide that mapping.
 
 ## 4. Deliver
 

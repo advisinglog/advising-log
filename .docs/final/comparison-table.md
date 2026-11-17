@@ -8,7 +8,7 @@
 ## 1. Evidence index
 
 - [UAT data workbook (Google Sheets)](https://docs.google.com/spreadsheets/d/1vuRry_EFzIqQnaEpisaO380DNdhOafFM-WqMs3bNC7U/edit): `Task Results`, `Student UAT Summary`, `Advisor UAT Summary`, `QA UAT Summary`, `Overview`, `Student`, `Advisor`, `Form Responses 1`, `Student Video Evidence`, `QA Issue Log`.
-- **Repository evidence still to link:** anonymized session logs; exported task-level table; anonymized SUS/TAM summary and scoring; video-evidence manifest; issue/fix/retest records (if they exist); AI feature test artifacts (if they exist). Add actual committed paths, not hypothetical links.
+- **Committed repository evidence:** [anonymized UAT session logs](../04-test%20plan/evidence/uat-session-logs.md), [anonymized task-level results](../04-test%20plan/evidence/uat-task-results.csv), the [UAT presentation evidence brief](../04-test%20plan/evidence/advisinglog_uat_presentation_brief.pdf), and the [issue log with fix/retest evidence](../04-test%20plan/evidence/issue-log.md). An anonymized SUS/TAM export, video-evidence manifest, and AI feature test artifacts are not included yet.
 - **Privacy:** Do not commit participant emails, names, or raw personally identifying form responses. Use participant codes (U01–U10 and QA-01 as recorded) and sanitized aggregates.
 
 ## 2. Participants and measurement scope
@@ -104,7 +104,7 @@ The form asks **3 items per construct**: `PU1–PU3`, `PEOU1–PEOU3`, and `BI1�
 - **Results:** V2 had lower recorded aggregate timing than V1 for Student (**14.4%**), Advisor (**36.7%**), and QA (**15.4%**). Student UAT05 was **0.5% higher** in V2. Across the six evaluated workflows, all **58 recorded task outcomes** were marked Pass (**29 per version**); several Pass decisions were **user-confirmed**, not independently visible in video.
 - **Timing caution:** Student timing combines observed times, estimates, and full-video proxies; Advisor and QA mainly use full-video lengths. These are **indicative comparisons**, not controlled measurements of task-only completion time.
 - **Survey scope:** Participants tested **V1 and V2**, and the questionnaire includes a **direct V1-versus-V2 feedback question**. SUS (**64.00/100 overall**) and TAM are each drawn from **one unseparated item set** answered by **8 Student + 2 Advisor** respondents. There are no distinct V1 and V2 SUS/TAM score sets; QA supplied no questionnaire. Report comparative opinions qualitatively, without claiming a numerical questionnaire-based V1-to-V2 improvement.
-- **Evidence caveats:** Advisor V1/V2 video assignments were corrected following the coordinator's report of swapped files. Some QA clips do not independently demonstrate successful report export. `QA Issue Log` lists no issues, but that is not proof of zero defects. Repository-level anonymized exports and session evidence are still needed.
+- **Evidence caveats:** Advisor V1/V2 video assignments were corrected following the coordinator's report of swapped files. Some QA clips do not independently demonstrate successful report export. `QA Issue Log` lists no issues, but that is not proof of zero defects. The committed logs preserve anonymized session/task evidence, but the source workbook did not map task clips to individual participant codes.
 
 ## 7. AI use and evaluation disclosure
 
@@ -114,4 +114,4 @@ The form asks **3 items per construct**: `PU1–PU3`, `PEOU1–PEOU3`, and `BI1�
 
 ---
 
-**Numerical source:** [AdvisingLog UAT workbook](https://docs.google.com/spreadsheets/d/1vuRry_EFzIqQnaEpisaO380DNdhOafFM-WqMs3bNC7U/edit). Replace or supplement external links with committed, anonymized evidence files for grading.
+**Numerical source:** [AdvisingLog UAT workbook](https://docs.google.com/spreadsheets/d/1vuRry_EFzIqQnaEpisaO380DNdhOafFM-WqMs3bNC7U/edit), corroborated by the committed [UAT presentation evidence brief](../04-test%20plan/evidence/advisinglog_uat_presentation_brief.pdf). The repository also includes [anonymized session logs](../04-test%20plan/evidence/uat-session-logs.md) and [task-level results](../04-test%20plan/evidence/uat-task-results.csv); do not publish the source workbook because it contains personal and survey data.

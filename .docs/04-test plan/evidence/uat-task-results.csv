@@ -1,0 +1,59 @@
+record_id,role,task_id,task_scenario,version,result,time_sec,errors_count,timing_basis
+V1-Clip01,Student,UAT01-V1,Request an advising session,V1,Pass,79.0,,not_specified
+V1-Clip02,Student,UAT01-V1,Request an advising session,V1,Pass,140.0,,not_specified
+V1-Clip03,Student,UAT01-V1,Request an advising session,V1,Pass,90.0,,not_specified
+V1-Clip04,Student,UAT01-V1,Request an advising session,V1,Pass,106.0,,not_specified
+V1-Clip05,Student,UAT01-V1,Request an advising session,V1,Pass,107.0,,not_specified
+V1-Clip06,Student,UAT01-V1,Request an advising session,V1,Pass,123.0,,not_specified
+V1-Clip07,Student,UAT01-V1,Request an advising session,V1,Pass,109.0,,not_specified
+V1-Clip08,Student,UAT01-V1,Request an advising session,V1,Pass,108.0,,not_specified
+V2-Clip01,Student,UAT01-V2,Request an advising session,V2,Pass,76.0,,not_specified
+V2-Clip02,Student,UAT01-V2,Request an advising session,V2,Pass,72.27,,not_specified
+V2-Clip03,Student,UAT01-V2,Request an advising session,V2,Pass,102.0,,not_specified
+V2-Clip04,Student,UAT01-V2,Request an advising session,V2,Pass,108.0,,not_specified
+V2-Clip05,Student,UAT01-V2,Request an advising session,V2,Pass,90.0,,not_specified
+V2-Clip06,Student,UAT01-V2,Request an advising session,V2,Pass,155.0,,not_specified
+V2-Clip07,Student,UAT01-V2,Request an advising session,V2,Pass,83.0,,not_specified
+V2-Clip08,Student,UAT01-V2,Request an advising session,V2,Pass,55.2,,not_specified
+V1-02-Clip01,Student,UAT02-V1,Check the status of an advising request,V1,Pass,80.0,,approximate_or_user_confirmed
+V1-05-Clip01,Student,UAT05-V1,Update a follow-up task,V1,Pass,111.5,,whole_video_proxy
+V1-02-Clip02,Student,UAT02-V1,Check the status of an advising request,V1,Pass,16.0,,approximate_or_user_confirmed
+V1-05-Clip02,Student,UAT05-V1,Update a follow-up task,V1,Pass,58.67,,whole_video_proxy
+V1-02-Clip03,Student,UAT02-V1,Check the status of an advising request,V1,Pass,114.1,,whole_video_proxy
+V1-05-Clip03,Student,UAT05-V1,Update a follow-up task,V1,Pass,19.7,,whole_video_proxy
+V1-02-Clip04,Student,UAT02-V1,Check the status of an advising request,V1,Pass,34.43,,whole_video_proxy
+V1-05-Clip04,Student,UAT05-V1,Update a follow-up task,V1,Pass,180.3,,whole_video_proxy
+V1-02-Clip05,Student,UAT02-V1,Check the status of an advising request,V1,Pass,138.37,,whole_video_proxy
+V1-05-Clip05,Student,UAT05-V1,Update a follow-up task,V1,Pass,138.37,,whole_video_proxy
+V1-02-Clip06,Student,UAT02-V1,Check the status of an advising request,V1,Pass,9.0,,approximate_or_user_confirmed
+V1-05-Clip06,Student,UAT05-V1,Update a follow-up task,V1,Pass,114.13,,whole_video_proxy
+V1-02-Clip07,Student,UAT02-V1,Check the status of an advising request,V1,Pass,180.3,,whole_video_proxy
+V1-05-Clip07,Student,UAT05-V1,Update a follow-up task,V1,Pass,49.1,,whole_video_proxy
+V1-02-Clip08,Student,UAT02-V1,Check the status of an advising request,V1,Pass,129.9,,whole_video_proxy
+V1-05-Clip08,Student,UAT05-V1,Update a follow-up task,V1,Pass,,,video_recorded
+V2-05-Clip01,Student,UAT05-V2,Update a follow-up task,V2,Pass,99.333,,whole_video_proxy
+V2-05-Clip02,Student,UAT05-V2,Update a follow-up task,V2,Pass,111.5,,whole_video_proxy
+V2-05-Clip03,Student,UAT05-V2,Update a follow-up task,V2,Pass,58.667,,whole_video_proxy
+V2-05-Clip04,Student,UAT05-V2,Update a follow-up task,V2,Pass,48.933,,whole_video_proxy
+V2-05-Clip05,Student,UAT05-V2,Update a follow-up task,V2,Pass,69.267,,whole_video_proxy
+V2-05-Clip06,Student,UAT05-V2,Update a follow-up task,V2,Pass,180.3,,whole_video_proxy
+V2-05-Clip07,Student,UAT05-V2,Update a follow-up task,V2,Pass,109.833,,whole_video_proxy
+V2-05-Clip08,Student,UAT05-V2,Update a follow-up task,V2,Pass,93.733,,whole_video_proxy
+V2-02-Clip01,Student,UAT02-V2,Check the status of an advising request,V2,Pass,48.933333,,whole_video_proxy
+V2-02-Clip02,Student,UAT02-V2,Check the status of an advising request,V2,Pass,58.666667,,whole_video_proxy
+V2-02-Clip03,Student,UAT02-V2,Check the status of an advising request,V2,Pass,25.066667,,whole_video_proxy
+V2-02-Clip04,Student,UAT02-V2,Check the status of an advising request,V2,Pass,49.1,,whole_video_proxy
+V2-02-Clip05,Student,UAT02-V2,Check the status of an advising request,V2,Pass,129.9,,whole_video_proxy
+V2-02-Clip06,Student,UAT02-V2,Check the status of an advising request,V2,Pass,50.2,,whole_video_proxy
+V2-02-Clip07,Student,UAT02-V2,Check the status of an advising request,V2,Pass,29.8,,whole_video_proxy
+V2-02-Clip08,Student,UAT02-V2,Check the status of an advising request,V2,Pass,91.6,,whole_video_proxy
+Advisor-V1-01,Advisor,APPT-CONFIRM-V1,Confirm an advising appointment,V1,Pass,160.0,,not_specified
+Advisor-V1-02,Advisor,APPT-CONFIRM-V1,Confirm an advising appointment,V1,Pass,,,not_specified
+Advisor-V1-01-Followup,Advisor,UAT04-V1,Assign a follow-up task,V1,Pass,20.0,,not_specified
+Advisor-V1-02-Followup,Advisor,UAT04-V1,Assign a follow-up task,V1,Pass,,,not_specified
+Advisor-V2-01,Advisor,APPT-CONFIRM-V2,Confirm / accept a student's advising appointment,V2,Pass,81.6,,not_specified
+Advisor-V2-02,Advisor,APPT-CONFIRM-V2,Confirm / accept a student's advising appointment,V2,Pass,107.366667,,not_specified
+Advisor-V2-01-Followup,Advisor,UAT04-V2,Assign a follow-up task,V2,Pass,111.5,,not_specified
+Advisor-V2-02-Followup,Advisor,UAT04-V2,Assign a follow-up task,V2,Pass,24.433333,,not_specified
+QA-01-V1,QA,UAT06-V1,View QA dashboard and export advising report,V1,Pass,36.821678,,whole_video_proxy
+QA-01-V2,QA,UAT06-V2,View QA dashboard and export advising report,V2,Pass,31.166667,,whole_video_proxy
