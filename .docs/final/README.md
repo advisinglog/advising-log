@@ -7,8 +7,10 @@ This index covers the project evidence from Discover through Deliver. All files 
 | Evidence | File |
 |---|---|
 | Project overview, team members, roles, and system scope | [Project README](../../README.md) |
+| Company charter, team rules, and git workflow | [Company charter](../01-requirements/charter.md) |
 | Team development rules and responsibilities | [AGENTS.md](../../AGENTS.md) |
 | Project brief, roles, workflow, domain rules, and AI guidance | [CLAUDE.md](../../CLAUDE.md) |
+| Problem analysis and literature review (SECONDARY) | [User research (SECONDARY)](../01-requirements/user-research.md) |
 | Project proposal and problem definition | [Proposal](../01-requirements/proposal.md) |
 | Functional requirements | [System specification](../01-requirements/spec.md) |
 | MoSCoW product backlog and MUST items | [Product backlog](../01-requirements/backlog.md) |
@@ -17,7 +19,7 @@ This index covers the project evidence from Discover through Deliver. All files 
 | Feature list | [Feature list](../02-design/feature-list.md) |
 | PDPA and legal requirements | [Compliance rules](../03-compliance/rule.md) |
 
-> Interview records or `SECONDARY` evidence are not included in this repository yet.
+> Due to timeline constraints, user research relies on secondary evidence (academic literature, market review of comparable advising systems, and AUN-QA documentation) labeled `SECONDARY` in [User research](../01-requirements/user-research.md).
 
 ## 2. Build
 
@@ -29,6 +31,8 @@ This index covers the project evidence from Discover through Deliver. All files 
 | System architecture | [Architecture diagram](../02-design/diagrams/04-system-architecture-diagram.jpg) |
 | Frontend source code | [Frontend](../../frontend/) |
 | Backend source code | [Backend](../../backend/) |
+| Frontend environment template | [Frontend .env.example](../../frontend/.env.example) |
+| Backend environment template | [Backend .dev.vars.example](../../backend/.dev.vars.example) |
 | Frontend tests | [Frontend test files](../../frontend/src/) |
 | Backend tests | [Backend test files](../../backend/src/) |
 | Deployment workflow | [Cloudflare deployment workflow](../../.github/workflows/deploy.yml) |

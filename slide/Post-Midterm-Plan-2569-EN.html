@@ -1,0 +1,957 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Post-Midterm Plan (EN) — Case Study — 1305493</title>
+<style>
+  :root{
+    --paper:#F3F4F7; --card:#FFFFFF; --ink:#141B24; --ink-2:#3A4655; --ink-3:#6A7686;
+    --line:#DCE0E7; --line-2:#E9ECF1;
+    --p1:#3E7CB1; --p2:#2A9D8F; --p3:#E1972B; --p4:#D9542B;
+    --accent:var(--p1); --accent-soft:#E1ECF5;
+    --good:#2A9D8F; --warn:#E1972B; --stop:#C6402A;
+    --good-soft:#E1F1EE; --warn-soft:#FBF0DC; --stop-soft:#FBE3DD;
+    --codebg:#0E141B; --codeink:#D7DEE8; --codekey:#7FB2E0; --codestr:#69C7B4; --codecom:#6A7686;
+    --shadow:0 1px 2px rgba(20,27,36,.05),0 10px 30px rgba(20,27,36,.07);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --paper:#0E141B; --card:#161F2A; --ink:#EAEEF4; --ink-2:#AEB9C7; --ink-3:#7C8797;
+      --line:#26313E; --line-2:#1E2733; --p1:#5B9BD1; --p2:#3FB9AA; --p3:#EFB44A; --p4:#EE7350;
+      --accent-soft:#152532; --good-soft:#173029; --warn-soft:#2E2413; --stop-soft:#2E1712;
+      --good:#3FB9AA; --warn:#EFB44A; --stop:#EE7350;
+      --codebg:#0A0F15; --codeink:#D7DEE8;
+      --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 34px rgba(0,0,0,.4);
+    }
+  }
+  :root[data-theme="light"]{
+    --paper:#F3F4F7; --card:#FFFFFF; --ink:#141B24; --ink-2:#3A4655; --ink-3:#6A7686;
+    --line:#DCE0E7; --line-2:#E9ECF1; --p1:#3E7CB1; --p2:#2A9D8F; --p3:#E1972B; --p4:#D9542B;
+    --accent-soft:#E1ECF5; --good-soft:#E1F1EE; --warn-soft:#FBF0DC; --stop-soft:#FBE3DD;
+    --good:#2A9D8F; --warn:#E1972B; --stop:#C6402A;
+    --codebg:#0E141B; --codeink:#D7DEE8;
+    --shadow:0 1px 2px rgba(20,27,36,.05),0 10px 30px rgba(20,27,36,.07);
+  }
+  :root[data-theme="dark"]{
+    --paper:#0E141B; --card:#161F2A; --ink:#EAEEF4; --ink-2:#AEB9C7; --ink-3:#7C8797;
+    --line:#26313E; --line-2:#1E2733; --p1:#5B9BD1; --p2:#3FB9AA; --p3:#EFB44A; --p4:#EE7350;
+    --accent-soft:#152532; --good-soft:#173029; --warn-soft:#2E2413; --stop-soft:#2E1712;
+    --good:#3FB9AA; --warn:#EFB44A; --stop:#EE7350;
+    --codebg:#0A0F15; --codeink:#D7DEE8;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 34px rgba(0,0,0,.4);
+  }
+
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; background:var(--paper); color:var(--ink); overflow:hidden;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,"Noto Sans Thai",system-ui,sans-serif;
+    line-height:1.55; -webkit-font-smoothing:antialiased;
+  }
+  .mono{font-family:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace}
+
+  .deck{position:relative;height:100vh;width:100%}
+  .slide{
+    position:absolute; inset:0; padding:min(7vh,60px) min(7vw,84px);
+    display:flex; flex-direction:column; justify-content:center; gap:16px;
+    opacity:0; visibility:hidden; transform:translateY(8px);
+    transition:opacity .4s ease, transform .4s ease, visibility .4s;
+    overflow-y:auto;
+  }
+  .slide.active{opacity:1;visibility:visible;transform:none}
+  .slide.top{justify-content:flex-start;padding-top:min(8vh,64px)}
+  @media (prefers-reduced-motion:reduce){.slide{transition:none}}
+  .inner{max-width:1040px;margin:0 auto;width:100%;display:flex;flex-direction:column;gap:16px}
+
+  .eyebrow{font-family:ui-monospace,Menlo,monospace;font-size:clamp(11px,1.5vw,14px);letter-spacing:.18em;text-transform:uppercase;color:var(--ink-3);margin:0}
+  h1{font-size:clamp(28px,5.6vw,58px);line-height:1.05;letter-spacing:-.02em;font-weight:800;margin:0;text-wrap:balance}
+  h2{font-size:clamp(23px,4vw,40px);line-height:1.1;letter-spacing:-.02em;font-weight:800;margin:0;text-wrap:balance}
+  .lead{font-size:clamp(16px,2.4vw,23px);color:var(--ink-2);max-width:68ch;margin:0}
+  .lead b{color:var(--ink)}
+  .accent{color:var(--accent)}
+
+  .title{border-left:4px solid var(--accent);padding-left:clamp(16px,3vw,28px)}
+  .facts{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+  .chip{font-family:ui-monospace,Menlo,monospace;font-size:clamp(11px,1.5vw,13px);color:var(--ink-2);background:var(--card);
+    border:1px solid var(--line);border-radius:8px;padding:7px 11px}
+  .chip b{color:var(--ink)}
+  .chip.hot{background:var(--accent-soft);border-color:transparent;color:var(--accent);font-weight:700}
+
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .two.lean{grid-template-columns:1.1fr .9fr}
+  .box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:9px}
+  .box.hot{background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 12%,var(--card)),var(--card))}
+  .box h3{margin:0;font-size:clamp(17px,2.3vw,23px);font-weight:750}
+  .box .k{font-family:ui-monospace,Menlo,monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+  .box.no .k{color:var(--stop)} .box.yes .k{color:var(--good)} .box.mid .k{color:var(--warn)}
+  .box ul{margin:0;padding-left:18px;color:var(--ink-2);font-size:clamp(13.5px,1.8vw,17px);display:flex;flex-direction:column;gap:6px}
+  .box ul b{color:var(--ink)}
+
+  .note{font-size:clamp(13.5px,1.7vw,17px);color:var(--ink-3);max-width:76ch}
+  .note b{color:var(--ink-2)}
+  .plain{background:var(--accent-soft);border-radius:11px;padding:10px 14px;font-size:clamp(12.5px,1.6vw,15.5px);color:var(--ink-2);line-height:1.5}
+  .plain .lbl{font-family:ui-monospace,Menlo,monospace;font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--accent);font-weight:700;display:inline-flex;align-items:center;gap:5px;margin-right:7px}
+  .plain b{color:var(--ink)} .plain .eg{color:var(--ink-3)}
+  .plain .eg b{color:var(--ink-2)}
+
+  .grid{display:grid;gap:12px}
+  .grid.g2{grid-template-columns:repeat(2,1fr)}
+  .grid.g3{grid-template-columns:repeat(3,1fr)}
+  .grid.g4{grid-template-columns:repeat(4,1fr)}
+  .c{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:15px 17px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:7px}
+  .c .kk{font-family:ui-monospace,Menlo,monospace;font-size:13px;font-weight:700;color:var(--accent)}
+  .c h4{margin:0;font-size:clamp(15.5px,2.1vw,20px);font-weight:750}
+  .c p{margin:0;font-size:clamp(13px,1.6vw,16px);color:var(--ink-2)}
+  .c p b{color:var(--ink)}
+  .c.must{border-top:3px solid var(--p4)} .c.should{border-top:3px solid var(--p3)}
+  .c.could{border-top:3px solid var(--p1)} .c.wont{border-top:3px solid var(--ink-3)}
+  .c.must .kk{color:var(--p4)} .c.should .kk{color:var(--p3)} .c.could .kk{color:var(--p1)} .c.wont .kk{color:var(--ink-3)}
+
+  pre.code{margin:0;background:var(--codebg);border-radius:12px;padding:15px 17px;overflow:auto;box-shadow:var(--shadow)}
+  pre.code code{font-family:ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace;font-size:clamp(11px,1.45vw,14px);line-height:1.6;color:var(--codeink);white-space:pre}
+  .code .cm{color:var(--codecom)} .code .kw{color:var(--codekey)} .code .st{color:var(--codestr)} .code .fn{color:#E6B673}
+  .filename{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;color:var(--ink-3);margin:0 0 -6px 2px}
+
+  .flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .flow .step{background:var(--card);border:1px solid var(--line);border-radius:9px;padding:8px 12px;font-size:clamp(12px,1.5vw,14.5px);color:var(--ink-2)}
+  .flow .step.on{background:var(--accent-soft);border-color:transparent;color:var(--accent);font-weight:700}
+  .flow .step.gate{background:var(--good-soft);border-color:transparent;color:var(--good);font-weight:800}
+  .flow .step b{color:var(--ink)}
+  .flow .arw{color:var(--ink-3);font-size:18px}
+
+  table.mx{border-collapse:collapse;width:100%;font-size:clamp(12px,1.55vw,15px);background:var(--card);border-radius:12px;overflow:hidden;box-shadow:var(--shadow)}
+  table.mx th,table.mx td{text-align:left;padding:9px 13px;border-bottom:1px solid var(--line-2);vertical-align:top}
+  table.mx th{background:var(--accent-soft);color:var(--ink);font-weight:700;font-family:ui-monospace,Menlo,monospace;font-size:11.5px;letter-spacing:.05em;text-transform:uppercase}
+  table.mx td{color:var(--ink-2)} table.mx td b{color:var(--ink)}
+  table.mx tr:last-child td{border-bottom:none}
+  table.mx td .mono{font-size:.92em}
+
+  .steps{display:flex;flex-direction:column;gap:8px}
+  .steps .st{display:grid;grid-template-columns:auto 1fr;gap:13px;align-items:start;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:9px 15px;box-shadow:var(--shadow)}
+  .steps .st .no{font-family:ui-monospace,Menlo,monospace;font-weight:800;font-size:15px;color:#fff;background:var(--accent);width:30px;height:30px;border-radius:8px;display:grid;place-items:center}
+  .steps .st .tm{font-family:ui-monospace,Menlo,monospace;font-size:11px;color:var(--ink-3);letter-spacing:.05em}
+  .steps .st h4{margin:0;font-size:clamp(15px,2vw,18.5px);font-weight:750}
+  .steps .st p{margin:2px 0 0;font-size:clamp(12.5px,1.6vw,15.5px);color:var(--ink-2)}
+  .steps .st p b{color:var(--ink)}
+
+  svg{display:block;max-width:100%;height:auto}
+  .viz{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:clamp(12px,2vw,20px)}
+
+  .bar-top{position:fixed;top:14px;left:18px;right:18px;display:flex;align-items:center;justify-content:space-between;z-index:20;pointer-events:none}
+  .bar-top .code-tag{pointer-events:auto;font-family:ui-monospace,Menlo,monospace;font-size:12px;font-weight:700;color:#fff;background:var(--ink);padding:5px 9px;border-radius:6px}
+  .bar-top .tg{pointer-events:auto;font-family:ui-monospace,Menlo,monospace;font-size:12px;color:var(--ink-2);background:var(--card);border:1px solid var(--line);padding:6px 11px;border-radius:20px;cursor:pointer}
+  .bar-top .tg:hover{border-color:var(--ink-3)}
+
+  .nav{position:fixed;bottom:16px;right:18px;display:flex;align-items:center;gap:8px;z-index:20}
+  .nav button{font-family:ui-monospace,Menlo,monospace;font-size:16px;color:var(--ink-2);background:var(--card);border:1px solid var(--line);width:38px;height:38px;border-radius:10px;cursor:pointer;display:grid;place-items:center}
+  .nav button:hover{border-color:var(--accent);color:var(--accent)}
+  .nav .count{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;color:var(--ink-3);font-variant-numeric:tabular-nums;min-width:52px;text-align:center}
+
+  .dots{position:fixed;bottom:22px;left:18px;display:flex;gap:6px;z-index:20;max-width:60vw;flex-wrap:wrap}
+  .dots button{width:9px;height:9px;border-radius:50%;border:none;background:var(--line);cursor:pointer;padding:0}
+  .dots button.on{background:var(--accent);transform:scale(1.25)}
+
+  .progress{position:fixed;top:0;left:0;height:3px;background:var(--accent);z-index:30;transition:width .3s ease}
+
+  @media (max-width:760px){
+    .two,.two.lean,.grid.g3,.grid.g2,.grid.g4,.steps.cols{grid-template-columns:1fr}
+    .slide{padding:60px 18px 72px}
+    .dots{display:none}
+  }
+  @media print{
+    body{overflow:visible;height:auto}
+    .deck{height:auto}
+    .slide{position:static;opacity:1;visibility:visible;transform:none;min-height:100vh;page-break-after:always;break-after:page}
+    .bar-top,.nav,.dots,.progress{display:none}
+  }
+
+  .tl{display:flex;flex-direction:column;gap:8px}
+  .tl .row{display:grid;grid-template-columns:150px 118px 1fr;gap:14px;align-items:center;background:var(--card);border:1px solid var(--line);border-left:4px solid var(--tc,var(--line));border-radius:12px;padding:10px 16px;box-shadow:var(--shadow)}
+  .tl .d{font-family:ui-monospace,Menlo,monospace;font-size:clamp(12px,1.5vw,14.5px);font-weight:700;color:var(--ink)}
+  .tl .d small{display:block;font-weight:400;color:var(--ink-3);font-size:11px;letter-spacing:.05em}
+  .tl .tag{justify-self:start;font-family:ui-monospace,Menlo,monospace;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:4px 9px;border-radius:6px;color:#fff;background:var(--tc,var(--ink-3))}
+  .tl .w{font-size:clamp(13.5px,1.8vw,17px);color:var(--ink-2)}
+  .tl .w b{color:var(--ink)}
+  .t-online{--tc:var(--p1)} .t-off{--tc:var(--ink-3)} .t-due{--tc:var(--p4)}
+  .t-guest{--tc:var(--p3)} .t-work{--tc:var(--p2)} .t-final{--tc:var(--good)} .t-exam{--tc:var(--stop)}
+
+  .big-date{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+  .big-date .dd{font-size:clamp(44px,9vw,96px);font-weight:850;line-height:.95;letter-spacing:-.03em;color:var(--accent)}
+  .big-date .mm{font-size:clamp(17px,2.6vw,26px);font-weight:700;color:var(--ink-2)}
+  .fill{display:inline-block;font-family:ui-monospace,Menlo,monospace;font-size:.92em;color:var(--stop);background:var(--stop-soft);border:1px dashed var(--stop);border-radius:6px;padding:1px 7px}
+  .ck{list-style:none;padding-left:0 !important}
+  .ck li{padding-left:26px;position:relative}
+  .ck li::before{content:"";position:absolute;left:3px;top:.38em;width:11px;height:11px;border:2px solid var(--accent);border-radius:3px}
+
+  .c ul{margin:0;padding-left:18px;color:var(--ink-2);font-size:clamp(12.5px,1.55vw,15px);display:flex;flex-direction:column;gap:4px}
+  .c ul b{color:var(--ink)}
+  .md text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,"Noto Sans Thai",system-ui,sans-serif}
+  .md .node{fill:var(--card);stroke:var(--line);stroke-width:1.5}
+  .md .node.m{fill:var(--accent-soft);stroke:var(--accent)}
+  .md .node.o{fill:var(--warn-soft);stroke:var(--warn)}
+  .md .node.x{fill:var(--card);stroke:var(--ink-3);stroke-dasharray:5 4}
+  .md .t1{fill:var(--ink);font-weight:800;font-size:16px}
+  .md .t2{fill:var(--ink-2);font-size:12.5px}
+  .md .ed{stroke:var(--ink-3);stroke-width:1.6;fill:none}
+  .md .ed.d{stroke-dasharray:5 4}
+  .md .ah{fill:var(--ink-3)}
+  .lg{display:flex;gap:18px;flex-wrap:wrap;font-size:clamp(12px,1.5vw,14px);color:var(--ink-2)}
+  .lg i{display:inline-block;width:18px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+  .lg .m{background:var(--accent-soft);border:1.5px solid var(--accent)}
+  .lg .o{background:var(--warn-soft);border:1.5px solid var(--warn)}
+  .lg .x{border:1.5px dashed var(--ink-3)}
+  .box ol{margin:0;padding-left:22px;color:var(--ink-2);font-size:clamp(12px,1.45vw,14px);display:flex;flex-direction:column;gap:2px}
+  .chart-sv .bar{fill:var(--p1)}
+  .chart-sv .ax{stroke:var(--ink-3);stroke-width:1}
+  .chart-sv .gl{stroke:var(--line);stroke-width:1}
+  .chart-sv .bench{stroke:var(--stop);stroke-width:1.5;stroke-dasharray:5 4}
+  .chart-sv .mean{stroke:var(--good);stroke-width:2}
+  .chart-sv text{fill:var(--ink-3);font-family:ui-monospace,Menlo,monospace;font-size:16px}
+  .chart-sv .tb{fill:var(--stop);font-weight:700} .chart-sv .tm{fill:var(--good);font-weight:700}
+  .hb{display:flex;flex-direction:column;gap:10px}
+  .hb .r{display:grid;grid-template-columns:58px 1fr 76px;gap:10px;align-items:center;font-size:clamp(12.5px,1.5vw,14px);color:var(--ink-2)}
+  .hb .r b{font-family:ui-monospace,Menlo,monospace;color:var(--ink)}
+  .hb .tr{height:14px;background:var(--line-2);border-radius:7px;overflow:hidden}
+  .hb .fl{height:100%;background:var(--p2);border-radius:7px}
+  .hb .v{font-family:ui-monospace,Menlo,monospace;font-weight:700;color:var(--ink);text-align:right;font-size:12.5px}
+  .demo{font-family:ui-monospace,Menlo,monospace;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--warn);background:var(--warn-soft);border-radius:6px;padding:3px 8px;align-self:flex-start}
+  .stat{font-family:ui-monospace,Menlo,monospace;font-size:clamp(12px,1.5vw,14px);color:var(--ink-2)}
+  .stat b{color:var(--ink)}
+  .ref{font-size:11.5px;color:var(--ink-3);margin:0}
+
+  .md{max-height:40vh;width:auto;margin:0 auto}
+  .md.tall{max-height:48vh}
+  .chart-sv{max-height:32vh;width:auto;margin:0 auto}
+  .steps.cols{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .steps.cols .st:last-child{grid-column:1 / -1}
+  @media (max-height:780px){
+    .slide.top{padding-top:46px;padding-bottom:56px}
+    .inner{gap:12px}
+    h2{font-size:clamp(22px,3.4vw,34px)}
+    table.mx th,table.mx td{padding:6px 12px}
+    .chart-sv{max-height:20vh}
+  }
+  .two>*,.grid>*{min-width:0}
+  @media (max-width:760px){
+    .tl .row{grid-template-columns:1fr;gap:6px}
+    .steps.cols{grid-template-columns:1fr}
+    .steps.cols .st:last-child{grid-column:auto}
+  }
+</style>
+</head>
+<body>
+<div class="progress" id="prog"></div>
+<div class="bar-top">
+  <span class="code-tag">1305493: After the midterm (Oct–Nov 2026)</span>
+  <button class="tg" id="tg" aria-label="Toggle theme">theme</button>
+</div>
+
+<div class="deck" id="deck">
+
+  <!-- 1 TITLE -->
+  <section class="slide active">
+    <div class="inner title">
+      <p class="eyebrow">After the midterm: TEST → DELIVER</p>
+      <h1>Post-midterm plan</h1>
+      <p class="lead">From here on, every team <b>tests its system with real users</b> and then <b>presents the final project</b>. The schedule has changed in several places: <b>an online class, a cancelled class, and a Saturday session</b>. Please read every slide.</p>
+      <div class="facts">
+        <span class="chip hot">14 Oct – 18 Nov 2026</span>
+        <span class="chip">Test Plan, Guest, Testing, Final</span>
+        <span class="chip">Dr. Prasara Jakkaew, ADT MFU</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 TIMELINE AT A GLANCE -->
+  <section class="slide top">
+    <div class="inner">
+      <p class="eyebrow">Timeline at a glance</p>
+      <h2>The new schedule on one slide</h2>
+      <div class="tl">
+        <div class="row t-online"><span class="d">Wed 14 Oct<small>W9</small></span><span class="tag">Online</span><span class="w"><b>Online class</b> at the usual time. Topic: Testing &amp; UAT, Testing Pyramid</span></div>
+        <div class="row t-off"><span class="d">Wed 21 Oct<small>W10</small></span><span class="tag">No class</span><span class="w"><b>No class</b>, replaced by the Saturday guest lecture on 31 Oct</span></div>
+        <div class="row t-due"><span class="d">Before Wed 28 Oct<small>Deadline</small></span><span class="tag">Due</span><span class="w"><b>Submit your Test Plan</b>, one per team</span></div>
+        <div class="row t-guest"><span class="d">Sat 31 Oct<small>09:00–17:00</small></span><span class="tag">Guest</span><span class="w"><b>Cybersecurity guest lecture</b>, onsite in Room E4614; bring a laptop</span></div>
+        <div class="row t-work"><span class="d">Wed 4 Nov<small>W12</small></span><span class="tag">Testing</span><span class="w"><b>No class in the room</b>; teams run their tests following the Test Plan</span></div>
+        <div class="row t-final"><span class="d">Wed 11 / 18 Nov<small>W13, W14</small></span><span class="tag">Final</span><span class="w"><b>Final project presentations</b>: teams 1–10 on the 11th, teams 11–20 on the 18th</span></div>
+        <div class="row t-exam"><span class="d">22 Nov – 4 Dec<small>Exam period</small></span><span class="tag">Exam</span><span class="w"><b>Final exam</b>, emphasis on testing, AI governance, IT/AI law</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 14 OCT ONLINE -->
+  <section class="slide">
+    <div class="inner">
+      <p class="eyebrow">W9: Online class</p>
+      <div class="big-date"><span class="dd">14</span><span class="mm">Oct 2026, Wednesday: online class</span></div>
+      <div class="two">
+        <div class="box hot">
+          <span class="k">How to join</span>
+          <h3>Don't come to the room</h3>
+          <ul>
+            <li>Join online <b>at the usual class time</b></li>
+            <li>Zoom: <a href="https://zoom.us/j/95353469386?pwd=uIsUwbI0hxGtC9vHzvtqEbiayaEuDl.1" target="_blank" rel="noopener">NewGen Zoom room</a><br>Meeting ID 953 5346 9386, Passcode 960242</li>
+            <li><b>Attendance is taken as usual</b>; join on time</li>
+            <li>Have your mic and internet ready</li>
+          </ul>
+        </div>
+        <div class="box">
+          <span class="k">Topic</span>
+          <h3>Testing &amp; UAT</h3>
+          <ul>
+            <li><b>Testing Pyramid</b>: Unit → Integration → E2E</li>
+            <li><b>UAT</b>: real users decide whether the system is acceptable</li>
+            <li>Today's content is the foundation of the <b>Test Plan</b> you must submit</li>
+          </ul>
+        </div>
+      </div>
+      <div class="plain"><span class="lbl">In plain terms</span> This is a normal class, <b>just online</b>. Missing it counts as an absence, and you will use today's content for your Test Plan right away.</div>
+    </div>
+  </section>
+
+  <!-- 4 21 OCT NO CLASS -->
+  <section class="slide">
+    <div class="inner">
+      <p class="eyebrow">W10: No class</p>
+      <div class="big-date"><span class="dd">21</span><span class="mm">Oct 2026, Wednesday: no class</span></div>
+      <div class="two">
+        <div class="box">
+          <span class="k">Why</span>
+          <h3>Replaced by Saturday 31 Oct</h3>
+          <p class="note">This week's class hours move to a <b>full-day guest lecture</b> on Saturday 31 Oct (see the guest lecture slide).</p>
+        </div>
+        <div class="box yes">
+          <span class="k">Use the time</span>
+          <h3>Work on your Test Plan</h3>
+          <ul>
+            <li>Meet as a team and split the Test Plan writing</li>
+            <li>Book your <b>real users</b> in advance for testing on 4 Nov</li>
+            <li>The Test Plan is due <b>before Wednesday 28 Oct</b></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 TEST PLAN -->
+  <section class="slide top">
+    <div class="inner">
+      <p class="eyebrow">Deliverable: due before Wed 28 Oct 2026</p>
+      <h2>Test Plan: what it must include</h2>
+      <div class="grid g3">
+        <div class="c"><span class="kk">01 Scope</span><h4>What you will test</h4><p>Your <b>MUST</b> core workflow and its related requirements. Also state what you will <b>not</b> test.</p></div>
+        <div class="c"><span class="kk">02 Levels</span><h4>Which test levels</h4><p>Unit, Integration and E2E following the <b>Testing Pyramid</b>, plus <b>UAT</b> with real users.</p></div>
+        <div class="c"><span class="kk">03 Test cases</span><h4>Test cases and UAT scenarios</h4><p>Steps, test data, <b>expected result</b>, and pass/fail for each case.</p></div>
+        <div class="c"><span class="kk">04 Users</span><h4>Real users</h4><p>Who you will test with, how many people, and how many sessions (target <b>≥ 10 sessions</b>).</p></div>
+        <div class="c"><span class="kk">05 Metrics</span><h4>How you measure</h4><p>Task results (<b>before / after</b>) are <b>required</b>. <b>SUS</b>, <b>TAM</b> or <b>UTAUT2</b> are <b>optional</b>; if you skip them, describe your own way of measuring.</p></div>
+        <div class="c"><span class="kk">06 Schedule</span><h4>Who does what, when</h4><p>Test schedule (testing on <b>4 Nov</b>), owners, and exit criteria.</p></div>
+      </div>
+      <div class="plain"><span class="lbl">AI-First</span> You may use AI to draft test cases, but <b>your team must review every case</b> and state in the Test Plan where you used AI.<br><span class="eg">Submit via: <span class="fill">[add submission channel]</span>, one per team</span></div>
+    </div>
+  </section>
+
+  <!-- 6 GUEST 31 OCT -->
+  <section class="slide top">
+    <div class="inner">
+      <p class="eyebrow">Guest lecture: Saturday, onsite</p>
+      <div class="big-date"><span class="dd">31</span><span class="mm">Oct 2026, Saturday, 09:00–17:00</span></div>
+      <h2>Cybersecurity for Software &amp; Systems Engineers</h2>
+      <p class="lead">Guest speaker: <b>Mr. Jedsada Punyapreedapong</b>, Army Cyber Center</p>
+      <div class="two lean">
+        <div class="box">
+          <span class="k">Sessions</span>
+          <ul>
+            <li><b>From Code to Breach</b></li>
+            <li><b>AppSec &amp; API Security</b></li>
+            <li><b>Hands-On Lab "Hack &amp; Patch"</b></li>
+            <li><b>DevSecOps &amp; Supply Chain</b></li>
+            <li><b>Defensive Architecture &amp; Observability</b></li>
+            <li><b>Career &amp; Q&amp;A</b></li>
+          </ul>
+        </div>
+        <div class="box hot">
+          <span class="k">Bring &amp; know</span>
+          <ul>
+            <li><b>Room E4614</b>, Building E4</li>
+            <li><b>Bring a laptop</b> for the lab</li>
+            <li><b>Counts as class time</b>; attendance is taken</li>
+            <li>Complete the <b>feedback survey</b> afterwards</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 4 NOV TESTING -->
+  <section class="slide">
+    <div class="inner">
+      <p class="eyebrow">W12: No class, field testing</p>
+      <div class="big-date"><span class="dd">4</span><span class="mm">Nov 2026, Wednesday: no class in the room</span></div>
+      <div class="two">
+        <div class="box yes">
+          <span class="k">Do</span>
+          <h3>Test with real users</h3>
+          <ul>
+            <li>Follow the <b>Test Plan</b> you submitted</li>
+            <li>Have real users complete the core workflow <b>end to end</b></li>
+            <li>Record every session: pass/fail and issues found</li>
+            <li>Fix the critical bugs from feedback</li>
+          </ul>
+        </div>
+        <div class="box">
+          <span class="k">Keep evidence</span>
+          <h3>Evidence you need for the final</h3>
+          <ul>
+            <li><b>User Evidence Log</b> (P3): who you tested with, when, and what you found</li>
+            <li><b>Impact Metrics</b> (P4): before / after numbers</li>
+            <li>Photos or video of testing (ask users for permission first)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="plain"><span class="lbl">AI policy</span> Do <b>not fabricate test results or user interviews</b>. Every session must really happen, with real people.</div>
+    </div>
+  </section>
+
+  <!-- 7a HOW TO RUN A SESSION -->
+  <section class="slide top">
+    <div class="inner">
+      <p class="eyebrow">How to run a test session (~30 min per user)</p>
+      <h2>Testing with real users: one session, step by step</h2>
+      <div class="grid g3">
+        <div class="c"><span class="kk">Before</span><h4>Prepare</h4><ul><li>Recruit users from your <b>real target group</b>, not classmates</li><li>Get <b>informed consent (PDPA)</b> and ask before recording audio or video</li><li>Use codes <b>U01, U02…</b> instead of names</li><li>Prepare tasks, questionnaires, and an Excel sheet (one row per user)</li><li>Run <b>one pilot</b> first</li></ul></div>
+        <div class="c"><span class="kk">During</span><h4>Observe, don't help</h4><ul><li>Split roles: a <b>Moderator</b> (talks and gives tasks) and a <b>Note-taker</b> (times and records)</li><li>Tell the user "we are testing the system, not you"</li><li>Ask them to <b>think aloud</b></li><li>Give tasks <b>one at a time</b> and <b>never help or point</b></li><li>Record success, time, where they got stuck, and key quotes</li></ul></div>
+        <div class="c"><span class="kk">After</span><h4>Measure right away</h4><ul><li>If you use the <b>SUS</b>, give it immediately after the tasks</li><li>If you use <b>TAM or UTAUT2</b>, give it after the SUS</li><li>A 3-question interview: what did you like, where did you get stuck, would you keep using it and why</li><li>Thank the user and <b>enter results into the sheet the same day</b></li></ul></div>
+      </div>
+      <div class="flow">
+        <span class="step">Intro + consent <b>3'</b></span><span class="arw">→</span>
+        <span class="step">Old way (baseline) <b>5'</b></span><span class="arw">→</span>
+        <span class="step on">Tasks + think-aloud <b>10–15'</b></span><span class="arw">→</span>
+        <span class="step">Questionnaires (if used) <b>3–6'</b></span><span class="arw">→</span>
+        <span class="step">Interview <b>5'</b></span>
+      </div>
+      <div class="plain"><span class="lbl">Tip</span> About 5 users per round usually uncover most of the major usability problems. If you can, <b>test 5 → fix → test 5 more</b>: you reach ≥ 10 sessions and get before/after-fix evidence too. <span class="eg">(Nielsen, 2000)</span></div>
+    </div>
+  </section>
+
+  <!-- 7b TASKS -->
+  <section class="slide top">
+    <div class="inner">
+      <p class="eyebrow">Task-based testing</p>
+      <h2>Tasks: what users try to do</h2>
+      <div class="two lean">
+        <div class="box yes">
+          <span class="k">How to write tasks</span>
+          <ul>
+            <li>3–5 tasks drawn from your locked <b>core workflow (MUST)</b></li>
+            <li>Write them as <b>scenarios</b>, not button instructions</li>
+            <li>Each task has a clear <b>success criterion</b></li>
+            <li>Order from easy to hard and use the <b>same set for everyone</b></li>
+            <li>Measure: <b>success</b>, <b>time on task</b>, and <b>errors</b></li>
+            <li>Have users do it <b>the old way</b> first (e.g., on paper) to get the <b>before</b> time</li>
+          </ul>
+        </div>
+        <div class="box">
+          <span class="k">Example: CupLog</span>
+          <ul>
+            <li><b>T1</b> "You just sold one latte. Record it."<br><span class="note">Success = correct item logged in ≤ 3 taps</span></li>
+            <li><b>T2</b> "The owner asks how many cups you sold today."<br><span class="note">Success = correct number given</span></li>
+            <li><b>T3</b> "You logged an Americano by mistake. Fix it."<br><span class="note">Success = entry corrected to latte</span></li>
+          </ul>
+        </div>
+      </div>
+      <div class="plain"><span class="lbl">The trap</span> <span class="eg"><b>Wrong:</b> "Tap + and choose Latte." (You gave away the answer, so the result means nothing.)</span><br><span class="eg"><b>Right:</b> "You just sold one latte. Record it." (The user has to find the way.)</span></div>
+    </div>
+  </section>
+
+  <!-- 7c THREE INSTRUMENTS -->
+  <section class="slide">
+    <div class="inner">
+      <p class="eyebrow">Measurement: required and optional</p>
+      <h2>What is required and what is optional</h2>
+      <div class="grid g3">
+        <div class="c must"><span class="kk">Required: Tasks (Performance)</span><h4>"Does it actually work?"</h4><p>Success rate, time per task, errors, and <b>before / after</b> time. This is your evidence for <b>P4 Impact</b>.</p></div>
+        <div class="c should"><span class="kk">Optional: SUS (Usability)</span><h4>"How easy is it to use?"</h4><p>A <b>0–100</b> score per user, averaged and compared with the benchmark of <b>68</b>.</p></div>
+        <div class="c could"><span class="kk">Optional: TAM / UTAUT2 (Acceptance)</span><h4>"Will they adopt it?"</h4><p>Mean score per construct, such as usefulness, ease of use, and intention to keep using.</p></div>
+      </div>
+      <div class="plain"><span class="lbl">How to choose</span> Use SUS, TAM or UTAUT2: <b>one, several, or none</b> (pick only one of TAM and UTAUT2).<br>Combining them gives a clearer picture: a system can be <b>easy to use</b> (high SUS) while users <b>see no benefit</b> (low PU), so they won't keep using it.<br><span class="eg">If you use <b>none</b> of them, you must present other evidence; see the next slide.</span></div>
+    </div>
+  </section>
+
+  <!-- 7c2 NO STANDARD INSTRUMENT -->
+  <section class="slide top">
+    <div class="inner">
+      <p class="eyebrow">No SUS, TAM or UTAUT2? Then show your evidence</p>
+      <h2>Not using a standard instrument: what evidence to present</h2>
+      <div class="grid g2">
+        <div class="c"><span class="kk">1 Method (What)</span><h4>Which method you used</h4><p>Name your method, e.g., task-based observation, post-use interviews, a multi-day field trial with usage logs, or a questionnaire your team wrote (attach the questions), and <b>why you chose it</b>.</p></div>
+        <div class="c"><span class="kk">2 Procedure (How)</span><h4>How you ran it</h4><p><b>Who, how many people, how many sessions, when and where</b>; what users did, what you measured, and who in your team did what.</p></div>
+        <div class="c"><span class="kk">3 Results</span><h4>What you found</h4><p>Measured numbers such as success rate, <b>before / after</b> time, or number of uses; problems found with severity, user quotes, and <b>what your team fixed</b>.</p></div>
+        <div class="c"><span class="kk">4 Evidence</span><h4>Traceable proof</h4><p>Consent forms, photos or video, the raw data sheet, interview notes, or usage logs that <b>the instructor can verify</b>.</p></div>
+      </div>
+      <div class="plain"><span class="lbl">The bar</span> Whatever method you choose, <b>you must test with real users</b> and be able to say <b>whether the system really helps them, and how you know</b>.<br><span class="eg">Vague claims such as "users said it was good", with no method and no evidence, do not count as test results.</span></div>
+    </div>
+  </section>
+
+  <!-- 7d SUS -->
+  <section class="slide top">
+    <div class="inner">
+      <p class="eyebrow">Optional: System Usability Scale (Brooke, 1996)</p>
+      <h2>SUS: 10 items, a 0–100 score</h2>
+      <div class="two lean">
+        <div class="box">
+          <span class="k">10 items, Likert 1–5 (strongly disagree → strongly agree)</span>
+          <ol>
+            <li>I think that I would like to use this system frequently.</li>
+            <li>I found the system unnecessarily complex.</li>
+            <li>I thought the system was easy to use.</li>
+            <li>I think that I would need the support of a technical person to be able to use this system.</li>
+            <li>I found the various functions in this system were well integrated.</li>
+            <li>I thought there was too much inconsistency in this system.</li>
+            <li>I would imagine that most people would learn to use this system very quickly.</li>
+            <li>I found the system very cumbersome to use.</li>
+            <li>I felt very confident using the system.</li>
+            <li>I needed to learn a lot of things before I could get going with this system.</li>
+          </ol>
+        </div>
+        <div class="box hot">
+          <span class="k">Scoring</span>
+          <ul>
+            <li>Odd items (1, 3, 5, 7, 9): <b>score − 1</b></li>
+            <li>Even items (2, 4, 6, 8, 10): <b>5 − score</b></li>
+            <li>Sum all 10 <b>× 2.5</b> → 0–100 per user</li>
+            <li>Report the mean and SD across users</li>
+          </ul>
+          <span class="k">Interpretation (Sauro &amp; Lewis)</span>
+          <ul>
+            <li><b>≥ 80.8</b> = A (excellent)</li>
+            <li><b>68</b> = average (C)</li>
+            <li><b>&lt; 51.7</b> = F (needs fixing)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="plain"><span class="lbl">Watch out</span> SUS is <b>not a percentage</b> (78 ≠ 78%)<br><b>don't drop or reword items</b> (you may replace "system" with your product name)<br>use the overall score, not item-by-item<br>about 12–14 users give fairly stable results <span class="eg">(Tullis &amp; Stetson, 2004)</span></div>
+    </div>
+  </section>
+
+  <!-- 7e TAM vs UTAUT2 -->
+  <section class="slide top">
+    <div class="inner">
+      <p class="eyebrow">Optional: technology acceptance (if used, pick one model)</p>
+      <h2>TAM or UTAUT2: will users accept it?</h2>
+      <div class="two">
+        <div class="box">
+          <span class="k">TAM (Davis, 1989): fits workplace tools</span>
+          <ul>
+            <li><b>PU</b> Perceived Usefulness<br><span class="note">"Using [system] helps me do ___ faster."</span></li>
+            <li><b>PEOU</b> Perceived Ease of Use<br><span class="note">"Learning to use [system] is easy for me."</span></li>
+            <li><b>BI</b> Behavioral Intention<br><span class="note">"I intend to keep using [system]."</span></li>
+            <li><b>3–4 items</b> per construct</li>
+          </ul>
+        </div>
+        <div class="box">
+          <span class="k">UTAUT2 (Venkatesh, Thong &amp; Xu, 2012): fits consumer apps</span>
+          <ul>
+            <li><b>PE</b> Performance Expectancy, <b>EE</b> Effort Expectancy</li>
+            <li><b>SI</b> Social Influence, <b>FC</b> Facilitating Conditions</li>
+            <li><b>HM</b> Hedonic Motivation, <b>PV</b> Price Value, <b>HT</b> Habit</li>
+            <li>All point to <b>BI</b> (intention to use)</li>
+            <li>Pick only the constructs that fit your system</li>
+            <li><b>HT</b> can't be measured in a single session; use <b>PV</b> only for paid products</li>
+          </ul>
+        </div>
+      </div>
+      <div class="plain"><span class="lbl">Rigor</span> If you use one, choose <b>one model</b> and justify it in your Test Plan<br>use a 5-point Likert scale<br>with ~10–15 users, <b>report only the mean ± SD per construct</b><br><span class="eg">Don't claim causal paths such as "PU drives BI": that needs SEM/PLS and a much larger sample.</span></div>
+    </div>
+  </section>
+
+  <!-- 7e1 TAM MODEL -->
+  <section class="slide top">
+    <div class="inner">
+      <p class="eyebrow">Model: TAM (Davis, 1989; Venkatesh &amp; Davis, 1996)</p>
+      <h2>Technology Acceptance Model</h2>
+      <div class="viz">
+        <svg class="md" viewBox="0 0 760 290" role="img" aria-label="TAM: External variables lead to PU and PEOU, PEOU leads to PU, both lead to BI, BI leads to actual use">
+          <defs><marker id="arTam" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+          <rect class="node x" x="20" y="113" width="130" height="64" rx="10"/>
+          <text class="t1" x="85" y="140" text-anchor="middle">External</text>
+          <text class="t2" x="85" y="160" text-anchor="middle">variables</text>
+          <rect class="node m" x="220" y="30" width="170" height="64" rx="10"/>
+          <text class="t1" x="305" y="57" text-anchor="middle">PU</text>
+          <text class="t2" x="305" y="77" text-anchor="middle">Perceived Usefulness</text>
+          <rect class="node m" x="220" y="196" width="170" height="64" rx="10"/>
+          <text class="t1" x="305" y="223" text-anchor="middle">PEOU</text>
+          <text class="t2" x="305" y="243" text-anchor="middle">Perceived Ease of Use</text>
+          <rect class="node m" x="460" y="113" width="130" height="64" rx="10"/>
+          <text class="t1" x="525" y="140" text-anchor="middle">BI</text>
+          <text class="t2" x="525" y="160" text-anchor="middle">Behavioral Intention</text>
+          <rect class="node x" x="630" y="113" width="110" height="64" rx="10"/>
+          <text class="t1" x="685" y="140" text-anchor="middle">Actual</text>
+          <text class="t2" x="685" y="160" text-anchor="middle">System Use</text>
+          <line class="ed" x1="150" y1="133" x2="220" y2="70" marker-end="url(#arTam)"/>
+          <line class="ed" x1="150" y1="157" x2="220" y2="220" marker-end="url(#arTam)"/>
+          <line class="ed" x1="305" y1="196" x2="305" y2="94" marker-end="url(#arTam)"/>
+          <line class="ed" x1="390" y1="70" x2="460" y2="133" marker-end="url(#arTam)"/>
+          <line class="ed" x1="390" y1="220" x2="460" y2="157" marker-end="url(#arTam)"/>
+          <line class="ed" x1="590" y1="145" x2="630" y2="145" marker-end="url(#arTam)"/>
+        </svg>
+        <div class="lg"><span><i class="m"></i>Measured in this test</span><span><i class="x"></i>Not measured (outside the scope of a single test session)</span></div>
+      </div>
+      <div class="grid g3">
+        <div class="c"><span class="kk">PEOU → PU</span><p>A system that is <b>easy to use</b> makes its <b>usefulness</b> easier to see.</p></div>
+        <div class="c"><span class="kk">PU → BI</span><p>When users see that the system <b>really helps their work</b>, they <b>intend to keep using it</b>. In many studies this is the strongest path.</p></div>
+        <div class="c"><span class="kk">PEOU → BI</span><p>Ease of use affects intention both <b>directly</b> and <b>through PU</b>.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7e2 UTAUT2 MODEL -->
+  <section class="slide top">
+    <div class="inner">
+      <p class="eyebrow">Model: UTAUT2 (Venkatesh, Thong &amp; Xu, 2012)</p>
+      <h2>Unified Theory of Acceptance and Use of Technology 2</h2>
+      <div class="viz">
+        <svg class="md tall" viewBox="0 0 760 400" role="img" aria-label="UTAUT2: seven constructs lead to behavioral intention, facilitating conditions and habit also lead to use behavior, moderated by age, gender and experience">
+          <defs><marker id="arUt" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+          <rect class="node m" x="20" y="20" width="230" height="44" rx="9"/><text class="t1" x="34" y="47">PE</text><text class="t2" x="72" y="47">Performance Expectancy</text>
+          <rect class="node m" x="20" y="74" width="230" height="44" rx="9"/><text class="t1" x="34" y="101">EE</text><text class="t2" x="72" y="101">Effort Expectancy</text>
+          <rect class="node m" x="20" y="128" width="230" height="44" rx="9"/><text class="t1" x="34" y="155">SI</text><text class="t2" x="72" y="155">Social Influence</text>
+          <rect class="node m" x="20" y="182" width="230" height="44" rx="9"/><text class="t1" x="34" y="209">FC</text><text class="t2" x="72" y="209">Facilitating Conditions</text>
+          <rect class="node m" x="20" y="236" width="230" height="44" rx="9"/><text class="t1" x="34" y="263">HM</text><text class="t2" x="72" y="263">Hedonic Motivation</text>
+          <rect class="node o" x="20" y="290" width="230" height="44" rx="9"/><text class="t1" x="34" y="317">PV</text><text class="t2" x="72" y="317">Price Value</text>
+          <rect class="node x" x="20" y="344" width="230" height="44" rx="9"/><text class="t1" x="34" y="371">HT</text><text class="t2" x="72" y="371">Habit</text>
+          <rect class="node m" x="430" y="170" width="130" height="64" rx="10"/>
+          <text class="t1" x="495" y="197" text-anchor="middle">BI</text>
+          <text class="t2" x="495" y="217" text-anchor="middle">Behavioral Intention</text>
+          <rect class="node x" x="610" y="170" width="130" height="64" rx="10"/>
+          <text class="t1" x="675" y="197" text-anchor="middle">Use</text>
+          <text class="t2" x="675" y="217" text-anchor="middle">Behavior</text>
+          <rect class="node o" x="430" y="20" width="310" height="50" rx="10"/>
+          <text class="t2" x="585" y="50" text-anchor="middle">Moderators: Age, Gender, Experience</text>
+          <line class="ed" x1="250" y1="42" x2="430" y2="190" marker-end="url(#arUt)"/>
+          <line class="ed" x1="250" y1="96" x2="430" y2="194" marker-end="url(#arUt)"/>
+          <line class="ed" x1="250" y1="150" x2="430" y2="198" marker-end="url(#arUt)"/>
+          <line class="ed" x1="250" y1="204" x2="430" y2="202" marker-end="url(#arUt)"/>
+          <line class="ed" x1="250" y1="258" x2="430" y2="206" marker-end="url(#arUt)"/>
+          <line class="ed" x1="250" y1="312" x2="430" y2="210" marker-end="url(#arUt)"/>
+          <line class="ed" x1="250" y1="366" x2="430" y2="214" marker-end="url(#arUt)"/>
+          <line class="ed" x1="560" y1="202" x2="610" y2="202" marker-end="url(#arUt)"/>
+          <path class="ed" d="M250,212 C380,300 600,300 655,234" marker-end="url(#arUt)"/>
+          <path class="ed" d="M250,374 C480,390 690,330 695,234" marker-end="url(#arUt)"/>
+          <line class="ed d" x1="585" y1="70" x2="515" y2="168" marker-end="url(#arUt)"/>
+        </svg>
+        <div class="lg"><span><i class="m"></i>Measurable in this test</span><span><i class="o"></i>Measure when relevant (PV only for paid products; moderators collected as participant background)</span><span><i class="x"></i>Cannot be measured in a single session</span></div>
+      </div>
+      <div class="plain"><span class="lbl">Reading the model</span> All seven constructs point to <b>BI</b>. <b>FC</b> and <b>HT</b> also affect actual use (Use Behavior) directly. <b>Age, gender and experience</b> make these relationships stronger or weaker for different groups.</div>
+    </div>
+  </section>
+
+  <!-- 7e3 HOW TO USE A MODEL -->
+  <section class="slide top">
+    <div class="inner">
+      <p class="eyebrow">Optional: how to use the model in your project</p>
+      <h2>Using a model in your project: 7 steps</h2>
+      <div class="steps cols">
+        <div class="st"><span class="no">1</span><div><h4>Pick the model that fits the context</h4><p>A workplace system that people are required to use calls for <b>TAM</b>. A consumer app that people choose for themselves calls for <b>UTAUT2</b>. Write your reason in the Test Plan.</p></div></div>
+        <div class="st"><span class="no">2</span><div><h4>Choose the constructs to measure</h4><p>For TAM, measure all three: <b>PU, PEOU, BI</b>. For UTAUT2, pick the constructs that fit your system and always include <b>BI</b>. Leave out HT and Use Behavior.</p></div></div>
+        <div class="st"><span class="no">3</span><div><h4>Build items from the source papers</h4><p>Adapt the items in the original papers, <b>3–4 per construct</b>, changing only the system and task names. Don't write new items from scratch.</p></div></div>
+        <div class="st"><span class="no">4</span><div><h4>Translate and check meaning</h4><p>Translate into Thai, have someone else translate it back into English (<b>back-translation</b>), and compare the meaning. Then pilot it with 2–3 people.</p></div></div>
+        <div class="st"><span class="no">5</span><div><h4>Collect the data</h4><p>Give the questionnaire <b>after the tasks and the SUS</b>, on a 5-point Likert scale. With UTAUT2, also record age, gender, and experience.</p></div></div>
+        <div class="st"><span class="no">6</span><div><h4>Score it</h4><p>Each user's construct score = <b>the mean of that construct's items</b>. Then report the mean and SD across users.</p></div></div>
+        <div class="st"><span class="no">7</span><div><h4>Interpret and fix</h4><p>Link the <b>lowest-scoring</b> construct to problems you observed in the tasks, then fix the system. Don't claim causal relationships.</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7e4 WRITING QUESTIONS -->
+  <section class="slide top">
+    <div class="inner">
+      <p class="eyebrow">Writing questionnaire items</p>
+      <h2>How to write good questions</h2>
+      <div class="two lean">
+        <div class="box yes">
+          <span class="k">Rules</span>
+          <ul>
+            <li>Start from <b>validated items</b> in the source papers; change only the system and task names</li>
+            <li><b>One idea per item</b>: never ask two things at once</li>
+            <li>Name the <b>system and task</b> clearly, e.g., "record sales", not "do my work"</li>
+            <li>No <b>leading wording</b> such as "this excellent system"</li>
+            <li>Avoid <b>negative</b> and double-negative statements</li>
+            <li>Use <b>the same scale for every item</b>: 1 = strongly disagree to 5 = strongly agree</li>
+            <li>Give <b>every item a code</b> such as PU1, PU2, PU3 for analysis</li>
+          </ul>
+        </div>
+        <div class="box">
+          <span class="k">Examples: wrong and right</span>
+          <ul>
+            <li><b>Wrong:</b> "CupLog is easy and fast." (two ideas)<br><b>Right:</b> split into "CupLog is easy to use." (PEOU) and "Using CupLog lets me record sales more quickly." (PU)</li>
+            <li><b>Wrong:</b> "Don't you like this system that makes work easier?" (leading)<br><b>Right:</b> "I find CupLog useful in my work at the café."</li>
+            <li><b>Wrong:</b> "I don't think CupLog is hard to use." (double negative)<br><b>Right:</b> "CupLog is easy to use."</li>
+            <li><b>Wrong:</b> "This system is good." (too broad; which construct?)<br><b>Right:</b> word each item to match the construct it measures</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7e5 TAM ITEM BANK -->
+  <section class="slide top">
+    <div class="inner">
+      <p class="eyebrow">Item bank: TAM for CupLog (Likert 1–5)</p>
+      <h2>Example TAM questionnaire</h2>
+      <table class="mx">
+        <tr><th>Code</th><th>Construct</th><th>Item</th></tr>
+        <tr><td><b>PU1</b></td><td>Perceived Usefulness</td><td>Using CupLog lets me record sales more quickly.</td></tr>
+        <tr><td><b>PU2</b></td><td>Perceived Usefulness</td><td>Using CupLog makes it easier to know the day's sales.</td></tr>
+        <tr><td><b>PU3</b></td><td>Perceived Usefulness</td><td>I find CupLog useful in my work at the café.</td></tr>
+        <tr><td><b>PEOU1</b></td><td>Perceived Ease of Use</td><td>Learning to use CupLog is easy for me.</td></tr>
+        <tr><td><b>PEOU2</b></td><td>Perceived Ease of Use</td><td>My interaction with CupLog is clear and understandable.</td></tr>
+        <tr><td><b>PEOU3</b></td><td>Perceived Ease of Use</td><td>I find CupLog easy to use.</td></tr>
+        <tr><td><b>BI1</b></td><td>Behavioral Intention</td><td>I intend to use CupLog in my work.</td></tr>
+        <tr><td><b>BI2</b></td><td>Behavioral Intention</td><td>I plan to keep using CupLog next month.</td></tr>
+        <tr><td><b>BI3</b></td><td>Behavioral Intention</td><td>If CupLog were available, I would use it regularly.</td></tr>
+      </table>
+      <div class="plain"><span class="lbl">Source</span> Adapted from Davis (1989) and Venkatesh &amp; Davis (2000). Replace "CupLog" and "record sales" with your own system and its core task.</div>
+    </div>
+  </section>
+
+  <!-- 7e6 UTAUT2 ITEM TEMPLATE -->
+  <section class="slide top">
+    <div class="inner">
+      <p class="eyebrow">Item template: UTAUT2 for a consumer app (Likert 1–5)</p>
+      <h2>Example UTAUT2 items</h2>
+      <table class="mx">
+        <tr><th>Code</th><th>Construct</th><th>Example item</th></tr>
+        <tr><td><b>PE1</b></td><td>Performance Expectancy</td><td>I find [app] useful in my daily life.</td></tr>
+        <tr><td><b>EE1</b></td><td>Effort Expectancy</td><td>Learning how to use [app] is easy for me.</td></tr>
+        <tr><td><b>SI1</b></td><td>Social Influence</td><td>People who are important to me think that I should use [app].</td></tr>
+        <tr><td><b>FC1</b></td><td>Facilitating Conditions</td><td>I have the knowledge necessary to use [app].</td></tr>
+        <tr><td><b>HM1</b></td><td>Hedonic Motivation</td><td>Using [app] is fun.</td></tr>
+        <tr><td><b>PV1</b></td><td>Price Value</td><td>[app] is good value for the money.</td></tr>
+        <tr><td><b>BI1</b></td><td>Behavioral Intention</td><td>I intend to continue using [app] in the future.</td></tr>
+      </table>
+      <div class="plain"><span class="lbl">Note</span> This table shows <b>one example per construct</b>. Your real questionnaire needs <b>3–4 items per construct</b>, adapted from Venkatesh, Thong &amp; Xu (2012), and only for the constructs that fit your system.</div>
+    </div>
+  </section>
+
+  <!-- 7e7 SCORING IN EXCEL -->
+  <section class="slide top">
+    <div class="inner">
+      <p class="eyebrow">Scoring: from answers to construct scores</p>
+      <h2>Scoring constructs in Excel</h2>
+      <div class="two lean">
+        <div class="box">
+          <span class="k">Illustrative data: PU</span>
+          <table class="mx">
+            <tr><th>User</th><th>PU1</th><th>PU2</th><th>PU3</th><th>PU (mean)</th></tr>
+            <tr><td>U01</td><td>4</td><td>5</td><td>4</td><td><b>4.33</b></td></tr>
+            <tr><td>U02</td><td>5</td><td>5</td><td>4</td><td><b>4.67</b></td></tr>
+            <tr><td>U03</td><td>3</td><td>4</td><td>4</td><td><b>3.67</b></td></tr>
+            <tr><td colspan="4"><b>PU across users (mean ± SD)</b></td><td><b>4.22 ± 0.51</b></td></tr>
+          </table>
+          <p class="note">Do the same for every construct, then chart the construct means as horizontal bars.</p>
+        </div>
+        <div class="box">
+          <span class="k">Excel formulas (one row per user)</span>
+<pre class="code"><code><span class="cm">' PU score for the user in row 2 (PU1–PU3 in B:D)</span>
+=AVERAGE(B2:D2)
+
+<span class="cm">' Mean and SD across users (PU scores in column E)</span>
+=AVERAGE(E2:E11)
+=STDEV.S(E2:E11)
+
+<span class="cm">' SUS for the user in row 2 (items 1–10 in B:K)</span>
+=2.5*((B2-1)+(5-C2)+(D2-1)+(5-E2)+(F2-1)
+     +(5-G2)+(H2-1)+(5-I2)+(J2-1)+(5-K2))</code></pre>
+        </div>
+      </div>
+      <div class="plain"><span class="lbl">Optional</span> You may compute <b>Cronbach's α</b> per construct (≥ 0.70 is acceptable), but with 10–15 users the value is unstable, so report it as supporting information only.</div>
+    </div>
+  </section>
+
+  <!-- 7f WHAT TO BRING BACK -->
+  <section class="slide top">
+    <div class="inner">
+      <p class="eyebrow">Deliverables from testing → Final</p>
+      <h2>What to bring back and present in the final</h2>
+      <table class="mx">
+        <tr><th>#</th><th>What to present</th><th>How to show it</th><th>Portfolio</th></tr>
+        <tr><td>1</td><td><b>Participants</b>: number of users and sessions, user groups (anonymized)</td><td>Table U01–U10</td><td>P3</td></tr>
+        <tr><td>2</td><td><b>Task results</b>: success rate, mean time, errors, before vs after time</td><td>Table + before / after chart</td><td>P4</td></tr>
+        <tr><td>3</td><td><b>SUS</b> (if used): mean, SD, grade vs 68</td><td>Bar per user + line at 68</td><td>P4</td></tr>
+        <tr><td>4</td><td><b>TAM / UTAUT2</b> (if used): mean ± SD per construct</td><td>Horizontal bars</td><td>P4</td></tr>
+        <tr><td>or</td><td><b>If you skip 3–4</b>: method, procedure, results and evidence of the method you used</td><td>Follow the 4 headings on the "standard instrument" slide</td><td>P3, P4</td></tr>
+        <tr><td>5</td><td><b>Issues found</b>: top 3–5 problems + severity 0–4 + user quotes</td><td>Issue table</td><td>P3</td></tr>
+        <tr><td>6</td><td><b>What you fixed</b>: before → after</td><td>Before / after screenshots</td><td>P1</td></tr>
+      </table>
+      <div class="plain"><span class="lbl">Raw evidence</span> Keep consent forms, the raw Excel sheet, and photos or video available for the instructor to check<br><b>never fabricate data</b><br><span class="eg">Severity (Nielsen): 0 not a problem<br>1 cosmetic<br>2 minor<br>3 major<br>4 catastrophe, must fix before release</span></div>
+    </div>
+  </section>
+
+  <!-- 7g EXAMPLE RESULTS -->
+  <section class="slide top">
+    <div class="inner">
+      <p class="eyebrow">Example results: CupLog</p>
+      <h2>What your results should look like</h2>
+      <span class="demo">Illustrative data only</span>
+      <div class="two lean">
+        <div class="viz">
+          <p class="stat">SUS per user: <b>Mean 78.5</b>, SD 8.0, n = 10, <b>B+</b> (above the 68 average)</p>
+          <svg class="chart-sv" viewBox="0 0 600 232" role="img" aria-label="SUS score per user, mean 78.5 against benchmark 68">
+            <line class="gl" x1="40" y1="20" x2="498" y2="20"/>
+            <line class="gl" x1="40" y1="110" x2="498" y2="110"/>
+            <line class="ax" x1="40" y1="200" x2="498" y2="200"/>
+            <text x="32" y="24" text-anchor="end">100</text>
+            <text x="32" y="114" text-anchor="end">50</text>
+            <text x="32" y="204" text-anchor="end">0</text>
+            <rect class="bar" x="50" y="69.5" width="32" height="130.5" rx="3"/>
+            <rect class="bar" x="96" y="47" width="32" height="153" rx="3"/>
+            <rect class="bar" x="142" y="60.5" width="32" height="139.5" rx="3"/>
+            <rect class="bar" x="188" y="38" width="32" height="162" rx="3"/>
+            <rect class="bar" x="234" y="83" width="32" height="117" rx="3"/>
+            <rect class="bar" x="280" y="56" width="32" height="144" rx="3"/>
+            <rect class="bar" x="326" y="51.5" width="32" height="148.5" rx="3"/>
+            <rect class="bar" x="372" y="74" width="32" height="126" rx="3"/>
+            <rect class="bar" x="418" y="42.5" width="32" height="157.5" rx="3"/>
+            <rect class="bar" x="464" y="65" width="32" height="135" rx="3"/>
+            <line class="bench" x1="40" y1="77.6" x2="498" y2="77.6"/>
+            <line class="mean" x1="40" y1="58.7" x2="498" y2="58.7"/>
+            <text class="tm" x="504" y="57">mean 78.5</text>
+            <text class="tb" x="504" y="88">avg 68</text>
+            <text x="66" y="222" text-anchor="middle">U01</text><text x="112" y="222" text-anchor="middle">U02</text>
+            <text x="158" y="222" text-anchor="middle">U03</text><text x="204" y="222" text-anchor="middle">U04</text>
+            <text x="250" y="222" text-anchor="middle">U05</text><text x="296" y="222" text-anchor="middle">U06</text>
+            <text x="342" y="222" text-anchor="middle">U07</text><text x="388" y="222" text-anchor="middle">U08</text>
+            <text x="434" y="222" text-anchor="middle">U09</text><text x="480" y="222" text-anchor="middle">U10</text>
+          </svg>
+        </div>
+        <div class="viz">
+          <p class="stat">TAM by construct (Likert 1–5, mean ± SD)</p>
+          <div class="hb">
+            <div class="r"><b>PU</b><div class="tr"><div class="fl" style="width:86%"></div></div><span class="v">4.3 ± 0.5</span></div>
+            <div class="r"><b>PEOU</b><div class="tr"><div class="fl" style="width:90%"></div></div><span class="v">4.5 ± 0.4</span></div>
+            <div class="r"><b>BI</b><div class="tr"><div class="fl" style="width:82%"></div></div><span class="v">4.1 ± 0.6</span></div>
+          </div>
+          <p class="ref">With UTAUT2, show it the same way: one bar per construct.</p>
+        </div>
+      </div>
+      <table class="mx">
+        <tr><th>Task</th><th>Success</th><th>Mean time</th><th>Before (old way)</th><th>Errors / user</th></tr>
+        <tr><td><b>T1</b> Log one latte</td><td>10/10 (100%)</td><td>8 s</td><td>35 s (paper tally)</td><td>0.2</td></tr>
+        <tr><td><b>T2</b> See today's total</td><td>10/10 (100%)</td><td>5 s</td><td>4 min (manual count)</td><td>0.0</td></tr>
+        <tr><td><b>T3</b> Fix a wrong entry</td><td>7/10 (70%)</td><td>21 s</td><td>–</td><td>1.1</td></tr>
+      </table>
+      <div class="plain"><span class="lbl">Insight → Fix</span> T3: 3 of 10 users couldn't find the edit button (severity 3) → moved the edit button onto the entry → retested<br><span class="eg">Always present a number together with <b>what your team did about it</b>.</span></div>
+    </div>
+  </section>
+
+  <!-- 8 FINAL -->
+  <section class="slide top">
+    <div class="inner">
+      <p class="eyebrow">W13 and W14: Final Project Presentation</p>
+      <h2>Final presentations: 11 and 18 Nov 2026</h2>
+      <div class="two">
+        <div class="box hot">
+          <span class="k">Wed 11 Nov (W13)</span>
+          <h3>Teams 1–10</h3>
+          <p class="note"><b>10 minutes</b> per team</p>
+        </div>
+        <div class="box hot">
+          <span class="k">Wed 18 Nov (W14)</span>
+          <h3>Teams 11–20</h3>
+          <p class="note"><b>10 minutes</b> per team</p>
+        </div>
+      </div>
+      <table class="mx">
+        <tr><th>Portfolio</th><th>Must include</th></tr>
+        <tr><td><b>P1</b> Case Study Page</td><td>Problem → Process → Outcome</td></tr>
+        <tr><td><b>P2</b> Live product + demo</td><td>A working system and a demo video ≤ 3 min</td></tr>
+        <tr><td><b>P3</b> User Evidence Log</td><td>Proof that you talked to and tested with real users</td></tr>
+        <tr><td><b>P4</b> Impact Metrics</td><td>Before / after + one metric on AI's impact on your team's SDLC</td></tr>
+        <tr><td><b>P5</b> Personal Role Statement</td><td>200 words per person, including your AI-use disclosure</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- 9 CHECKLIST -->
+  <section class="slide">
+    <div class="inner">
+      <p class="eyebrow">Team checklist</p>
+      <h2>What your team must do, by date</h2>
+      <div class="two">
+        <div class="box">
+          <span class="k">October</span>
+          <ul class="ck">
+            <li><b>14 Oct</b> Join the online class</li>
+            <li><b>21 Oct</b> No class; write the Test Plan</li>
+            <li><b>Before 28 Oct</b> Submit the Test Plan</li>
+            <li><b>31 Oct</b> Guest lecture in E4614; bring a laptop</li>
+          </ul>
+        </div>
+        <div class="box">
+          <span class="k">November</span>
+          <ul class="ck">
+            <li><b>4 Nov</b> Test with real users and collect evidence</li>
+            <li><b>11 Nov</b> Teams 1–10 present the final</li>
+            <li><b>18 Nov</b> Teams 11–20 present the final</li>
+            <li><b>22 Nov – 4 Dec</b> Final exam period</li>
+          </ul>
+        </div>
+      </div>
+      <div class="facts">
+        <span class="chip hot">Questions? Comment under the post in Google Classroom</span>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<div class="dots" id="dots"></div>
+<div class="nav">
+  <button id="prev" aria-label="Previous">‹</button>
+  <span class="count" id="count">1 / 9</span>
+  <button id="next" aria-label="Next">›</button>
+</div>
+
+<script>
+(function(){
+  var slides=[].slice.call(document.querySelectorAll('.slide'));
+  var i=0, n=slides.length;
+  var count=document.getElementById('count');
+  var prog=document.getElementById('prog');
+  var dotsWrap=document.getElementById('dots');
+  slides.forEach(function(_,k){
+    var b=document.createElement('button'); b.setAttribute('aria-label','Slide '+(k+1));
+    b.addEventListener('click',function(){go(k)}); dotsWrap.appendChild(b);
+  });
+  var dots=[].slice.call(dotsWrap.children);
+  function render(){
+    slides.forEach(function(s,k){s.classList.toggle('active',k===i)});
+    dots.forEach(function(d,k){d.classList.toggle('on',k===i)});
+    count.textContent=(i+1)+' / '+n;
+    prog.style.width=((i+1)/n*100)+'%';
+    var act=slides[i]; if(act) act.scrollTop=0;
+  }
+  function go(k){ i=Math.max(0,Math.min(n-1,k)); render(); }
+  function next(){go(i+1)} function prev(){go(i-1)}
+  document.getElementById('next').addEventListener('click',next);
+  document.getElementById('prev').addEventListener('click',prev);
+  document.addEventListener('keydown',function(e){
+    if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){e.preventDefault();next();}
+    else if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();prev();}
+    else if(e.key==='Home'){go(0)} else if(e.key==='End'){go(n-1)}
+  });
+  document.getElementById('deck').addEventListener('click',function(e){
+    if(e.target.closest('button, a, pre, table, svg')) return;
+    (e.clientX > window.innerWidth/2) ? next() : prev();
+  });
+  document.getElementById('tg').addEventListener('click',function(){
+    var cur=document.documentElement.getAttribute('data-theme');
+    var nextT=cur?(cur==='dark'?'light':'dark'):(matchMedia('(prefers-color-scheme: dark)').matches?'light':'dark');
+    document.documentElement.setAttribute('data-theme',nextT);
+  });
+  render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,645 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>W5 — User Validation Gate — Case Study — 1305493</title>
+<style>
+  :root{
+    --paper:#F3F4F7; --card:#FFFFFF; --ink:#141B24; --ink-2:#3A4655; --ink-3:#6A7686;
+    --line:#DCE0E7; --line-2:#E9ECF1;
+    --p1:#3E7CB1; --p2:#2A9D8F; --p3:#E1972B; --p4:#D9542B;
+    --accent:var(--p2); --accent-soft:#E1F1EE;
+    --good:#2A9D8F; --warn:#E1972B; --stop:#C6402A;
+    --good-soft:#E1F1EE; --warn-soft:#FBF0DC; --stop-soft:#FBE3DD;
+    --codebg:#0E141B; --codeink:#D7DEE8; --codekey:#7FB2E0; --codestr:#69C7B4; --codecom:#6A7686;
+    --shadow:0 1px 2px rgba(20,27,36,.05),0 10px 30px rgba(20,27,36,.07);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --paper:#0E141B; --card:#161F2A; --ink:#EAEEF4; --ink-2:#AEB9C7; --ink-3:#7C8797;
+      --line:#26313E; --line-2:#1E2733; --p1:#5B9BD1; --p2:#3FB9AA; --p3:#EFB44A; --p4:#EE7350;
+      --accent-soft:#173029; --good-soft:#173029; --warn-soft:#2E2413; --stop-soft:#2E1712;
+      --good:#3FB9AA; --warn:#EFB44A; --stop:#EE7350;
+      --codebg:#0A0F15; --codeink:#D7DEE8;
+      --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 34px rgba(0,0,0,.4);
+    }
+  }
+  :root[data-theme="light"]{
+    --paper:#F3F4F7; --card:#FFFFFF; --ink:#141B24; --ink-2:#3A4655; --ink-3:#6A7686;
+    --line:#DCE0E7; --line-2:#E9ECF1; --p1:#3E7CB1; --p2:#2A9D8F; --p3:#E1972B; --p4:#D9542B;
+    --accent-soft:#E1F1EE; --good-soft:#E1F1EE; --warn-soft:#FBF0DC; --stop-soft:#FBE3DD;
+    --good:#2A9D8F; --warn:#E1972B; --stop:#C6402A;
+    --codebg:#0E141B; --codeink:#D7DEE8;
+    --shadow:0 1px 2px rgba(20,27,36,.05),0 10px 30px rgba(20,27,36,.07);
+  }
+  :root[data-theme="dark"]{
+    --paper:#0E141B; --card:#161F2A; --ink:#EAEEF4; --ink-2:#AEB9C7; --ink-3:#7C8797;
+    --line:#26313E; --line-2:#1E2733; --p1:#5B9BD1; --p2:#3FB9AA; --p3:#EFB44A; --p4:#EE7350;
+    --accent-soft:#173029; --good-soft:#173029; --warn-soft:#2E2413; --stop-soft:#2E1712;
+    --good:#3FB9AA; --warn:#EFB44A; --stop:#EE7350;
+    --codebg:#0A0F15; --codeink:#D7DEE8;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 34px rgba(0,0,0,.4);
+  }
+
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; background:var(--paper); color:var(--ink); overflow:hidden;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,"Noto Sans Thai",system-ui,sans-serif;
+    line-height:1.55; -webkit-font-smoothing:antialiased;
+  }
+  .mono{font-family:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace}
+
+  .deck{position:relative;height:100vh;width:100%}
+  .slide{
+    position:absolute; inset:0; padding:min(7vh,60px) min(7vw,84px);
+    display:flex; flex-direction:column; justify-content:center; gap:16px;
+    opacity:0; visibility:hidden; transform:translateY(8px);
+    transition:opacity .4s ease, transform .4s ease, visibility .4s;
+    overflow-y:auto;
+  }
+  .slide.active{opacity:1;visibility:visible;transform:none}
+  .slide.top{justify-content:flex-start;padding-top:min(8vh,64px)}
+  @media (prefers-reduced-motion:reduce){.slide{transition:none}}
+  .inner{max-width:1040px;margin:0 auto;width:100%;display:flex;flex-direction:column;gap:16px}
+
+  .eyebrow{font-family:ui-monospace,Menlo,monospace;font-size:clamp(11px,1.5vw,14px);letter-spacing:.18em;text-transform:uppercase;color:var(--ink-3);margin:0}
+  h1{font-size:clamp(28px,5.6vw,58px);line-height:1.05;letter-spacing:-.02em;font-weight:800;margin:0;text-wrap:balance}
+  h2{font-size:clamp(23px,4vw,40px);line-height:1.1;letter-spacing:-.02em;font-weight:800;margin:0;text-wrap:balance}
+  .lead{font-size:clamp(16px,2.4vw,23px);color:var(--ink-2);max-width:68ch;margin:0}
+  .lead b{color:var(--ink)}
+  .accent{color:var(--accent)}
+
+  .title{border-left:4px solid var(--accent);padding-left:clamp(16px,3vw,28px)}
+  .facts{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+  .chip{font-family:ui-monospace,Menlo,monospace;font-size:clamp(11px,1.5vw,13px);color:var(--ink-2);background:var(--card);
+    border:1px solid var(--line);border-radius:8px;padding:7px 11px}
+  .chip b{color:var(--ink)}
+  .chip.hot{background:var(--accent-soft);border-color:transparent;color:var(--accent);font-weight:700}
+
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .two.lean{grid-template-columns:1.1fr .9fr}
+  .box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:9px}
+  .box.hot{background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 12%,var(--card)),var(--card))}
+  .box h3{margin:0;font-size:clamp(17px,2.3vw,23px);font-weight:750}
+  .box .k{font-family:ui-monospace,Menlo,monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+  .box.no .k{color:var(--stop)} .box.yes .k{color:var(--good)} .box.mid .k{color:var(--warn)}
+  .box ul{margin:0;padding-left:18px;color:var(--ink-2);font-size:clamp(13.5px,1.8vw,17px);display:flex;flex-direction:column;gap:6px}
+  .box ul b{color:var(--ink)}
+
+  .note{font-size:clamp(13.5px,1.7vw,17px);color:var(--ink-3);max-width:76ch}
+  .note b{color:var(--ink-2)}
+  .plain{background:var(--accent-soft);border-radius:11px;padding:10px 14px;font-size:clamp(12.5px,1.6vw,15.5px);color:var(--ink-2);line-height:1.5}
+  .plain .lbl{font-family:ui-monospace,Menlo,monospace;font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--accent);font-weight:700;display:inline-flex;align-items:center;gap:5px;margin-right:7px}
+  .plain b{color:var(--ink)} .plain .eg{color:var(--ink-3)}
+  .plain .eg b{color:var(--ink-2)}
+  .livelink{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;background:var(--accent-soft);border:1.5px solid var(--accent);border-radius:12px;padding:14px 18px;margin-top:12px}
+  .livelink .qr{font-size:clamp(13px,1.7vw,16px);color:var(--ink-2)}
+  .livelink .qr b{color:var(--ink)}
+  .livelink a{display:inline-flex;align-items:center;gap:8px;background:var(--accent);color:#fff;text-decoration:none;font-weight:800;
+    font-family:ui-monospace,Menlo,monospace;font-size:clamp(13px,1.7vw,16px);padding:10px 18px;border-radius:9px;white-space:nowrap;transition:opacity .12s}
+  .livelink a:hover{opacity:.9}
+  .livelink .url{font-family:ui-monospace,Menlo,monospace;font-size:clamp(11px,1.4vw,13.5px);color:var(--accent);word-break:break-all}
+  .livelink .qrsvg{width:clamp(96px,12vw,120px);height:auto;flex:none;border-radius:9px;background:#fff;padding:7px;box-shadow:0 1px 5px rgba(20,27,36,.18)}
+  .livelink .txt{flex:1;min-width:180px}
+
+  .grid{display:grid;gap:12px}
+  .grid.g2{grid-template-columns:repeat(2,1fr)}
+  .grid.g3{grid-template-columns:repeat(3,1fr)}
+  .grid.g4{grid-template-columns:repeat(4,1fr)}
+  .c{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:15px 17px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:7px}
+  .c .kk{font-family:ui-monospace,Menlo,monospace;font-size:13px;font-weight:700;color:var(--accent)}
+  .c h4{margin:0;font-size:clamp(15.5px,2.1vw,20px);font-weight:750}
+  .c p{margin:0;font-size:clamp(13px,1.6vw,16px);color:var(--ink-2)}
+  .c p b{color:var(--ink)}
+
+  pre.code{margin:0;background:var(--codebg);border-radius:12px;padding:15px 17px;overflow:auto;box-shadow:var(--shadow)}
+  pre.code code{font-family:ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace;font-size:clamp(11px,1.45vw,14px);line-height:1.6;color:var(--codeink);white-space:pre}
+  .code .cm{color:var(--codecom)} .code .kw{color:var(--codekey)} .code .st{color:var(--codestr)} .code .fn{color:#E6B673}
+  .filename{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;color:var(--ink-3);margin:0 0 -6px 2px}
+
+  .flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .flow .step{background:var(--card);border:1px solid var(--line);border-radius:9px;padding:8px 12px;font-size:clamp(12px,1.5vw,14.5px);color:var(--ink-2)}
+  .flow .step.on{background:var(--accent-soft);border-color:transparent;color:var(--accent);font-weight:700}
+  .flow .step.gate{background:var(--stop-soft);border-color:transparent;color:var(--stop);font-weight:800}
+  .flow .step b{color:var(--ink)}
+  .flow .arw{color:var(--ink-3);font-size:18px}
+
+  table.mx{border-collapse:collapse;width:100%;font-size:clamp(12px,1.55vw,15px);background:var(--card);border-radius:12px;overflow:hidden;box-shadow:var(--shadow)}
+  table.mx th,table.mx td{text-align:left;padding:9px 13px;border-bottom:1px solid var(--line-2);vertical-align:top}
+  table.mx th{background:var(--accent-soft);color:var(--ink);font-weight:700;font-family:ui-monospace,Menlo,monospace;font-size:11.5px;letter-spacing:.05em;text-transform:uppercase}
+  table.mx td{color:var(--ink-2)} table.mx td b{color:var(--ink)}
+  table.mx tr:last-child td{border-bottom:none}
+  table.mx td .mono{font-size:.92em}
+
+  .band{display:flex;flex-direction:column;gap:6px;border-radius:13px;padding:15px 17px;border:1px solid var(--line);box-shadow:var(--shadow)}
+  .band .bt{font-family:ui-monospace,Menlo,monospace;font-weight:800;font-size:clamp(15px,2vw,19px);letter-spacing:.02em;display:flex;align-items:center;gap:8px}
+  .band p{margin:0;font-size:clamp(12.5px,1.6vw,15.5px);color:var(--ink-2)}
+  .band.pass{background:var(--good-soft)} .band.pass .bt{color:var(--good)}
+  .band.cond{background:var(--warn-soft)} .band.cond .bt{color:var(--warn)}
+  .band.fail{background:var(--stop-soft)} .band.fail .bt{color:var(--stop)}
+
+  .steps{display:flex;flex-direction:column;gap:8px}
+  .steps .st{display:grid;grid-template-columns:auto 1fr;gap:13px;align-items:start;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:9px 15px;box-shadow:var(--shadow)}
+  .steps .st .no{font-family:ui-monospace,Menlo,monospace;font-weight:800;font-size:15px;color:#fff;background:var(--accent);width:30px;height:30px;border-radius:8px;display:grid;place-items:center}
+  .steps .st .tm{font-family:ui-monospace,Menlo,monospace;font-size:11px;color:var(--ink-3);letter-spacing:.05em}
+  .steps .st h4{margin:0;font-size:clamp(15px,2vw,18.5px);font-weight:750}
+  .steps .st p{margin:2px 0 0;font-size:clamp(12.5px,1.6vw,15.5px);color:var(--ink-2)}
+  .steps .st p b{color:var(--ink)}
+
+  svg{display:block;max-width:100%;height:auto}
+  .viz{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:clamp(12px,2vw,20px)}
+
+  .bar-top{position:fixed;top:14px;left:18px;right:18px;display:flex;align-items:center;justify-content:space-between;z-index:20;pointer-events:none}
+  .bar-top .code-tag{pointer-events:auto;font-family:ui-monospace,Menlo,monospace;font-size:12px;font-weight:700;color:#fff;background:var(--ink);padding:5px 9px;border-radius:6px}
+  .bar-top .tg{pointer-events:auto;font-family:ui-monospace,Menlo,monospace;font-size:12px;color:var(--ink-2);background:var(--card);border:1px solid var(--line);padding:6px 11px;border-radius:20px;cursor:pointer}
+  .bar-top .tg:hover{border-color:var(--ink-3)}
+
+  .nav{position:fixed;bottom:16px;right:18px;display:flex;align-items:center;gap:8px;z-index:20}
+  .nav button{font-family:ui-monospace,Menlo,monospace;font-size:16px;color:var(--ink-2);background:var(--card);border:1px solid var(--line);width:38px;height:38px;border-radius:10px;cursor:pointer;display:grid;place-items:center}
+  .nav button:hover{border-color:var(--accent);color:var(--accent)}
+  .nav .count{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;color:var(--ink-3);font-variant-numeric:tabular-nums;min-width:52px;text-align:center}
+
+  .dots{position:fixed;bottom:22px;left:18px;display:flex;gap:6px;z-index:20;max-width:60vw;flex-wrap:wrap}
+  .dots button{width:9px;height:9px;border-radius:50%;border:none;background:var(--line);cursor:pointer;padding:0}
+  .dots button.on{background:var(--accent);transform:scale(1.25)}
+
+  .progress{position:fixed;top:0;left:0;height:3px;background:var(--accent);z-index:30;transition:width .3s ease}
+
+  @media (max-width:760px){
+    .two,.two.lean,.grid.g3,.grid.g2,.grid.g4{grid-template-columns:1fr}
+    .slide{padding:60px 18px 72px}
+    .dots{display:none}
+  }
+  @media print{
+    body{overflow:visible;height:auto}
+    .deck{height:auto}
+    .slide{position:static;opacity:1;visibility:visible;transform:none;min-height:100vh;page-break-after:always;break-after:page}
+    .bar-top,.nav,.dots,.progress{display:none}
+  }
+</style>
+</head>
+<body>
+<div class="progress" id="prog"></div>
+<div class="bar-top">
+  <span class="code-tag">1305493 · W5 · 9 Sep 2569</span>
+  <button class="tg" id="tg" aria-label="Toggle theme">theme</button>
+</div>
+
+<div class="deck" id="deck">
+
+  <!-- 1 TITLE -->
+  <section class="slide active">
+    <div class="inner title">
+      <p class="eyebrow">Week 5 · DISCOVER phase · the gate</p>
+      <h1>User Validation Gate</h1>
+      <p class="lead">The checkpoint that ends DISCOVER. Prove there's a <b>real problem</b> for <b>real users</b> — then, and only then, you're allowed to build. <b>Don't pass, don't start BUILD.</b></p>
+      <div class="facts">
+        <span class="chip hot">Pass / Fail · 10 of 50 in Project</span>
+        <span class="chip">Reviewed: proposal · backlog · design · compliance</span>
+        <span class="chip">Dr. Prasara Jakkaew · ADT MFU</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 WHERE WE ARE -->
+  <section class="slide">
+    <div class="inner">
+      <p class="eyebrow">Recap · the DISCOVER month</p>
+      <h2>Everything so far was to earn one stamp</h2>
+      <div class="flow">
+        <span class="step">W1 · Charter</span><span class="arw">→</span>
+        <span class="step">W2 · Ethics + law</span><span class="arw">→</span>
+        <span class="step">W3 · Backlog</span><span class="arw">→</span>
+        <span class="step">W4 · Design + 4 diagrams</span><span class="arw">→</span>
+        <span class="step gate">W5 · GATE</span><span class="arw">→</span>
+        <span class="step">W6 · BUILD begins</span>
+      </div>
+      <div class="two" style="margin-top:6px">
+        <div class="box yes">
+          <span class="k">You've been assembling</span>
+          <ul>
+            <li>Evidence of a <b>real user need</b> (interviews / research / advisor)</li>
+            <li>A <b>product backlog</b> that traces to that pain</li>
+            <li><b>Design</b> + the <b>4 required diagrams</b></li>
+            <li>A <b>rule.md</b> for legal / PDPA compliance</li>
+          </ul>
+        </div>
+        <div class="box hot">
+          <span class="k">Today</span>
+          <h3>You present that package at the gate.</h3>
+          <p class="note">A gate is not a grade for effort. It's a <b>go / no-go decision</b>: is there enough proof to justify spending September building?</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 WHY A GATE -->
+  <section class="slide">
+    <div class="inner">
+      <p class="eyebrow">Why this exists</p>
+      <h2>Building the wrong software costs the most</h2>
+      <div class="two lean">
+        <div class="box no">
+          <span class="k">Without a gate</span>
+          <ul>
+            <li>Team commits to an <b>idea</b>, not to a user need</li>
+            <li>Builds for a month on a <b>guess</b></li>
+            <li>Ships something <b>nobody asked for</b></li>
+            <li>Discovers the real problem in November — too late</li>
+          </ul>
+        </div>
+        <div class="box yes">
+          <span class="k">With a gate</span>
+          <ul>
+            <li>You <b>prove problem–solution fit first</b></li>
+            <li>Cost of being wrong = <b>a few interviews</b>, not a month</li>
+            <li>BUILD starts with <b>evidence</b>, not opinion</li>
+            <li>This is exactly how industry stage-gates work</li>
+          </ul>
+        </div>
+      </div>
+      <div class="plain"><span class="lbl">💡 In plain terms</span> Failing here, on paper, costs far less than failing in December with a finished product no one wants.</div>
+    </div>
+  </section>
+
+  <!-- 4 THE FOUR PILLARS -->
+  <section class="slide top">
+    <div class="inner">
+      <p class="eyebrow">The gate checks four things</p>
+      <h2>Four pillars — you need all four</h2>
+      <div class="grid g4">
+        <div class="c"><span class="kk">Pillar 1</span><h4>Validated need</h4><p>Interviews, user research, or advisor brief — <b>with evidence</b>. + usability test planned.</p></div>
+        <div class="c"><span class="kk">Pillar 2</span><h4>4 diagrams</h4><p>Present <b>and consistent</b> with each other + the backlog.</p></div>
+        <div class="c"><span class="kk">Pillar 3</span><h4>Traceability</h4><p>Every feature traces <b>back to a real pain</b>.</p></div>
+        <div class="c"><span class="kk">Pillar 4</span><h4>Compliance</h4><p><code>rule.md</code> + legal requirements from W2 are in.</p></div>
+      </div>
+      <div class="plain"><span class="lbl">The standard</span> This is <b>pass / fail</b>, worth <b>10 of the 50 project points</b>. A missing pillar doesn't cost "a few marks" — it stops BUILD until you fix it.</div>
+    </div>
+  </section>
+
+  <!-- 5 PILLAR 1 VALIDATED NEED -->
+  <section class="slide top">
+    <div class="inner">
+      <p class="eyebrow">Pillar 1 · Validated user need</p>
+      <h2>Prove the need is real — three paths count</h2>
+      <div class="grid g3">
+        <div class="c"><span class="kk">Path A · Interviews</span><h4>Talk to real users</h4><p><b>≥ 5</b> (target ≥ 15). Dated log + a <b>direct quote</b> of the pain; past behaviour, not "would you use…?".</p></div>
+        <div class="c"><span class="kk">Path B · User research</span><h4>Competitors + community</h4><p>Competitor analysis, app-store reviews, forum / Pantip / social threads — <b>screenshot with source + date</b>.</p></div>
+        <div class="c"><span class="kk">Path C · Advisor brief</span><h4>Requirements from อาจารย์</h4><p>Reqs collected from a faculty advisor / sponsor acting as the <b>client</b> → exempt from the interview count.</p></div>
+      </div>
+      <div class="plain"><span class="lbl">⚠ Non-negotiable · every path</span> You still commit to <b>usability testing</b> with real users on your prototype / MVP (run in the TEST phase). No path skips real-user validation — it's just <b>deferred to the usability test</b>. Show a plan: who, what tasks, when.</div>
+      <div class="note">Still doesn't count: a claim with <b>no evidence behind it</b>, or "users" who are your own teammates. Whichever path — <b>bring the proof</b>.</div>
+    </div>
+  </section>
+
+  <!-- 6 PILLAR 2 FOUR DIAGRAMS -->
+  <section class="slide top">
+    <div class="inner">
+      <p class="eyebrow">Pillar 2 · The 4 required diagrams</p>
+      <h2>Present — and consistent</h2>
+      <div class="grid g4">
+        <div class="c"><span class="kk">D1</span><h4>System Context</h4><p>The system as one box + the actors and systems around it.</p></div>
+        <div class="c"><span class="kk">D2</span><h4>Use Case / Story Map</h4><p>What each actor does — traces to backlog items.</p></div>
+        <div class="c"><span class="kk">D3</span><h4>High-level Architecture</h4><p>The big components + how they connect.</p></div>
+        <div class="c"><span class="kk">D4</span><h4>Activity / Sequence</h4><p>One core workflow, step by step.</p></div>
+      </div>
+      <div class="two" style="margin-top:4px">
+        <div class="box yes"><span class="k">Consistent means</span><ul><li>An actor in D1 appears in D2</li><li>A use case in D2 has a backlog item</li><li>A component in D3 does the work in D4</li></ul></div>
+        <div class="box no"><span class="k">Inconsistent = FAIL</span><ul><li>D2 shows a feature that's <b>not in the backlog</b></li><li>D4 calls a component <b>not drawn in D3</b></li><li>Four pretty pictures that <b>don't agree</b></li></ul></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 PILLAR 3 TRACEABILITY -->
+  <section class="slide">
+    <div class="inner">
+      <p class="eyebrow">Pillar 3 · Traceability</p>
+      <h2>Every feature traces back to a real pain</h2>
+      <div class="flow" style="margin:2px 0">
+        <span class="step on"><b>Pain</b> (a user said it)</span><span class="arw">→</span>
+        <span class="step"><b>Requirement</b></span><span class="arw">→</span>
+        <span class="step"><b>Backlog item</b></span><span class="arw">→</span>
+        <span class="step"><b>Design / diagram</b></span>
+      </div>
+      <table class="mx">
+        <tr><th>Pain (user's words)</th><th>Requirement</th><th>Backlog item</th><th>Shows up in</th></tr>
+        <tr><td>"I lose the paper tally and re-count cups."</td><td>Log a cup in ≤ 3 taps, stored safely</td><td><span class="mono">US-01 quick cup log</span></td><td>D2 use case · D4 activity</td></tr>
+        <tr><td>"I never know today's total till I add it up."</td><td>Show a live running total</td><td><span class="mono">US-04 daily total</span></td><td>D1 context · D3 component</td></tr>
+      </table>
+      <div class="plain"><span class="lbl">The test we run</span> Pick <b>any</b> feature and ask <b>"which user asked for this?"</b> No answer → it is scope creep, and it gets cut, not built.</div>
+    </div>
+  </section>
+
+  <!-- 8 PILLAR 4 COMPLIANCE -->
+  <section class="slide">
+    <div class="inner">
+      <p class="eyebrow">Pillar 4 · Compliance review</p>
+      <h2>Your W2 law homework becomes a gate check</h2>
+      <div class="two lean">
+        <div class="box">
+          <span class="k">At the gate, we check your rule.md for</span>
+          <ul>
+            <li><b>PDPA</b> — if you store personal data, is consent + purpose declared?</li>
+            <li><b>Computer Crime Act §26</b> — are logs kept ≥ 90 days?</li>
+            <li><b>Electronic Transactions Act</b> — any e-signature / e-record handled right?</li>
+            <li>Are these written as <b>real backlog requirements</b>, not just prose?</li>
+          </ul>
+        </div>
+        <div class="box hot">
+          <span class="k">Why now, not later</span>
+          <h3>Compliance is a design input, not something you add later.</h3>
+          <p class="note">"We'll add PDPA later" means rebuilding your data model in October. We catch it here while it's still one line in <code>rule.md</code>.</p>
+        </div>
+      </div>
+      <div class="plain"><span class="lbl">Link to W2</span> The <code>rule.md</code> your company wrote in the Week 2 workshop is the file reviewed here — it should sit at repo root next to <code>CLAUDE.md</code>.</div>
+    </div>
+  </section>
+
+  <!-- 9 RUBRIC BANDS -->
+  <section class="slide">
+    <div class="inner">
+      <p class="eyebrow">How you're judged</p>
+      <h2>Three outcomes — PASS, CONDITIONAL, FAIL</h2>
+      <div class="grid g3">
+        <div class="band pass"><span class="bt">✓ PASS</span><p>All four pillars stand. Diagrams present <b>and</b> consistent, need validated (any path), traceability holds, compliance in. <b>BUILD unlocked.</b></p></div>
+        <div class="band cond"><span class="bt">◐ CONDITIONAL</span><p><b>One</b> pillar has a fixable gap (e.g. evidence thin, no usability-test plan, one diagram thin). Fix it this week, re-submit. BUILD starts once cleared.</p></div>
+        <div class="band fail"><span class="bt">✕ FAIL</span><p>Diagrams <b>inconsistent</b>, no real user evidence, or no traceability. Rework DISCOVER — <b>no BUILD</b> yet.</p></div>
+      </div>
+      <div class="plain"><span class="lbl">💡 In plain terms</span> PASS = you can start BUILD. CONDITIONAL = one small fix needed. FAIL = the design is not ready yet. <b>Most gaps are CONDITIONAL, and fixable in days.</b></div>
+    </div>
+  </section>
+
+  <!-- 10 HOW TODAY RUNS -->
+  <section class="slide top">
+    <div class="inner">
+      <p class="eyebrow">How today runs · 180 min</p>
+      <h2>Teach → self-check → peer review → gate stamp</h2>
+      <div class="steps">
+        <div class="st"><span class="no">1</span><div><span class="tm">0–30 MIN</span><h4>The gate, explained</h4><p>These slides: the four pillars, the rubric, how to present. <b>You're here now.</b></p></div></div>
+        <div class="st"><span class="no">2</span><div><span class="tm">30–45 MIN</span><h4>Team self-check</h4><p>Each company runs the <b>Student Gate Checklist</b> on its own package. Mark every pillar green / amber / red. Be honest — the peer round will find it anyway.</p></div></div>
+        <div class="st"><span class="no">3</span><div><span class="tm">45–110 MIN</span><h4>Peer mini-reviews (rotating)</h4><p>Companies pair up. Each gives a <b>5-min gate pitch</b>, the other scores it with the scorecard and names <b>one PASS-blocker</b>. Then swap. Two rounds.</p></div></div>
+        <div class="st"><span class="no">4</span><div><span class="tm">110–165 MIN</span><h4>Instructor gate stamp</h4><p>I visit each company for a short review and record PASS / CONDITIONAL / FAIL on the scorecard. Fix time runs in parallel.</p></div></div>
+        <div class="st"><span class="no">5</span><div><span class="tm">165–180 MIN</span><h4>Close + fix-it plans</h4><p>CONDITIONAL teams write their fix-it plan and re-submit date. Everyone previews W6 BUILD.</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 11 THE 5-MIN PITCH -->
+  <section class="slide top">
+    <div class="inner">
+      <p class="eyebrow">Your 5-minute gate pitch</p>
+      <h2>Say these six things — in this order</h2>
+      <div class="grid g3">
+        <div class="c"><span class="kk">1 · 30s</span><h4>The problem</h4><p>One sentence. Whose pain, and how you know it's real.</p></div>
+        <div class="c"><span class="kk">2 · 60s</span><h4>The evidence</h4><p>Your path — interviews / research / advisor — with <b>one concrete proof</b> + your usability-test plan.</p></div>
+        <div class="c"><span class="kk">3 · 60s</span><h4>The trace</h4><p>Show <b>one</b> pain → requirement → backlog → diagram.</p></div>
+        <div class="c"><span class="kk">4 · 90s</span><h4>The 4 diagrams</h4><p>Show them; say one consistency link between two of them.</p></div>
+        <div class="c"><span class="kk">5 · 30s</span><h4>Compliance</h4><p>One line from <code>rule.md</code> that's now a backlog requirement.</p></div>
+        <div class="c"><span class="kk">6 · 30s</span><h4>The ask</h4><p>"We believe we PASS because…" — name your weakest pillar too.</p></div>
+      </div>
+      <div class="plain"><span class="lbl">Tone</span> Not a sales pitch. You are an engineer showing <b>evidence</b> to a reviewer. Admitting your weakest pillar earns more trust than hiding it.</div>
+    </div>
+  </section>
+
+  <!-- 12 PEER REVIEW ROUND -->
+  <section class="slide">
+    <div class="inner">
+      <p class="eyebrow">Peer mini-review · how to review another team</p>
+      <h2>Give tough, fair feedback</h2>
+      <div class="two">
+        <div class="box yes">
+          <span class="k">Good reviewing</span>
+          <ul>
+            <li>Score against the <b>scorecard</b>, pillar by pillar</li>
+            <li>Ask <b>"which user asked for this?"</b> on a random feature</li>
+            <li>Name exactly <b>one PASS-blocker</b> — the thing to fix first</li>
+            <li>Point at a <b>diagram inconsistency</b> if you see one</li>
+          </ul>
+        </div>
+        <div class="box no">
+          <span class="k">Weak reviewing</span>
+          <ul>
+            <li>"Looks good 👍" — helps no one</li>
+            <li>Redesigning their product for them</li>
+            <li>Nit-picking colours instead of checking evidence</li>
+            <li>Criticising the people instead of the work</li>
+          </ul>
+        </div>
+      </div>
+      <div class="plain"><span class="lbl">Hand back</span> A filled scorecard + one sentence: <b>"Your PASS-blocker is ___; fix that first."</b> Score it on the <b>live scorecard</b> → <span class="mono accent">prascymj.github.io/w5-gate-scorecard-2569</span></div>
+    </div>
+  </section>
+
+  <!-- 12b PEER ROTATION MECHANIC -->
+  <section class="slide top">
+    <div class="inner">
+      <p class="eyebrow">Peer mini-review · the rotation, step by step</p>
+      <h2>Two rounds → two different reviewers each</h2>
+
+      <div class="steps">
+        <div class="st"><span class="no">1</span><div><span class="tm">0–5 MIN</span><h4>Team 1 pitches</h4><p>The 5-min gate pitch. Team 2 just listens with the scorecard open.</p></div></div>
+        <div class="st"><span class="no">2</span><div><span class="tm">5–8 MIN</span><h4>Team 2 scores Team 1</h4><p>Mark P / C / F on all four pillars in the <b>live scorecard</b>, then name <b>one</b> PASS-blocker out loud.</p></div></div>
+        <div class="st"><span class="no">3</span><div><span class="tm">8–13 MIN</span><h4>Swap — Team 2 pitches</h4><p>Now roles flip. Same 5 minutes, Team 1 listens.</p></div></div>
+        <div class="st"><span class="no">4</span><div><span class="tm">13–16 MIN</span><h4>Team 1 scores Team 2</h4><p>Same drill. <b>One round ≈ 16 min</b> — both teams reviewed once.</p></div></div>
+      </div>
+
+      <table class="mx">
+        <tr><th>Round</th><th>Who pairs with who <span class="mono">(↔ = pitch, then swap &amp; score)</span></th><th>Time</th></tr>
+        <tr><td><b>Round 1</b><br><span class="mono">pair up</span></td><td class="mono">A ↔ B&nbsp;&nbsp;·&nbsp;&nbsp;C ↔ D&nbsp;&nbsp;·&nbsp;&nbsp;E ↔ F</td><td class="mono">~16 min</td></tr>
+        <tr><td><b>Shuffle</b></td><td>Everyone moves to a <b>new</b> partner (no repeats)</td><td class="mono">2 min</td></tr>
+        <tr><td><b>Round 2</b><br><span class="mono">new partner</span></td><td class="mono">A ↔ D&nbsp;&nbsp;·&nbsp;&nbsp;B ↔ F&nbsp;&nbsp;·&nbsp;&nbsp;C ↔ E</td><td class="mono">~16 min</td></tr>
+      </table>
+
+      <div class="plain"><span class="lbl">Result</span> Every team <b>pitched twice</b>, <b>reviewed two other teams</b>, and walks away holding <b>two scorecards + two PASS-blockers</b> — so you get feedback from two teams, not just one. The rest of the 45–110 block is <b>fix time</b>.</div>
+      <div class="plain"><span class="lbl">Odd number of teams?</span> Make <b>one trio</b> instead of a pair — it round-robins (3 pitch, 3 score) and takes one extra ~8-min slot. Adapt the A–F letters to however many companies you have today.</div>
+    </div>
+  </section>
+
+  <!-- 13 SCORECARD WALKTHROUGH -->
+  <section class="slide top">
+    <div class="inner">
+      <p class="eyebrow">The gate scorecard · what I mark</p>
+      <h2>The same sheet peers and I use</h2>
+      <table class="mx">
+        <tr><th>Pillar</th><th>Check</th><th>✓ / ◐ / ✕</th></tr>
+        <tr><td><b>1 · Validated need</b></td><td>Interviews (≥5) / user research / advisor brief · evidence shown · usability test planned</td><td class="mono">P / C / F</td></tr>
+        <tr><td><b>2 · 4 diagrams</b></td><td>D1–D4 all present · consistent with each other + backlog</td><td class="mono">P / C / F</td></tr>
+        <tr><td><b>3 · Traceability</b></td><td>Every backlog item traces to a pain · no orphan features</td><td class="mono">P / C / F</td></tr>
+        <tr><td><b>4 · Compliance</b></td><td><span class="mono">rule.md</span> present · PDPA/CCA/ETA as real requirements</td><td class="mono">P / C / F</td></tr>
+      </table>
+      <div class="plain"><span class="lbl">Decision rule</span> <b>All P → PASS.</b> One C, rest P → <b>CONDITIONAL.</b> Any F, or two+ C → <b>FAIL</b>. Notes + fix-it date go on the same sheet.</div>
+      <div class="livelink">
+        <svg class="qrsvg" viewBox="0 0 37 37" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges" role="img" aria-label="QR code to the live scorecard"><rect width="37" height="37" fill="#fff"/><g fill="#141B24"><rect x="2" y="2" width="7" height="1"/><rect x="10" y="2" width="1" height="1"/><rect x="13" y="2" width="5" height="1"/><rect x="23" y="2" width="3" height="1"/><rect x="28" y="2" width="7" height="1"/><rect x="2" y="3" width="1" height="1"/><rect x="8" y="3" width="1" height="1"/><rect x="11" y="3" width="1" height="1"/><rect x="15" y="3" width="2" height="1"/><rect x="18" y="3" width="1" height="1"/><rect x="20" y="3" width="3" height="1"/><rect x="24" y="3" width="1" height="1"/><rect x="28" y="3" width="1" height="1"/><rect x="34" y="3" width="1" height="1"/><rect x="2" y="4" width="1" height="1"/><rect x="4" y="4" width="3" height="1"/><rect x="8" y="4" width="1" height="1"/><rect x="11" y="4" width="1" height="1"/><rect x="13" y="4" width="1" height="1"/><rect x="16" y="4" width="2" height="1"/><rect x="19" y="4" width="2" height="1"/><rect x="23" y="4" width="1" height="1"/><rect x="28" y="4" width="1" height="1"/><rect x="30" y="4" width="3" height="1"/><rect x="34" y="4" width="1" height="1"/><rect x="2" y="5" width="1" height="1"/><rect x="4" y="5" width="3" height="1"/><rect x="8" y="5" width="1" height="1"/><rect x="10" y="5" width="3" height="1"/><rect x="17" y="5" width="3" height="1"/><rect x="21" y="5" width="1" height="1"/><rect x="24" y="5" width="2" height="1"/><rect x="28" y="5" width="1" height="1"/><rect x="30" y="5" width="3" height="1"/><rect x="34" y="5" width="1" height="1"/><rect x="2" y="6" width="1" height="1"/><rect x="4" y="6" width="3" height="1"/><rect x="8" y="6" width="1" height="1"/><rect x="10" y="6" width="5" height="1"/><rect x="18" y="6" width="1" height="1"/><rect x="21" y="6" width="1" height="1"/><rect x="23" y="6" width="4" height="1"/><rect x="28" y="6" width="1" height="1"/><rect x="30" y="6" width="3" height="1"/><rect x="34" y="6" width="1" height="1"/><rect x="2" y="7" width="1" height="1"/><rect x="8" y="7" width="1" height="1"/><rect x="10" y="7" width="3" height="1"/><rect x="14" y="7" width="2" height="1"/><rect x="17" y="7" width="1" height="1"/><rect x="22" y="7" width="1" height="1"/><rect x="26" y="7" width="1" height="1"/><rect x="28" y="7" width="1" height="1"/><rect x="34" y="7" width="1" height="1"/><rect x="2" y="8" width="7" height="1"/><rect x="10" y="8" width="1" height="1"/><rect x="12" y="8" width="1" height="1"/><rect x="14" y="8" width="1" height="1"/><rect x="16" y="8" width="1" height="1"/><rect x="18" y="8" width="1" height="1"/><rect x="20" y="8" width="1" height="1"/><rect x="22" y="8" width="1" height="1"/><rect x="24" y="8" width="1" height="1"/><rect x="26" y="8" width="1" height="1"/><rect x="28" y="8" width="7" height="1"/><rect x="10" y="9" width="3" height="1"/><rect x="14" y="9" width="1" height="1"/><rect x="16" y="9" width="1" height="1"/><rect x="19" y="9" width="5" height="1"/><rect x="25" y="9" width="2" height="1"/><rect x="2" y="10" width="1" height="1"/><rect x="6" y="10" width="1" height="1"/><rect x="8" y="10" width="5" height="1"/><rect x="17" y="10" width="3" height="1"/><rect x="22" y="10" width="3" height="1"/><rect x="26" y="10" width="6" height="1"/><rect x="34" y="10" width="1" height="1"/><rect x="4" y="11" width="1" height="1"/><rect x="7" y="11" width="1" height="1"/><rect x="12" y="11" width="1" height="1"/><rect x="14" y="11" width="1" height="1"/><rect x="16" y="11" width="2" height="1"/><rect x="19" y="11" width="2" height="1"/><rect x="25" y="11" width="1" height="1"/><rect x="27" y="11" width="1" height="1"/><rect x="31" y="11" width="3" height="1"/><rect x="2" y="12" width="2" height="1"/><rect x="5" y="12" width="1" height="1"/><rect x="7" y="12" width="5" height="1"/><rect x="13" y="12" width="1" height="1"/><rect x="15" y="12" width="3" height="1"/><rect x="20" y="12" width="1" height="1"/><rect x="24" y="12" width="3" height="1"/><rect x="31" y="12" width="1" height="1"/><rect x="33" y="12" width="1" height="1"/><rect x="4" y="13" width="1" height="1"/><rect x="6" y="13" width="2" height="1"/><rect x="11" y="13" width="1" height="1"/><rect x="13" y="13" width="3" height="1"/><rect x="22" y="13" width="3" height="1"/><rect x="28" y="13" width="1" height="1"/><rect x="3" y="14" width="1" height="1"/><rect x="5" y="14" width="4" height="1"/><rect x="10" y="14" width="2" height="1"/><rect x="15" y="14" width="1" height="1"/><rect x="18" y="14" width="1" height="1"/><rect x="21" y="14" width="3" height="1"/><rect x="26" y="14" width="1" height="1"/><rect x="28" y="14" width="4" height="1"/><rect x="34" y="14" width="1" height="1"/><rect x="6" y="15" width="1" height="1"/><rect x="9" y="15" width="4" height="1"/><rect x="14" y="15" width="3" height="1"/><rect x="20" y="15" width="6" height="1"/><rect x="27" y="15" width="1" height="1"/><rect x="29" y="15" width="1" height="1"/><rect x="31" y="15" width="2" height="1"/><rect x="2" y="16" width="1" height="1"/><rect x="6" y="16" width="3" height="1"/><rect x="12" y="16" width="1" height="1"/><rect x="14" y="16" width="2" height="1"/><rect x="17" y="16" width="1" height="1"/><rect x="23" y="16" width="1" height="1"/><rect x="25" y="16" width="1" height="1"/><rect x="27" y="16" width="2" height="1"/><rect x="33" y="16" width="1" height="1"/><rect x="3" y="17" width="4" height="1"/><rect x="9" y="17" width="1" height="1"/><rect x="11" y="17" width="2" height="1"/><rect x="14" y="17" width="1" height="1"/><rect x="16" y="17" width="4" height="1"/><rect x="23" y="17" width="1" height="1"/><rect x="27" y="17" width="2" height="1"/><rect x="31" y="17" width="1" height="1"/><rect x="3" y="18" width="1" height="1"/><rect x="5" y="18" width="1" height="1"/><rect x="8" y="18" width="1" height="1"/><rect x="11" y="18" width="3" height="1"/><rect x="15" y="18" width="2" height="1"/><rect x="18" y="18" width="4" height="1"/><rect x="23" y="18" width="2" height="1"/><rect x="28" y="18" width="1" height="1"/><rect x="30" y="18" width="1" height="1"/><rect x="33" y="18" width="1" height="1"/><rect x="2" y="19" width="2" height="1"/><rect x="5" y="19" width="2" height="1"/><rect x="15" y="19" width="4" height="1"/><rect x="20" y="19" width="1" height="1"/><rect x="25" y="19" width="1" height="1"/><rect x="31" y="19" width="2" height="1"/><rect x="8" y="20" width="5" height="1"/><rect x="16" y="20" width="2" height="1"/><rect x="19" y="20" width="1" height="1"/><rect x="22" y="20" width="2" height="1"/><rect x="25" y="20" width="3" height="1"/><rect x="29" y="20" width="1" height="1"/><rect x="31" y="20" width="1" height="1"/><rect x="33" y="20" width="1" height="1"/><rect x="2" y="21" width="1" height="1"/><rect x="4" y="21" width="2" height="1"/><rect x="9" y="21" width="2" height="1"/><rect x="12" y="21" width="1" height="1"/><rect x="16" y="21" width="1" height="1"/><rect x="19" y="21" width="2" height="1"/><rect x="23" y="21" width="1" height="1"/><rect x="25" y="21" width="1" height="1"/><rect x="27" y="21" width="1" height="1"/><rect x="29" y="21" width="1" height="1"/><rect x="33" y="21" width="1" height="1"/><rect x="5" y="22" width="1" height="1"/><rect x="7" y="22" width="2" height="1"/><rect x="10" y="22" width="1" height="1"/><rect x="15" y="22" width="1" height="1"/><rect x="17" y="22" width="1" height="1"/><rect x="20" y="22" width="1" height="1"/><rect x="22" y="22" width="2" height="1"/><rect x="28" y="22" width="1" height="1"/><rect x="30" y="22" width="2" height="1"/><rect x="33" y="22" width="2" height="1"/><rect x="2" y="23" width="1" height="1"/><rect x="5" y="23" width="1" height="1"/><rect x="9" y="23" width="2" height="1"/><rect x="12" y="23" width="1" height="1"/><rect x="14" y="23" width="1" height="1"/><rect x="18" y="23" width="2" height="1"/><rect x="21" y="23" width="5" height="1"/><rect x="27" y="23" width="1" height="1"/><rect x="29" y="23" width="1" height="1"/><rect x="31" y="23" width="1" height="1"/><rect x="33" y="23" width="1" height="1"/><rect x="5" y="24" width="1" height="1"/><rect x="7" y="24" width="2" height="1"/><rect x="11" y="24" width="2" height="1"/><rect x="14" y="24" width="1" height="1"/><rect x="18" y="24" width="1" height="1"/><rect x="20" y="24" width="1" height="1"/><rect x="22" y="24" width="1" height="1"/><rect x="24" y="24" width="3" height="1"/><rect x="33" y="24" width="1" height="1"/><rect x="5" y="25" width="3" height="1"/><rect x="9" y="25" width="2" height="1"/><rect x="12" y="25" width="2" height="1"/><rect x="15" y="25" width="2" height="1"/><rect x="19" y="25" width="1" height="1"/><rect x="21" y="25" width="5" height="1"/><rect x="29" y="25" width="2" height="1"/><rect x="34" y="25" width="1" height="1"/><rect x="2" y="26" width="3" height="1"/><rect x="8" y="26" width="1" height="1"/><rect x="10" y="26" width="1" height="1"/><rect x="12" y="26" width="3" height="1"/><rect x="16" y="26" width="2" height="1"/><rect x="19" y="26" width="1" height="1"/><rect x="22" y="26" width="2" height="1"/><rect x="26" y="26" width="6" height="1"/><rect x="33" y="26" width="2" height="1"/><rect x="10" y="27" width="2" height="1"/><rect x="16" y="27" width="2" height="1"/><rect x="19" y="27" width="2" height="1"/><rect x="26" y="27" width="1" height="1"/><rect x="30" y="27" width="1" height="1"/><rect x="32" y="27" width="2" height="1"/><rect x="2" y="28" width="7" height="1"/><rect x="10" y="28" width="1" height="1"/><rect x="12" y="28" width="1" height="1"/><rect x="14" y="28" width="1" height="1"/><rect x="16" y="28" width="2" height="1"/><rect x="20" y="28" width="1" height="1"/><rect x="22" y="28" width="1" height="1"/><rect x="26" y="28" width="1" height="1"/><rect x="28" y="28" width="1" height="1"/><rect x="30" y="28" width="2" height="1"/><rect x="33" y="28" width="1" height="1"/><rect x="2" y="29" width="1" height="1"/><rect x="8" y="29" width="1" height="1"/><rect x="11" y="29" width="2" height="1"/><rect x="15" y="29" width="2" height="1"/><rect x="21" y="29" width="4" height="1"/><rect x="26" y="29" width="1" height="1"/><rect x="30" y="29" width="1" height="1"/><rect x="33" y="29" width="2" height="1"/><rect x="2" y="30" width="1" height="1"/><rect x="4" y="30" width="3" height="1"/><rect x="8" y="30" width="1" height="1"/><rect x="10" y="30" width="4" height="1"/><rect x="17" y="30" width="2" height="1"/><rect x="21" y="30" width="3" height="1"/><rect x="26" y="30" width="6" height="1"/><rect x="34" y="30" width="1" height="1"/><rect x="2" y="31" width="1" height="1"/><rect x="4" y="31" width="3" height="1"/><rect x="8" y="31" width="1" height="1"/><rect x="11" y="31" width="1" height="1"/><rect x="16" y="31" width="1" height="1"/><rect x="19" y="31" width="2" height="1"/><rect x="22" y="31" width="3" height="1"/><rect x="28" y="31" width="3" height="1"/><rect x="32" y="31" width="1" height="1"/><rect x="2" y="32" width="1" height="1"/><rect x="4" y="32" width="3" height="1"/><rect x="8" y="32" width="1" height="1"/><rect x="11" y="32" width="1" height="1"/><rect x="13" y="32" width="2" height="1"/><rect x="16" y="32" width="2" height="1"/><rect x="19" y="32" width="1" height="1"/><rect x="22" y="32" width="1" height="1"/><rect x="25" y="32" width="1" height="1"/><rect x="27" y="32" width="4" height="1"/><rect x="32" y="32" width="1" height="1"/><rect x="2" y="33" width="1" height="1"/><rect x="8" y="33" width="1" height="1"/><rect x="12" y="33" width="4" height="1"/><rect x="17" y="33" width="4" height="1"/><rect x="23" y="33" width="4" height="1"/><rect x="2" y="34" width="7" height="1"/><rect x="10" y="34" width="1" height="1"/><rect x="12" y="34" width="1" height="1"/><rect x="15" y="34" width="2" height="1"/><rect x="19" y="34" width="1" height="1"/><rect x="22" y="34" width="5" height="1"/><rect x="34" y="34" width="1" height="1"/></g></svg>
+        <span class="txt qr">📱 <b>Score online — open on your phone in class:</b><br><span class="url">prascymj.github.io/w5-gate-scorecard-2569</span></span>
+        <a href="https://prascymj.github.io/w5-gate-scorecard-2569/" target="_blank" rel="noopener">Open the live scorecard →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 14 COMMON FAILS -->
+  <section class="slide top">
+    <div class="inner">
+      <p class="eyebrow">The five ways teams miss the gate</p>
+      <h2>Know them, avoid them</h2>
+      <table class="mx">
+        <tr><th>The mistake</th><th>What we check</th><th>The fix</th></tr>
+        <tr><td><b>No real evidence</b></td><td>A claim with no log, screenshots, or advisor brief — or no usability-test plan</td><td>Show one path: interviews, captured research, or advisor reqs — + plan the usability test</td></tr>
+        <tr><td><b>Solution-first</b></td><td>A cool feature no user ever asked for</td><td>Cut it, or find the pain it answers</td></tr>
+        <tr><td><b>Diagrams disagree</b></td><td>D4 uses a component not in D3; D2 ≠ backlog</td><td>Make one edit ripple to all four + backlog</td></tr>
+        <tr><td><b>Compliance as prose</b></td><td>"We care about privacy" but no requirement</td><td>Turn each <code>rule.md</code> rule into a backlog item</td></tr>
+        <tr><td><b>Building already</b></td><td>Production code before the gate</td><td>Stop. DISCOVER has no code. That's the point.</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- 15 CONDITIONAL PATH -->
+  <section class="slide">
+    <div class="inner">
+      <p class="eyebrow">If you get CONDITIONAL</p>
+      <h2>It's a to-do list, not a verdict</h2>
+      <div class="two lean">
+        <div class="box mid">
+          <span class="k">Your fix-it plan (write it today)</span>
+          <ul>
+            <li><b>The one gap</b> — the pillar that came up amber</li>
+            <li><b>The concrete fix</b> — e.g. "interview 2 more users", "redraw D3 to match D4"</li>
+            <li><b>Who + by when</b> — an owner and a re-submit date</li>
+          </ul>
+        </div>
+        <div class="box yes">
+          <span class="k">Then</span>
+          <h3>Re-submit → cleared → BUILD.</h3>
+          <p class="note">Most teams are CONDITIONAL, not FAIL. A gap found here costs you a couple of days — the same gap found in October costs you the project.</p>
+        </div>
+      </div>
+      <div class="plain"><span class="lbl">Deadline</span> Fix-it plans are due at close today; re-submission before <b>W6 (Sep 16)</b> so scope-lock starts on time.</div>
+    </div>
+  </section>
+
+  <!-- 16 WHAT PASS UNLOCKS -->
+  <section class="slide">
+    <div class="inner">
+      <p class="eyebrow">What PASS lets you do</p>
+      <h2>PASS unlocks BUILD — and the rules change</h2>
+      <div class="flow" style="margin:2px 0">
+        <span class="step gate">GATE · PASS</span><span class="arw">→</span>
+        <span class="step on"><b>W6</b> Scope lock (MoSCoW) + Sprint 0 + repo + MCP</span><span class="arw">→</span>
+        <span class="step"><b>W7–8</b> Build sprint → Alpha Demo</span>
+      </div>
+      <div class="two">
+        <div class="box yes"><span class="k">Now allowed</span><ul><li><b>Production code</b> — full AI / vibe-coding</li><li>Ship <b>one core workflow</b> a real user can finish</li></ul></div>
+        <div class="box no"><span class="k">Still not allowed</span><ul><li><b>Feature creep</b> — scope is locked at W6</li><li>Rewriting the whole thing chasing a new idea</li></ul></div>
+      </div>
+      <div class="plain"><span class="lbl">Mindset shift</span> DISCOVER asked <b>"are we building the right thing?"</b> BUILD asks <b>"are we building the thing right?"</b> The gate separates the two.</div>
+    </div>
+  </section>
+
+  <!-- 17 CUPLOG MODEL -->
+  <section class="slide top">
+    <div class="inner">
+      <p class="eyebrow">The model · a gate-ready package</p>
+      <h2>What "PASS" looks like — CupLog</h2>
+      <div class="grid g2">
+        <div class="c"><span class="kk">Pillar 1 · need</span><p><b>7 baristas</b> interviewed across 3 cafés (Path A) + app-store reviews captured. Shared pain: <b>paper tally gets lost</b>. Usability test planned for TEST.</p></div>
+        <div class="c"><span class="kk">Pillar 2 · diagrams</span><p><b>D1–D4</b> present. The <i>Barista</i> actor in D1 does <i>Log cup</i> in D2, which D4 walks step-by-step.</p></div>
+        <div class="c"><span class="kk">Pillar 3 · trace</span><p>Every backlog item (<span class="mono">US-01…US-06</span>) links to a quoted pain. No orphan features.</p></div>
+        <div class="c"><span class="kk">Pillar 4 · compliance</span><p><span class="mono">rule.md</span> at root: PDPA consent for staff names, CCA §26 90-day logs — each a backlog requirement.</p></div>
+      </div>
+      <div class="plain"><span class="lbl">Where to study it</span> Full worked example in <b>CupLog-Worked-Example-2569</b> (§6 diagrams, §2 <code>CLAUDE.md</code>+<code>rule.md</code>). Copy its <i>structure</i>, not its content.</div>
+    </div>
+  </section>
+
+  <!-- 18 ACTIONS -->
+  <section class="slide">
+    <div class="inner">
+      <p class="eyebrow">Actions · by the end of today</p>
+      <h2>Leave class with a stamp or a plan</h2>
+      <div class="two">
+        <div class="box yes">
+          <span class="k">Every company</span>
+          <ul>
+            <li>Run the <b>Student Gate Checklist</b> on your package</li>
+            <li>Give + receive a <b>5-min peer gate pitch</b></li>
+            <li>Get your <b>instructor gate stamp</b> recorded</li>
+            <li>Submit the DISCOVER package to Google Classroom</li>
+          </ul>
+        </div>
+        <div class="box mid">
+          <span class="k">If CONDITIONAL / FAIL</span>
+          <ul>
+            <li>Write your <b>fix-it plan</b> (gap · fix · owner · date)</li>
+            <li>Re-submit before <b>W6 · Sep 16</b></li>
+            <li>No BUILD until cleared — protect your own timeline</li>
+          </ul>
+        </div>
+      </div>
+      <div class="plain"><span class="lbl">Reminder</span> The gate is graded <b>inside the Project (10/50)</b> and is <b>separate</b> from the written Midterm. It's about evidence, not memorised facts.</div>
+    </div>
+  </section>
+
+  <!-- 19 CLOSE -->
+  <section class="slide">
+    <div class="inner title">
+      <p class="eyebrow">Week 5 · close</p>
+      <h1>Prove it, then build it.</h1>
+      <p class="lead">A gate feels strict today. By December it will be the reason your team <b>stopped guessing</b>. Real users, four diagrams that agree, features that trace to a real user need, and compliance built in — <b>that</b> is what passes.</p>
+      <div class="facts">
+        <span class="chip hot">Next · W6 (Sep 16): Scope lock · Sprint 0 · repo · MCP</span>
+        <span class="chip">Don't pass, don't start BUILD.</span>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<div class="dots" id="dots"></div>
+<div class="nav">
+  <button id="prev" aria-label="Previous">‹</button>
+  <span class="count" id="count">1 / 20</span>
+  <button id="next" aria-label="Next">›</button>
+</div>
+
+<script>
+(function(){
+  var slides=[].slice.call(document.querySelectorAll('.slide'));
+  var i=0, n=slides.length;
+  var count=document.getElementById('count');
+  var prog=document.getElementById('prog');
+  var dotsWrap=document.getElementById('dots');
+  slides.forEach(function(_,k){
+    var b=document.createElement('button'); b.setAttribute('aria-label','Slide '+(k+1));
+    b.addEventListener('click',function(){go(k)}); dotsWrap.appendChild(b);
+  });
+  var dots=[].slice.call(dotsWrap.children);
+  function render(){
+    slides.forEach(function(s,k){s.classList.toggle('active',k===i)});
+    dots.forEach(function(d,k){d.classList.toggle('on',k===i)});
+    count.textContent=(i+1)+' / '+n;
+    prog.style.width=((i+1)/n*100)+'%';
+    var act=slides[i]; if(act) act.scrollTop=0;
+  }
+  function go(k){ i=Math.max(0,Math.min(n-1,k)); render(); }
+  function next(){go(i+1)} function prev(){go(i-1)}
+  document.getElementById('next').addEventListener('click',next);
+  document.getElementById('prev').addEventListener('click',prev);
+  document.addEventListener('keydown',function(e){
+    if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){e.preventDefault();next();}
+    else if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();prev();}
+    else if(e.key==='Home'){go(0)} else if(e.key==='End'){go(n-1)}
+  });
+  document.getElementById('deck').addEventListener('click',function(e){
+    if(e.target.closest('button, a, pre, table, svg')) return;
+    (e.clientX > window.innerWidth/2) ? next() : prev();
+  });
+  document.getElementById('tg').addEventListener('click',function(){
+    var cur=document.documentElement.getAttribute('data-theme');
+    var nextT=cur?(cur==='dark'?'light':'dark'):(matchMedia('(prefers-color-scheme: dark)').matches?'light':'dark');
+    document.documentElement.setAttribute('data-theme',nextT);
+  });
+  render();
+})();
+</script>
+</body>
+</html>
