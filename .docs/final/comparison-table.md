@@ -7,16 +7,20 @@
 
 ## 1. Evidence index
 
-- [UAT data workbook (Google Sheets)](https://docs.google.com/spreadsheets/d/1vuRry_EFzIqQnaEpisaO380DNdhOafFM-WqMs3bNC7U/edit): `Task Results`, `Student UAT Summary`, `Advisor UAT Summary`, `QA UAT Summary`, `Overview`, `Student`, `Advisor`, `Form Responses 1`, `Student Video Evidence`, `QA Issue Log`.
-- **Committed repository evidence:** [anonymized UAT session logs](../04-test%20plan/evidence/uat-session-logs.md), [anonymized task-level results](../04-test%20plan/evidence/uat-task-results.csv), the [UAT presentation evidence brief](../04-test%20plan/evidence/advisinglog_uat_presentation_brief.pdf), the [issue log with fix/retest evidence](../04-test%20plan/evidence/issue-log.md), and [anonymized SUS/TAM item responses](../04-test%20plan/evidence/sus-tam-results.csv). A video-evidence manifest and AI feature test artifacts are not included yet.
-- **Privacy:** Do not commit participant emails, names, or raw personally identifying form responses. Use participant codes (U01–U10 and QA-01 as recorded) and sanitized aggregates.
+- **UAT data workbook (Google Sheets):** [AdvisingLog UAT, SUS and TAM Results](https://docs.google.com/spreadsheets/d/1vuRry_EFzIqQnaEpisaO380DNdhOafFM-WqMs3bNC7U/edit) — Includes `Task Results`, `Student UAT Summary`, `Advisor UAT Summary`, `QA UAT Summary`, `Overview`, `Student`, `Advisor`, `Form Responses 1`, `Student Video Evidence`, and `QA Issue Log`.
+
+- **Real-user UAT Video Evidence (Google Drive):** [AdvisingLog Testing Recordings](https://drive.google.com/drive/folders/1rgSEF1-jRAW5fixyRZB4mJKBUM-z_7XO?usp=sharing) — Video recordings supporting V1/V2 user testing for Student, Advisor, and QA roles. Some task results use estimated timings or full-video durations rather than isolated task completion times. Not every reported Pass outcome is independently verified from the recordings.
+
+- **Committed repository evidence:** [Anonymized UAT session logs](../04-test%20plan/evidence/uat-session-logs.md), [anonymized task-level results](../04-test%20plan/evidence/uat-task-results.csv), the [UAT presentation evidence brief](../04-test%20plan/evidence/advisinglog_uat_presentation_brief.pdf), the [issue log](../04-test%20plan/evidence/issue-log.md), and [anonymized SUS/TAM item responses](../04-test%20plan/evidence/sus-tam-results.csv). A video-evidence manifest and AI feature test artifacts are not included yet. Fix commits and retest outcomes are not established unless supported by actual records.
+
+- **Privacy:** Do not commit participant emails, names, or raw personally identifying form responses. Use participant codes (`U01–U10` and `QA-01`) and anonymized aggregates. Ensure video-sharing permissions are appropriate before granting access.
 
 ## 2. Participants and measurement scope
 
 | Group | UAT participants | Evaluated workflows | Questionnaire responses |
 |---|---:|---|---:|
 | Student | 8 | UAT01, UAT02, UAT05 | 8 |
-| Advisor | 2 | UAT03 (confirm advising appointment), UAT04 | 2 |
+| Advisor | 2 | UAT03, UAT04 | 2 |
 | QA | 1 | UAT06 | 0 |
 | **Total** | **11** | **6 distinct workflow categories** | **10** |
 
@@ -32,7 +36,7 @@ The **11 UAT participants** and **10 SUS/TAM questionnaire responses** are diffe
 | Student — UAT02: Check request status | 87.76 s | 60.41 s | **31.2% lower** | V1 mixed measured/proxy timing; V2 whole-video proxies | `Student UAT Summary` + `Task Results` |
 | Student — UAT05: Update follow-up status | 95.97 s | 96.45 s | **0.5% higher** | Recorded whole-video proxies; V1 mean based on 7 available times | `Student UAT Summary` + `Task Results` |
 | **Student — sum of 3 task means** | **291.48 s** | **249.54 s** | **14.4% lower (41.94 s)** | Add the three mean times per version | `Student UAT Summary`, rows 19–23 |
-| Advisor — UAT03: Confirm advising appointment | 141.58 s | 94.48 s | **33.3% lower** | Mean duration of 2 complete videos per version | `Advisor UAT Summary` + `Task Results` |
+| Advisor — UAT03: Record a completed advising session | 141.58 s | 94.48 s | **33.3% lower** | Mean duration of 2 complete videos per version | `Advisor UAT Summary` + `Task Results` |
 | Advisor — UAT04: Assign follow-up task | 115.02 s | 67.97 s | **40.9% lower** | Mean duration of 2 complete videos per version | `Advisor UAT Summary` + `Task Results` |
 | **Advisor — sum of 2 task means** | **256.60 s** | **162.45 s** | **36.7% lower (94.15 s)** | Add the two mean video durations per version | `Advisor UAT Summary`, rows 30–33 |
 | QA — UAT06: View QA dashboard / export report | 36.82 s | 31.17 s | **15.4% lower (5.66 s)** | Entire video duration; 1 tester | `QA UAT Summary` + `Task Results` |
@@ -49,8 +53,8 @@ The **11 UAT participants** and **10 SUS/TAM questionnaire responses** are diffe
 
 | Workflow | V1 videos | V2 videos |
 |---|---|---|
-| UAT03 — Appointment confirmation | 168.90 s and 114.27 s | 81.60 s and 107.37 s |
-| Assign follow-up | 65.87 s and 164.17 s | 111.50 s and 24.43 s |
+| UAT03 — Record a completed advising session| 168.90 s and 114.27 s | 81.60 s and 107.37 s |
+| UAT04 — Assign follow-up | 65.87 s and 164.17 s | 111.50 s and 24.43 s |
 
 Advisor V1/V2 recording groups were **reassigned following the coordinator's correction of previously swapped attachments**. This assignment is recorded in `Task Results` but was not independently revalidated against original build metadata. Preserve this provenance in the evidence manifest.
 

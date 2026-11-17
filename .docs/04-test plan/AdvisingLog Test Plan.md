@@ -127,7 +127,7 @@ The team reports V1/V2 task results by role using the available recordings and c
 | Metric | AdvisingLog V1 (Previous Version) | AdvisingLog V2 (Current Version) | Expected Improvement |
 | --- | --- | --- | --- |
 | Recorded timing comparison | Student 291.48 s; Advisor task-group sum 256.60 s; QA 36.82 s | Student 249.54 s; Advisor task-group sum 162.45 s; QA 31.17 s | Student: 14.4%; Advisor: 36.7%; QA: 15.4% lower recorded durations; these are not all isolated task times |
-| Reported task success | Student 24/24; Advisor UAT04 2/2; appointment-confirmation task 2/2; QA 1/1 | Student 24/24; Advisor UAT04 2/2; appointment-confirmation task 2/2; QA 1/1 | All 29 recorded outcomes per version marked Pass; some are coordinator-confirmed rather than independently visible in the recordings. Appointment confirmation is NOT UAT03. |
+| Reported task success | Student 24/24; Advisor UAT04 2/2; appointment-confirmation task 2/2; QA 1/1 | Student 24/24; Advisor UAT04 2/2; appointment-confirmation task 2/2; QA 1/1 | All 29 recorded outcomes per version marked Pass; some are coordinator-confirmed rather than independently visible in the recordings. Appointment confirmation (`APPT-CONFIRM`) is tracked separately from UAT03, which requires a saved advising-session record. |
 | Number of Errors | Not reliably recorded | Not reliably recorded | Cannot calculate error reduction |
 
 _Task Success Rate (%) = (Successful Tasks / Attempted Tasks) × 100_
@@ -227,15 +227,15 @@ Scoring: each construct score = mean of its three items per user. Report mean ±
 
 7.2 Advisor (2 participants)
 
-**Important task-ID correction:** UAT03 is **Record a completed advising session** (as defined in Section 3.2); its criterion is **Session record saved**. UAT04 is **Assign a follow-up task** (follow-up tracking), and its success criterion is **Task assigned to intended student**. The `APPT-CONFIRM-V1/V2` data measures **Confirm an advising appointment**, a separate auxiliary workflow; it is not UAT03 or UAT04. The appointment-confirmation numbers below are retained as auxiliary evidence and are **not** a UAT03 result. No verified UAT03-specific before/after outcome is available in the reviewed workbook.
+**Task-ID clarification:** UAT03 is **Record a completed advising session**, and its success criterion is **Session record saved**. UAT04 remains **Assign a follow-up task**, with success criterion **Task assigned to intended student**. The workbook label `APPT-CONFIRM-V1/V2` refers to **Confirm an advising appointment**, which is related to advising but does not by itself verify that a completed session record was saved. Its recordings and timings are reported as auxiliary evidence, not verified UAT03 results. Pass statuses for this auxiliary workflow were reported by the participant coordinator; some successful final actions are not independently visible in all recordings. Timings are full-video durations, not isolated task times.
 
 | Task / Metric | V1 (sec) | V2 (sec) | Change | Result / Notes |
 | --- | --- | --- | --- | --- |
-| UAT03 — Record a completed advising session | Not verified | Not verified | Cannot calculate | Requires saved-session-log evidence and V1/V2 task timings |
-| Auxiliary: APPT-CONFIRM — Confirm appointment | 141.58 | 94.48 | 33.3% lower | Mean full-video duration; **not UAT03** |
+| UAT03 — Record a completed advising session | Not verified | Not verified | Cannot calculate | Requires evidence of a saved session record in both versions |
+| Auxiliary: `APPT-CONFIRM` — Confirm appointment | 141.58 | 94.48 | 33.3% lower | Full-video duration; 2/2 coordinator-reported Pass per version; not verified UAT03 |
 | UAT04 — Assign follow-up | 115.02 | 67.97 | 40.9% lower | Mean full-video duration; 2/2 reported Pass each version |
-| SUM — 2 recorded task-group means (APPT-CONFIRM + UAT04) | 256.60 | 162.45 | 36.7% lower | 94.15 s less; **not** sum of UAT03 + UAT04 |
-| Reported success for recorded Advisor task groups | 4/4 Pass | 4/4 Pass | No change | Appointment 2/2 + UAT04 2/2 per version; UAT03 excluded |
+| SUM — 2 recorded task-group means (`APPT-CONFIRM` + UAT04) | 256.60 | 162.45 | 36.7% lower | 94.15 s less; not a UAT03 + UAT04 total or end-to-end session |
+| Reported success for recorded Advisor task groups | 4/4 Pass | 4/4 Pass | No change | `APPT-CONFIRM` 2/2 + UAT04 2/2 per version; UAT03 excluded |
 
 **7.3 QA (1 participant)**
 
@@ -267,7 +267,7 @@ The original questionnaire dataset contains **U01–U08 (Student)** and **U09–
 | Participants | Role | Source | Current record state |
 | --- | --- | --- | --- |
 | U01–U08 | Student | `Student` + `Form Responses 1` | 8 anonymous questionnaire records. V1/V2 UAT task attempts are summarised by role; clip mapping to individual U-codes is not verified |
-| U09–U10 | Advisor | `Advisor` + `Form Responses 1` | 2 anonymous questionnaire records. Recorded appointment-confirmation and follow-up task groups; UAT03-specific saved-session evidence is not established |
+| U09–U10 | Advisor | `Advisor` + `Form Responses 1` | 2 anonymous questionnaire records. Recorded appointment-confirmation (`APPT-CONFIRM`) and UAT04 follow-up groups; separate UAT03 saved-session outcomes have not been verified |
 | QA-01 | QA | `QA UAT Summary` + `Task Results` | V1/V2 UAT06 marked Pass by coordinator; QA report export not independently visible in supplied clips; no SUS/TAM form |
 
 **Session-log minimum fields to add when traceable:** participant code, test date, role, actual build/version, UAT ID, start/end or duration source, Pass/Fail/Not Tested, observed issues, help given, video/observation-log reference, and whether success is `video-verified` or `coordinator-confirmed`. Do not fill unknown values with guesses. Refer to the clip and timing metadata already recorded in `Task Results` and `Student Video Evidence`.
@@ -280,12 +280,12 @@ The six UAT scenarios defined in Section 3.2 do **not automatically** establish 
 | --- | --- | --- | --- |
 | UAT01 | Student request advising | 8 attempts/version | Some measured/estimated timing |
 | UAT02 | Student check status | 8 attempts/version | Uses mixed/full-video timing proxies |
-| UAT03 | Advisor record a completed advising session | **Not established as a separate UAT03 outcome** | Appointment confirmation `APPT-CONFIRM` cannot substitute for saving a completed session record |
+| UAT03 | Advisor record a completed advising session | No verified V1/V2 saved-session outcomes in reviewed workbook | Appointment confirmation alone cannot verify a saved advising-session record |
 | UAT04 | Advisor assign follow-up | 2 attempts/version | Reported Pass, timing mainly full videos |
 | UAT05 | Student update follow-up | 8 attempts/version | V1 average uses 7 available timing entries |
 | UAT06 | QA view dashboard and export report | 1 attempt/version, coordinator-confirmed Pass | Video alone does not independently show successful export |
 
-**Auxiliary workflow:** `APPT-CONFIRM` — 2 attempts/version, recorded separately; full-video mean V1 **141.58 s**, V2 **94.48 s**. These numbers are **not** counted as evidence for UAT03. The Advisor two-workflow combined figure **256.60 → 162.45 s (-36.7%)** refers to `APPT-CONFIRM + UAT04`, not `UAT03 + UAT04`.
+**Auxiliary workbook label:** `APPT-CONFIRM-V1/V2` — 2 coordinator-reported Pass attempts/version; mean full-video duration V1 **141.58 s**, V2 **94.48 s**. This is appointment-confirmation evidence, not verified UAT03 session-record-saving evidence. The Advisor two-workflow combined figure **256.60 → 162.45 s (-36.7%)** refers to **`APPT-CONFIRM` + UAT04**, not UAT03 + UAT04. These are sums of recorded task-group means, not end-to-end task timings.
 
 ## 9. Actual Questionnaire Results and V1/V2 Feedback (Added November 17, 2026)
 
@@ -330,7 +330,7 @@ The question **“What did you like or needs improving in V2 compared with V1?�
 | Criterion from Section 6.3 | Project target | Verified or reported finding | Assessment |
 | --- | --- | --- | --- |
 | UAT session coverage | At least 10 sessions | 11 participants reported by role; individual session-video mapping incomplete | **Reported target count met; independent session reconciliation pending** |
-| Reported task success | At least 70% / task | Recorded tasks report Pass; some outcomes coordinator-confirmed | **Reported target met for covered workflows; UAT03 not established** |
+| Reported task success | At least 70% / task | Recorded tasks report Pass; some outcomes coordinator-confirmed | **Reported target met for covered workflows; UAT03 saved-session outcomes not separately verified** |
 | Overall SUS | At least 68 / 100 | 64.00 / 100 | **Below target** |
 | TAM overall construct means | At least 3.5 / 5 | PU 4.33; PEOU 4.17; BI 4.13 | **Overall group targets met; Advisor PEOU 3.33 below target** |
 | Error reduction | Measurable V1 vs V2 | Errors not consistently recorded | **Not measurable** |
