@@ -77,7 +77,7 @@ Users will receive scenarios rather than step-by-step button instructions.
 
 ## 4.1 Target Participants
 
-The team plans to conduct at least 10 real-user testing sessions.
+The original plan targeted at least 10 real-user testing sessions. The recorded UAT summary includes 8 Student, 2 Advisor, and 1 QA participant (11 reported participants by role). The questionnaire dataset includes 10 responses (8 Student, 2 Advisor); QA did not complete a questionnaire. Participant-to-video mapping requires reconciliation before claiming 11 independently verified sessions.
 
 | User Group | Planned Users | Planned Sessions |
 | --- | --- | --- |
@@ -88,7 +88,7 @@ The team plans to conduct at least 10 real-user testing sessions.
 
 ### 4.2 Testing Procedure
 
-The evaluation uses a Within-Subjects comparative design, in which each participant (U01–U10) performs the core advising tasks on AdvisingLog V1 (Previous Version) and then on AdvisingLog V2 (Current Version) to directly measure performance improvements.
+The intended design is a within-subjects V1/V2 comparison for each participant. The questionnaire uses codes U01–U10 and the QA task evidence uses QA-01. The available task-result entries do not consistently map every clip to a questionnaire participant ID; individual V1/V2 pairing and order have not been independently verified from the evidence index. Time comparisons should therefore be described as recorded-duration comparisons, not controlled evidence of improvements.
 
 Session Steps:
 
@@ -122,21 +122,21 @@ Each session follows this flow:
 
 ## 5.1 Required: Task Performance (V1 vs V2 Comparison)
 
-The team compares task performance between AdvisingLog V1 (Previous Version) and AdvisingLog V2 (Current Version) across all 10 participants to demonstrate measurable usability and efficiency gains.
+The team reports V1/V2 task results by role using the available recordings and coordinator-confirmed statuses. The QA task was also recorded (one additional participant). Results are descriptive: some timings are full-video proxies or estimates, and not every claimed completion is independently visible in the clips.
 
 | Metric | AdvisingLog V1 (Previous Version) | AdvisingLog V2 (Current Version) | Expected Improvement |
 | --- | --- | --- | --- |
-| Task Completion Time | Student 291.48 s; Advisor 256.60 s | Student 249.54 s; Advisor 162.45 s | Student: 14.4%; Advisor: 36.7% lower recorded time |
-| Task Success Rate | 100% (Student 24/24; Advisor 4/4) | 100% (Student 24/24; Advisor 4/4) | Both versions: 100%; no success-rate change |
+| Recorded timing comparison | Student 291.48 s; Advisor task-group sum 256.60 s; QA 36.82 s | Student 249.54 s; Advisor task-group sum 162.45 s; QA 31.17 s | Student: 14.4%; Advisor: 36.7%; QA: 15.4% lower recorded durations; these are not all isolated task times |
+| Reported task success | Student 24/24; Advisor UAT04 2/2; appointment-confirmation task 2/2; QA 1/1 | Student 24/24; Advisor UAT04 2/2; appointment-confirmation task 2/2; QA 1/1 | All 29 recorded outcomes per version marked Pass; some are coordinator-confirmed rather than independently visible in the recordings. Appointment confirmation is NOT UAT03. |
 | Number of Errors | Not reliably recorded | Not reliably recorded | Cannot calculate error reduction |
 
 _Task Success Rate (%) = (Successful Tasks / Attempted Tasks) × 100_
 
-The team will calculate the percentage of time saved and error reduction from V1 to V2.
+The team calculated percentage differences in recorded timing; error reduction cannot be calculated because verified per-attempt error counts are incomplete.
 
 ## 5.2 Optional: System Usability Scale (SUS)
 
-The team proposes using SUS to evaluate ease of use.
+The team collected one standard SUS questionnaire per responding participant after the comparison flow (10 responses: Student 8, Advisor 2). The form also asks for qualitative V1-vs-V2 feedback; the SUS items themselves are not separate V1 and V2 score sets.
 
 - 10 standardised questions
 - Five-point Likert scale
@@ -227,12 +227,15 @@ Scoring: each construct score = mean of its three items per user. Report mean ±
 
 7.2 Advisor (2 participants)
 
+**Important task-ID correction:** UAT03 is **Record a completed advising session** (as defined in Section 3.2); its criterion is **Session record saved**. UAT04 is **Assign a follow-up task** (follow-up tracking), and its success criterion is **Task assigned to intended student**. The `APPT-CONFIRM-V1/V2` data measures **Confirm an advising appointment**, a separate auxiliary workflow; it is not UAT03 or UAT04. The appointment-confirmation numbers below are retained as auxiliary evidence and are **not** a UAT03 result. No verified UAT03-specific before/after outcome is available in the reviewed workbook.
+
 | Task / Metric | V1 (sec) | V2 (sec) | Change | Result / Notes |
 | --- | --- | --- | --- | --- |
-| UAT03 — Confirm appointment | 141.58 | 94.48 | 33.3% lower | Mean full-video duration |
-| UAT04 — Assign follow-up | 115.02 | 67.97 | 40.9% lower | Mean full-video duration |
-| SUM — 2 task means | 256.60 | 162.45 | 36.7% lower | 94.15 s less; not full session |
-| Reported task success | 4/4 Pass | 4/4 Pass | No change | 100% for both versions |
+| UAT03 — Record a completed advising session | Not verified | Not verified | Cannot calculate | Requires saved-session-log evidence and V1/V2 task timings |
+| Auxiliary: APPT-CONFIRM — Confirm appointment | 141.58 | 94.48 | 33.3% lower | Mean full-video duration; **not UAT03** |
+| UAT04 — Assign follow-up | 115.02 | 67.97 | 40.9% lower | Mean full-video duration; 2/2 reported Pass each version |
+| SUM — 2 recorded task-group means (APPT-CONFIRM + UAT04) | 256.60 | 162.45 | 36.7% lower | 94.15 s less; **not** sum of UAT03 + UAT04 |
+| Reported success for recorded Advisor task groups | 4/4 Pass | 4/4 Pass | No change | Appointment 2/2 + UAT04 2/2 per version; UAT03 excluded |
 
 **7.3 QA (1 participant)**
 
@@ -241,3 +244,110 @@ Scoring: each construct score = mean of its three items per user. Report mean ±
 | UAT06 — QA Dashboard / Export | 36.82 | 31.17 | 15.4% lower | Full-video duration; 1 tester |
 | Reported task success | 1/1 Pass | 1/1 Pass | No change | 100%; user-confirmed |
 | SUS / TAM | N/A | N/A | Not collected | No QA questionnaire |
+
+
+## 8. Supporting Evidence and Anonymised Session-Log Index (Added November 17, 2026)
+
+### 8.1 Primary evidence sources
+
+| Source | Link | What it supports | What it does not prove alone |
+| --- | --- | --- | --- |
+| Real-user test recordings | [Advising-Logs video folder](https://drive.google.com/drive/folders/1rgSEF1-jRAW5fixyRZB4mJKBUM-z_7XO?usp=sharing) | Available recordings of test interactions, including Student and Advisor-related files | The folder list alone does not establish which clip belongs to each user, task, build version, or a successful final action |
+| UAT tracking and timing | [AdvisingLog UAT spreadsheet](https://docs.google.com/spreadsheets/d/1vuRry_EFzIqQnaEpisaO380DNdhOafFM-WqMs3bNC7U/edit?usp=sharing) — `Task Results` | Recorded task labels, coordinator-reported Pass, available timings and source filenames | Clips were not uniformly segmented by task; some times are estimates or whole-video proxies |
+| Per-role UAT summaries | Same spreadsheet — `Student UAT Summary`, `Advisor UAT Summary`, `QA UAT Summary` | V1/V2 descriptive comparisons and reported success by role | A shorter full clip is not itself proof of lower task completion time |
+| SUS/TAM responses | Same spreadsheet — `Form Responses 1`, `Student`, `Advisor`, `Overview` | 10 questionnaire submissions and calculated SUS/TAM by role | Does not provide separate numeric SUS/TAM scores for V1 and V2 |
+| Issue register | Same spreadsheet — `QA Issue Log` | Location of the team's issue tracking sheet | An empty issue register does not prove the system is free of defects or that every fix was retested |
+
+The linked Drive folder was inspected and returned a list of 14 directly accessible file entries, including 8 student-titled MP4 files, 1 advisor-titled MP4 file, and 5 other Advisor/QA-titled MOV entries. **Do not treat this count as 14 distinct testing sessions**: repeated names, clips from one session, and incomplete mappings may exist. Additional recording filenames referenced in `Task Results` may not be discoverable by name in this specific folder listing. If videos contain faces, voices, names, accounts, or personal data, keep access restricted and publish only an anonymised manifest in the repository.
+
+### 8.2 Session logs and participant codes
+
+The original questionnaire dataset contains **U01–U08 (Student)** and **U09–U10 (Advisor)**. The task workbook additionally contains **QA-01**. These are participant codes; no real names or emails should be copied into GitHub. Because the `Task Results` workbook uses clip-level IDs for many Student records (for example `V1-Clip01`) rather than U01–U08, a per-person video-to-task mapping cannot be asserted without an additional checked mapping. Preserve the following distinction:
+
+| Participants | Role | Source | Current record state |
+| --- | --- | --- | --- |
+| U01–U08 | Student | `Student` + `Form Responses 1` | 8 anonymous questionnaire records. V1/V2 UAT task attempts are summarised by role; clip mapping to individual U-codes is not verified |
+| U09–U10 | Advisor | `Advisor` + `Form Responses 1` | 2 anonymous questionnaire records. Recorded appointment-confirmation and follow-up task groups; UAT03-specific saved-session evidence is not established |
+| QA-01 | QA | `QA UAT Summary` + `Task Results` | V1/V2 UAT06 marked Pass by coordinator; QA report export not independently visible in supplied clips; no SUS/TAM form |
+
+**Session-log minimum fields to add when traceable:** participant code, test date, role, actual build/version, UAT ID, start/end or duration source, Pass/Fail/Not Tested, observed issues, help given, video/observation-log reference, and whether success is `video-verified` or `coordinator-confirmed`. Do not fill unknown values with guesses. Refer to the clip and timing metadata already recorded in `Task Results` and `Student Video Evidence`.
+
+### 8.3 MUST workflow coverage
+
+The six UAT scenarios defined in Section 3.2 do **not automatically** establish coverage for every `MUST` item in the product backlog. The team must compare this evidence with the repository's MoSCoW backlog before claiming full coverage.
+
+| UAT ID | Workflow | Available V1/V2 evidence | Caveat |
+| --- | --- | --- | --- |
+| UAT01 | Student request advising | 8 attempts/version | Some measured/estimated timing |
+| UAT02 | Student check status | 8 attempts/version | Uses mixed/full-video timing proxies |
+| UAT03 | Advisor record a completed advising session | **Not established as a separate UAT03 outcome** | Appointment confirmation `APPT-CONFIRM` cannot substitute for saving a completed session record |
+| UAT04 | Advisor assign follow-up | 2 attempts/version | Reported Pass, timing mainly full videos |
+| UAT05 | Student update follow-up | 8 attempts/version | V1 average uses 7 available timing entries |
+| UAT06 | QA view dashboard and export report | 1 attempt/version, coordinator-confirmed Pass | Video alone does not independently show successful export |
+
+**Auxiliary workflow:** `APPT-CONFIRM` — 2 attempts/version, recorded separately; full-video mean V1 **141.58 s**, V2 **94.48 s**. These numbers are **not** counted as evidence for UAT03. The Advisor two-workflow combined figure **256.60 → 162.45 s (-36.7%)** refers to `APPT-CONFIRM + UAT04`, not `UAT03 + UAT04`.
+
+## 9. Actual Questionnaire Results and V1/V2 Feedback (Added November 17, 2026)
+
+### 9.1 SUS and TAM results
+
+**Questionnaire participants:** Student **n=8**, Advisor **n=2**, QA **n=0**. There is one SUS/TAM questionnaire set per respondent after the testing flow; it is not a separate SUS or TAM numeric score for each version. The form separately collects written comparisons between V1 and V2.
+
+| Measure | Student (n=8) | Advisor (n=2) | Overall (n=10) | Notes |
+| --- | ---: | ---: | ---: | --- |
+| SUS (0–100) | 64.38 | 62.50 | **64.00** | Overall sample SD **16.96**, below the project benchmark 68 by 4 points |
+| TAM — Perceived Usefulness (PU, 1–5) | 4.54 | 3.50 | **4.33** | Weighted by respondent counts |
+| TAM — Perceived Ease of Use (PEOU, 1–5) | 4.38 | 3.33 | **4.17** | Weighted by respondent counts; Advisor PEOU is below the stated target 3.5 |
+| TAM — Behavioural Intention (BI, 1–5) | 4.25 | 3.67 | **4.13** | Weighted by respondent counts |
+
+**SUS scoring:** for each person's 10 items scored 1–5, odd items contribute `response - 1`, even items contribute `5 - response`; sum all contributions and multiply by 2.5. Example weighted mean: `(64.375 × 8 + 62.5 × 2) / 10 = 64.00`. SUS is a score on 0–100, **not a percentage**.
+
+**TAM scoring:** calculate each respondent's mean for 3 items per construct (`PU1–PU3`, `PEOU1–PEOU3`, `BI1–BI3`), then mean across respondents (1–5 scale). For an overall mean, weight role means by role sample size; e.g. PU `(4.541666667 × 8 + 3.5 × 2) / 10 = 4.33`. TAM means are **not percentages**.
+
+### 9.2 Actual respondent-level scores (anonymised)
+
+These are calculated role-tab values already recorded in the source workbook, not fabricated test results. Rounding follows the displayed sheet values.
+
+| Participant code | Role | SUS / 100 | PU / 5 | PEOU / 5 | BI / 5 |
+| --- | --- | ---: | ---: | ---: | ---: |
+| U01 | Student | 50.00 | 5.00 | 5.00 | 5.00 |
+| U02 | Student | 50.00 | 5.00 | 5.00 | 5.00 |
+| U03 | Student | 67.50 | 4.00 | 4.00 | 4.00 |
+| U04 | Student | 50.00 | 3.67 | 3.33 | 3.33 |
+| U05 | Student | 82.50 | 5.00 | 5.00 | 4.33 |
+| U06 | Student | 50.00 | 4.00 | 4.00 | 4.00 |
+| U07 | Student | 67.50 | 4.67 | 3.67 | 3.33 |
+| U08 | Student | 97.50 | 5.00 | 5.00 | 5.00 |
+| U09 | Advisor | 50.00 | 3.33 | 3.00 | 3.33 |
+| U10 | Advisor | 75.00 | 3.67 | 3.67 | 4.00 |
+
+### 9.3 Qualitative V1-vs-V2 feedback
+
+The question **“What did you like or needs improving in V2 compared with V1?”** explicitly asks participants to compare the two versions. Examples from recorded responses include: one Student described V1 as simpler while V2 was better overall; another preferred V1's ease of use; another liked V2's visual design but found the workflow harder than V1. One Advisor described V2 as more complete than V1. Feedback also requested larger text, fewer form steps, clearer status indicators, notifications, and improved navigation. These are **qualitative comparisons**, not a numeric vote or separate V1/V2 SUS score. Avoid claims such as “all users preferred V2.”
+
+### 9.4 Testing exit criteria: actual evidence vs targets
+
+| Criterion from Section 6.3 | Project target | Verified or reported finding | Assessment |
+| --- | --- | --- | --- |
+| UAT session coverage | At least 10 sessions | 11 participants reported by role; individual session-video mapping incomplete | **Reported target count met; independent session reconciliation pending** |
+| Reported task success | At least 70% / task | Recorded tasks report Pass; some outcomes coordinator-confirmed | **Reported target met for covered workflows; UAT03 not established** |
+| Overall SUS | At least 68 / 100 | 64.00 / 100 | **Below target** |
+| TAM overall construct means | At least 3.5 / 5 | PU 4.33; PEOU 4.17; BI 4.13 | **Overall group targets met; Advisor PEOU 3.33 below target** |
+| Error reduction | Measurable V1 vs V2 | Errors not consistently recorded | **Not measurable** |
+| Zero open critical bugs | 0 | `QA Issue Log` has no rows, but absence of entries is not proof of no open critical bugs | **Not independently verified** |
+| Unit/integration and E2E pass rates | At least 90%; 100% core flows | This UAT workbook does not contain the corresponding CI or test-run evidence | **Must link test reports / CI from repository** |
+
+## 10. Issue Log, Fix Commit and Retest Status (Added November 17, 2026)
+
+The linked workbook's `QA Issue Log` contains column headers (`Issue ID`, `Role affected`, `Area / feature`, `Steps to reproduce`, `Expected result`, `Actual result`, `Severity 0–4`, `Status`, `Evidence link`, `Fix / retest notes`) **but no recorded issue rows** at the time of review. It would be incorrect to invent defects, severity, fix commit hashes, or retest results. This document therefore records the status as **“No formally logged issues in the reviewed QA Issue Log; completeness and absence of defects not independently verified.”**
+
+For future verified issues, record each actual defect with severity, source evidence, the **real** fixing Git commit and the retest result. A `Done` status in the Test Plan's activity table does not prove a passing test; a successful retest requires execution evidence.
+
+| Issue ID | Severity | Fix commit | Retest result | Evidence |
+| --- | --- | --- | --- | --- |
+| No verified issue row available | N/A | N/A | Not established | [QA Issue Log](https://docs.google.com/spreadsheets/d/1vuRry_EFzIqQnaEpisaO380DNdhOafFM-WqMs3bNC7U/edit?usp=sharing) |
+
+
+**Privacy and sharing:** obtain the necessary consent and permissions before publishing recordings. Keep raw Google Form response data containing contact details out of public GitHub. Restrict access to raw videos when they include identifying information; an anonymised manifest with permission-controlled video URLs is sufficient for traceability where permitted. Avoid secrets or test-account credentials in evidence files.
+
+**Evidence references:** [Video folder](https://drive.google.com/drive/folders/1rgSEF1-jRAW5fixyRZB4mJKBUM-z_7XO?usp=sharing) · [UAT/SUS/TAM data workbook](https://docs.google.com/spreadsheets/d/1vuRry_EFzIqQnaEpisaO380DNdhOafFM-WqMs3bNC7U/edit?usp=sharing).
