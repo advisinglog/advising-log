@@ -14,3 +14,15 @@ drizzle/migrations/.drizzle
 # OS / Editor
 .DS_Store
 *.log
+
+# Slides (local reference)
+slide/
+*.pdf
+
+# Local scratch scripts
+parse_sheets.py
+read_sheets.py
+scratch_sheet.csv
+sheet_*.csv
+sheet_page.html
+send-test-email.cjs
