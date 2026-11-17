@@ -69,11 +69,11 @@ jobs:
       - name: Build Frontend Production Bundle
         working-directory: ./frontend
         env:
-          VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
-          VITE_SUPER_ADMIN_EMAIL: ${{ secrets.VITE_SUPER_ADMIN_EMAIL }}
-          VITE_CLOUDINARY_CLOUD_NAME: ${{ secrets.VITE_CLOUDINARY_CLOUD_NAME }}
-          VITE_CLOUDINARY_UPLOAD_PRESET: ${{ secrets.VITE_CLOUDINARY_UPLOAD_PRESET }}
-          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+          VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID || '762595973260-1rjkfe8kbc8s5c9cccr2qhpfi40okl1l.apps.googleusercontent.com' }}
+          VITE_SUPER_ADMIN_EMAIL: ${{ secrets.VITE_SUPER_ADMIN_EMAIL || 'se.advisinglog@gmail.com' }}
+          VITE_CLOUDINARY_CLOUD_NAME: ${{ secrets.VITE_CLOUDINARY_CLOUD_NAME || 'lzchanop' }}
+          VITE_CLOUDINARY_UPLOAD_PRESET: ${{ secrets.VITE_CLOUDINARY_UPLOAD_PRESET || 'advising_preset' }}
+          VITE_API_URL: ${{ secrets.VITE_API_URL || 'https://advising-log-backend.se-advisinglog.workers.dev' }}
         run: npm run build
 
       - name: Deploy to Cloudflare Pages
