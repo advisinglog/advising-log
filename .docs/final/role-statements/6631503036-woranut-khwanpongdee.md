@@ -7,7 +7,7 @@ As AI Lead for AdvisingLog, I managed how our team used AI during development an
 
 On the technical side, I tested our in-product AI prototype by writing automated tests in [`frontend/src/aiService.test.ts`](../../../frontend/src/aiService.test.ts) to see how well it summarizes advising sessions. Because student advising involves sensitive topics like health and family issues, I decided to keep the AI summarizer turned off in production to protect student privacy. I also organized our UAT testing numbers in [`ai-logic.md`](../ai-logic.md) and [`comparison-table.md`](../comparison-table.md), making sure all metrics came from real users, not made-up data.
 
-We used AI tools (Claude 3.5 Sonnet and GPT-4o) to help write repetitive code and unit tests. Our team checked and verified every suggestion before using it.
+We used AI tools (Gemini 3.8 Flash and Claude Sonnet 4.8) to help write repetitive code and unit tests. Our team checked and verified every suggestion before using it.
 
 ## Reflection
 
