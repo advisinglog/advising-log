@@ -31,6 +31,7 @@ This index covers the project evidence from Discover through Deliver. All files 
 | System architecture | [Architecture diagram](../02-design/diagrams/04-system-architecture-diagram.jpg) |
 | Frontend source code | [Frontend](../../frontend/) |
 | Backend source code | [Backend](../../backend/) |
+| Root environment template | [Root .env.example](../../.env.example) |
 | Frontend environment template | [Frontend .env.example](../../frontend/.env.example) |
 | Backend environment template | [Backend .dev.vars.example](../../backend/.dev.vars.example) |
 | Frontend tests | [Frontend test files](../../frontend/src/) |
