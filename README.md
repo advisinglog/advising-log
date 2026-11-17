@@ -130,18 +130,93 @@ advising-log/
 
 ---
 
+## 🚀 Getting Started & Local Setup
+
+### 1. Prerequisites
+- **Node.js**: v20 or v22
+- **npm** or **pnpm**
+- **Wrangler CLI** (included in backend dependencies)
+
+### 2. Environment Configuration
+Copy the example environment files and configure your local values:
+
+```bash
+# Frontend environment variables template
+cp frontend/.env.example frontend/.env.local
+
+# Backend environment variables template (Cloudflare Workers)
+cp backend/.dev.vars.example backend/.dev.vars
+```
+
+### 3. Backend Setup (Cloudflare Workers + D1)
+```bash
+cd backend
+npm install
+npm run db:migrate:local
+npm run db:seed:local    # Seed demo users and roster mappings
+npm run dev              # Starts local API at http://localhost:8787
+```
+
+### 4. Frontend Setup (React + Vite)
+```bash
+cd frontend
+npm install
+npm run dev              # Starts development server at http://localhost:5173
+```
+
+### 5. Running Automated Tests
+```bash
+# Frontend Unit & Integration Tests (Vitest)
+cd frontend
+npm test
+
+# Backend Unit & Scoping Tests (Vitest)
+cd backend
+npm test
+```
+
+---
+
+## 🔑 Evaluation Test Accounts
+
+The local database seed includes pre-configured accounts across all four system roles for testing:
+
+| Role | Name | Email / Account | ID / Code | Permissions / View |
+| :--- | :--- | :--- | :--- | :--- |
+| 🎓 **Student** | Somchai Jaidee | `somchai.j@student.mfu.ac.th` | `6631503001` | Submit requests, complete follow-up tasks, view own records |
+| 👨‍🏫 **Advisor** | Dr. Prasit Kanchanawat | `prasit.k@mfu.ac.th` | `EMP-1001` | Review assigned advisees, schedule sessions, write logs |
+| 📊 **QA Coordinator** | Assoc. Prof. Rattana Pongsakorn | `rattana.p@mfu.ac.th` | `EMP-2001` | View aggregate statistics, export AUN-QA reports |
+| 🏢 **Admin** | Supattra Kaewmanee | `supattra.k@mfu.ac.th` | `EMP-3001` | Manage user roster, categories, audit logs |
+
+*Note: For the deployed live system, sign-in is authenticated with MFU Google Workspace OAuth.*
+
+---
+
+## 🌐 Live Deployments
+
+- **Frontend Application (Cloudflare Pages):** [https://advising-log.pages.dev](https://advising-log.pages.dev)
+- **Backend API (Cloudflare Workers):** [https://advising-log-backend.se-advisinglog.workers.dev](https://advising-log-backend.se-advisinglog.workers.dev)
+
+---
+
 ## 📄 Documentation
 
 | Document | Description |
 | :--- | :--- |
+| [`.docs/final/README.md`](.docs/final/README.md) | **Master Deliverables Index (Rubric navigation)** |
 | [`AGENTS.md`](AGENTS.md) | AI agent rules, coding conventions, and testing requirements |
 | [`CLAUDE.md`](CLAUDE.md) | Full project brief, architecture, and coding guide |
+| [`.docs/01-requirements/charter.md`](.docs/01-requirements/charter.md) | Company Charter, team roles, and rules |
+| [`.docs/01-requirements/user-research.md`](.docs/01-requirements/user-research.md) | Problem analysis and literature review (SECONDARY) |
 | [`.docs/01-requirements/proposal.md`](.docs/01-requirements/proposal.md) | Updated project proposal |
 | [`.docs/01-requirements/spec.md`](.docs/01-requirements/spec.md) | Full functional & technical specification |
 | [`.docs/01-requirements/backlog.md`](.docs/01-requirements/backlog.md) | Feature backlog & task breakdown |
 | [`.docs/02-design/feature-list.md`](.docs/02-design/feature-list.md) | Core feature list by role |
 | [`.docs/02-design/user-journey.md`](.docs/02-design/user-journey.md) | User journey maps |
 | [`.docs/03-compliance/rule.md`](.docs/03-compliance/rule.md) | PDPA compliance & legal guardrails |
+| [`.docs/04-test plan/AdvisingLog Test Plan.md`](.docs/04-test%20plan/AdvisingLog%20Test%20Plan.md) | Test Plan v2.0 |
+| [`.docs/final/case-study.md`](.docs/final/case-study.md) | Case Study (Problem, Process, Outcome, Live URL) |
+| [`.docs/final/comparison-table.md`](.docs/final/comparison-table.md) | V1 vs V2 Comparison Table & Metrics |
 
 ---
 
