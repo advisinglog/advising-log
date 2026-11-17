@@ -52,6 +52,8 @@ This index covers the project evidence from Discover through Deliver. All files 
 | Anonymized SUS/TAM item responses and scores | [SUS/TAM results](../04-test%20plan/evidence/sus-tam-results.md) |
 | Anonymized SUS/TAM CSV data | [SUS/TAM CSV](../04-test%20plan/evidence/sus-tam-results.csv) |
 | Before/after task results and SUS/TAM summary | [Before/After comparison](comparison-table.md) |
+| Raw UAT data & survey responses (Google Sheets) | [UAT tracking workbook](https://docs.google.com/spreadsheets/d/1vuRry_EFzIqQnaEpisaO380DNdhOafFM-WqMs3bNC7U/edit?usp=sharing) |
+| Testing video recordings (Google Drive) | [Video evidence folder](https://drive.google.com/drive/folders/1rgSEF1-jRAW5fixyRZB4mJKBUM-z_7XO?usp=sharing) |
 
 > The source participant-code field was blank, so U01–U10 are repository-local pseudonyms assigned in source row order. Task-level records are not attributed to individual participants because the source workbook does not provide that mapping.
 
